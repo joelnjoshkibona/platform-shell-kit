@@ -1,0 +1,297 @@
+# Fomu frontend rules
+
+> Source of truth for every Fomu screen. In this repository this file is authoritative; the prototype's Rules tab is a snapshot of it. Change a rule only through a new decision (D#) in `docs/architecture/erd_data.py`, in the same PR. Decision numbers point to the ERD decision log.
+
+Every Fomu screen is built against these rules. Cobley's frontend code is discarded; its backend and behaviour rules are kept. Where the two disagree on look, the Fomu prototype wins (D27).
+
+## How to use these rules
+
+- **Locked**: every module matches exactly. These are correctness fixes or consistency a user would notice. No exceptions without a new decision (D#).
+- **Constrained-creative**: pick from an established shape; never invent a new one.
+- **Free**: per-module judgement, no standard imposed.
+- When unsure which tier applies, choose Locked for anything a user would see as inconsistent between modules, and Free for anything about a module's own data.
+- The prototype's Design system page is the visual source of truth (D17). These rules are the behaviour source of truth.
+
+## Locked: component library
+
+- `COMPONENTS.md` (generated) lists every component with its specs, props, emits, slots and do/don't. Build screens only from it.
+- A control that is not in the library is added to it first: spec and demo on the prototype's Design system page, API in `components_api.json`, then rebuild. Never hand-roll a one-off version inside a page.
+- A component's props/emits contract is frozen once another module uses it; extend it, don't change it.
+
+## Locked: app shell
+
+**Navigation**
+
+- Sidebar opened by a hamburger with the word "Menu" under it. On phones it opens as a sheet from the left.
+- Menus come from the database (`menus` table). Display modes: dropdown (always accordion), panel, section. Animation follows the mode unless the menu overrides it (D14, D16).
+- One permission per child menu. A parent shows if any child shows; an empty parent is hidden (D8).
+- Organisation switcher and location context sit at the top of the sidebar. Switching plays the curtain and reloads every list.
+
+**Permissions**
+
+- Names are `Module.action`: `list`, `view`, `create`, `edit`, `delete`, plus module verbs such as `Forms.publish`, `Responses.export`, `Users.impersonate` (D28).
+- Menus are gated by `Module.list`. Every route and endpoint behind a menu checks the same permission; a hidden menu reached by URL shows the No access page with a Request access button (D12).
+- Buttons the user cannot use are hidden, not disabled, unless the reason helps them (then a tooltip says why).
+- Effective permission at a location = main role + custom roles here and above + granted − denied; deny wins (D21).
+
+**Search (D29, D30)**
+
+- The top-bar box follows the page. In a module it searches that module only and filters the list in place through the module's `search` filter, kept in the URL.
+- Its last line is always "Search everywhere for ...".
+- On a details page it searches the parent module and shows a small dropdown; Enter opens the filtered list.
+- On pages with nothing to search the box is hidden.
+- On the Dashboard it is global: results grouped by module, top 5 each, each group ending in "See all in X".
+- Phones: a search icon expands into a full-width bar with Cancel. Dashboard results open full screen with recent searches.
+
+**Refresh (D32)**
+
+- Every viewable page has Refresh: lists, details, results, dashboard. Tooltip: "Updated 2 min ago".
+- Refresh keeps current content on screen, dimmed (`opacity-60`, `pointer-events-none`), until new data arrives. Only a first load with nothing on screen shows a spinner.
+
+**Modals and overlays**
+
+- Every dialog opens through the shared modal host (`useModal().openModal(...)`), never a local `ref(false)`.
+- Menus, selects, popovers and tooltips are portalled to `<body>`, fixed-positioned, 8px from screen edges, and flip to stay on screen. Never `absolute` inside a scrolling or overflow-hidden container (D9).
+- Every dialog and sheet has a title and a screen-reader description.
+- Footer order: Cancel on the left (`outline`), primary on the right. Destructive actions use the `destructive` variant.
+- On phones dialogs rise from the bottom; sheets fill the width.
+
+**Page transitions (D13)**
+
+- The curtain plays on first load and on every page change, sidebar included; not between sign-in steps or between tabs inside a page.
+- Loader text appears only after 300ms. Skipped under `prefers-reduced-motion`.
+- Curtain colours: bright teal in light mode, deep green in dark mode.
+
+**View as (D24, D37)**
+
+- Two read-only modes from the top-bar eye: **a person** (their exact main role, location roles and overrides) or **a role** (main role + optional custom role at a location, no real person). The Roles page also offers "Preview this role".
+- A banner shows who or what is being viewed. Everything is read-only, nothing is sent, and every session is written to the audit log.
+- The synthetic role-preview member never appears in lists, counts, pickers or approver lists.
+- There is no "Act as" (signing in as someone with write access).
+
+## Locked: lists
+
+**Toolbar (D31)**, left to right:
+
+1. Refresh (spinner while loading)
+2. Filters, with the active count: `Filters (2)`
+3. Clear 2 (only when filters are active)
+4. Sort: `Name ↑`
+5. Right side: cards/table toggle, Export / Import only when the backend has those routes, then the primary New button
+
+- Every primary action has an icon and visible text on desktop. On phones the toolbar shows icons with counts, and the New button keeps its text.
+- Quick-filter tabs (status) sit above the toolbar and stay in sync with the Filters dialog.
+
+**Filters dialog**
+
+- Fields come from the list endpoint's `filterFields`; the page declares none of its own.
+- Simple mode (default): each field uses its natural operator — text contains, select is any of, number/date/boolean equals.
+- Advanced switch: an operator picker per field (between, greater/less than, begins/ends with, is empty, is not empty).
+- Select filters are multi-select by default. A between with one side empty blocks Apply.
+- Field type decides the control (D38): `select` (pills) only for short fixed sets of 10 or fewer, such as status; anything that grows (locations, people, forms, wards) is `select_paginated` and renders a multi API select for its module. Location filters include the locations under the chosen ones by default, with a switch to turn it off; the chip says "and below".
+- Apply sends one request and returns to page 1. On phones the dialog is a bottom sheet.
+
+**State and loading**
+
+- Page, per-page, sort and filters live in the URL (`?page=2&sort=name&f[status][operator]=in...`), so any view can be bookmarked or shared and survives a reload. Other query params such as `?tab=` are kept.
+- First load with no rows: a centred spinner. Every later fetch keeps rows visible and dimmed.
+- Footer: `1–10 of 84`, per-page picker, Previous / Next.
+
+**Shape (prototype wins, D27)**
+
+- Desktop offers cards or a table, remembered per user. Phones always show cards (D11).
+- A row or card opens on click with a stretched link; its actions menu sits above it (`relative z-10`) (D10).
+- Empty list: centred icon (`size-6`, muted 60%), one specific line ("No forms match."), and Clear filters when filters are active. Never a second New button.
+- No horizontal page scroll at 360px. Tables wider than the screen scroll inside their own card.
+
+## Locked: details pages
+
+**Header**
+
+- Breadcrumb, then icon tile (or avatar for a person), title, code and status badge on one line, meta under it.
+- Header buttons, row 1: Refresh, and View full page when shown as a preview. Row 2: the record's actions. Only Edit is promoted to a visible button; delete and rare actions live in the More menu, which hides itself when empty.
+- One exception: a module may promote its single defining action beside Edit (Add child on a location, Preview this role on a role). Everything else stays in More (D39).
+- Back returns to `?back=` if present, else to the module list. Never browser history.
+- Terminal states (closed, cancelled, voided, archived) show a banner explaining why actions are gone and that the record is read-only.
+
+**Tabs**
+
+- Tabs live in `?tab=`, never nested routes, so a tab switch does not refetch the header.
+- Tabs switch without the page curtain (D13). On phones the tab strip scrolls sideways.
+- Every module has Overview first and History (activity) last. Which tabs sit between is Free.
+
+**Overview**
+
+- Cards of icon + label + value fields. Same field shape gets the same icon everywhere: `Hash` for codes and references, `AlignLeft` for notes, `FileText` for descriptions, `CalendarRange` for a validity window shown as `from → to`.
+- A Timeline card (Created, Created by, Updated, Updated by) and both halves of the audit pair are always shown when the API returns them.
+- A field that points at another record is a related-record link, never plain text or a raw id.
+
+**Related-record preview**
+
+- A related-record link opens the target module's own details panel in a side sheet (not a summary), with a View full page button that carries the active tab and stamps `?back=`.
+
+**Activity**
+
+- History tab = the shared activity card fed by `/{module}/{uuid}/activity`, paginated, with its own loading state.
+
+**Delete**
+
+- Delete first calls the backend's delete check, which lists what depends on the record.
+- A real delete needs the user to type YES before the button enables. Soft-deleted records show a restore banner.
+
+**Roles (D39)**
+
+- Roles is a list + details module like every other. Never a master-detail split view.
+- List rows: icon tile (Crown locked, Shield main, ShieldPlus custom), name + description, Main/Custom badge, permission coverage bar with `n/total`, visible menus, holder avatars.
+- Details tabs: Overview, Permissions, Menus, People, History. Permission and menu ticks save on change; read-only users see the same screen with disabled controls and a one-line reason.
+- Main roles: name fixed, never deleted. Custom roles: created from the list (optionally copying another role once), renamed in Edit, deleted only when nobody holds them.
+
+**Staged edits and leaving (D42)**
+
+- Editors that change many switches at once (role permissions, menus) stage changes. A sticky bar at the bottom shows the diff (+n / −n), who it affects, Discard and Save.
+- Leaving a page with staged changes asks Stay / Discard and leave / Save and leave. The guard covers every in-app navigation and the browser's close/reload prompt.
+
+## Locked: forms and fields
+
+**Fields**
+
+- Label above, help text under, error under that in `text-xs text-destructive`. No error summary box at the top.
+- Required: a CSS asterisk on the label (`after:content-['*']`), never a literal `*` in the text.
+- One field per row; pair two only when short and related (code + unit).
+- No native pickers, anywhere: no `<select>`, `<input type=file>`, `type=date|time`. Use Select, API select, Date picker, Time, File picker.
+- Create and edit share one form modal. Edit seeds itself from the record before it is shown.
+
+**Drafts (D33)**
+
+- Every create and edit form autosaves to the server every 4 seconds of idle time, so work survives a closed tab and resumes on another device.
+- The dialog footer shows the state next to Cancel: `Saving…`, `Draft saved 12:41`, or `Couldn't save draft` (announced once).
+- Create: several drafts per form; a banner "You have 2 drafts" opens a picker to resume or delete one.
+- Edit: one draft per record; a banner "You have unsaved changes from 2 hours ago" with Discard and Restore. Autosave pauses until the banner is answered.
+- Closing saves the draft; a successful save deletes it; a failed save keeps it.
+- A form changed back to how it started drops its draft.
+- Never stored: passwords, tokens, OTPs. Files are stored as media ids (see File picker).
+- Never in action wizards or one-shot dialogs.
+- "My drafts" in the user menu lists every draft across modules, newest first, with Resume and Delete.
+
+**File picker**
+
+- One component for single and multiple files. Two sources: Upload (drag and drop, browse, paste an image) and Media library (search and pick existing files).
+- Limits are shown before choosing: allowed types, max size, max files.
+- Each file shows a thumbnail or type icon, name, size, a progress bar, Cancel while uploading, Retry and the reason on failure.
+- Uploads go to the Media module immediately and the field holds `media_id`s. Unattached media older than 24 hours is cleaned by a scheduled job.
+- Existing files show with View, Download and Remove. Images open in a preview.
+- Phones: Upload offers Camera and Files; the library opens full screen.
+
+**API select (D36)**
+
+- Backed by `GET /select/{module}?search=&page=|after=&per_page=20&filter[k]=v&exclude[]=&ids[]=` → `{ data, selected, meta: { has_more, next_cursor? } }`.
+- Paging is mixed: `page=` for small tables, an opaque `after=` cursor for big or busy ones (wards, items, respondents). The module declares which. The client trusts `has_more`; no totals.
+- The next page loads when an end marker scrolls into view (120px early), with a "Loading more…" row and Retry if it fails.
+- Search from 2 letters, 300ms after typing stops. A new search cancels the previous request. Results rank exact, then starts-with, then contains.
+- Selected labels come from three layers: (a) view endpoints return every foreign key as `{ id, label, sub }` and the form passes it as `selected-options`; (b) anything still missing goes into one batched `ids[]` lookup per module per tick, across every picker on the page; (c) every label lands in a shared label store.
+- Current choices are pinned under "Selected" on page 1 and excluded from later pages.
+- A chosen value that is archived shows greyed with "(archived)"; one the user cannot see shows a lock and "Restricted record"; a deleted one shows "Deleted record". A warning sits under the field. Values are never cleared silently.
+- Results for the same module, filters and search are cached for 60 seconds: reopening shows them at once and refreshes in the background.
+- Desktop opens a popover with the search focused; phones open a bottom sheet. Footer "Create new …" when the user has `Module.create`.
+
+**Rich text (WYSIWYG)**
+
+- Tiptap (Vue 3, headless) styled with our tokens.
+- Toolbar: paragraph/H2/H3, bold, italic, underline, link, bulleted and numbered list, quote, clear formatting; image only through the File picker.
+- Markdown shortcuts work (`**`, `-`, `1.`, `>`). Paste is cleaned to the same allowlist.
+- Output is HTML, sanitised again on the server with the same allowlist (`HtmlSanitizerService`).
+- Character count when the field has a limit. On phones the toolbar scrolls sideways and sticks above the keyboard.
+
+**Action wizards**
+
+- `Stepper` inside a dialog. Footer: Cancel, Back, Next, then the real action on the last step.
+- The last step is a read-only review with a confirmation checkbox that gates the action.
+- A validation error jumps back to the step that owns the field. No drafts.
+
+## Locked: approvals (D25, D34)
+
+- Any action can be put behind an approval workflow. The UI checks for an active workflow before doing the action and offers "Request to …" instead.
+- Steps run in order; each step lists who may approve (custom role at the request's location or above, main role, permission or person), Any or All, and how many approvals it needs.
+- Approvers are resolved at the request's location chain. If nobody qualifies, the step escalates to owners and admins and says so.
+- The request page always shows, for the current step, who can act and why ("Branch supervisor at Arusha Branch").
+- A requester never approves their own request. A rejection needs a reason; an approval comment is optional.
+- Acting under a delegation is labelled on the decision ("by Hamisi, delegated") and on the request page.
+- Approved, rejected and cancelled requests show a banner explaining the outcome and that the request is read-only.
+- The editor previews who each step would go to at a chosen location and warns when fewer people qualify than the step needs.
+- Capacity rule (D40): a step needing 2+ approvals needs required + 1 people who can approve; the editor shows an inline error, Save stays disabled and the workflow can't be switched on. Existing failing workflows show a "Can't be met" badge; a short step adds the Owner, and an Owner completes a step that already has every approval it can get.
+- Gated actions (D41): when a workflow applies, the action button opens "This needs approval" (subject, route preview, note) instead of running. Labels change to say so ("Request another attempt"), menus show a disabled "Needs approval first" row, and an open request for the same subject shows its number instead of a second request.
+- Notifications (D43): the workflow editor has a Notifications block (channel chips, in-app locked on; event switches; reminder every N hours up to M). Each step can override channels and mark them required. The request page has a Notifications tab: one row per person and event with a chip per channel, crossed out with the reason when skipped. People manage their own email/SMS/push in Notification settings (user menu); in-app can't be turned off.
+- Email and quiet hours (D44): approval emails link to the request; nobody decides from an email. SMS and push inside the org's quiet hours (Settings, default 20:00–07:00 EAT) show as held (amber chip with the release time); required steps ignore quiet hours.
+
+## Locked: visual
+
+shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or grey class in a component. Values come from the prototype's Design system page (D17).
+
+| Token | Light | Dark | Use |
+| --- | --- | --- | --- |
+| `--primary` | teal `174 72% 26%` | teal `170 62% 46%` | Primary buttons, focus, active nav |
+| Neutrals | zinc scale | zinc scale | Background, cards, borders, muted text |
+| `--warning` / `--destructive` | semantic | semantic | Approaching a limit / errors and danger |
+| Chart c1–c5 | #14937f #d06d0a #2f6fe0 #d6456a #7c5ad8 | #1f9e89 #c97514 #4c82e8 #dc5577 #8f73e3 | Charts only, max 5 series then Other (#94a3b8 / #64748b) |
+| `--curtain` | `170 62% 46%`, dark text | `166 58% 13%`, light text | Page transition only |
+| Form accent | per form | per form | A form's own brand colour, tenant-overridable |
+
+- **Type**: Geist. Page title `text-xl font-semibold` (`text-2xl` from `sm`), body `text-sm`, meta `text-xs`, group labels `text-[11px]` uppercase semibold, KPI numbers `text-2xl` with tabular figures, codes and permission names in mono `text-xs`.
+- **Spacing**: `gap-4` between sections and fields, `p-4` card padding (`p-3.5` for KPI tiles), `gap-1.5` inside a label/input/error stack, `gap-2` between inline items.
+- **Radius**: `rounded-md` controls, `rounded-lg` dialogs and popovers, `rounded-xl` cards, `rounded-full` pills and avatars.
+- **Icons**: Lucide, `size-4` next to text, `size-6` for empty states. Same field shape, same icon everywhere.
+- **Status**: short badges or pills with a dot; colour never carries meaning alone (always a word).
+- **Motion**: cards rise in with a 40–60ms stagger, sparklines draw in, bars grow from the left; 150–250ms for UI transitions. Everything decorative stops under `prefers-reduced-motion`.
+- **Dark mode**: every screen is checked in light and dark before merging. Theme choice: Light, Dark, System.
+- **Responsive**: built and checked at 360, 390, 768, 1280px. Grid children get `min-w-0`; no horizontal page scroll; tap targets at least 40px on phones; safe-area insets respected.
+- **i18n**: every user-facing string goes through `t()`, with English and Swahili keys added together.
+
+## Constrained-creative and Free
+
+**Constrained-creative** (pick an existing shape):
+
+- List card content: accent bar or icon tile, title, status pill, one meta line, a key number with a sparkline, footer with owner and date. Which fields fill each slot is per module.
+- List table columns: which columns earn a place is per module; the column look is fixed.
+- Details header title: a name, a code or a document number, whichever identifies the record; a person always gets an avatar with initials.
+- Overview cards: field grid inside a card; grouping and card names per module (Information, Amounts, Rule, Timeline).
+- KPI strip: 2 columns on phones, 4 on desktop; each tile = label, icon chip, number, one line of context or a sparkline/progress bar.
+- Charts: the views in the chart catalogue (bars, donut, columns, rating, stacked, heatmap) with the shared palette.
+
+**Free**:
+
+- Which tabs a details page has between Overview and History.
+- Domain visualisations a module's data calls for (the location tree, a permission editor, a timer pill).
+- Empty-state wording and illustrations within the empty-state shape.
+
+## Backend contract the frontend relies on
+
+| Need | Endpoint / shape | Note |
+| --- | --- | --- |
+| Lists | `GET /{module}/list` with `filters`, `params{page,per_page,sort,order}` → `data, meta, filterFields` | Every module declares a `search` filter field (D29) |
+| Pickers | `GET /select/{module}?search=&page=\|after=&per_page=&filter[k]=&exclude[]=&ids[]=` → `data, selected, meta{has_more,next_cursor}` | min 2 characters; `ids[]` resolves labels incl. archived/restricted/deleted (D36) |
+| Global search | `GET /search?q=` → groups of top 5 per searchable module | New; permission- and location-scoped (D30) |
+| Details | `GET /{module}/{uuid}/view`, `/activity` | Every foreign key comes back as `{ id, label, sub }` for pickers (D36) |
+| Delete | `GET /{module}/{uuid}/delete/check`, then `DELETE /{module}/{uuid}/delete` | Check lists dependants |
+| Drafts | `POST /drafts/save`, `GET /drafts/find`, `/drafts/for-context`, `/drafts`, `DELETE /drafts/{uuid}` | Keyed by module, form type, record key |
+| Media | `POST /media/create`, `GET /media/list`, `/media/{uuid}/info`, `/download` | Download needs the bearer token, so fetch as a blob |
+| Location context | `X-Location-Id` header + `location_filter` param | Header checks permission; param narrows data |
+| Booleans in FormData | `1` / `0` | Never `true` / `false` strings |
+
+- Services validate before touching a model; only validated keys reach `create`/`update`.
+- Permissions are checked by middleware with the same name the menu uses.
+
+## Review checklist before merging a screen
+
+- [ ] Checked at 360px and 1280px, light and dark; no horizontal page scroll
+- [ ] Zero console errors and zero console warnings (e2e asserts it)
+- [ ] Every menu, select, popover and tooltip is portalled and stays on screen
+- [ ] Toolbar order is Refresh, Filters, Clear, Sort, then toggle and New; Refresh keeps content visible
+- [ ] Filters, sort, page and tab are in the URL and survive a reload
+- [ ] Top-bar search filters this module; "Search everywhere" works
+- [ ] Create/edit form has drafts (or is listed as an exception with a reason)
+- [ ] No native pickers; required asterisks are CSS; errors sit under fields
+- [ ] Buttons and menus respect permissions; a direct URL without permission shows No access
+- [ ] Delete uses the delete check and the YES gate
+- [ ] Strings in English and Swahili
+- [ ] Built only from components in `COMPONENTS.md`; new ones added to the library first
+- [ ] Rule changes copied to the doc, `FRONTEND_RULES.md` and the Rules tab

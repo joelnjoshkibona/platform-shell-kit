@@ -1,0 +1,1251 @@
+{
+  "Button": {
+    "file": "src/components/ui/button (shadcn-vue)",
+    "props": [
+      [
+        "variant",
+        "'default' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'link'",
+        "'default'",
+        "Visual weight. One default (primary) button per area."
+      ],
+      [
+        "size",
+        "'default' | 'sm' | 'lg' | 'icon' | 'icon-sm'",
+        "'default'",
+        "icon sizes need an aria-label"
+      ],
+      [
+        "type",
+        "'button' | 'submit'",
+        "'button'",
+        "Always explicit inside a <form>"
+      ],
+      [
+        "disabled",
+        "boolean",
+        "false",
+        ""
+      ]
+    ],
+    "emits": [
+      [
+        "click",
+        "MouseEvent",
+        ""
+      ]
+    ],
+    "slots": [
+      [
+        "default",
+        "Icon first, then text"
+      ]
+    ],
+    "do": [
+      "Icon + visible text for every primary action",
+      "Cancel on the left (outline), primary on the right"
+    ],
+    "dont": [
+      "Icon-only primary actions",
+      "Two default-variant buttons side by side",
+      "Omit type inside a form (it submits)"
+    ]
+  },
+  "Input": {
+    "file": "src/components/ui/input",
+    "props": [
+      [
+        "modelValue",
+        "string | number",
+        "",
+        "v-model"
+      ],
+      [
+        "type",
+        "'text' | 'email' | 'tel' | 'number' | 'password' | 'search'",
+        "'text'",
+        "Never date/time/file"
+      ],
+      [
+        "id",
+        "string",
+        "",
+        "Pair with <Label for>"
+      ]
+    ],
+    "emits": [
+      [
+        "update:modelValue",
+        "string",
+        ""
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Raw Input + Label + error <p> for plain text fields",
+      "Required = CSS asterisk on the Label"
+    ],
+    "dont": [
+      "type=date|time|file (use DatePicker, TimeField, FilePicker)"
+    ]
+  },
+  "Select": {
+    "file": "src/components/ui/select (wrapped as Select)",
+    "props": [
+      [
+        "modelValue",
+        "string | number",
+        "",
+        "v-model"
+      ],
+      [
+        "options",
+        "{ value, label, icon?, disabled?, group? }[]",
+        "",
+        "Static options only; server data uses ApiSelect"
+      ],
+      [
+        "placeholder",
+        "string",
+        "'Select'",
+        ""
+      ],
+      [
+        "size",
+        "'default' | 'sm'",
+        "'default'",
+        ""
+      ],
+      [
+        "align",
+        "'start' | 'end'",
+        "'start'",
+        "Popover alignment"
+      ],
+      [
+        "disabled",
+        "boolean",
+        "false",
+        ""
+      ]
+    ],
+    "emits": [
+      [
+        "update:modelValue",
+        "value",
+        ""
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Portal + collision padding 8 (D9)"
+    ],
+    "dont": [
+      "Native <select> or NativeSelect",
+      "More than ~15 static options (use ApiSelect)"
+    ]
+  },
+  "Checkbox · Switch · Radio": {
+    "file": "src/components/ui/checkbox, switch, radio-group",
+    "props": [
+      [
+        "modelValue",
+        "boolean",
+        "false",
+        "Checkbox/Switch v-model"
+      ],
+      [
+        "disabled",
+        "boolean",
+        "false",
+        ""
+      ]
+    ],
+    "emits": [
+      [
+        "update:modelValue",
+        "boolean",
+        ""
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Switch for settings that apply immediately",
+      "Checkbox for choices submitted with a form"
+    ],
+    "dont": [
+      "Switch inside a form that needs Save"
+    ]
+  },
+  "Badge · Status pill": {
+    "file": "src/components/ui/badge + app StatusPill",
+    "props": [
+      [
+        "variant",
+        "'default' | 'secondary' | 'outline' | 'destructive' | 'warning'",
+        "'default'",
+        ""
+      ],
+      [
+        "status",
+        "string",
+        "",
+        "StatusPill: key into the module's status map (label, dot, class) in lib.ts"
+      ]
+    ],
+    "emits": [],
+    "slots": [
+      [
+        "default",
+        "One or two words"
+      ]
+    ],
+    "do": [
+      "Status pill = dot + word; map lives in the module lib.ts",
+      "warning token for 'approaching a limit'"
+    ],
+    "dont": [
+      "Colour without a word",
+      "Raw coloured spans"
+    ]
+  },
+  "Tabs": {
+    "file": "src/components/ui/tabs (app DetailsTabs for records)",
+    "props": [
+      [
+        "modelValue",
+        "string",
+        "",
+        "v-model; DetailsTabs binds it to ?tab="
+      ],
+      [
+        "items",
+        "{ value, label, count? }[]",
+        "",
+        ""
+      ],
+      [
+        "full",
+        "boolean",
+        "false",
+        "Stretch to full width (phones)"
+      ]
+    ],
+    "emits": [
+      [
+        "update:modelValue",
+        "string",
+        ""
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Wrap in overflow-x-auto on phones",
+      "Quick-filter tabs sync with the Filters dialog"
+    ],
+    "dont": [
+      "Nested routes for tabs",
+      "Curtain transition between tabs"
+    ]
+  },
+  "Card · KPI tile": {
+    "file": "src/components/ui/card + app KpiTile",
+    "props": [
+      [
+        "label",
+        "string",
+        "",
+        "KpiTile"
+      ],
+      [
+        "value",
+        "string | number",
+        "",
+        "tabular figures"
+      ],
+      [
+        "icon",
+        "string",
+        "",
+        "Lucide name in a 24px chip"
+      ],
+      [
+        "hint",
+        "string",
+        "",
+        "One muted line, or pass a sparkline/progress in the slot"
+      ]
+    ],
+    "emits": [],
+    "slots": [
+      [
+        "default",
+        "Card body"
+      ],
+      [
+        "footer",
+        "KpiTile: sparkline or progress bar"
+      ]
+    ],
+    "do": [
+      "2 columns on phones, 4 on desktop",
+      "kpi class for the rise-in stagger"
+    ],
+    "dont": [
+      "More than 4 KPIs in one strip"
+    ]
+  },
+  "DropdownMenu": {
+    "file": "src/components/ui/dropdown-menu",
+    "props": [
+      [
+        "items",
+        "{ id, label, icon?, destructive?, checked?, separator?, disabled? }[]",
+        "",
+        "App wrapper; raw shadcn parts allowed for custom content"
+      ],
+      [
+        "align",
+        "'start' | 'end'",
+        "'end'",
+        ""
+      ],
+      [
+        "label",
+        "string",
+        "",
+        "Optional heading"
+      ]
+    ],
+    "emits": [
+      [
+        "select",
+        "item",
+        ""
+      ]
+    ],
+    "slots": [
+      [
+        "trigger",
+        "The button that opens it"
+      ]
+    ],
+    "do": [
+      "Portalled; never absolute inside scroll containers (D9)",
+      "Destructive items last, after a separator"
+    ],
+    "dont": [
+      "Primary actions only reachable from a menu"
+    ]
+  },
+  "Dialog · Sheet": {
+    "file": "src/components/app-dialog (AppDialog), ui/sheet",
+    "props": [
+      [
+        "open",
+        "boolean",
+        "false",
+        "Owned by the modal host when opened with useModal()"
+      ],
+      [
+        "title",
+        "string",
+        "",
+        "Required"
+      ],
+      [
+        "description",
+        "string",
+        "",
+        "Falls back to an sr-only copy of the title"
+      ],
+      [
+        "size",
+        "'sm' | 'md' | 'lg' | '3xl'",
+        "'md'",
+        ""
+      ],
+      [
+        "side",
+        "'right' | 'left'",
+        "'right'",
+        "Sheet"
+      ]
+    ],
+    "emits": [
+      [
+        "update:open",
+        "boolean",
+        ""
+      ]
+    ],
+    "slots": [
+      [
+        "default",
+        "Body"
+      ],
+      [
+        "footer",
+        "Cancel left, primary right"
+      ]
+    ],
+    "do": [
+      "Open with useModal().openModal(Component, props)",
+      "Bottom sheet on phones",
+      "Escape closes only the top-most dialog or sheet, and only when no popover inside it consumed the key first"
+    ],
+    "dont": [
+      "Local ref(false) + static instance",
+      "Dialog without a title/description"
+    ]
+  },
+  "Tooltip · Toast": {
+    "file": "src/components/ui/tooltip, vue-sonner",
+    "props": [
+      [
+        "content",
+        "string",
+        "",
+        "Tooltip text"
+      ],
+      [
+        "side",
+        "'top' | 'bottom' | 'left' | 'right'",
+        "'top'",
+        "Pick a side that stays on screen"
+      ]
+    ],
+    "emits": [],
+    "slots": [
+      [
+        "default",
+        "Trigger"
+      ]
+    ],
+    "do": [
+      "Tooltip on every icon-only button",
+      "Toast: title + optional one-line description + icon"
+    ],
+    "dont": [
+      "Essential information only in a tooltip",
+      "Toasts for errors that need action (use inline errors)"
+    ]
+  },
+  "Table · Card list": {
+    "file": "app ListPage pattern",
+    "props": [
+      [
+        "rows",
+        "array",
+        "",
+        "From useServerTable"
+      ],
+      [
+        "loading",
+        "boolean",
+        "",
+        "Refetch dims rows; first load shows a spinner"
+      ]
+    ],
+    "emits": [
+      [
+        "open",
+        "row",
+        "Row click opens details"
+      ]
+    ],
+    "slots": [
+      [
+        "actions",
+        "Row menu, z-10 above the stretched link"
+      ]
+    ],
+    "do": [
+      "Cards below 640px always",
+      "Numbers right-aligned, tabular"
+    ],
+    "dont": [
+      "Horizontal page scroll",
+      "Kebab menu as the only way to open a row"
+    ]
+  },
+  "Charts": {
+    "file": "app ChartCard + views (Bars, Donut, Columns, Rating, Stacked, Heatmap)",
+    "props": [
+      [
+        "view",
+        "'bars' | 'donut' | 'columns' | 'rating' | 'stacked' | 'heatmap'",
+        "",
+        "Defaults per question type (D6)"
+      ],
+      [
+        "data",
+        "{ label, value }[]",
+        "",
+        ""
+      ]
+    ],
+    "emits": [
+      [
+        "update:view",
+        "string",
+        "Per-question override"
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Palette c1–c5 then Other",
+      "Animate in once; respect reduced motion"
+    ],
+    "dont": [
+      "More than 5 coloured series",
+      "Colour as the only label"
+    ]
+  },
+  "Sidebar item": {
+    "file": "src/components/ui/sidebar + app SideNav",
+    "props": [
+      [
+        "menus",
+        "Menu[] from GET /menus/list",
+        "",
+        "Database-driven"
+      ],
+      [
+        "collapsed",
+        "boolean",
+        "false",
+        "64px rail with flyouts"
+      ]
+    ],
+    "emits": [],
+    "slots": [],
+    "do": [
+      "One permission per child; parent shows if any child does (D8)"
+    ],
+    "dont": [
+      "Hard-coded menu items"
+    ]
+  },
+  "Pin input (OTP)": {
+    "file": "src/components/ui/input-otp",
+    "props": [
+      [
+        "modelValue",
+        "string",
+        "",
+        "6 digits"
+      ],
+      [
+        "length",
+        "number",
+        "6",
+        ""
+      ]
+    ],
+    "emits": [
+      [
+        "complete",
+        "string",
+        "Auto-submits"
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Paste fills all boxes",
+      "inputmode=numeric"
+    ],
+    "dont": [
+      "Store OTPs in drafts"
+    ]
+  },
+  "Empty · Skeleton · No access": {
+    "file": "app EmptyState, ui/skeleton, app NoAccessPage",
+    "props": [
+      [
+        "icon",
+        "string",
+        "",
+        "size-6, muted 60%"
+      ],
+      [
+        "title",
+        "string",
+        "",
+        "Specific: 'No forms match.'"
+      ],
+      [
+        "action",
+        "{ label, onClick }",
+        "",
+        "Only when it is not already in the toolbar"
+      ]
+    ],
+    "emits": [],
+    "slots": [],
+    "do": [
+      "Lighter empty state inside details sub-lists (text only)"
+    ],
+    "dont": [
+      "'No data.'",
+      "A second New button"
+    ]
+  },
+  "List toolbar · Filters": {
+    "file": "app ListToolbar, FiltersDialog, RefreshButton + useServerTable/useListFilters/useListSort",
+    "props": [
+      [
+        "list",
+        "ServerTable & ListFilters & ListSort",
+        "",
+        "The whole composable object, not decomposed props"
+      ],
+      [
+        "filterFields[].type",
+        "'text' | 'number' | 'date' | 'boolean' | 'select' | 'select_paginated'",
+        "",
+        "select = short fixed sets (≤ 10, e.g. status); select_paginated = anything that grows (locations, people, forms) and renders a multi API select with its module"
+      ]
+    ],
+    "emits": [],
+    "slots": [
+      [
+        "default",
+        "Right side: layout toggle, Export/Import (only if routes exist), primary New"
+      ]
+    ],
+    "do": [
+      "Order: Refresh · Filters (n) · Clear n · Sort",
+      "Filter fields come from the endpoint's filterFields",
+      "Search chip shows when the top-bar search is active",
+      "Location filters include the locations under the chosen ones by default (switch in the dialog); chips say 'and below'"
+    ],
+    "dont": [
+      "Per-page hand-rolled filter dialogs",
+      "Export/Import buttons without backend routes",
+      "Pill or static select filters for locations, people or forms"
+    ]
+  },
+  "File picker · Media library": {
+    "file": "app FilePicker, MediaLibraryDialog",
+    "props": [
+      [
+        "modelValue",
+        "string | string[]",
+        "",
+        "media_id or ids"
+      ],
+      [
+        "multiple",
+        "boolean",
+        "false",
+        ""
+      ],
+      [
+        "accept",
+        "'any' | 'image' | 'pdf'",
+        "'any'",
+        ""
+      ],
+      [
+        "maxSize",
+        "number (MB)",
+        "10",
+        ""
+      ],
+      [
+        "maxFiles",
+        "number",
+        "5",
+        "multiple only"
+      ],
+      [
+        "label",
+        "string",
+        "",
+        ""
+      ],
+      [
+        "required",
+        "boolean",
+        "false",
+        ""
+      ],
+      [
+        "help",
+        "string",
+        "",
+        ""
+      ]
+    ],
+    "emits": [
+      [
+        "update:modelValue",
+        "string | string[]",
+        "After each upload finishes"
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Uploads go to Media first (POST /media/create)",
+      "Show limits before choosing",
+      "Per-file reason on failure"
+    ],
+    "dont": [
+      "<input type=file> outside this component",
+      "Send File objects with the record form"
+    ]
+  },
+  "API select": {
+    "file": "app ApiSelect + useSelectLabels store",
+    "props": [
+      [
+        "modelValue",
+        "string | string[]",
+        "",
+        "v-model (ids)"
+      ],
+      [
+        "module",
+        "string",
+        "",
+        "GET /select/{module}"
+      ],
+      [
+        "multiple",
+        "boolean",
+        "false",
+        "Chips in the trigger, +N with a tooltip"
+      ],
+      [
+        "selectedOptions",
+        "{ value, label, sub?, status? }[]",
+        "[]",
+        "Layer a: labels the record already carried; no lookup request"
+      ],
+      [
+        "exclude",
+        "id[]",
+        "[]",
+        "exclude[]"
+      ],
+      [
+        "filters",
+        "Record<string, any>",
+        "{}",
+        "filter[key]=value"
+      ],
+      [
+        "perPage",
+        "number",
+        "20",
+        ""
+      ],
+      [
+        "label",
+        "string",
+        "",
+        ""
+      ],
+      [
+        "placeholder",
+        "string",
+        "'Select'",
+        ""
+      ],
+      [
+        "required",
+        "boolean",
+        "false",
+        ""
+      ],
+      [
+        "help",
+        "string",
+        "",
+        ""
+      ],
+      [
+        "error",
+        "string",
+        "",
+        ""
+      ],
+      [
+        "disabled",
+        "boolean",
+        "false",
+        ""
+      ]
+    ],
+    "emits": [
+      [
+        "update:modelValue",
+        "id | id[]",
+        ""
+      ],
+      [
+        "create",
+        "query string",
+        "Footer 'Create new …' (needs Module.create)"
+      ]
+    ],
+    "slots": [
+      [
+        "option",
+        "Custom option row (optional)"
+      ]
+    ],
+    "do": [
+      "Load the next page when the end marker scrolls into view (IntersectionObserver), with a 'Loading more…' row and Retry",
+      "Use page= for small tables and an opaque after= cursor for big or busy ones; trust has_more, never totals",
+      "Search from 2 letters, 300ms debounce; cancel the previous request",
+      "Labels: record sends { id, label, sub } → batched ids[] lookup per module per tick → shared label store",
+      "Pin current choices under 'Selected' on page 1 and exclude them from later pages",
+      "Keep archived, restricted or deleted values, flagged, with a warning under the field"
+    ],
+    "dont": [
+      "Load a whole table into a static Select",
+      "Clear a value silently because it is no longer listed",
+      "One lookup request per picker"
+    ]
+  },
+  "Rich text": {
+    "file": "app RichText (Tiptap)",
+    "props": [
+      [
+        "modelValue",
+        "string (HTML)",
+        "",
+        "v-model"
+      ],
+      [
+        "label",
+        "string",
+        "",
+        ""
+      ],
+      [
+        "max",
+        "number",
+        "",
+        "Character limit with counter"
+      ],
+      [
+        "placeholder",
+        "string",
+        "",
+        ""
+      ],
+      [
+        "required",
+        "boolean",
+        "false",
+        ""
+      ],
+      [
+        "help",
+        "string",
+        "",
+        ""
+      ]
+    ],
+    "emits": [
+      [
+        "update:modelValue",
+        "string",
+        "Sanitised HTML"
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Same allowlist client and server (HtmlSanitizerService)",
+      "Images only through FilePicker"
+    ],
+    "dont": [
+      "v-html of unsanitised input"
+    ]
+  },
+  "Date picker": {
+    "file": "app DatePicker (Popover + Calendar)",
+    "props": [
+      [
+        "modelValue",
+        "string (YYYY-MM-DD)",
+        "",
+        "v-model"
+      ],
+      [
+        "label",
+        "string",
+        "",
+        "Modal title on phones and accessible name"
+      ],
+      [
+        "placeholder",
+        "string",
+        "'Pick a date'",
+        ""
+      ],
+      [
+        "min",
+        "string (YYYY-MM-DD)",
+        "",
+        "Earlier days disabled"
+      ],
+      [
+        "max",
+        "string (YYYY-MM-DD)",
+        "",
+        "Later days disabled"
+      ],
+      [
+        "size",
+        "'default' | 'sm'",
+        "'default'",
+        ""
+      ],
+      [
+        "align",
+        "'start' | 'end'",
+        "'start'",
+        "Desktop popover alignment"
+      ]
+    ],
+    "emits": [
+      [
+        "update:modelValue",
+        "string",
+        "'' when cleared"
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Month and year switchers live inside the card, in the calendar header",
+      "Popover on desktop, bottom-sheet modal on phones",
+      "Ranges = two pickers, From and To, with min/max linking them"
+    ],
+    "dont": [
+      "<input type=date>",
+      "Month/year selects outside the calendar card"
+    ]
+  },
+  "Drafts": {
+    "file": "composables/useFormDraft + app DraftBanner, DraftStatus, MyDraftsSheet",
+    "props": [
+      [
+        "draft",
+        "FormDraft",
+        "",
+        "Return value of useFormDraft({ module, uuid?, getPayload, applyPayload, exclude })"
+      ]
+    ],
+    "emits": [],
+    "slots": [],
+    "do": [
+      "arm() after the form is hydrated",
+      "flush() on every close that is not a save",
+      "discardOnSuccess() on save",
+      "DraftBanner at the top of the form, DraftStatus next to Cancel"
+    ],
+    "dont": [
+      "Drafts in wizards or one-shot dialogs",
+      "Store passwords, tokens or OTPs"
+    ]
+  },
+  "Core module page": {
+    "file": "app DetailsPanelHeader, DetailsTabs, RelatedRecordLink, ActivityHistoryCard, DeleteRecordModal",
+    "props": [
+      [
+        "loading",
+        "boolean",
+        "",
+        "Header"
+      ],
+      [
+        "embedded",
+        "boolean",
+        "false",
+        "Preview mode: View full page, no back"
+      ],
+      [
+        "tabs",
+        "{ key, label }[]",
+        "",
+        "Overview first, History last"
+      ],
+      [
+        "endpoint",
+        "string",
+        "",
+        "ActivityHistoryCard: /{module}/{uuid}/activity"
+      ],
+      [
+        "nameField",
+        "string",
+        "'name'",
+        "DeleteRecordModal"
+      ]
+    ],
+    "emits": [
+      [
+        "refresh",
+        "",
+        ""
+      ],
+      [
+        "update:activeTab",
+        "string",
+        ""
+      ],
+      [
+        "navigate",
+        "RouteLocation",
+        "Preview asks the wrapper to close then navigate"
+      ]
+    ],
+    "slots": [
+      [
+        "icon",
+        ""
+      ],
+      [
+        "title",
+        ""
+      ],
+      [
+        "actions",
+        "Only Edit is promoted"
+      ],
+      [
+        "more-menu",
+        "Delete and rare actions; menu hides when empty"
+      ]
+    ],
+    "do": [
+      "Back = ?back= else list",
+      "Terminal-state banner explains missing actions",
+      "Delete = check, then type YES"
+    ],
+    "dont": [
+      "router.back()",
+      "Raw ids for related records"
+    ]
+  },
+  "Top-bar search": {
+    "file": "app HeaderSearch + SEARCH_SCOPE map + GET /search",
+    "props": [
+      [
+        "phone",
+        "boolean",
+        "false",
+        "Full-width bar variant"
+      ]
+    ],
+    "emits": [],
+    "slots": [],
+    "do": [
+      "Register each list route in SEARCH_SCOPE (mode list | parent | global)",
+      "List pages read the search from the route and report the match count"
+    ],
+    "dont": [
+      "A second search box inside a list page",
+      "Global search outside the Dashboard (offer 'Search everywhere' instead)"
+    ]
+  },
+  "Organisation switcher": {
+    "file": "app OrgSwitcher",
+    "props": [
+      [
+        "collapsed",
+        "boolean",
+        "false",
+        "Rail: opens to the right"
+      ]
+    ],
+    "emits": [],
+    "slots": [],
+    "do": [
+      "Portalled popover (D9)",
+      "Alt+1…9 shortcuts",
+      "Switch plays the curtain and resets search"
+    ],
+    "dont": [
+      "Absolute positioning inside the sidebar"
+    ]
+  },
+  "View as banner": {
+    "file": "app ViewAsBanner, ViewAsDialog (person | role)",
+    "props": [
+      [
+        "G.viewAs",
+        "{ kind: 'person' | 'role', email, name, role, loc }",
+        "",
+        "Global state; 'role' uses a synthetic member that is never listed"
+      ]
+    ],
+    "emits": [],
+    "slots": [],
+    "do": [
+      "Two modes: a real person, or a role built from main role + custom role at a location",
+      "Roles page offers 'Preview this role'",
+      "Banner above the header + Exit view in the header",
+      "canEdit()/canManage() return false while active",
+      "Audit every session: who, what was viewed, location, duration"
+    ],
+    "dont": [
+      "Any write, email or OTP while viewing",
+      "Show the synthetic preview member in lists, counts, pickers or approvers",
+      "'Act as' (signing in as someone with write access); not part of Fomu (D37)"
+    ]
+  },
+  "Approval steps": {
+    "file": "app ApprovalSteps, ApprovalActions",
+    "props": [
+      [
+        "request",
+        "Request",
+        "",
+        "With steps, approvals and the resolved approvers"
+      ],
+      [
+        "compact",
+        "boolean",
+        "false",
+        "List-row variant: dots only"
+      ]
+    ],
+    "emits": [
+      [
+        "approve",
+        "comment",
+        ""
+      ],
+      [
+        "reject",
+        "reason (required)",
+        ""
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Show who can act on the current step and why (role at which location)",
+      "Rejection needs a reason",
+      "Acting under a delegation is labelled"
+    ],
+    "dont": [
+      "Let a requester approve their own request"
+    ]
+  },
+  "SaveBar · LeaveGuard": {
+    "file": "src/components/save-bar (SaveBar), composables/useLeaveGuard",
+    "props": [
+      [
+        "dirty",
+        "boolean",
+        "false",
+        "Shows the bar"
+      ],
+      [
+        "added",
+        "number",
+        "0",
+        ""
+      ],
+      [
+        "removed",
+        "number",
+        "0",
+        ""
+      ],
+      [
+        "affects",
+        "string",
+        "",
+        "e.g. '3 people'"
+      ],
+      [
+        "saving",
+        "boolean",
+        "false",
+        ""
+      ]
+    ],
+    "emits": [
+      [
+        "save",
+        "",
+        ""
+      ],
+      [
+        "discard",
+        "",
+        ""
+      ]
+    ],
+    "slots": [
+      [
+        "default",
+        "Extra summary text"
+      ]
+    ],
+    "do": [
+      "Sticky at the bottom of the page content, above the fold on phones",
+      "useLeaveGuard(dirty) blocks router navigation and sets beforeunload; dialog offers Stay / Discard and leave / Save and leave"
+    ],
+    "dont": [
+      "Autosave on every tick for permission sets",
+      "Leaving silently with staged changes"
+    ]
+  },
+  "ApprovalGate · NotificationChannels": {
+    "file": "src/composables/useApprovalGate, src/components/approvals/ChannelPicker",
+    "props": [
+      [
+        "action",
+        "string",
+        "",
+        "Permission name, e.g. Responses.export"
+      ],
+      [
+        "subject",
+        "{type,id,label,meta}",
+        "",
+        "What the request is about"
+      ],
+      [
+        "channels (ChannelPicker)",
+        "string[]",
+        "['in_app','email']",
+        "in_app always included and locked"
+      ],
+      [
+        "required (ChannelPicker)",
+        "boolean",
+        "false",
+        "Step-level: ignore personal opt-outs"
+      ]
+    ],
+    "emits": [
+      [
+        "requested",
+        "Request",
+        "After the request is created"
+      ],
+      [
+        "update:channels",
+        "string[]",
+        ""
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Call gate(action, subject, run): runs directly when no workflow applies",
+      "Show the open request number instead of creating a duplicate",
+      "Show delivery chips per channel with skip reasons"
+    ],
+    "dont": [
+      "One-click approve links in email",
+      "Letting users turn off in-app"
+    ]
+  }
+}

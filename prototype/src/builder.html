@@ -1,0 +1,1239 @@
+<title>Form Builder Prototype</title>
+<meta name="description" content="Iteration 1: form builder (Questions, Settings), shadcn-vue atoms, responsive, light and dark.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      border: 'hsl(var(--border) / <alpha-value>)', input: 'hsl(var(--input) / <alpha-value>)', ring: 'hsl(var(--ring) / <alpha-value>)',
+      background: 'hsl(var(--background) / <alpha-value>)', foreground: 'hsl(var(--foreground) / <alpha-value>)',
+      canvas: 'hsl(var(--canvas) / <alpha-value>)',
+      primary: { DEFAULT: 'hsl(var(--primary) / <alpha-value>)', foreground: 'hsl(var(--primary-foreground) / <alpha-value>)' },
+      secondary: { DEFAULT: 'hsl(var(--secondary) / <alpha-value>)', foreground: 'hsl(var(--secondary-foreground) / <alpha-value>)' },
+      destructive: { DEFAULT: 'hsl(var(--destructive) / <alpha-value>)', foreground: 'hsl(var(--destructive-foreground) / <alpha-value>)' },
+      muted: { DEFAULT: 'hsl(var(--muted) / <alpha-value>)', foreground: 'hsl(var(--muted-foreground) / <alpha-value>)' },
+      accent: { DEFAULT: 'hsl(var(--accent) / <alpha-value>)', foreground: 'hsl(var(--accent-foreground) / <alpha-value>)' },
+      popover: { DEFAULT: 'hsl(var(--popover) / <alpha-value>)', foreground: 'hsl(var(--popover-foreground) / <alpha-value>)' },
+      card: { DEFAULT: 'hsl(var(--card) / <alpha-value>)', foreground: 'hsl(var(--card-foreground) / <alpha-value>)' },
+      warning: 'hsl(var(--warning) / <alpha-value>)',
+      fa: { DEFAULT: 'hsl(var(--form-accent) / <alpha-value>)', fg: 'hsl(var(--form-accent-fg) / <alpha-value>)' },
+    },
+    borderRadius: { xl: 'calc(var(--radius) + 4px)', lg: 'var(--radius)', md: 'calc(var(--radius) - 2px)', sm: 'calc(var(--radius) - 4px)' },
+    fontFamily: { sans: ['Geist', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'], mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'] },
+  } }
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Layout: Google-Forms-style centred canvas (720px) on a tinted ground, floating tool rail on md+, bottom action bar on phones. shadcn zinc tokens, one brand accent (teal); each form carries its own accent (--form-accent). */
+:root{
+  --background:0 0% 100%; --foreground:240 10% 3.9%; --canvas:220 14% 96%;
+  --card:0 0% 100%; --card-foreground:240 10% 3.9%; --popover:0 0% 100%; --popover-foreground:240 10% 3.9%;
+  --primary:174 72% 26%; --primary-foreground:0 0% 98%;
+  --secondary:240 4.8% 95.9%; --secondary-foreground:240 5.9% 10%;
+  --muted:240 4.8% 95.9%; --muted-foreground:240 3.8% 42%;
+  --accent:240 4.8% 95.9%; --accent-foreground:240 5.9% 10%;
+  --destructive:0 72% 48%; --destructive-foreground:0 0% 98%; --warning:32 92% 38%;
+  --border:240 5.9% 90%; --input:240 5.9% 86%; --ring:174 72% 30%; --radius:0.6rem;
+  --fa-l:174 72% 26%; --fa-d:170 62% 46%; --form-accent:var(--fa-l); --form-accent-fg:0 0% 100%;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --background:240 10% 3.9%; --foreground:0 0% 96%; --canvas:240 10% 3.9%;
+  --card:240 6% 7.5%; --card-foreground:0 0% 96%; --popover:240 6% 9%; --popover-foreground:0 0% 96%;
+  --primary:170 62% 46%; --primary-foreground:240 10% 4%;
+  --secondary:240 3.7% 15.9%; --secondary-foreground:0 0% 96%;
+  --muted:240 3.7% 14%; --muted-foreground:240 5% 64.9%;
+  --accent:240 3.7% 15.9%; --accent-foreground:0 0% 96%;
+  --destructive:0 70% 58%; --destructive-foreground:0 0% 98%; --warning:38 92% 56%;
+  --border:240 3.7% 16%; --input:240 3.7% 20%; --ring:170 62% 46%;
+  color-scheme:dark; }
+  :root:not([data-theme="light"]) .form-theme{ --form-accent:var(--fa-d); --form-accent-fg:240 10% 4% } }
+:root[data-theme="dark"]{
+  --background:240 10% 3.9%; --foreground:0 0% 96%; --canvas:240 10% 3.9%;
+  --card:240 6% 7.5%; --card-foreground:0 0% 96%; --popover:240 6% 9%; --popover-foreground:0 0% 96%;
+  --primary:170 62% 46%; --primary-foreground:240 10% 4%;
+  --secondary:240 3.7% 15.9%; --secondary-foreground:0 0% 96%;
+  --muted:240 3.7% 14%; --muted-foreground:240 5% 64.9%;
+  --accent:240 3.7% 15.9%; --accent-foreground:0 0% 96%;
+  --destructive:0 70% 58%; --destructive-foreground:0 0% 98%; --warning:38 92% 56%;
+  --border:240 3.7% 16%; --input:240 3.7% 20%; --ring:170 62% 46%;
+  color-scheme:dark; }
+:root[data-theme="dark"] .form-theme{ --form-accent:var(--fa-d); --form-accent-fg:240 10% 4% }
+.form-theme{ --form-accent:var(--fa-l); --form-accent-fg:0 0% 100% }
+
+html,body{background:hsl(var(--canvas));color:hsl(var(--foreground))}
+body{font-family:Geist,ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+*{border-color:hsl(var(--border))}
+[v-cloak]{display:none}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* motion */
+.q-move{transition:transform 180ms cubic-bezier(.2,.8,.2,1)}
+.q-enter-active{transition:opacity 180ms ease, transform 180ms ease}
+.q-enter-from{opacity:0;transform:translateY(8px)}
+.q-leave-active{transition:opacity 120ms ease}
+.q-leave-to{opacity:0}
+.pop{animation:pop 120ms ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
+.fade-enter-active,.fade-leave-active{transition:opacity 150ms}
+.fade-enter-from,.fade-leave-to{opacity:0}
+.sheet-enter-active,.sheet-leave-active{transition:transform 220ms cubic-bezier(.2,.8,.2,1)}
+.sheet-enter-from,.sheet-leave-to{transform:translateX(100%)}
+.expand{animation:expand 160ms ease-out}
+@keyframes expand{from{opacity:.6}to{opacity:1}}
+.toast-enter-active,.toast-leave-active{transition:all 200ms ease}
+.toast-enter-from,.toast-leave-to{opacity:0;transform:translateY(8px)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* inline title inputs: underline on focus like Google Forms */
+.line-input{display:block;background:transparent;border:0;border-bottom:1px solid transparent;border-radius:0;outline:none;width:100%;padding:6px 0;transition:border-color 150ms}
+.line-input:hover{border-bottom-color:hsl(var(--border))}
+.line-input:focus{border-bottom:2px solid hsl(var(--primary));padding-bottom:5px}
+.line-input::placeholder{color:hsl(var(--muted-foreground))}
+
+/* respondent renderer: container queries so the preview frame behaves like a real viewport */
+.frame{container-type:inline-size}
+.grid-stack{display:none}
+@container (max-width: 560px){ .grid-table{display:none} .grid-stack{display:flex} .r-pad{padding:16px!important} .scale-row{flex-wrap:wrap} }
+.drag-ghost{opacity:.45}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:hsl(var(--border));border-radius:8px;border:2px solid transparent;background-clip:padding-box}
+</style>
+
+<div id="app" v-cloak></div>
+
+<script>
+const { createApp, reactive, ref, computed, watch, nextTick, h, onMounted, onBeforeUnmount } = Vue;
+
+/* ---------------------------------------------------------------- helpers */
+const ulid = (p) => p + '_' + (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)).toUpperCase();
+const cn = (...a) => a.flat().filter(Boolean).join(' ');
+
+const TYPES = [
+  { value: 'single_choice', label: 'Multiple choice', icon: 'CircleDot', logic: true, choice: true },
+  { value: 'multi_choice', label: 'Checkboxes', icon: 'SquareCheck', choice: true },
+  { value: 'true_false', label: 'True / False', icon: 'ToggleLeft', logic: true, choice: true },
+  { value: 'dropdown', label: 'Dropdown', icon: 'SquareChevronDown', logic: true, choice: true },
+  { value: 'linear_scale', label: 'Linear scale', icon: 'SlidersHorizontal' },
+  { value: 'rating', label: 'Rating', icon: 'Star' },
+  { value: 'choice_grid', label: 'Multiple choice grid', icon: 'Grid3x3', grid: true },
+  { value: 'checkbox_grid', label: 'Checkbox grid', icon: 'LayoutGrid', grid: true },
+];
+const TYPE = Object.fromEntries(TYPES.map(t => [t.value, t]));
+
+const ACCENTS = {
+  teal:   { label: 'Teal',   l: '174 72% 26%', d: '170 62% 46%' },
+  blue:   { label: 'Blue',   l: '221 83% 45%', d: '217 91% 64%' },
+  violet: { label: 'Violet', l: '262 62% 50%', d: '262 80% 72%' },
+  rose:   { label: 'Rose',   l: '346 72% 44%', d: '346 80% 66%' },
+  amber:  { label: 'Amber',  l: '28 90% 36%',  d: '38 92% 56%' },
+  slate:  { label: 'Slate',  l: '215 25% 27%', d: '215 20% 72%' },
+};
+
+const opt = (label, go_to = 'next') => ({ key: ulid('opt'), label, go_to });
+const row = (label) => ({ key: ulid('row'), label });
+function makeQuestion(type = 'single_choice', patch = {}) {
+  const q = {
+    key: ulid('q'), type, title: '', description: '', showDescription: false, required: false,
+    logic: false, shuffle: false,
+    options: [opt('Option 1')],
+    scale: { min: 1, max: 5, min_label: '', max_label: '' },
+    rating: { max: 5 },
+    rows: [row('Row 1')], columns: [row('Column 1')],
+    validation: { enabled: false, min: 1, max: null },
+  };
+  if (type === 'true_false') q.options = [opt('True'), opt('False')];
+  return Object.assign(q, patch);
+}
+function makeSection(patch = {}) {
+  return Object.assign({ key: ulid('sec'), title: '', description: '', time_limit_minutes: 5, next: 'auto', questions: [] }, patch);
+}
+
+/* ---------------------------------------------------------------- mock form (Kilima Retail is example data) */
+const sec1 = makeSection({ title: 'About you', description: 'Tell us where you work. This decides which sections you see.', time_limit_minutes: 3 });
+const sec2 = makeSection({ title: 'Product knowledge', description: 'Answer from memory. You cannot return to this section after it ends.', time_limit_minutes: 8 });
+const sec3 = makeSection({ title: 'Feedback', description: '', time_limit_minutes: 4 });
+
+sec1.questions = [
+  makeQuestion('single_choice', { title: 'How long have you worked with Kilima Retail?', required: true, logic: true,
+    options: [opt('Less than 2 weeks', sec3.key), opt('2 weeks to 6 months'), opt('More than 6 months')] }),
+  makeQuestion('dropdown', { title: 'Which branch do you work at?', required: true,
+    options: [opt('Arusha'), opt('Dar es Salaam (Kariakoo)'), opt('Dodoma'), opt('Mwanza')] }),
+  makeQuestion('single_choice', { title: 'What is your role?', required: true,
+    options: [opt('Cashier'), opt('Sales associate'), opt('Store supervisor'), opt('Stock controller')] }),
+];
+sec2.questions = [
+  makeQuestion('multi_choice', { title: 'Which payment methods do our stores accept?', required: true, description: 'Select all that apply.', showDescription: true,
+    options: [opt('Cash'), opt('M-Pesa'), opt('Tigo Pesa (Mixx by Yas)'), opt('Airtel Money'), opt('Bank card'), opt('Cheque')],
+    validation: { enabled: true, min: 1, max: null } }),
+  makeQuestion('true_false', { title: 'A customer can return opened electronics within 7 days if they have the receipt.', required: true }),
+  makeQuestion('choice_grid', { title: 'How confident are you handling these situations?', required: true,
+    rows: [row('Price disputes at the till'), row('Damaged goods returns'), row('Mobile money reversals')],
+    columns: [row('Not confident'), row('Somewhat'), row('Very confident')] }),
+];
+sec3.questions = [
+  makeQuestion('linear_scale', { title: "How useful was last month's product training?", required: true, scale: { min: 1, max: 5, min_label: 'Not useful', max_label: 'Very useful' } }),
+  makeQuestion('rating', { title: "Rate your team's customer service this quarter.", rating: { max: 5 } }),
+  makeQuestion('checkbox_grid', { title: 'Which shifts do you usually work?',
+    rows: [row('Morning (07:00–15:00)'), row('Evening (13:00–21:00)')],
+    columns: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(row) }),
+];
+
+/* ---------------------------------------------------------------- store */
+const S = reactive({
+  org: { name: 'Kilima Retail', slug: 'kilima-retail' },
+  form: {
+    id: '01JA2K7XH9Q4B8M3T6V0RZNC5D',
+    title: 'Customer Service Assessment Q4',
+    description: 'A short assessment for all branch staff. It takes about 15 minutes and must be finished in one sitting.',
+    sections: [sec1, sec2, sec3],
+  },
+  settings: {
+    visibility: 'public', slug: 'cs-assessment-q4', accepting: true,
+    one_response: true, allow_edit: false,
+    timer_mode: 'per_section', time_limit_minutes: 20,
+    violation_policy: 'auto_submit', violation_limit: 3, resume_policy: 'resume',
+    require_fullscreen: true, single_tab: true, block_copy_paste: true,
+    opens_at: '2026-10-13T08:00', closes_at: '2026-10-31T17:00', max_responses: '',
+    accent: 'teal', confirmation: 'Thank you. Your answers were recorded. Your supervisor will share results after the assessment closes.',
+    invites: [
+      { email: 'amina.juma@kilimaretail.co.tz', status: 'responded' },
+      { email: 'baraka.mushi@kilimaretail.co.tz', status: 'opened' },
+      { email: 'neema.kimaro@kilimaretail.co.tz', status: 'sent' },
+    ],
+    notify_me: true,
+  },
+  tab: 'questions',
+  active: null,
+  save: 'saved', lastSaved: Date.now(), edits: 0, published: { version: 3, at: '8 Oct 2026, 16:42' },
+  theme: 'system',
+  preview: false, spec: false, publishDlg: false, confirmDel: null,
+  toasts: [],
+  drag: null, dragArmed: null,
+  settingsNav: 'responses',
+});
+S.active = S.form.sections[0].questions[0].key;
+
+function toast(title, desc = '', icon = 'CircleCheck') {
+  const t = { id: ulid('t'), title, desc, icon };
+  S.toasts.push(t);
+  setTimeout(() => { S.toasts = S.toasts.filter(x => x.id !== t.id) }, 3200);
+}
+
+/* autosave simulation: debounce 800ms, then "Saved" */
+let saveTimer = null, booting = true;
+watch(() => [S.form, S.settings], () => {
+  if (booting) return;
+  S.save = 'saving';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { S.save = 'saved'; S.lastSaved = Date.now(); S.edits++; }, 800);
+}, { deep: true });
+watch(() => S.settings.timer_mode, (m) => { if (m !== 'off') S.settings.allow_edit = false; });
+setTimeout(() => { booting = false }, 50);
+
+function applyTheme(mode) {
+  const r = document.documentElement;
+  if (mode === 'system') r.removeAttribute('data-theme'); else r.setAttribute('data-theme', mode);
+  try { localStorage.setItem('fb-theme', mode) } catch (e) {}
+}
+try { const t = localStorage.getItem('fb-theme'); if (t) { S.theme = t; } } catch (e) {}
+
+/* ---------------------------------------------------------------- tree ops */
+const allQuestions = () => S.form.sections.flatMap(s => s.questions);
+function locate(key) {
+  for (const s of S.form.sections) { const i = s.questions.findIndex(q => q.key === key); if (i > -1) return { s, i, q: s.questions[i] }; }
+  return null;
+}
+function activeSection() {
+  if (!S.active) return S.form.sections[0];
+  if (S.active.startsWith('sec:')) return S.form.sections.find(s => 'sec:' + s.key === S.active) || S.form.sections[0];
+  const l = locate(S.active); return l ? l.s : S.form.sections[S.form.sections.length - 1];
+}
+function focusCard(key) {
+  nextTick(() => {
+    const el = document.querySelector(`[data-card="${key}"]`);
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); const inp = el.querySelector('[data-autofocus]'); if (inp) setTimeout(() => inp.focus({ preventScroll: true }), 180); }
+  });
+}
+function addQuestion() {
+  const q = makeQuestion('single_choice');
+  const l = S.active && !S.active.startsWith('sec:') && S.active !== 'header' ? locate(S.active) : null;
+  if (l) l.s.questions.splice(l.i + 1, 0, q); else activeSection().questions.push(q);
+  S.active = q.key; focusCard(q.key);
+}
+function addSection() {
+  const sec = activeSection();
+  const idx = S.form.sections.indexOf(sec);
+  const ns = makeSection({ title: '', questions: [makeQuestion('single_choice')] });
+  // questions after the active one move into the new section, like Google Forms
+  const l = S.active && !S.active.startsWith('sec:') && S.active !== 'header' ? locate(S.active) : null;
+  if (l && l.i < l.s.questions.length - 1) { ns.questions = l.s.questions.splice(l.i + 1); }
+  S.form.sections.splice(idx + 1, 0, ns);
+  S.active = 'sec:' + ns.key; focusCard('sec:' + ns.key);
+  toast('Section added', `Section ${idx + 2} of ${S.form.sections.length}`, 'Rows3');
+}
+function duplicateQuestion(key) {
+  const l = locate(key); if (!l) return;
+  const c = JSON.parse(JSON.stringify(l.q)); c.key = ulid('q');
+  c.options.forEach(o => o.key = ulid('opt')); c.rows.forEach(r => r.key = ulid('row')); c.columns.forEach(r => r.key = ulid('row'));
+  l.s.questions.splice(l.i + 1, 0, c); S.active = c.key; focusCard(c.key);
+}
+function deleteQuestion(key) {
+  const l = locate(key); if (!l) return;
+  const removed = l.s.questions.splice(l.i, 1)[0];
+  const next = l.s.questions[l.i] || l.s.questions[l.i - 1];
+  S.active = next ? next.key : 'sec:' + l.s.key;
+  toast('Question deleted', removed.title || 'Untitled question', 'Trash2');
+}
+function moveQuestion(key, dir) {
+  const l = locate(key); if (!l) return;
+  const si = S.form.sections.indexOf(l.s);
+  if (dir < 0 && l.i === 0 && si > 0) { l.s.questions.splice(l.i, 1); S.form.sections[si - 1].questions.push(l.q); }
+  else if (dir > 0 && l.i === l.s.questions.length - 1 && si < S.form.sections.length - 1) { l.s.questions.splice(l.i, 1); S.form.sections[si + 1].questions.unshift(l.q); }
+  else { const j = l.i + dir; if (j < 0 || j >= l.s.questions.length) return; l.s.questions.splice(l.i, 1); l.s.questions.splice(j, 0, l.q); }
+  focusCard(key);
+}
+function deleteSection(key) {
+  const i = S.form.sections.findIndex(s => s.key === key); if (i < 0 || S.form.sections.length === 1) return;
+  const [s] = S.form.sections.splice(i, 1);
+  const target = S.form.sections[Math.max(0, i - 1)];
+  target.questions.push(...s.questions);
+  // clear dangling logic targets
+  allQuestions().forEach(q => q.options.forEach(o => { if (o.go_to === key) o.go_to = 'next' }));
+  S.form.sections.forEach(x => { if (x.next === key) x.next = 'auto' });
+  S.active = 'sec:' + target.key;
+  toast('Section removed', 'Its questions moved to the section above.', 'Rows3');
+}
+function changeType(q, type) {
+  const was = TYPE[q.type], to = TYPE[type];
+  if (type === 'true_false') q.options = [opt('True'), opt('False')];
+  else if (q.type === 'true_false' && to.choice) q.options = [opt('Option 1'), opt('Option 2')];
+  if (!to.logic) q.logic = false;
+  if (to.grid && !was.grid && q.rows.length < 2) { q.rows = [row('Row 1'), row('Row 2')]; q.columns = [row('Column 1'), row('Column 2'), row('Column 3')]; }
+  q.type = type;
+}
+
+/* drag & drop (prototype: HTML5 DnD + FLIP via TransitionGroup; build: vue-draggable-plus) */
+function onDragStart(e, key) { S.drag = key; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', key) } catch (_) {} }
+function onDragOverCard(e, targetKey) {
+  if (!S.drag || S.drag === targetKey) return;
+  e.preventDefault();
+  const from = locate(S.drag), to = locate(targetKey); if (!from || !to) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const after = e.clientY > rect.top + rect.height / 2;
+  const want = to.i + (after ? 1 : 0) - (from.s === to.s && from.i < to.i ? 1 : 0);
+  if (from.s === to.s && want === from.i) return;
+  from.s.questions.splice(from.i, 1);
+  const t2 = locate(targetKey);
+  t2.s.questions.splice(t2.i + (after ? 1 : 0), 0, from.q);
+}
+function onDragOverSection(e, sec) {
+  if (!S.drag) return; e.preventDefault();
+  if (sec.questions.length === 0) { const f = locate(S.drag); f.s.questions.splice(f.i, 1); sec.questions.push(f.q); }
+}
+function onDragEnd() { if (S.drag) toast('Question moved', '', 'GripHorizontal'); S.drag = null; S.dragArmed = null; }
+
+/* ---------------------------------------------------------------- atoms (names/props mirror shadcn-vue) */
+const Icon = {
+  name: 'Icon',
+  props: { name: String, size: { type: [Number, String], default: 16 }, strokeWidth: { type: [Number, String], default: 2 }, fill: { type: String, default: 'none' } },
+  setup(p) {
+    return () => {
+      const node = (window.lucide && window.lucide.icons && window.lucide.icons[p.name]) || null;
+      let kids = [];
+      if (node) kids = node[0] === 'svg' ? node[2] : node;
+      return h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: p.size, height: p.size, viewBox: '0 0 24 24', fill: p.fill, stroke: 'currentColor', 'stroke-width': p.strokeWidth, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', class: 'shrink-0', 'aria-hidden': 'true' },
+        kids.map(([t, a]) => h(t, a)));
+    };
+  }
+};
+
+const BTN_V = {
+  default: 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90',
+  destructive: 'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90',
+  outline: 'border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground',
+  secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
+  ghost: 'hover:bg-accent hover:text-accent-foreground',
+  link: 'text-primary underline-offset-4 hover:underline',
+};
+const BTN_S = { default: 'h-9 px-4 py-2', sm: 'h-8 rounded-md px-3 text-xs', lg: 'h-10 rounded-md px-8', icon: 'h-9 w-9', 'icon-sm': 'h-8 w-8' };
+const Button = {
+  props: { variant: { default: 'default' }, size: { default: 'default' }, type: { default: 'button' }, disabled: Boolean },
+  computed: { cls() { return cn('inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50', BTN_V[this.variant], BTN_S[this.size]) } },
+  template: `<button :type="type" :class="cls" :disabled="disabled"><slot/></button>`
+};
+const Input = {
+  props: { modelValue: [String, Number], type: { default: 'text' } }, emits: ['update:modelValue'],
+  template: `<input :type="type" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">`
+};
+const Textarea = {
+  props: { modelValue: String, rows: { default: 3 } }, emits: ['update:modelValue'],
+  template: `<textarea :rows="rows" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"></textarea>`
+};
+const Label = { template: `<label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"><slot/></label>` };
+const Switch = {
+  props: { modelValue: Boolean, disabled: Boolean, id: String }, emits: ['update:modelValue'],
+  template: `<button :id="id" type="button" role="switch" :aria-checked="modelValue" :disabled="disabled" @click="$emit('update:modelValue', !modelValue)"
+    class="peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
+    :class="modelValue ? 'bg-primary' : 'bg-input'">
+    <span class="pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform" :class="modelValue ? 'translate-x-4' : 'translate-x-0'"></span></button>`
+};
+const Checkbox = {
+  props: { modelValue: Boolean, disabled: Boolean }, emits: ['update:modelValue'],
+  template: `<button type="button" role="checkbox" :aria-checked="modelValue" :disabled="disabled" @click="$emit('update:modelValue', !modelValue)" class="peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50 grid place-items-center" :class="modelValue ? 'bg-primary text-primary-foreground' : ''"><Icon v-if="modelValue" name="Check" :size="12" stroke-width="3"/></button>`
+};
+const RadioGroupItem = {
+  props: { checked: Boolean, disabled: Boolean }, emits: ['select'],
+  template: `<button type="button" role="radio" :aria-checked="checked" :disabled="disabled" @click="$emit('select')" class="aspect-square h-4 w-4 shrink-0 rounded-full border border-primary text-primary shadow focus:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 grid place-items-center"><span v-if="checked" class="h-2 w-2 rounded-full bg-primary"></span></button>`
+};
+const Badge = {
+  props: { variant: { default: 'default' } },
+  computed: { cls() { return cn('inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold transition-colors whitespace-nowrap', {
+    default: 'border-transparent bg-primary text-primary-foreground shadow',
+    secondary: 'border-transparent bg-secondary text-secondary-foreground',
+    outline: 'text-foreground',
+    destructive: 'border-transparent bg-destructive text-destructive-foreground',
+    warning: 'border-transparent bg-warning/15 text-warning',
+  }[this.variant]) } },
+  template: `<span :class="cls"><slot/></span>`
+};
+const Card = { template: `<div class="rounded-xl border bg-card text-card-foreground shadow-sm"><slot/></div>` };
+const Separator = { props: { orientation: { default: 'horizontal' } }, template: `<div role="separator" :class="orientation==='vertical' ? 'h-5 w-px bg-border' : 'h-px w-full bg-border'"></div>` };
+
+function usePopover() {
+  const open = ref(false), root = ref(null);
+  const onDoc = (e) => { if (open.value && root.value && !root.value.contains(e.target)) open.value = false; };
+  const onKey = (e) => { if (e.key === 'Escape') open.value = false; };
+  onMounted(() => { document.addEventListener('pointerdown', onDoc); document.addEventListener('keydown', onKey); });
+  onBeforeUnmount(() => { document.removeEventListener('pointerdown', onDoc); document.removeEventListener('keydown', onKey); });
+  return { open, root };
+}
+const Select = {
+  props: { modelValue: [String, Number], options: Array, placeholder: { default: 'Select' }, disabled: Boolean, size: { default: 'default' }, align: { default: 'start' }, triggerClass: String },
+  emits: ['update:modelValue'],
+  setup(p, { emit }) {
+    const { open, root } = usePopover();
+    const current = computed(() => (p.options || []).find(o => o.value === p.modelValue));
+    const pick = (o) => { emit('update:modelValue', o.value); open.value = false; };
+    return { open, root, current, pick };
+  },
+  template: `<div class="relative" ref="root">
+    <button type="button" :disabled="disabled" @click="open=!open" :aria-expanded="open" role="combobox"
+      :class="['flex w-full items-center justify-between gap-2 whitespace-nowrap rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50', size==='sm' ? 'h-8 text-xs' : 'h-9', triggerClass]">
+      <span class="flex min-w-0 items-center gap-2"><Icon v-if="current && current.icon" :name="current.icon" class="text-muted-foreground"/><span class="truncate" :class="!current && 'text-muted-foreground'">{{ current ? current.label : placeholder }}</span></span>
+      <Icon name="ChevronDown" :size="16" class="opacity-50"/>
+    </button>
+    <div v-if="open" :class="['pop absolute z-50 mt-1 max-h-72 min-w-[12rem] w-full overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md', align==='end' ? 'right-0' : 'left-0']" role="listbox">
+      <template v-for="o in options" :key="o.value">
+        <div v-if="o.group" class="px-2 py-1.5 text-xs font-medium text-muted-foreground">{{ o.group }}</div>
+        <button v-else type="button" role="option" :aria-selected="o.value===modelValue" :disabled="o.disabled" @click="pick(o)"
+          class="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm py-1.5 pl-2 pr-8 text-left text-sm outline-none hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent disabled:pointer-events-none disabled:opacity-50">
+          <Icon v-if="o.icon" :name="o.icon" class="text-muted-foreground"/><span class="truncate">{{ o.label }}</span>
+          <span v-if="o.value===modelValue" class="absolute right-2 flex h-3.5 w-3.5 items-center justify-center"><Icon name="Check" :size="14"/></span>
+        </button>
+      </template>
+    </div></div>`
+};
+const DropdownMenu = {
+  props: { items: Array, align: { default: 'end' }, label: String },
+  emits: ['select'],
+  setup() { return usePopover(); },
+  template: `<div class="relative" ref="root">
+    <div @click="open=!open"><slot name="trigger"/></div>
+    <div v-if="open" :class="['pop absolute z-50 mt-1 min-w-[13rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md', align==='end' ? 'right-0' : 'left-0']" role="menu">
+      <div v-if="label" class="px-2 py-1.5 text-sm font-semibold">{{ label }}</div>
+      <template v-for="(it, i) in items" :key="i">
+        <div v-if="it.separator" class="-mx-1 my-1 h-px bg-border"></div>
+        <button v-else type="button" role="menuitem" :disabled="it.disabled" @click="open=false; $emit('select', it)"
+          :class="['relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none hover:bg-accent focus-visible:bg-accent disabled:pointer-events-none disabled:opacity-50', it.destructive ? 'text-destructive' : '']">
+          <Icon v-if="it.icon" :name="it.icon" class="opacity-70"/><span class="flex-1">{{ it.label }}</span>
+          <Icon v-if="it.checked" name="Check" :size="14"/>
+          <span v-if="it.shortcut" class="ml-auto text-xs tracking-widest opacity-60">{{ it.shortcut }}</span>
+        </button>
+      </template>
+    </div></div>`
+};
+const Tooltip = {
+  props: { content: String, side: { default: 'top' } },
+  template: `<span class="group relative inline-flex"><slot/>
+    <span role="tooltip" :class="['pointer-events-none absolute z-50 whitespace-nowrap rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground opacity-0 shadow transition-opacity delay-300 duration-150 group-hover:opacity-100 group-focus-within:opacity-100',
+      side==='left' ? 'right-full top-1/2 mr-2 -translate-y-1/2' : side==='bottom' ? 'top-full left-1/2 mt-2 -translate-x-1/2' : 'bottom-full left-1/2 mb-2 -translate-x-1/2']">{{ content }}</span></span>`
+};
+const Dialog = {
+  props: { open: Boolean }, emits: ['update:open'],
+  template: `<Teleport to="body"><Transition name="fade"><div v-if="open" class="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
+    <div class="absolute inset-0 bg-black/70" @click="$emit('update:open', false)"></div>
+    <div role="dialog" aria-modal="true" class="pop relative grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg rounded-t-xl sm:rounded-xl" style="padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px))">
+      <button type="button" class="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" @click="$emit('update:open', false)" aria-label="Close"><Icon name="X" :size="16"/></button>
+      <slot/></div></div></Transition></Teleport>`
+};
+const Sheet = {
+  props: { open: Boolean }, emits: ['update:open'],
+  template: `<Teleport to="body"><Transition name="fade"><div v-if="open" class="fixed inset-0 z-50 bg-black/60" @click="$emit('update:open', false)"></div></Transition>
+    <Transition name="sheet"><div v-if="open" role="dialog" aria-modal="true" class="fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col border-l bg-background shadow-lg sm:max-w-lg" style="padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)">
+      <button type="button" class="absolute right-4 top-4 z-10 rounded-sm opacity-70 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" style="margin-top:env(safe-area-inset-top,0px)" @click="$emit('update:open', false)" aria-label="Close"><Icon name="X" :size="16"/></button>
+      <slot/></div></Transition></Teleport>`
+};
+const Tabs = {
+  props: { modelValue: String, items: Array, full: Boolean }, emits: ['update:modelValue'],
+  template: `<div role="tablist" :class="['inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground', full ? 'grid w-full' : '']" :style="full ? 'grid-template-columns:repeat(' + items.length + ',minmax(0,1fr))' : ''">
+    <button v-for="t in items" :key="t.value" type="button" role="tab" :aria-selected="modelValue===t.value" @click="$emit('update:modelValue', t.value)"
+      :class="['inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', modelValue===t.value ? 'bg-background text-foreground shadow' : 'hover:text-foreground']">
+      {{ t.label }}<span v-if="t.count != null" class="tnum rounded-full bg-muted-foreground/15 px-1.5 text-[11px] leading-4">{{ t.count }}</span></button></div>`
+};
+
+/* ---------------------------------------------------------------- QuestionCard */
+const QuestionCard = {
+  props: { q: Object, sec: Object, si: Number, qi: Number },
+  setup(p) {
+    const active = computed(() => S.active === p.q.key);
+    const typeOptions = TYPES.map(t => ({ value: t.value, label: t.label, icon: t.icon }));
+    const t = computed(() => TYPE[p.q.type]);
+    const sectionTargets = computed(() => [
+      { value: 'next', label: 'Continue to next section' },
+      ...S.form.sections.map((s, i) => ({ value: s.key, label: `Go to section ${i + 1} (${s.title || 'Untitled'})`, disabled: s.key === p.sec.key })),
+      { value: 'submit', label: 'Submit form' },
+    ]);
+    const scaleMin = [{ value: 0, label: '0' }, { value: 1, label: '1' }];
+    const scaleMax = [2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => ({ value: n, label: String(n) }));
+    const ratingMax = [3, 4, 5, 6, 7, 8, 9, 10].map(n => ({ value: n, label: String(n) }));
+    const menuItems = computed(() => [
+      { id: 'desc', label: 'Description', icon: 'AlignLeft', checked: p.q.showDescription },
+      ...(t.value.logic ? [{ id: 'logic', label: 'Go to section based on answer', icon: 'Split', checked: p.q.logic, disabled: S.form.sections.length < 2 }] : []),
+      ...(t.value.choice && p.q.type !== 'true_false' ? [{ id: 'shuffle', label: 'Shuffle option order', icon: 'Shuffle', checked: p.q.shuffle }] : []),
+      ...(p.q.type === 'multi_choice' ? [{ id: 'valid', label: 'Response validation', icon: 'ListChecks', checked: p.q.validation.enabled }] : []),
+      { separator: true },
+      { id: 'up', label: 'Move up', icon: 'ArrowUp', disabled: p.si === 0 && p.qi === 0 },
+      { id: 'down', label: 'Move down', icon: 'ArrowDown', disabled: p.si === S.form.sections.length - 1 && p.qi === p.sec.questions.length - 1 },
+    ]);
+    function onMenu(it) {
+      const q = p.q;
+      if (it.id === 'desc') q.showDescription = !q.showDescription;
+      if (it.id === 'logic') { q.logic = !q.logic; if (!q.logic) q.options.forEach(o => o.go_to = 'next'); }
+      if (it.id === 'shuffle') q.shuffle = !q.shuffle;
+      if (it.id === 'valid') q.validation.enabled = !q.validation.enabled;
+      if (it.id === 'up') moveQuestion(q.key, -1);
+      if (it.id === 'down') moveQuestion(q.key, 1);
+    }
+    function addOption() { p.q.options.push(opt('Option ' + (p.q.options.length + 1))); nextTick(() => { const el = document.querySelectorAll(`[data-card="${p.q.key}"] [data-opt]`); el[el.length - 1]?.select(); }); }
+    function addRow(list, base) { list.push(row(base + ' ' + (list.length + 1))); }
+    function optKey(e, i) { if (e.key === 'Enter') { e.preventDefault(); if (i === p.q.options.length - 1 && p.q.type !== 'true_false') addOption(); } }
+    const indicator = computed(() => p.q.type === 'multi_choice' ? 'square' : p.q.type === 'dropdown' ? 'number' : 'circle');
+    const logicLabel = (k) => k === 'next' ? null : k === 'submit' ? 'Submit form' : 'Section ' + (S.form.sections.findIndex(s => s.key === k) + 1);
+    return { S, active, typeOptions, t, sectionTargets, scaleMin, scaleMax, ratingMax, menuItems, onMenu, addOption, addRow, optKey, indicator, logicLabel, changeType, duplicateQuestion, deleteQuestion, onDragStart, onDragOverCard, onDragEnd, range: (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i) };
+  },
+  template: `
+  <div :data-card="q.key" :draggable="S.dragArmed===q.key" @dragstart="onDragStart($event, q.key)" @dragover="onDragOverCard($event, q.key)" @dragend="onDragEnd"
+    @click="S.active = q.key"
+    :class="['group/card relative rounded-xl border bg-card text-card-foreground shadow-sm transition-shadow', active ? 'shadow-md ring-1 ring-primary/30' : 'hover:shadow', S.drag===q.key ? 'drag-ghost' : '']">
+    <span v-if="active" class="absolute inset-y-0 left-0 w-1 rounded-l-xl bg-primary" aria-hidden="true"></span>
+    <!-- drag handle -->
+    <div class="flex h-4 cursor-grab items-center justify-center text-muted-foreground/60 opacity-0 transition-opacity group-hover/card:opacity-100 active:cursor-grabbing" :class="active && 'opacity-100'"
+      @pointerdown="S.dragArmed = q.key" @pointerup="S.dragArmed = null" title="Drag to reorder" aria-label="Drag to reorder">
+      <Icon name="GripHorizontal" :size="16"/></div>
+
+    <!-- COLLAPSED -->
+    <div v-if="!active" class="px-4 pb-3 sm:px-5 sm:pb-4">
+      <div class="flex items-start gap-3">
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-medium leading-snug" :class="!q.title && 'text-muted-foreground'">{{ q.title || 'Untitled question' }}<span v-if="q.required" class="ml-0.5 text-destructive">*</span></p>
+          <p v-if="q.showDescription && q.description" class="mt-1 text-sm text-muted-foreground">{{ q.description }}</p>
+        </div>
+        <Badge variant="secondary" class="hidden sm:inline-flex"><Icon :name="t.icon" :size="12"/>{{ t.label }}</Badge>
+      </div>
+      <div class="mt-2 space-y-1.5">
+        <template v-if="t.choice && q.type!=='dropdown'">
+          <div class="grid gap-x-6 gap-y-1.5 sm:grid-cols-2"><div v-for="o in q.options.slice(0,6)" :key="o.key" class="flex items-center gap-3 text-sm">
+            <span :class="['h-4 w-4 shrink-0 border border-muted-foreground/50', indicator==='square' ? 'rounded-sm' : 'rounded-full']"></span>
+            <span class="min-w-0 truncate">{{ o.label }}</span>
+            <span v-if="q.logic && logicLabel(o.go_to)" class="ml-auto inline-flex shrink-0 items-center gap-1 text-xs text-primary"><Icon name="CornerDownRight" :size="12"/>{{ logicLabel(o.go_to) }}</span>
+          </div>
+          </div><p v-if="q.options.length>6" class="pl-7 text-xs text-muted-foreground">+{{ q.options.length-6 }} more</p>
+        </template>
+        <div v-else-if="q.type==='dropdown'" class="flex h-9 max-w-xs items-center justify-between rounded-md border border-input px-3 text-sm text-muted-foreground">Choose <Icon name="ChevronDown" :size="16" class="opacity-50"/></div>
+        <div v-else-if="q.type==='linear_scale'" class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <span>{{ q.scale.min_label || q.scale.min }}</span>
+          <span v-for="n in range(q.scale.min, q.scale.max)" :key="n" class="grid h-7 w-7 place-items-center rounded-full border text-xs tnum">{{ n }}</span>
+          <span>{{ q.scale.max_label || q.scale.max }}</span>
+        </div>
+        <div v-else-if="q.type==='rating'" class="flex gap-1 text-muted-foreground/60"><Icon v-for="n in q.rating.max" :key="n" name="Star" :size="20"/></div>
+        <div v-else class="text-sm text-muted-foreground">{{ q.rows.length }} rows × {{ q.columns.length }} columns</div>
+      </div>
+      <div v-if="q.logic" class="mt-2"><Badge variant="outline" class="font-medium"><Icon name="Split" :size="12"/>Branches by answer</Badge></div>
+    </div>
+
+    <!-- ACTIVE / EDITOR -->
+    <div v-else class="expand px-4 pb-1 sm:px-5" @click.stop>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
+        <div class="min-w-0 flex-1 rounded-md bg-muted/60 px-3">
+          <textarea rows="1" data-autofocus style="field-sizing:content" class="line-input block resize-none text-sm font-medium" v-model="q.title" @keydown.enter.prevent placeholder="Question" aria-label="Question title"></textarea>
+        </div>
+        <Select class="sm:w-60" :model-value="q.type" @update:model-value="v => changeType(q, v)" :options="typeOptions"/>
+      </div>
+      <input v-if="q.showDescription" class="line-input mt-2 text-sm" v-model="q.description" placeholder="Description" aria-label="Question description">
+
+      <!-- choice options -->
+      <div v-if="t.choice" class="mt-3 space-y-0">
+        <div v-for="(o, i) in q.options" :key="o.key" class="group/opt flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md py-0.5 pl-1 sm:flex-nowrap">
+          <Icon name="GripVertical" :size="14" class="hidden text-muted-foreground/50 opacity-0 group-hover/opt:opacity-100 sm:block"/>
+          <span v-if="indicator==='number'" class="w-4 shrink-0 text-right text-sm text-muted-foreground tnum">{{ i+1 }}.</span>
+          <span v-else :class="['h-4 w-4 shrink-0 border border-muted-foreground/50', indicator==='square' ? 'rounded-sm' : 'rounded-full']"></span>
+          <input data-opt class="line-input min-w-0 flex-1 basis-40 text-sm" v-model="o.label" @keydown="optKey($event, i)" :aria-label="'Option ' + (i+1)">
+          <Select v-if="q.logic" class="order-last w-full pl-7 sm:order-none sm:w-56 sm:shrink-0 sm:pl-0" size="sm" v-model="o.go_to" :options="sectionTargets" align="end"/>
+          <Button v-if="q.type!=='true_false' && q.options.length>1" variant="ghost" size="icon-sm" class="shrink-0 text-muted-foreground" @click="q.options.splice(i,1)" :aria-label="'Remove option ' + (i+1)"><Icon name="X" :size="16"/></Button>
+        </div>
+        <button v-if="q.type!=='true_false'" type="button" @click="addOption" class="flex items-center gap-3 rounded-md py-2 pl-1 text-sm text-muted-foreground hover:text-foreground">
+          <span class="hidden w-[14px] sm:block"></span>
+          <span :class="['h-4 w-4 shrink-0 border border-dashed border-muted-foreground/50', indicator==='square' ? 'rounded-sm' : 'rounded-full']"></span>Add option</button>
+        <p v-if="q.type==='true_false'" class="pl-1 pt-1 text-xs text-muted-foreground">True / False always has two answers. You can rename them (for example Yes / No).</p>
+      </div>
+
+      <!-- multi validation -->
+      <div v-if="q.type==='multi_choice' && q.validation.enabled" class="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-dashed p-3 text-sm">
+        <span class="text-muted-foreground">Select at least</span>
+        <Input class="!w-16" type="number" min="0" v-model.number="q.validation.min"/>
+        <span class="text-muted-foreground">and at most</span>
+        <Input class="!w-16" type="number" min="1" v-model.number="q.validation.max" placeholder="Any"/>
+      </div>
+
+      <!-- linear scale -->
+      <div v-if="q.type==='linear_scale'" class="mt-4 space-y-3">
+        <div class="flex items-center gap-3 text-sm"><Select class="w-20" v-model="q.scale.min" :options="scaleMin"/><span class="text-muted-foreground">to</span><Select class="w-20" v-model="q.scale.max" :options="scaleMax"/></div>
+        <div class="grid gap-2 sm:grid-cols-2">
+          <div class="flex items-center gap-3"><span class="w-6 text-right text-sm text-muted-foreground tnum">{{ q.scale.min }}</span><input class="line-input text-sm" v-model="q.scale.min_label" placeholder="Label (optional)"></div>
+          <div class="flex items-center gap-3"><span class="w-6 text-right text-sm text-muted-foreground tnum">{{ q.scale.max }}</span><input class="line-input text-sm" v-model="q.scale.max_label" placeholder="Label (optional)"></div>
+        </div>
+      </div>
+
+      <!-- rating -->
+      <div v-if="q.type==='rating'" class="mt-4 flex flex-wrap items-center gap-4">
+        <div class="flex items-center gap-2 text-sm"><span class="text-muted-foreground">Levels</span><Select class="w-20" v-model="q.rating.max" :options="ratingMax"/></div>
+        <div class="flex gap-1 text-fa"><Icon v-for="n in q.rating.max" :key="n" name="Star" :size="22"/></div>
+      </div>
+
+      <!-- grids -->
+      <div v-if="t.grid" class="mt-4 grid gap-6 sm:grid-cols-2">
+        <div v-for="part in [{k:'rows',label:'Rows',base:'Row'},{k:'columns',label:'Columns',base:'Column'}]" :key="part.k">
+          <p class="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">{{ part.label }}</p>
+          <div v-for="(r, i) in q[part.k]" :key="r.key" class="flex items-center gap-2">
+            <span class="w-5 shrink-0 text-right text-sm text-muted-foreground tnum">{{ i+1 }}.</span>
+            <input class="line-input text-sm" v-model="r.label">
+            <Button v-if="q[part.k].length>1" variant="ghost" size="icon-sm" class="shrink-0 text-muted-foreground" @click="q[part.k].splice(i,1)" :aria-label="'Remove ' + part.base"><Icon name="X" :size="16"/></Button>
+          </div>
+          <button type="button" class="mt-1 pl-7 text-sm text-muted-foreground hover:text-foreground" @click="addRow(q[part.k], part.base)">Add {{ part.base.toLowerCase() }}</button>
+        </div>
+        <p class="text-xs text-muted-foreground sm:col-span-2">{{ q.type==='choice_grid' ? 'One answer per row.' : 'Any number of answers per row.' }} On phones each row becomes its own block.</p>
+      </div>
+
+      <!-- footer -->
+      <div class="mt-3 flex items-center justify-end gap-1 border-t py-1.5">
+        <Tooltip content="Duplicate"><Button variant="ghost" size="icon" @click="duplicateQuestion(q.key)" aria-label="Duplicate question"><Icon name="Copy"/></Button></Tooltip>
+        <Tooltip content="Delete"><Button variant="ghost" size="icon" @click="deleteQuestion(q.key)" aria-label="Delete question"><Icon name="Trash2"/></Button></Tooltip>
+        <Separator orientation="vertical" class="mx-2"/>
+        <label class="flex cursor-pointer items-center gap-2 px-1 text-sm" :for="'req-'+q.key">Required <Switch :id="'req-'+q.key" v-model="q.required"/></label>
+        <DropdownMenu :items="menuItems" @select="onMenu" label="Show">
+          <template #trigger><Button variant="ghost" size="icon" aria-label="More options"><Icon name="EllipsisVertical"/></Button></template>
+        </DropdownMenu>
+      </div>
+    </div>
+  </div>`
+};
+
+/* ---------------------------------------------------------------- SectionHeader */
+const SectionHeader = {
+  props: { sec: Object, si: Number },
+  setup(p) {
+    const active = computed(() => S.active === 'sec:' + p.sec.key);
+    const menu = computed(() => [
+      { id: 'up', label: 'Move section up', icon: 'ArrowUp', disabled: p.si === 0 },
+      { id: 'down', label: 'Move section down', icon: 'ArrowDown', disabled: p.si === S.form.sections.length - 1 },
+      { separator: true },
+      { id: 'del', label: 'Delete section', icon: 'Trash2', destructive: true, disabled: S.form.sections.length === 1 },
+    ]);
+    function onMenu(it) {
+      const arr = S.form.sections, i = p.si;
+      if (it.id === 'up' && i > 0) arr.splice(i - 1, 0, arr.splice(i, 1)[0]);
+      if (it.id === 'down' && i < arr.length - 1) arr.splice(i + 1, 0, arr.splice(i, 1)[0]);
+      if (it.id === 'del') S.confirmDel = p.sec.key;
+    }
+    return { S, active, menu, onMenu };
+  },
+  template: `
+  <div :data-card="'sec:' + sec.key" class="relative" @click="S.active = 'sec:' + sec.key">
+    <div v-if="S.form.sections.length > 1" class="inline-flex items-center gap-2 rounded-t-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">
+      Section {{ si+1 }} of {{ S.form.sections.length }}
+    </div>
+    <div :class="['relative border bg-card text-card-foreground shadow-sm', S.form.sections.length > 1 ? 'rounded-b-xl rounded-tr-xl border-t-2 border-t-primary' : 'rounded-xl', active ? 'shadow-md ring-1 ring-primary/30' : '']">
+      <span v-if="active" class="absolute inset-y-0 left-0 w-1 rounded-bl-xl bg-primary" aria-hidden="true"></span>
+      <div class="flex items-start gap-2 px-4 py-3 sm:px-5">
+        <div class="min-w-0 flex-1">
+          <textarea rows="1" style="field-sizing:content" class="line-input resize-none text-lg font-semibold tracking-tight" v-model="sec.title" @keydown.enter.prevent placeholder="Untitled section" aria-label="Section title" :data-autofocus="active || null"></textarea>
+          <textarea rows="1" style="field-sizing:content" class="line-input mt-1 resize-none text-sm text-muted-foreground" v-model="sec.description" placeholder="Description (optional)" aria-label="Section description"></textarea>
+          <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span class="tnum">{{ sec.questions.length }} {{ sec.questions.length===1 ? 'question' : 'questions' }}</span>
+            <template v-if="S.settings.timer_mode==='per_section'">
+              <span aria-hidden="true">·</span>
+              <label class="inline-flex items-center gap-1.5 rounded-md border bg-background px-2 py-1 text-foreground" @click.stop>
+                <Icon name="Timer" :size="13" class="text-warning"/>
+                <input type="number" min="1" max="240" v-model.number="sec.time_limit_minutes" class="w-9 bg-transparent text-right outline-none tnum" aria-label="Section time limit in minutes"> min
+              </label>
+            </template>
+          </div>
+        </div>
+        <DropdownMenu v-if="S.form.sections.length>1" :items="menu" @select="onMenu"><template #trigger><Button variant="ghost" size="icon" aria-label="Section options"><Icon name="EllipsisVertical"/></Button></template></DropdownMenu>
+      </div>
+    </div>
+  </div>`
+};
+
+/* ---------------------------------------------------------------- FormRenderer (shared with live form) */
+const FormRenderer = {
+  props: { device: String },
+  setup(p) {
+    const st = reactive({ stage: 'start', si: 0, path: [], answers: {}, errors: {}, secLeft: 0, violations: 0 });
+    let tick = null;
+    const sections = computed(() => S.form.sections);
+    const sec = computed(() => sections.value[st.si]);
+    const totalQ = computed(() => allQuestions().length);
+    const accent = computed(() => ACCENTS[S.settings.accent]);
+    function startTimer() {
+      clearInterval(tick);
+      if (S.settings.timer_mode === 'off') return;
+      st.secLeft = S.settings.timer_mode === 'per_section' ? sec.value.time_limit_minutes * 60 : (st.secLeft || S.settings.time_limit_minutes * 60);
+      tick = setInterval(() => { st.secLeft = Math.max(0, st.secLeft - 1); }, 1000);
+    }
+    onBeforeUnmount(() => clearInterval(tick));
+    const clock = computed(() => { const m = Math.floor(st.secLeft / 60), s = st.secLeft % 60; return `${m}:${String(s).padStart(2, '0')}`; });
+    function nextTarget() {
+      for (const q of sec.value.questions) {
+        if (q.logic && st.answers[q.key]) { const o = q.options.find(o => o.key === st.answers[q.key]); if (o && o.go_to !== 'next') return o.go_to; }
+      }
+      if (sec.value.next && sec.value.next !== 'auto') return sec.value.next;
+      return st.si + 1 >= sections.value.length ? 'submit' : sections.value[st.si + 1].key;
+    }
+    const isLast = computed(() => nextTarget() === 'submit');
+    function answered(q) {
+      const a = st.answers[q.key];
+      if (TYPE[q.type].grid) return a && q.rows.every(r => q.type === 'choice_grid' ? a[r.key] : (a[r.key] || []).length);
+      if (q.type === 'multi_choice') return a && a.length >= Math.max(1, q.validation.enabled ? (q.validation.min || 1) : 1);
+      return a != null && a !== '';
+    }
+    function validate() {
+      st.errors = {};
+      sec.value.questions.forEach(q => { if (q.required && !answered(q)) st.errors[q.key] = TYPE[q.type].grid ? 'Answer every row.' : 'This question is required.'; });
+      return !Object.keys(st.errors).length;
+    }
+    function next() {
+      if (!validate()) { nextTick(() => document.querySelector('.frame [data-err]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })); return; }
+      const t = nextTarget();
+      if (t === 'submit') { st.stage = 'done'; clearInterval(tick); return; }
+      st.path.push(st.si); st.si = sections.value.findIndex(s => s.key === t); startTimer();
+      document.querySelector('.frame-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function back() { if (S.settings.timer_mode === 'per_section') return; st.si = st.path.pop() ?? 0; }
+    function start() { st.stage = 'section'; st.si = 0; st.path = []; st.answers = {}; st.errors = {}; st.secLeft = 0; startTimer(); }
+    function setGrid(q, r, c, multi) {
+      const a = st.answers[q.key] || (st.answers[q.key] = {});
+      if (multi) { const arr = a[r] || (a[r] = []); const i = arr.indexOf(c); i > -1 ? arr.splice(i, 1) : arr.push(c); }
+      else a[r] = c;
+    }
+    function toggleMulti(q, k) { const a = st.answers[q.key] || (st.answers[q.key] = []); const i = a.indexOf(k); i > -1 ? a.splice(i, 1) : a.push(k); }
+    const progress = computed(() => st.stage === 'done' ? 100 : Math.round(((st.si) / sections.value.length) * 100));
+    return { S, st, sec, sections, totalQ, accent, clock, isLast, next, back, start, setGrid, toggleMulti, progress, TYPE, range: (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i) };
+  },
+  template: `
+  <div class="form-theme frame min-h-full" :style="{ '--fa-l': accent.l, '--fa-d': accent.d }">
+    <div class="mx-auto max-w-[680px] px-3 py-4 sm:py-8">
+      <!-- START -->
+      <div v-if="st.stage==='start'" class="overflow-hidden rounded-xl border bg-card shadow-sm">
+        <div class="h-2 bg-fa"></div>
+        <div class="r-pad p-6 sm:p-8">
+          <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">{{ S.org.name }}</p>
+          <h1 class="mt-2 text-2xl font-semibold tracking-tight" style="text-wrap:balance">{{ S.form.title || 'Untitled form' }}</h1>
+          <p class="mt-2 text-sm text-muted-foreground">{{ S.form.description }}</p>
+          <ul class="mt-6 grid gap-3 text-sm">
+            <li class="flex gap-3"><Icon name="Rows3" class="mt-0.5 text-fa"/><span>{{ sections.length }} sections, {{ totalQ }} questions</span></li>
+            <li v-if="S.settings.timer_mode==='per_section'" class="flex gap-3"><Icon name="Timer" class="mt-0.5 text-fa"/><span>Each section is timed. You cannot go back to a section once you leave it.</span></li>
+            <li v-if="S.settings.timer_mode==='whole_form'" class="flex gap-3"><Icon name="Timer" class="mt-0.5 text-fa"/><span>You have {{ S.settings.time_limit_minutes }} minutes once you start.</span></li>
+            <li v-if="S.settings.require_fullscreen" class="flex gap-3"><Icon name="Maximize" class="mt-0.5 text-fa"/><span>The form opens in full screen. Leaving full screen counts as a violation.</span></li>
+            <li v-if="S.settings.single_tab || S.settings.block_copy_paste" class="flex gap-3"><Icon name="ShieldCheck" class="mt-0.5 text-fa"/><span>Stay on this tab. {{ S.settings.block_copy_paste ? 'Copy and paste are turned off.' : '' }}</span></li>
+            <li v-if="S.settings.one_response" class="flex gap-3"><Icon name="Mail" class="mt-0.5 text-fa"/><span>One response per email address.</span></li>
+          </ul>
+          <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-xs text-muted-foreground">Preview skips email verification and integrity checks.</p>
+            <button type="button" @click="start" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-fa px-6 text-sm font-medium text-fa-fg shadow-sm hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fa focus-visible:ring-offset-2 focus-visible:ring-offset-background">Start <Icon name="ArrowRight"/></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION -->
+      <template v-else-if="st.stage==='section'">
+        <div class="sticky top-0 z-10 -mx-3 mb-3 bg-canvas/90 px-3 pb-2 pt-1 backdrop-blur">
+          <div class="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <span class="tnum">Section {{ st.si+1 }} of {{ sections.length }}</span>
+            <span v-if="S.settings.timer_mode!=='off'" :class="['inline-flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1 font-medium tnum', st.secLeft < 60 ? 'border-destructive/40 text-destructive' : 'text-foreground']"><Icon name="Timer" :size="13"/>{{ clock }}</span>
+          </div>
+          <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div class="h-full rounded-full bg-fa transition-all duration-300" :style="{ width: progress + '%' }"></div></div>
+        </div>
+        <div class="overflow-hidden rounded-xl border bg-card shadow-sm">
+          <div class="h-1.5 bg-fa"></div>
+          <div class="r-pad px-6 py-5"><h2 class="text-lg font-semibold">{{ sec.title || 'Untitled section' }}</h2><p v-if="sec.description" class="mt-1 text-sm text-muted-foreground">{{ sec.description }}</p></div>
+        </div>
+        <div class="mt-3 space-y-3">
+          <div v-for="q in sec.questions" :key="q.key" :data-err="st.errors[q.key] ? '' : null" :class="['r-pad rounded-xl border bg-card p-6 shadow-sm', st.errors[q.key] ? 'border-destructive/60' : '']">
+            <p class="text-[15px] font-medium leading-snug">{{ q.title || 'Untitled question' }}<span v-if="q.required" class="ml-0.5 text-destructive">*</span></p>
+            <p v-if="q.showDescription && q.description" class="mt-1 text-sm text-muted-foreground">{{ q.description }}</p>
+            <div class="mt-4">
+              <div v-if="q.type==='single_choice' || q.type==='true_false'" class="grid gap-1" role="radiogroup">
+                <label v-for="o in q.options" :key="o.key" class="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2 text-sm hover:bg-muted/60">
+                  <input type="radio" class="peer sr-only" :name="q.key" :value="o.key" v-model="st.answers[q.key]">
+                  <span class="grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 border-muted-foreground/50 peer-checked:border-fa peer-focus-visible:ring-2 peer-focus-visible:ring-fa/40"><span v-if="st.answers[q.key]===o.key" class="h-2.5 w-2.5 rounded-full bg-fa"></span></span>{{ o.label }}</label>
+              </div>
+              <div v-else-if="q.type==='multi_choice'" class="grid gap-1">
+                <label v-for="o in q.options" :key="o.key" class="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2 text-sm hover:bg-muted/60">
+                  <input type="checkbox" class="peer sr-only" :checked="(st.answers[q.key]||[]).includes(o.key)" @change="toggleMulti(q, o.key)">
+                  <span :class="['grid h-5 w-5 shrink-0 place-items-center rounded border-2 peer-focus-visible:ring-2 peer-focus-visible:ring-fa/40', (st.answers[q.key]||[]).includes(o.key) ? 'border-fa bg-fa text-fa-fg' : 'border-muted-foreground/50']"><Icon v-if="(st.answers[q.key]||[]).includes(o.key)" name="Check" :size="13" stroke-width="3"/></span>{{ o.label }}</label>
+              </div>
+              <Select v-else-if="q.type==='dropdown'" class="max-w-sm" v-model="st.answers[q.key]" :options="q.options.map(o=>({value:o.key,label:o.label}))" placeholder="Choose"/>
+              <div v-else-if="q.type==='linear_scale'">
+                <div class="scale-row flex items-end justify-between gap-1">
+                  <button v-for="n in range(q.scale.min, q.scale.max)" :key="n" type="button" @click="st.answers[q.key]=n" :aria-pressed="st.answers[q.key]===n"
+                    :class="['grid h-11 min-w-11 flex-1 place-items-center rounded-lg border text-sm font-medium transition-colors tnum', st.answers[q.key]===n ? 'border-fa bg-fa text-fa-fg' : 'hover:bg-muted']">{{ n }}</button>
+                </div>
+                <div class="mt-2 flex justify-between text-xs text-muted-foreground"><span>{{ q.scale.min_label }}</span><span>{{ q.scale.max_label }}</span></div>
+              </div>
+              <div v-else-if="q.type==='rating'" class="flex flex-wrap gap-1">
+                <button v-for="n in q.rating.max" :key="n" type="button" @click="st.answers[q.key]=n" :aria-label="n + ' of ' + q.rating.max" class="grid h-11 w-11 place-items-center rounded-lg hover:bg-muted">
+                  <Icon name="Star" :size="26" :class="(st.answers[q.key]||0) >= n ? 'text-fa' : 'text-muted-foreground/50'" :fill="(st.answers[q.key]||0) >= n ? 'currentColor' : 'none'"/></button>
+              </div>
+              <template v-else>
+                <div class="grid-table overflow-x-auto"><table class="w-full text-sm">
+                  <thead><tr><th></th><th v-for="c in q.columns" :key="c.key" class="px-2 pb-2 text-center text-xs font-medium text-muted-foreground">{{ c.label }}</th></tr></thead>
+                  <tbody><tr v-for="r in q.rows" :key="r.key" class="border-t"><td class="py-3 pr-3">{{ r.label }}</td>
+                    <td v-for="c in q.columns" :key="c.key" class="text-center"><button type="button" @click="setGrid(q, r.key, c.key, q.type==='checkbox_grid')" :aria-label="r.label + ': ' + c.label"
+                      :class="['inline-grid h-5 w-5 place-items-center border-2', q.type==='checkbox_grid' ? 'rounded' : 'rounded-full', (q.type==='checkbox_grid' ? ((st.answers[q.key]||{})[r.key]||[]).includes(c.key) : (st.answers[q.key]||{})[r.key]===c.key) ? 'border-fa bg-fa' : 'border-muted-foreground/50']"></button></td></tr></tbody>
+                </table></div>
+                <div class="grid-stack flex-col gap-4">
+                  <div v-for="r in q.rows" :key="r.key" class="rounded-lg border p-3"><p class="text-sm font-medium">{{ r.label }}</p>
+                    <div class="mt-2 flex flex-wrap gap-2"><button v-for="c in q.columns" :key="c.key" type="button" @click="setGrid(q, r.key, c.key, q.type==='checkbox_grid')"
+                      :class="['min-h-9 rounded-full border px-3 text-sm', (q.type==='checkbox_grid' ? ((st.answers[q.key]||{})[r.key]||[]).includes(c.key) : (st.answers[q.key]||{})[r.key]===c.key) ? 'border-fa bg-fa text-fa-fg' : 'hover:bg-muted']">{{ c.label }}</button></div></div>
+                </div>
+              </template>
+            </div>
+            <p v-if="st.errors[q.key]" class="mt-3 flex items-center gap-1.5 text-sm text-destructive"><Icon name="CircleAlert" :size="14"/>{{ st.errors[q.key] }}</p>
+          </div>
+        </div>
+        <div class="mt-5 flex items-center justify-between gap-3">
+          <button v-if="st.path.length && S.settings.timer_mode!=='per_section'" type="button" @click="back" class="inline-flex h-10 items-center gap-2 rounded-md border bg-card px-4 text-sm font-medium hover:bg-muted"><Icon name="ArrowLeft"/>Back</button>
+          <span v-else class="text-xs text-muted-foreground">{{ S.settings.timer_mode==='per_section' ? 'Timed sections: going back is off.' : '' }}</span>
+          <button type="button" @click="next" class="inline-flex h-10 items-center gap-2 rounded-md bg-fa px-6 text-sm font-medium text-fa-fg shadow-sm hover:opacity-90">{{ isLast ? 'Submit' : 'Next' }}<Icon :name="isLast ? 'Send' : 'ArrowRight'"/></button>
+        </div>
+      </template>
+
+      <!-- DONE -->
+      <div v-else class="overflow-hidden rounded-xl border bg-card text-center shadow-sm">
+        <div class="h-2 bg-fa"></div>
+        <div class="r-pad p-8">
+          <div class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-fa/15 text-fa"><Icon name="CircleCheck" :size="26"/></div>
+          <h2 class="mt-4 text-xl font-semibold">Response recorded</h2>
+          <p class="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{{ S.settings.confirmation }}</p>
+          <button type="button" @click="st.stage='start'" class="mt-6 text-sm font-medium text-fa underline-offset-4 hover:underline">Restart preview</button>
+        </div>
+      </div>
+    </div>
+  </div>`
+};
+
+/* ---------------------------------------------------------------- Settings */
+const SettingRow = {
+  props: { title: String, desc: String, id: String, disabled: Boolean },
+  template: `<div :class="['flex items-start justify-between gap-6 py-3', disabled && 'opacity-60']"><div class="min-w-0"><label :for="id" class="text-sm font-medium">{{ title }}</label><p v-if="desc" class="mt-1 text-sm text-muted-foreground">{{ desc }}</p><slot name="below"/></div><div class="shrink-0 pt-0.5"><slot/></div></div>`
+};
+const ChoiceCard = {
+  props: { checked: Boolean, title: String, desc: String, icon: String, disabled: Boolean }, emits: ['select'],
+  template: `<button type="button" role="radio" :aria-checked="checked" :disabled="disabled" @click="$emit('select')"
+    :class="['flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50', checked ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:bg-muted/60']">
+    <Icon v-if="icon" :name="icon" class="mt-0.5" :class="checked ? 'text-primary' : 'text-muted-foreground'"/>
+    <span class="min-w-0"><span class="block text-sm font-medium">{{ title }}</span><span v-if="desc" class="mt-0.5 block text-xs text-muted-foreground">{{ desc }}</span></span></button>`
+};
+const SettingsTab = {
+  setup() {
+    const groups = [
+      { id: 'responses', label: 'Responses', icon: 'Inbox' },
+      { id: 'timer', label: 'Timer', icon: 'Timer' },
+      { id: 'integrity', label: 'Integrity', icon: 'ShieldCheck' },
+      { id: 'sharing', label: 'Sharing', icon: 'Users' },
+      { id: 'schedule', label: 'Schedule', icon: 'Calendar' },
+      { id: 'presentation', label: 'Presentation', icon: 'Palette' },
+    ];
+    const newInvite = ref('');
+    const inviteErr = ref('');
+    function addInvites() {
+      const list = newInvite.value.split(/[\s,;]+/).map(x => x.trim().toLowerCase()).filter(Boolean);
+      const bad = list.filter(e => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
+      if (bad.length) { inviteErr.value = `Check ${bad[0]}. It is not a valid email address.`; return; }
+      let added = 0;
+      list.forEach(e => { if (!S.settings.invites.some(i => i.email === e)) { S.settings.invites.push({ email: e, status: 'pending' }); added++; } });
+      inviteErr.value = ''; newInvite.value = '';
+      if (added) toast(`${added} ${added === 1 ? 'person' : 'people'} invited`, 'Invitations send when you publish.', 'Mail');
+    }
+    const link = computed(() => `forms.app/f/${S.settings.slug}`);
+    function copy() { const t = 'https://' + link.value; try { navigator.clipboard.writeText(t).then(() => toast('Link copied', t, 'Link'), () => toast('Copy this link', t, 'Link')); } catch (e) { toast('Copy this link', t, 'Link'); } }
+    function go(id) { S.settingsNav = id; document.getElementById('set-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    const statusVariant = { responded: 'default', opened: 'secondary', sent: 'outline', pending: 'outline', revoked: 'destructive' };
+    const resumeOpts = [{ value: 'resume', label: 'Resume the attempt' }, { value: 'auto_submit', label: 'Submit answers so far' }];
+    return { S, ACCENTS, groups, newInvite, inviteErr, addInvites, link, copy, go, statusVariant, resumeOpts };
+  },
+  template: `
+  <div class="mx-auto grid max-w-[960px] gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
+    <nav class="hidden lg:block" aria-label="Settings groups"><div class="sticky top-[84px] grid gap-0.5">
+      <button v-for="g in groups" :key="g.id" type="button" @click="go(g.id)" :class="['flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm', S.settingsNav===g.id ? 'bg-card font-medium shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:bg-card/60 hover:text-foreground']"><Icon :name="g.icon"/>{{ g.label }}</button>
+    </div></nav>
+    <div class="grid min-w-0 gap-3">
+      <Card id="set-responses" class="scroll-mt-24"><div class="p-4 sm:p-5">
+        <h3 class="font-semibold">Responses</h3><p class="text-sm text-muted-foreground">Who can answer and how often.</p>
+        <div class="mt-2 divide-y">
+          <SettingRow title="Accepting responses" desc="Turn off to close the form right away." id="s-acc"><Switch id="s-acc" v-model="S.settings.accepting"/></SettingRow>
+          <SettingRow title="Limit to one response per person" desc="Each verified email can submit once. A voided attempt also uses the chance; you can reset a person from Responses." id="s-one"><Switch id="s-one" v-model="S.settings.one_response"/></SettingRow>
+          <SettingRow title="Allow editing after submit" :desc="S.settings.timer_mode!=='off' ? 'Turned off because this form is timed. Editing would get around the timer.' : 'Respondents can change answers until the form closes. Each edit is kept as a revision.'" id="s-edit" :disabled="S.settings.timer_mode!=='off'"><Switch id="s-edit" v-model="S.settings.allow_edit" :disabled="S.settings.timer_mode!=='off'"/></SettingRow>
+          <SettingRow title="Email me new responses" desc="Instant email to you for each submission." id="s-not"><Switch id="s-not" v-model="S.settings.notify_me"/></SettingRow>
+        </div></div></Card>
+
+      <Card id="set-timer" class="scroll-mt-24"><div class="p-4 sm:p-5">
+        <h3 class="font-semibold">Timer</h3><p class="text-sm text-muted-foreground">The server keeps the time. Changing the device clock has no effect.</p>
+        <div class="mt-4 grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Timer mode">
+          <ChoiceCard :checked="S.settings.timer_mode==='off'" @select="S.settings.timer_mode='off'" icon="TimerOff" title="No timer" desc="Respondents take as long as they need."/>
+          <ChoiceCard :checked="S.settings.timer_mode==='whole_form'" @select="S.settings.timer_mode='whole_form'" icon="Timer" title="Whole form" desc="One countdown from Start to Submit."/>
+          <ChoiceCard :checked="S.settings.timer_mode==='per_section'" @select="S.settings.timer_mode='per_section'" icon="Rows3" title="Per section" desc="Each section has its own limit. No going back."/>
+        </div>
+        <div v-if="S.settings.timer_mode==='whole_form'" class="mt-4 flex items-center gap-3"><label for="s-tl" class="text-sm font-medium">Time limit</label><Input id="s-tl" type="number" min="1" class="!w-24" v-model.number="S.settings.time_limit_minutes"/><span class="text-sm text-muted-foreground">minutes</span></div>
+        <p v-if="S.settings.timer_mode==='per_section'" class="mt-4 flex items-start gap-2 rounded-lg bg-muted/60 p-3 text-sm text-muted-foreground"><Icon name="Info" class="mt-0.5"/>Set each section's limit on its header in the Questions tab. Total: <span class="font-medium text-foreground tnum">{{ S.form.sections.reduce((a,s)=>a+(+s.time_limit_minutes||0),0) }} min</span></p>
+        <div v-if="S.settings.timer_mode!=='off'" class="mt-2 divide-y border-t">
+          <SettingRow title="If the respondent closes the tab" desc="The clock keeps running on the server either way." id="s-res"><Select class="w-56" v-model="S.settings.resume_policy" :options="resumeOpts" align="end"/></SettingRow>
+        </div></div></Card>
+
+      <Card id="set-integrity" class="scroll-mt-24"><div class="p-4 sm:p-5">
+        <h3 class="font-semibold">Integrity</h3><p class="text-sm text-muted-foreground">Every violation is logged on the response, whatever the policy.</p>
+        <div class="mt-2 divide-y">
+          <SettingRow title="Open in full screen" desc="Leaving full screen counts as a violation. iPhone Safari cannot go full screen, so those respondents are blocked when this is on." id="s-fs"><Switch id="s-fs" v-model="S.settings.require_fullscreen"/></SettingRow>
+          <SettingRow title="One tab only" desc="A second tab or device with the same email is blocked." id="s-tab"><Switch id="s-tab" v-model="S.settings.single_tab"/></SettingRow>
+          <SettingRow title="Block copy and paste" desc="Also blocks right-click and text selection. Screenshots cannot be prevented." id="s-cp"><Switch id="s-cp" v-model="S.settings.block_copy_paste"/></SettingRow>
+        </div>
+        <p class="mt-4 text-sm font-medium">When a rule is broken</p>
+        <div class="mt-2 grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Violation policy">
+          <ChoiceCard :checked="S.settings.violation_policy==='warn_log'" @select="S.settings.violation_policy='warn_log'" icon="TriangleAlert" title="Warn and log" desc="Show a warning. You review it later."/>
+          <ChoiceCard :checked="S.settings.violation_policy==='auto_submit'" @select="S.settings.violation_policy='auto_submit'" icon="Send" title="Auto-submit" desc="Warn, then submit after a set number."/>
+          <ChoiceCard :checked="S.settings.violation_policy==='void'" @select="S.settings.violation_policy='void'" icon="Ban" title="Void attempt" desc="Cancel on the first violation."/>
+        </div>
+        <div v-if="S.settings.violation_policy==='auto_submit'" class="mt-3 flex items-center gap-3"><label for="s-vl" class="text-sm">Submit after</label><Input id="s-vl" type="number" min="1" max="20" class="!w-20" v-model.number="S.settings.violation_limit"/><span class="text-sm text-muted-foreground">violations</span></div>
+        <p class="mt-4 flex items-start gap-2 text-xs text-muted-foreground"><Icon name="Bot" :size="14" class="mt-px"/>Bot protection (Turnstile, email code, rate limits) is always on for every form.</p>
+      </div></Card>
+
+      <Card id="set-sharing" class="scroll-mt-24"><div class="p-4 sm:p-5">
+        <h3 class="font-semibold">Sharing</h3><p class="text-sm text-muted-foreground">Everyone verifies their email with a 6-digit code before starting.</p>
+        <div class="mt-4 grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Visibility">
+          <ChoiceCard :checked="S.settings.visibility==='public'" @select="S.settings.visibility='public'" icon="Globe" title="Anyone with the link" desc="Any email can respond."/>
+          <ChoiceCard :checked="S.settings.visibility==='private'" @select="S.settings.visibility='private'" icon="Lock" title="Invited emails only" desc="Only the emails you add below."/>
+        </div>
+        <div class="mt-4 flex gap-2"><div class="flex h-9 min-w-0 flex-1 items-center rounded-md border border-input bg-muted/50 px-3 text-sm"><span class="truncate font-mono text-xs">https://{{ link }}</span></div><Button variant="outline" @click="copy"><Icon name="Copy"/><span class="hidden sm:inline">Copy</span></Button></div>
+        <template v-if="S.settings.visibility==='private'">
+          <label for="s-inv" class="mt-5 block text-sm font-medium">Invite people</label>
+          <div class="mt-2 flex gap-2"><Input id="s-inv" v-model="newInvite" placeholder="name@company.co.tz, another@company.co.tz" @keydown.enter="addInvites"/><Button @click="addInvites">Invite</Button></div>
+          <p v-if="inviteErr" class="mt-2 text-sm text-destructive">{{ inviteErr }}</p>
+          <ul class="mt-3 divide-y rounded-lg border">
+            <li v-for="(iv, i) in S.settings.invites" :key="iv.email" class="flex items-center gap-3 px-3 py-2.5 text-sm">
+              <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-xs font-medium uppercase">{{ iv.email[0] }}</span>
+              <span class="min-w-0 flex-1 truncate">{{ iv.email }}</span>
+              <Badge :variant="statusVariant[iv.status]" class="capitalize">{{ iv.status }}</Badge>
+              <Button variant="ghost" size="icon-sm" @click="S.settings.invites.splice(i,1)" :aria-label="'Remove ' + iv.email"><Icon name="X" :size="15"/></Button>
+            </li>
+          </ul>
+        </template>
+      </div></Card>
+
+      <Card id="set-schedule" class="scroll-mt-24"><div class="p-4 sm:p-5">
+        <h3 class="font-semibold">Schedule</h3><p class="text-sm text-muted-foreground">Times are in East Africa Time (UTC+3).</p>
+        <div class="mt-4 grid gap-4 sm:grid-cols-3">
+          <div class="grid gap-1.5"><label for="s-op" class="text-sm font-medium">Opens</label><Input id="s-op" type="datetime-local" v-model="S.settings.opens_at"/></div>
+          <div class="grid gap-1.5"><label for="s-cl" class="text-sm font-medium">Closes</label><Input id="s-cl" type="datetime-local" v-model="S.settings.closes_at"/></div>
+          <div class="grid gap-1.5"><label for="s-mx" class="text-sm font-medium">Max responses</label><Input id="s-mx" type="number" min="1" v-model="S.settings.max_responses" placeholder="No limit"/></div>
+        </div></div></Card>
+
+      <Card id="set-presentation" class="scroll-mt-24"><div class="p-4 sm:p-5">
+        <h3 class="font-semibold">Presentation</h3><p class="text-sm text-muted-foreground">Colour of this form for respondents. Defaults to your organisation's accent.</p>
+        <div class="mt-4 flex flex-wrap gap-3" role="radiogroup" aria-label="Form accent">
+          <button v-for="(a, k) in ACCENTS" :key="k" type="button" role="radio" :aria-checked="S.settings.accent===k" @click="S.settings.accent=k" :aria-label="a.label"
+            class="form-theme grid h-9 w-9 place-items-center rounded-full ring-offset-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            :class="S.settings.accent===k ? 'ring-2 ring-foreground' : ''" :style="{ '--fa-l': a.l, '--fa-d': a.d, background: 'hsl(var(--form-accent))' }">
+            <Icon v-if="S.settings.accent===k" name="Check" :size="16" class="text-fa-fg"/></button>
+        </div>
+        <label for="s-conf" class="mt-5 block text-sm font-medium">Confirmation message</label>
+        <Textarea id="s-conf" class="mt-2" v-model="S.settings.confirmation"/>
+      </div></Card>
+    </div>
+  </div>`
+};
+
+/* ---------------------------------------------------------------- App */
+const App = {
+  setup() {
+    const savedAgo = ref('just now');
+    let iv = setInterval(() => { const s = Math.round((Date.now() - S.lastSaved) / 1000); savedAgo.value = s < 5 ? 'just now' : s < 60 ? s + 's ago' : Math.round(s / 60) + 'm ago'; }, 1000);
+    onBeforeUnmount(() => clearInterval(iv));
+    watch(() => S.theme, applyTheme, { immediate: true });
+    const tabs = computed(() => [{ value: 'questions', label: 'Questions' }, { value: 'responses', label: 'Responses', count: 0 }, { value: 'settings', label: 'Settings' }]);
+    const themeItems = computed(() => [
+      { id: 'light', label: 'Light', icon: 'Sun', checked: S.theme === 'light' },
+      { id: 'dark', label: 'Dark', icon: 'Moon', checked: S.theme === 'dark' },
+      { id: 'system', label: 'System', icon: 'Laptop', checked: S.theme === 'system' },
+    ]);
+    const moreItems = computed(() => [
+      { id: 'link', label: 'Copy responder link', icon: 'Link' },
+      { id: 'spec', label: 'Design spec', icon: 'Ruler' },
+      { separator: true },
+      ...themeItems.value.map(t => ({ ...t, label: 'Theme: ' + t.label })),
+    ]);
+    const device = ref('desktop');
+    const devices = [{ value: 'desktop', icon: 'Monitor', label: 'Desktop', w: '100%' }, { value: 'tablet', icon: 'Tablet', label: 'Tablet', w: '768px' }, { value: 'mobile', icon: 'Smartphone', label: 'Phone', w: '390px' }];
+    const frameW = computed(() => devices.find(d => d.value === device.value).w);
+    const previewKey = ref(0);
+    function openPreview() { previewKey.value++; S.preview = true; }
+    function copyLink() { const t = `https://forms.app/f/${S.settings.slug}`; try { navigator.clipboard.writeText(t).then(() => toast('Link copied', t, 'Link'), () => toast('Copy this link', t, 'Link')); } catch (e) { toast('Copy this link', t, 'Link'); } }
+    function onMore(it) { if (it.id === 'link') copyLink(); else if (it.id === 'spec') S.spec = true; else S.theme = it.id; }
+    const dirty = computed(() => S.edits > 0);
+    const issues = computed(() => {
+      const out = [];
+      allQuestions().forEach((q, i) => { if (!q.title.trim()) out.push(`Question ${i + 1} has no title.`); });
+      S.form.sections.forEach((s, i) => { if (S.form.sections.length > 1 && !s.title.trim()) out.push(`Section ${i + 1} has no title.`); if (!s.questions.length) out.push(`Section ${i + 1} has no questions.`); });
+      return out;
+    });
+    function publish() {
+      S.published = { version: S.published.version + 1, at: 'Just now' }; S.edits = 0; S.publishDlg = false;
+      const pending = S.settings.invites.filter(i => i.status === 'pending'); pending.forEach(i => i.status = 'sent');
+      toast(`Version ${S.published.version} is live`, pending.length ? `${pending.length} invitation${pending.length > 1 ? 's' : ''} sent.` : 'New respondents see this version. Open attempts finish on the old one.', 'Send');
+    }
+    function confirmDelete() { deleteSection(S.confirmDel); S.confirmDel = null; }
+    const counts = computed(() => ({ s: S.form.sections.length, q: allQuestions().length }));
+    function canvasClick(e) { if (e.target === e.currentTarget) S.active = null; }
+    return { S, savedAgo, tabs, themeItems, moreItems, onMore, device, devices, frameW, previewKey, openPreview, copyLink, dirty, issues, publish, addQuestion, addSection, confirmDelete, counts, canvasClick, onDragOverSection, ACCENTS };
+  },
+  template: `
+  <div class="flex min-h-screen flex-col">
+    <!-- HEADER -->
+    <header class="sticky z-40 border-b bg-background/95 backdrop-blur" style="top:env(safe-area-inset-top,0px)">
+      <div class="flex h-14 items-center gap-2 px-3 sm:px-4 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+        <div class="flex min-w-0 flex-1 items-center gap-2">
+          <Tooltip content="All forms" side="bottom"><Button variant="ghost" size="icon" aria-label="Back to all forms"><Icon name="ChevronLeft"/></Button></Tooltip>
+          <div class="hidden h-8 w-8 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground sm:grid"><Icon name="ClipboardList" :size="16"/></div>
+          <div class="min-w-0">
+            <p class="truncate text-sm font-semibold leading-tight">{{ S.form.title || 'Untitled form' }}</p>
+            <p class="flex items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
+              <template v-if="S.save==='saving'"><Icon name="LoaderCircle" :size="12" class="animate-spin"/>Saving…</template>
+              <template v-else><Icon name="Check" :size="12"/>Saved {{ savedAgo }}</template>
+              <span class="hidden sm:inline" aria-hidden="true">·</span>
+              <span class="hidden sm:inline">{{ S.org.name }}</span>
+            </p>
+          </div>
+        </div>
+        <Tabs class="hidden lg:inline-flex" v-model="S.tab" :items="tabs"/>
+        <div class="flex items-center justify-end gap-1 sm:gap-2">
+          <Tooltip content="Preview" side="bottom"><Button variant="ghost" size="icon" @click="openPreview" aria-label="Preview"><Icon name="Eye"/></Button></Tooltip>
+          <Tooltip content="Copy responder link" side="bottom" class="hidden sm:inline-flex"><Button variant="ghost" size="icon" @click="copyLink" aria-label="Copy responder link"><Icon name="Link"/></Button></Tooltip>
+          <DropdownMenu class="hidden sm:block" :items="themeItems" @select="it => S.theme = it.id" label="Theme">
+            <template #trigger><Button variant="ghost" size="icon" aria-label="Theme"><Icon :name="S.theme==='dark' ? 'Moon' : S.theme==='light' ? 'Sun' : 'Laptop'"/></Button></template>
+          </DropdownMenu>
+          <Tooltip content="Design spec" side="bottom" class="hidden sm:inline-flex"><Button variant="ghost" size="icon" @click="S.spec=true" aria-label="Design spec"><Icon name="Ruler"/></Button></Tooltip>
+          <DropdownMenu class="sm:hidden" :items="moreItems" @select="onMore"><template #trigger><Button variant="ghost" size="icon" aria-label="More"><Icon name="EllipsisVertical"/></Button></template></DropdownMenu>
+          <Button class="relative ml-1" size="sm" @click="S.publishDlg=true">
+            <span v-if="dirty" class="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-warning ring-2 ring-background" aria-hidden="true"></span>
+            <Icon name="Send" :size="14"/>Publish
+          </Button>
+        </div>
+      </div>
+      <div class="border-t px-3 py-2 lg:hidden"><Tabs full v-model="S.tab" :items="tabs"/></div>
+    </header>
+
+    <!-- QUESTIONS -->
+    <main v-if="S.tab==='questions'" class="flex-1 px-3 pb-28 pt-3 sm:px-4 lg:pb-16" @click="canvasClick">
+      <div class="mx-auto max-w-[720px] lg:grid lg:max-w-[1040px] lg:grid-cols-[minmax(0,1fr)_minmax(0,720px)_minmax(0,1fr)] lg:gap-4" @click="canvasClick">
+        <div class="hidden lg:block"></div>
+        <div class="min-w-0 space-y-2">
+          <!-- draft banner -->
+          <div v-if="dirty" class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5 text-sm">
+            <Icon name="History" class="text-warning"/>
+            <span class="min-w-0 flex-1">Unpublished changes. Respondents still see <span class="font-medium">version {{ S.published.version }}</span>.</span>
+            <Button size="sm" variant="outline" @click="S.publishDlg=true">Review and publish</Button>
+          </div>
+          <!-- form header -->
+          <div data-card="header" @click="S.active='header'" :class="['form-theme relative overflow-hidden rounded-xl border bg-card shadow-sm', S.active==='header' ? 'shadow-md ring-1 ring-primary/30' : '']" :style="{ '--fa-l': ACCENTS[S.settings.accent].l, '--fa-d': ACCENTS[S.settings.accent].d }">
+            <div class="h-2.5 bg-fa"></div>
+            <span v-if="S.active==='header'" class="absolute bottom-0 left-0 top-2.5 w-1 bg-primary" aria-hidden="true"></span>
+            <div class="px-4 pb-4 pt-2 sm:px-5">
+              <textarea rows="1" class="line-input resize-none text-xl font-semibold tracking-tight sm:text-2xl" style="field-sizing:content" v-model="S.form.title" @keydown.enter.prevent placeholder="Untitled form" aria-label="Form title"></textarea>
+              <textarea rows="2" style="field-sizing:content" class="line-input mt-1 resize-none text-sm text-muted-foreground" v-model="S.form.description" placeholder="Form description" aria-label="Form description"></textarea>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <Badge variant="secondary" class="tnum"><Icon name="Rows3" :size="12"/>{{ counts.s }} sections · {{ counts.q }} questions</Badge>
+                <Badge v-if="S.settings.timer_mode!=='off'" variant="warning"><Icon name="Timer" :size="12"/>{{ S.settings.timer_mode==='per_section' ? 'Timed per section' : S.settings.time_limit_minutes + ' min limit' }}</Badge>
+                <Badge v-if="S.settings.require_fullscreen || S.settings.single_tab || S.settings.block_copy_paste" variant="secondary"><Icon name="ShieldCheck" :size="12"/>Integrity rules on</Badge>
+                <Badge variant="outline"><Icon :name="S.settings.visibility==='public' ? 'Globe' : 'Lock'" :size="12"/>{{ S.settings.visibility==='public' ? 'Anyone with link' : 'Invited only' }}</Badge>
+              </div>
+            </div>
+          </div>
+
+          <!-- sections -->
+          <template v-for="(sec, si) in S.form.sections" :key="sec.key">
+            <div class="space-y-2 pt-3" :class="si===0 && S.form.sections.length===1 ? 'pt-0' : ''">
+              <SectionHeader v-if="S.form.sections.length > 1 || sec.title" :sec="sec" :si="si"/>
+              <TransitionGroup name="q" tag="div" class="space-y-2" @dragover="onDragOverSection($event, sec)">
+                <QuestionCard v-for="(q, qi) in sec.questions" :key="q.key" :q="q" :sec="sec" :si="si" :qi="qi"/>
+              </TransitionGroup>
+              <div v-if="!sec.questions.length" class="grid place-items-center rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground" @dragover="onDragOverSection($event, sec)">
+                <Icon name="Inbox" :size="22"/><p class="mt-2">No questions in this section.</p><Button class="mt-3" size="sm" variant="outline" @click="S.active='sec:'+sec.key; addQuestion()"><Icon name="Plus"/>Add question</Button>
+              </div>
+              <!-- after-section routing -->
+              <div v-if="si < S.form.sections.length - 1 || sec.next !== 'auto'" class="flex flex-wrap items-center gap-2 px-1 text-sm text-muted-foreground">
+                <Icon name="CornerDownRight" :size="14"/>After section {{ si+1 }}
+                <Select size="sm" class="w-64 max-w-full" v-model="sec.next" :options="[{value:'auto',label:'Continue to next section'}, ...S.form.sections.map((s,i)=>({value:s.key,label:'Go to section '+(i+1)+' ('+(s.title||'Untitled')+')',disabled:s.key===sec.key})), {value:'submit',label:'Submit form'}]"/>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- floating rail (lg+) -->
+        <div class="hidden lg:block">
+          <div class="sticky top-[84px] inline-flex flex-col gap-1 rounded-xl border bg-card p-1 shadow-sm" role="toolbar" aria-label="Add">
+            <Tooltip content="Add question" side="left"><Button variant="ghost" size="icon" @click.stop="addQuestion" aria-label="Add question"><Icon name="CirclePlus" :size="18"/></Button></Tooltip>
+            <Tooltip content="Add section" side="left"><Button variant="ghost" size="icon" @click.stop="addSection" aria-label="Add section"><Icon name="Rows3" :size="18"/></Button></Tooltip>
+            <Separator class="my-0.5"/>
+            <Tooltip content="Preview" side="left"><Button variant="ghost" size="icon" @click.stop="openPreview" aria-label="Preview"><Icon name="Eye" :size="18"/></Button></Tooltip>
+          </div>
+        </div>
+      </div>
+
+      <!-- bottom bar (phones) -->
+      <div class="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 px-3 pt-2 backdrop-blur lg:hidden" style="padding-bottom:calc(0.5rem + env(safe-area-inset-bottom,0px))">
+        <div class="mx-auto grid max-w-md grid-cols-3 gap-2">
+          <Button @click.stop="addQuestion"><Icon name="Plus"/>Question</Button>
+          <Button variant="outline" @click.stop="addSection"><Icon name="Rows3"/>Section</Button>
+          <Button variant="outline" @click.stop="openPreview"><Icon name="Eye"/>Preview</Button>
+        </div>
+      </div>
+    </main>
+
+    <!-- RESPONSES (placeholder, iteration 3) -->
+    <main v-else-if="S.tab==='responses'" class="flex-1 px-3 py-6 sm:px-4">
+      <div class="mx-auto max-w-[720px]">
+        <Card><div class="grid place-items-center p-10 text-center">
+          <div class="grid h-12 w-12 place-items-center rounded-full bg-muted"><Icon name="Inbox" :size="22" class="text-muted-foreground"/></div>
+          <h2 class="mt-4 font-semibold">No responses yet</h2>
+          <p class="mt-1 max-w-sm text-sm text-muted-foreground">Share the link to start collecting. Summary charts, individual responses and the integrity log appear here.</p>
+          <div class="mt-5 flex flex-wrap justify-center gap-2"><Button @click="copyLink"><Icon name="Link"/>Copy link</Button><Button variant="outline" @click="S.tab='settings'; S.settingsNav='sharing'">Sharing settings</Button></div>
+          <p class="mt-6 text-xs text-muted-foreground">Design of this tab is iteration 3.</p>
+        </div></Card>
+      </div>
+    </main>
+
+    <!-- SETTINGS -->
+    <main v-else class="flex-1 px-3 py-6 sm:px-4"><SettingsTab/></main>
+
+    <!-- PREVIEW (full-screen) -->
+    <Teleport to="body"><Transition name="fade">
+      <div v-if="S.preview" class="fixed inset-0 z-50 flex flex-col bg-canvas" role="dialog" aria-modal="true" aria-label="Preview">
+        <div class="flex h-14 shrink-0 items-center gap-3 border-b bg-background px-3 sm:px-4" style="margin-top:env(safe-area-inset-top,0px)">
+          <Button variant="ghost" size="icon" @click="S.preview=false" aria-label="Close preview"><Icon name="X"/></Button>
+          <p class="min-w-0 flex-1 truncate text-sm font-semibold">Preview <span class="font-normal text-muted-foreground">· draft</span></p>
+          <div class="hidden items-center rounded-lg bg-muted p-1 sm:inline-flex" role="radiogroup" aria-label="Device">
+            <Tooltip v-for="d in devices" :key="d.value" :content="d.label" side="bottom"><button type="button" role="radio" :aria-checked="device===d.value" @click="device=d.value" :aria-label="d.label"
+              :class="['grid h-7 w-9 place-items-center rounded-md', device===d.value ? 'bg-background text-foreground shadow' : 'text-muted-foreground hover:text-foreground']"><Icon :name="d.icon"/></button></Tooltip>
+          </div>
+          <Button variant="outline" size="sm" @click="previewKey++"><Icon name="RotateCcw" :size="14"/><span class="hidden sm:inline">Restart</span></Button>
+        </div>
+        <div class="frame-scroll flex-1 overflow-auto" style="padding-bottom:env(safe-area-inset-bottom,0px)">
+          <div class="mx-auto h-full transition-[max-width] duration-300" :style="{ maxWidth: frameW }" :class="device!=='desktop' ? 'sm:my-4 sm:h-auto sm:min-h-[calc(100%-2rem)] sm:rounded-2xl sm:border sm:shadow-lg sm:bg-canvas' : ''">
+            <FormRenderer :key="previewKey" :device="device"/>
+          </div>
+        </div>
+      </div>
+    </Transition></Teleport>
+
+    <!-- PUBLISH -->
+    <Dialog v-model:open="S.publishDlg">
+      <div class="grid gap-1.5 pr-6"><h2 class="text-lg font-semibold leading-none tracking-tight">Publish version {{ S.published.version + 1 }}</h2>
+        <p class="text-sm text-muted-foreground">Version {{ S.published.version }} went live {{ S.published.at }}. Publishing freezes this draft. People mid-attempt finish on the version they started.</p></div>
+      <div class="grid gap-2 rounded-lg border p-3 text-sm">
+        <div class="flex justify-between"><span class="text-muted-foreground">Changes since v{{ S.published.version }}</span><span class="font-medium tnum">{{ S.edits }} {{ S.edits===1 ? 'edit' : 'edits' }}</span></div>
+        <div class="flex justify-between"><span class="text-muted-foreground">Sections · questions</span><span class="font-medium tnum">{{ counts.s }} · {{ counts.q }}</span></div>
+        <div class="flex justify-between"><span class="text-muted-foreground">Who can respond</span><span class="font-medium">{{ S.settings.visibility==='public' ? 'Anyone with the link' : S.settings.invites.length + ' invited emails' }}</span></div>
+      </div>
+      <div v-if="issues.length" class="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+        <p class="flex items-center gap-2 font-medium text-destructive"><Icon name="CircleAlert" :size="15"/>Fix before publishing</p>
+        <ul class="mt-1.5 list-disc pl-6 text-muted-foreground"><li v-for="i in issues.slice(0,4)" :key="i">{{ i }}</li></ul>
+      </div>
+      <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <Button variant="outline" @click="S.publishDlg=false">Cancel</Button>
+        <Button :disabled="issues.length > 0" @click="publish"><Icon name="Send" :size="14"/>Publish</Button>
+      </div>
+    </Dialog>
+
+    <!-- CONFIRM DELETE SECTION -->
+    <Dialog :open="!!S.confirmDel" @update:open="v => { if(!v) S.confirmDel = null }">
+      <div class="grid gap-1.5 pr-6"><h2 class="text-lg font-semibold leading-none">Delete this section?</h2>
+        <p class="text-sm text-muted-foreground">Its questions move to the section above. Any "go to section" rules pointing here switch to "Continue to next section".</p></div>
+      <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button variant="outline" @click="S.confirmDel=null">Cancel</Button><Button variant="destructive" @click="confirmDelete">Delete section</Button></div>
+    </Dialog>
+
+    <!-- SPEC SHEET -->
+    <Sheet v-model:open="S.spec">
+      <div class="border-b p-6 pr-12"><h2 class="text-lg font-semibold">Design spec · Builder</h2><p class="mt-1 text-sm text-muted-foreground">Iteration 1.1 (dense). Component names match shadcn-vue; props match its reka-ui based API (v-model).</p></div>
+      <div class="flex-1 space-y-6 overflow-auto p-6 text-sm">
+        <section><h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Breakpoints</h3>
+          <div class="overflow-x-auto"><table class="w-full text-left"><tbody class="divide-y">
+            <tr><td class="py-2 pr-3 font-mono text-xs">&lt; 640</td><td class="py-2">Phone. Tabs on row 2 (full width). Header icons collapse to a More menu. Bottom action bar (Question · Section · Preview). Option logic selects drop below the option.</td></tr>
+            <tr><td class="py-2 pr-3 font-mono text-xs">640–767</td><td class="py-2">Large phone / small tablet. Copy link, theme and spec icons return. Type select sits beside the title.</td></tr>
+            <tr><td class="py-2 pr-3 font-mono text-xs">768–1023</td><td class="py-2">Tablet. Canvas centred at 720px; bottom action bar stays (thumb reach on tablets).</td></tr>
+            <tr><td class="py-2 pr-3 font-mono text-xs">≥ 1024</td><td class="py-2">Desktop. Floating tool rail (sticky, right of canvas) replaces the bottom bar. Tabs centred in header. Settings gets a left group nav.</td></tr>
+          </tbody></table></div>
+          <p class="mt-2 text-muted-foreground">Canvas max 720px. Respondent form max 680px; grids switch to stacked rows via a container query at 560px, so embeds behave the same.</p></section>
+        <section><h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Components</h3>
+          <ul class="grid gap-2">
+            <li><span class="font-medium">Header</span> · Button (ghost/icon, default/sm), Tabs + TabsList + TabsTrigger, DropdownMenu (theme, more), Tooltip</li>
+            <li><span class="font-medium">Question card</span> · Card, Input (title uses ghost underline variant), Select (type, 8 items with lucide icons), Switch (Required), DropdownMenu with DropdownMenuCheckboxItem, Separator, Badge, Button icon</li>
+            <li><span class="font-medium">Section header</span> · Card with Badge-like tab "Section n of N", Input, NumberField for minutes</li>
+            <li><span class="font-medium">Settings</span> · Card, Switch, RadioGroup rendered as cards, Input, NumberField, Textarea, Select, Badge (invite status)</li>
+            <li><span class="font-medium">Overlays</span> · Dialog (publish, delete), Sheet side=right (spec), full-screen Dialog (preview), Sonner (toasts)</li>
+            <li><span class="font-medium">Drag</span> · vue-draggable-plus, handle ".drag-handle", group "questions" across sections, animation 180</li>
+          </ul></section>
+        <section><h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tokens</h3>
+          <ul class="grid gap-1.5">
+            <li>Base: shadcn zinc, radius 0.6rem. Canvas ground --canvas sits behind cards.</li>
+            <li>--primary: teal (174 72% 26% light / 170 62% 46% dark). Builder chrome only.</li>
+            <li>--form-accent: per form (6 presets, default = org branding). Respondent view only.</li>
+            <li>--warning: unpublished changes, timers. --destructive: delete, errors.</li>
+            <li>Font: Geist / Geist Mono. Density: card padding 16/20px, question title 14px, 8px gap between cards, choice previews in 2 columns from 640px.</li>
+          </ul></section>
+        <section><h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Motion</h3>
+          <ul class="grid gap-1.5"><li>Reorder: FLIP 180ms cubic-bezier(.2,.8,.2,1)</li><li>Card activate: 160ms fade; popovers 120ms</li><li>Autosave: 800ms debounce → "Saving…" → "Saved"</li><li>Sheet: 220ms slide. All motion off with prefers-reduced-motion.</li></ul></section>
+        <section><h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">API touchpoints</h3>
+          <ul class="grid gap-1.5 font-mono text-xs"><li>PUT /{org}/forms/{id}/draft  (autosave: forms.draft_definition)</li><li>POST /{org}/forms/{id}/publish  (form_versions row)</li><li>PATCH /{org}/forms/{id}/settings</li><li>POST /{org}/forms/{id}/invitations</li></ul></section>
+      </div>
+    </Sheet>
+
+    <!-- TOASTS -->
+    <div class="pointer-events-none fixed inset-x-0 bottom-20 z-[60] flex flex-col items-center gap-2 px-3 lg:bottom-4 lg:right-4 lg:left-auto lg:items-end" style="margin-bottom:env(safe-area-inset-bottom,0px)" aria-live="polite">
+      <TransitionGroup name="toast">
+        <div v-for="t in S.toasts" :key="t.id" class="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border bg-popover p-4 text-popover-foreground shadow-lg">
+          <Icon :name="t.icon" class="mt-0.5 text-primary"/>
+          <div class="min-w-0"><p class="text-sm font-medium">{{ t.title }}</p><p v-if="t.desc" class="truncate text-xs text-muted-foreground">{{ t.desc }}</p></div>
+        </div>
+      </TransitionGroup>
+    </div>
+  </div>`
+};
+
+const app = createApp(App);
+Object.entries({ Icon, Button, Input, Textarea, Label, Switch, Checkbox, RadioGroupItem, Badge, Card, Separator, Select, DropdownMenu, Tooltip, Dialog, Sheet, Tabs, QuestionCard, SectionHeader, FormRenderer, SettingRow, ChoiceCard, SettingsTab })
+  .forEach(([n, c]) => app.component(n, c));
+app.mount('#app');
+</script>
