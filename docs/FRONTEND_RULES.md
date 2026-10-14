@@ -82,6 +82,15 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 - Every primary action has an icon and visible text on desktop. On phones the toolbar shows icons with counts, and the New button keeps its text.
 - Quick-filter tabs (status) sit above the toolbar and stay in sync with the Filters dialog.
 
+**One card (P39).** Every list that shows rows, on list pages and in details tabs, is one `ListCard`:
+
+1. Search + quick tabs share a row only when they fit: the search grows (`flex: 1 1 16rem`) with the tabs on the right; when the tabs do not fit they wrap and sit on the left while the search fills its row. Decided by content, never by screen breakpoints. Pages that follow the top-bar search show only the tabs.
+2. Filters, Clear, Sort (and Refresh on list pages) on the left; Export, Copy link and the primary create button on the right. Export and Copy link are icon-only below extra-wide screens.
+3. Active-filter chips, an optional summary strip, then the rows and the empty state, inside the same card.
+
+- The card switches table and row cards by its own width (container query): row cards under 700px, table from 700px filling the card with no sideways scroll. The sidebar and zoom change the card width, so check in-between widths with the sidebar open.
+- Card grids (forms in cards view, media, delegations) keep the separate `ListToolbar`: cards inside a card read badly.
+
 **Filters dialog**
 
 - Fields come from the list endpoint's `filterFields`; the page declares none of its own.
@@ -151,6 +160,16 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 - Editors that change many switches at once (role permissions, menus) stage changes. A sticky bar at the bottom shows the diff (+n / −n), who it affects, Discard and Save.
 - Leaving a page with staged changes asks Stay / Discard and leave / Save and leave. The guard covers every in-app navigation and the browser's close/reload prompt.
 
+
+**Tabs that show records (P39)**
+
+- The tab is the module's own list with a scope (`useList({ scope: () => ({ fieldKey: parentId }) })`); never a second hand-built table.
+- Rows are locked to the parent (no removable chip); the parent's filter field, column and search are removed; quick tabs count within the scope.
+- The tab has its own search box in the card; the top bar keeps searching the parent module (P22). No Refresh and no context line in the tab.
+- Rows open the record's preview (P26). Export downloads exactly the rows shown, with the parent in the file name and without the parent column.
+- The create button opens the normal form with the parent shown read-only (`LockedField`), only when the parent allows it.
+- Page-level tabs that show records (e.g. History / Waiting) follow the same pattern: Waiting is the same list scoped to its status.
+- The tab, search, sort and filters are in the link (`?tab=users&q=…&f[from][op]=in…`); a tab change is a new history entry, a filter change is not.
 ## Locked: forms and fields
 
 **Fields**
@@ -287,6 +306,8 @@ shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or
 - [ ] Every menu, select, popover and tooltip is portalled and stays on screen
 - [ ] Toolbar order is Refresh, Filters, Clear, Sort, then toggle and New; Refresh keeps content visible
 - [ ] Filters, sort, page and tab are in the URL and survive a reload
+- [ ] Lists that show rows are one ListCard; search and tabs wrap by content; the card switches table/cards by its own width; checked at ~700–1100px with the sidebar open
+- [ ] Tabs that show records use the module list with a scope (parent filter/column/search removed, own search, Export, Copy link, create with the parent locked)
 - [ ] Top-bar search filters this module; "Search everywhere" works
 - [ ] Create/edit form has drafts (or is listed as an exception with a reason)
 - [ ] No native pickers; required asterisks are CSS; errors sit under fields

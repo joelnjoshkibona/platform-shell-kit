@@ -48,14 +48,18 @@
 
   /* ---------- useList: client-side stand-in for Cobley's useServerTable + useListFilters + useListSort */
   function useList(o) {
-    const S = reactive({ filters: {}, sort: o.sort || o.sorts[0].value, dir: o.dir || 'asc', loading: false, first: true, updatedAt: Date.now(), open: false, mode: 'simple', draft: {} });
+    const S = reactive({ _defSort: { sort: o.sort || o.sorts[0].value, dir: o.dir || 'asc' }, filters: {}, sort: o.sort || o.sorts[0].value, dir: o.dir || 'asc', loading: false, first: true, updatedAt: Date.now(), open: false, mode: 'simple', draft: {} });
     setTimeout(() => { S.first = false; }, 0);
-    const fields = computed(() => typeof o.fields === 'function' ? o.fields() : o.fields);
+    // P39: o.scope() = { fieldKey: parentId } (locked pre-filter, that field leaves the filters); o.query() = the list's own search text
+    const allFields = computed(() => typeof o.fields === 'function' ? o.fields() : o.fields);
+    const scopeOf = () => (o.scope && o.scope()) || {};
+    const fields = computed(() => allFields.value.filter(f => !(f.key in scopeOf())));
     const activeCount = computed(() => Object.keys(S.filters).length);
     const rows = computed(() => {
-      const q = (G.search || '').trim().toLowerCase();
+      const q = ((o.query ? o.query() : G.search) || '').trim().toLowerCase();
+      const sc = Object.entries(scopeOf()).map(([k, v]) => [allFields.value.find(x => x.key === k), v]).filter(x => x[0]);
       const eff = Object.entries(S.filters).map(([k, f]) => { const fd = fields.value.find(x => x.key === k); return [fd, fd.type === 'select_paginated' && fd.module === 'locations' && f.below && Array.isArray(f.value) ? { ...f, value: [...new Set(f.value.flatMap(id => subtreeIds(id)))] } : f]; });
-      let r = o.rows().filter(x => (!q || o.search(x, q)) && eff.every(([fd, f]) => matchOne(fd.get(x), f)));
+      let r = o.rows().filter(x => sc.every(([fd, v]) => { const g = fd.get(x); return Array.isArray(g) ? g.includes(v) : g === v; }) && (!q || o.search(x, q)) && eff.every(([fd, f]) => matchOne(fd.get(x), f)));
       const sd = o.sorts.find(s => s.value === S.sort); if (sd) { r = [...r].sort((a, b) => { const A = sd.get(a), B = sd.get(b); return (A > B ? 1 : A < B ? -1 : 0) * (S.dir === 'asc' ? 1 : -1); }); }
       return r;
     });
@@ -81,7 +85,7 @@
     function clearAll() { S.filters = {}; S.draft = {}; S.mode = 'simple'; refresh(); }
     function setFilter(k, f) { if (f) S.filters[k] = f; else delete S.filters[k]; refresh(); }
     function chips() { return Object.entries(S.filters).map(([k, f]) => { const fd = fields.value.find(x => x.key === k); const val = noValue(f.op) ? '' : f.op === 'between' ? f.value.map(v => fd.type === 'date' ? fmtDay(v) : v).join(' – ') : Array.isArray(f.value) ? f.value.map(v => fd.type === 'select_paginated' ? ((LABELS[lkey(fd.module, v)] || {}).label || v) : (fd.options.find(op => op.value === v) || { label: v }).label).join(', ') + (fd.type === 'select_paginated' && fd.module === 'locations' && f.below ? ' and below' : '') : fd.type === 'date' ? fmtDay(f.value) : fd.type === 'boolean' ? (f.value === 'yes' ? 'Yes' : 'No') : '"' + f.value + '"'; return { key: k, text: fd.label + ' ' + opLabel(fd.type, f.op) + (val ? ' ' + val : '') }; }); }
-    return { S, rows, fields, sorts: o.sorts, activeCount, refresh, openFilters, setMode, setOp, canApply, apply, clearAll, setFilter, chips, noun: o.noun || 'records' };
+    return { S, rows, fields, scoped: computed(() => Object.keys(scopeOf()).length > 0), sorts: o.sorts, activeCount, refresh, openFilters, setMode, setOp, canApply, apply, clearAll, setFilter, chips, noun: o.noun || 'records' };
   }
 
   /* ---------- Date picker (no native pickers, rules): month + year switchers inside the calendar card; popover on desktop, modal on phones */

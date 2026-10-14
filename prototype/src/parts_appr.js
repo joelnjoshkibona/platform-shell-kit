@@ -275,24 +275,26 @@
       function quick(r, mode) { D.req = r; D.mode = mode; D.comment = ''; }
       function confirm() { if (D.mode === 'reject' && !D.comment.trim()) return; decide(D.req, D.mode === 'approve' ? 'approved' : 'rejected', D.comment.trim()); D.req = null; }
       const canCreate = () => !G.viewAs && myPerms.value.includes('Requests.create');
+      registerUrlList(LS, { get: () => G.search || '', set: (v) => { G.search = v; } });   // P39: search, sort and filters live in the link
       return { G, Q, LS, tabs, RQ_STATUS, ACTIONS, rtById, nameOf, initials, locById, openReq, actingFor, agoLong, D, quick, confirm, newRequest, canCreate, waitingForMe };
     },
     template: `<div class="mx-auto grid max-w-[1100px] grid-cols-[minmax(0,1fr)] gap-4">
       <div><h2 class="text-xl font-semibold tracking-tight sm:text-2xl">Approvals</h2><p class="text-sm text-muted-foreground">Requests that need sign-off before they take effect. Approvers come from roles at the request's location and above.</p></div>
-      <div class="-mb-1 max-w-full overflow-x-auto"><Tabs v-model="Q.tab" :items="tabs"/></div>
-      <ListToolbar :list="LS"><Button v-if="canCreate()" size="sm" @click="newRequest()"><Icon name="Plus" :size="15"/>New request</Button></ListToolbar>
-      <div v-if="LS.rows.value.length" :class="['kpi overflow-hidden rounded-xl border bg-card shadow-sm transition-opacity', LS.S.loading && 'pointer-events-none opacity-60']">
-        <ul class="divide-y"><li v-for="r in LS.rows.value" :key="r.id" class="relative flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-3 hover:bg-muted/40 sm:flex-nowrap sm:px-4">
-          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Icon :name="ACTIONS[rtById(r.type).action].icon" :size="16"/></span>
-          <button type="button" class="min-w-0 flex-1 basis-[calc(100%-3.5rem)] text-left after:absolute after:inset-0 after:content-[''] sm:basis-auto" @click="openReq(r.id)">
-            <p class="flex items-center gap-2"><span class="truncate text-sm font-medium">{{ rtById(r.type).name }}: {{ r.subject.label }}</span></p>
-            <p class="truncate text-xs text-muted-foreground"><span class="font-mono">{{ r.no }}</span> · {{ nameOf(r.requester) }} · {{ (locById(r.loc) || {}).name }} · {{ agoLong(r.at) }}</p></button>
-          <ApprovalSteps :req="r" compact class="hidden md:flex"/>
-          <span :class="['ml-12 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium sm:ml-0', RQ_STATUS[r.status].cls]"><span :class="['h-1.5 w-1.5 rounded-full', RQ_STATUS[r.status].dot]"></span>{{ RQ_STATUS[r.status].label }}</span>
-          <div v-if="actingFor(r) && !G.viewAs" class="relative z-10 ml-auto flex gap-1.5 sm:ml-0"><Button size="sm" variant="outline" class="h-8" @click="quick(r, 'reject')">Reject</Button><Button size="sm" class="h-8" @click="quick(r, 'approve')"><Icon name="Check" :size="14"/>Approve</Button></div>
-          <Icon v-else name="ChevronRight" :size="16" class="hidden shrink-0 text-muted-foreground sm:block"/>
-        </li></ul></div>
-      <div v-else class="flex h-40 flex-col items-center justify-center gap-1 rounded-xl border border-dashed px-4 text-center"><Icon name="Stamp" :size="24" class="text-muted-foreground/60"/><p class="text-sm text-muted-foreground">{{ Q.tab==='mine' ? 'Nothing is waiting for you.' : 'No requests match.' }}</p></div>
+      <ListCard :list="LS" :tabs="tabs" v-model:quick="Q.tab">
+        <template #actions><Button v-if="canCreate()" size="sm" @click="newRequest()"><Icon name="Plus" :size="15"/>New request</Button></template>
+        <div v-if="LS.rows.value.length">
+          <ul class="divide-y"><li v-for="r in LS.rows.value" :key="r.id" class="relative flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-3 hover:bg-muted/40 sm:flex-nowrap sm:px-4">
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Icon :name="ACTIONS[rtById(r.type).action].icon" :size="16"/></span>
+            <button type="button" class="min-w-0 flex-1 basis-[calc(100%-3.5rem)] text-left after:absolute after:inset-0 after:content-[''] sm:basis-auto" @click="openReq(r.id)">
+              <p class="flex items-center gap-2"><span class="truncate text-sm font-medium">{{ rtById(r.type).name }}: {{ r.subject.label }}</span></p>
+              <p class="truncate text-xs text-muted-foreground"><span class="font-mono">{{ r.no }}</span> · {{ nameOf(r.requester) }} · {{ (locById(r.loc) || {}).name }} · {{ agoLong(r.at) }}</p></button>
+            <ApprovalSteps :req="r" compact class="hidden md:flex"/>
+            <span :class="['ml-12 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium sm:ml-0', RQ_STATUS[r.status].cls]"><span :class="['h-1.5 w-1.5 rounded-full', RQ_STATUS[r.status].dot]"></span>{{ RQ_STATUS[r.status].label }}</span>
+            <div v-if="actingFor(r) && !G.viewAs" class="relative z-10 ml-auto flex gap-1.5 sm:ml-0"><Button size="sm" variant="outline" class="h-8" @click="quick(r, 'reject')">Reject</Button><Button size="sm" class="h-8" @click="quick(r, 'approve')"><Icon name="Check" :size="14"/>Approve</Button></div>
+            <Icon v-else name="ChevronRight" :size="16" class="hidden shrink-0 text-muted-foreground sm:block"/>
+          </li></ul></div>
+        <div v-else class="flex h-40 flex-col items-center justify-center gap-1 px-4 text-center"><Icon name="Stamp" :size="24" class="text-muted-foreground/60"/><p class="text-sm text-muted-foreground">{{ Q.tab==='mine' ? 'Nothing is waiting for you.' : 'No requests match.' }}</p></div>
+      </ListCard>
       <ApproveDialog :state="D" @confirm="confirm"/>
     </div>`
   };
@@ -313,6 +315,8 @@
       const req = computed(() => reqById(G.reqId));
       const T = reactive({ tab: G.pendingTab || 'overview', loading: false, updatedAt: Date.now() });
       watch(() => G.reqId, () => { T.tab = 'overview'; });
+      watch(() => G.pendingTab, (v) => { if (v) T.tab = v; });
+      watch(() => T.tab, (t) => { G.tab = t; }, { immediate: true });   // P39: the tab is part of the link
       watch(req, r => { if (r) seedLog(r); }, { immediate: true });
       const log = computed(() => req.value && req.value.log ? [...req.value.log].sort((a, b) => b.at - a.at) : []);
       const logGroups = computed(() => { const out = []; log.value.forEach(x => { const k = x.at + x.event + x.to; let g = out.find(o => o.k === k); if (!g) { g = { k, at: x.at, event: x.event, to: x.to, step: x.step, items: [] }; out.push(g); } g.items.push(x); }); return out; });
@@ -478,6 +482,7 @@
       function save() { N.tried = true; if (errs.value.to || errs.value.end) return; delegOf().unshift({ id: ulid('dg'), from: N.from, to: N.to, types: [...N.types], start: N.start, end: N.end, reason: N.reason.trim(), created: isoDay(TODAY) }); N.open = false; toast('Delegation saved', nameOf(N.to) + ' can approve for ' + nameOf(N.from) + ' until ' + fmtDay(N.end) + '.', 'Forward'); }
       function endNow(d) { if (G.viewAs) return readOnly(); d.end = daysAgo(1); toast('Delegation ended', '', 'Ban'); }
       const ST = { active: { label: 'Active', cls: 'bg-c1/15', dot: 'bg-c1' }, upcoming: { label: 'Upcoming', cls: 'bg-c3/15', dot: 'bg-c3' }, expired: { label: 'Expired', cls: 'bg-muted text-muted-foreground', dot: 'bg-muted-foreground/60' } };
+      registerUrlList(LS, { get: () => G.search || '', set: (v) => { G.search = v; } });   // P39: search, sort and filters live in the link
       return { G, LS, N, admin, openNew, errs, save, endNow, ST, delegState, nameOf, initials, rtById, rtypesOf, fmtDay, ME };
     },
     template: `<div class="mx-auto grid max-w-[1000px] grid-cols-[minmax(0,1fr)] gap-4">

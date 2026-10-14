@@ -100,6 +100,18 @@ body{font-family:Geist,ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial,sans-seri
 @container (max-width: 560px){ .grid-table{display:none} .grid-stack{display:flex} .r-pad{padding:16px!important} .scale-row{flex-wrap:wrap} }
 .drag-ghost{opacity:.45}
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:hsl(var(--border));border-radius:8px;border:2px solid transparent;background-clip:padding-box}
+  /* P39 one-card lists: the card decides table vs cards by its own width, not the screen's (container query) */
+  [data-list-card]{container-type:inline-size;container-name:lc}
+  @container lc (max-width: 699px){
+    [data-list-card] .sm\:block:has(> table){display:none !important}
+    [data-list-card] ul.sm\:hidden{display:block !important}
+    [data-list-card] .md\:block:has(> table){display:none !important}
+    [data-list-card] ul.md\:hidden{display:block !important}
+  }
+  /* search + tabs row needs no query: search grows (flex 1 1 16rem); when the tabs do not fit they wrap and justify-between puts a lone line at the left */
+  @container lc (min-width: 700px){ [data-list-card] .sm\:block > table, [data-list-card] .md\:block > table{min-width:0 !important} }
+  /* tables and row cards that switch at md follow the card too */
+  @container lc (min-width: 700px){ [data-list-card] .md\:block:has(> table){display:block !important} [data-list-card] ul.md\:hidden{display:none !important} }
 </style>
 
 <div id="app" v-cloak></div>
