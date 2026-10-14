@@ -16,8 +16,10 @@ respd = open(SP + 'parts_app.js').read()
 shell = open(SP + 'parts_shell.js').read()
 loc = open(SP + 'parts_loc.js').read()
 loc += open(SP + 'parts_list.js').read()
+loc += open(SP + 'parts_listcard.js').read()   # P39: ListCard, ListShare, LockedField, exportList
 loc += open(SP + 'parts_comp.js').read()
 loc += open(SP + 'parts_appr.js').read()
+loc += open(SP + 'parts_links.js').read()   # P39: every view has an address (keep last)
 # ---- Rules tab: FRONTEND_RULES.md -> sections of HTML (one source, D27)
 import html as _h, json as _j
 def _inline(t):
@@ -75,7 +77,7 @@ for t,cs in _tags.items():
         if a.get('do'): _md += [''] + ['- Do: '+d for d in a['do']]
         if a.get('dont'): _md += ['- Don\'t: '+d for d in a['dont']]
 open(os.path.join(KIT, 'docs', 'COMPONENTS.md'),'w').write('\n'.join(_md)+'\n')
-shell = shell.replace('  return { AuthView, ShellView, comps: {', loc + '\n  return { AuthView, ShellView, comps: { LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog,', 1)
+shell = shell.replace('  return { AuthView, ShellView, comps: {', loc + '\n  return { AuthView, ShellView, comps: { ListCard, ListShare, LockedField, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog,', 1)
 
 def rep(s, a, b, count=1):
     assert s.count(a) >= 1, ('missing', a[:80])

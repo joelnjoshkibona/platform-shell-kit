@@ -204,6 +204,7 @@
         if (it.id === 'child') G.newLoc = l.id;
         if (it.id === 'status') { l.status = l.status === 'active' ? 'inactive' : 'active'; toast(l.name + (l.status === 'active' ? ' activated' : ' deactivated'), l.status === 'inactive' ? 'Its forms stop accepting responses. People keep their roles.' : '', l.status === 'active' ? 'CircleCheck' : 'Ban'); }
       }
+      registerUrlList(LS, { get: () => G.search || '', set: (v) => { G.search = v; } });   // P39: search, sort and filters live in the link
       return { LS, quick, G, S, LTYPES, LSTAT, statusTabs, rows, kpi, toggle, expandAll, allOpen, menu, onMenu, openLoc, usersAt, formsAt, respOf, filtering, canManageLoc, memberByEmail, initials };
     },
     template: `<div class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">
@@ -216,36 +217,35 @@
         <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Location forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="ClipboardList" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.forms }}</p><p class="mt-1 text-[11px] text-muted-foreground">Owned by a location</p></div>
         <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Responses, 30 days</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Inbox" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.resp }}</p><p class="mt-1 text-[11px] text-muted-foreground">Snapshotted per location</p></div>
       </div>
-      <div class="-mb-1 max-w-full overflow-x-auto"><Tabs v-model="quick" :items="statusTabs"/></div>
-      <ListToolbar :list="LS">
-        <Tooltip :content="allOpen ? 'Collapse all' : 'Expand all'" side="left"><Button variant="ghost" size="sm" class="w-8 px-0" :disabled="filtering" @click="expandAll(!allOpen)" :aria-label="allOpen ? 'Collapse all' : 'Expand all'"><Icon :name="allOpen ? 'ChevronsDownUp' : 'ChevronsUpDown'" :size="15"/></Button></Tooltip>
-        <Button v-if="canManageLoc()" size="sm" @click="G.newLoc = true"><Icon name="Plus" :size="15"/>New<span class="hidden sm:inline"> location</span></Button>
-      </ListToolbar>
-      <div v-if="rows.length" :class="['kpi overflow-hidden rounded-xl border bg-card shadow-sm transition-opacity', LS.S.loading && 'pointer-events-none opacity-60']" style="animation-delay:120ms">
-        <div class="hidden overflow-x-auto sm:block"><table class="w-full min-w-[760px] text-sm">
-          <thead><tr class="border-b text-left text-xs text-muted-foreground"><th class="px-4 py-2.5 font-medium">Location</th><th class="px-3 py-2.5 font-medium">Type</th><th class="px-3 py-2.5 font-medium">People here</th><th class="px-3 py-2.5 text-right font-medium">Forms</th><th class="px-3 py-2.5 text-right font-medium">Responses, 30d</th><th class="px-3 py-2.5 font-medium">Status</th><th class="w-10"></th></tr></thead>
-          <tbody><tr v-for="r in rows" :key="r.l.id" :class="['cursor-pointer border-b last:border-0 hover:bg-muted/50', r.dim ? 'opacity-55' : '']" @click="openLoc(r.l.id)">
-            <td class="py-2 pl-4 pr-3"><div class="flex items-center gap-1.5" :style="{ paddingLeft: (r.d * 22) + 'px' }">
-              <button v-if="r.kids" type="button" @click.stop="toggle(r.l.id)" :disabled="filtering" class="grid h-6 w-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-60" :aria-expanded="filtering || !!S.open[r.l.id]" :aria-label="(S.open[r.l.id] ? 'Collapse ' : 'Expand ') + r.l.name"><Icon name="ChevronRight" :size="14" :class="['transition-transform duration-200', (filtering || S.open[r.l.id]) ? 'rotate-90' : '']"/></button>
-              <span v-else class="w-6 shrink-0"></span>
-              <span :class="['grid h-7 w-7 shrink-0 place-items-center rounded-md', r.l.type==='org' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary']"><Icon :name="LTYPES[r.l.type].icon" :size="14"/></span>
-              <div class="min-w-0 pl-1"><p class="truncate font-medium">{{ r.l.name }}</p><p class="truncate text-xs text-muted-foreground"><span class="font-mono">{{ r.l.code }}</span><template v-if="r.l.region"> · {{ r.l.region }}</template></p></div></div></td>
-            <td class="px-3 py-2 text-muted-foreground">{{ LTYPES[r.l.type].label }}</td>
-            <td class="px-3 py-2"><div v-if="usersAt(r.l.id).length" class="flex items-center"><span v-for="(a, i) in usersAt(r.l.id).slice(0, 3)" :key="a.id" class="-ml-1.5 grid h-6 w-6 place-items-center rounded-full bg-muted text-[9px] font-semibold uppercase ring-2 ring-card first:ml-0" :title="(memberByEmail(a.email)||{}).name">{{ initials((memberByEmail(a.email)||{name:'?'}).name) }}</span><span v-if="usersAt(r.l.id).length > 3" class="ml-1.5 text-xs text-muted-foreground">+{{ usersAt(r.l.id).length - 3 }}</span></div><span v-else class="text-muted-foreground">–</span></td>
-            <td class="px-3 py-2 text-right tnum">{{ formsAt(r.l.id).length || '–' }}</td>
-            <td class="px-3 py-2 text-right tnum">{{ respOf(r.l.id) || '–' }}</td>
-            <td class="px-3 py-2"><span :class="['inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium', LSTAT[r.l.status].cls]"><span :class="['h-1.5 w-1.5 rounded-full', LSTAT[r.l.status].dot]"></span>{{ LSTAT[r.l.status].label }}</span></td>
-            <td class="px-2" @click.stop><DropdownMenu :items="menu(r.l)" @select="it => onMenu(r.l, it)"><template #trigger><Button variant="ghost" size="icon-sm" :aria-label="'Actions for ' + r.l.name"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu></td>
-          </tr></tbody></table></div>
-        <ul class="divide-y sm:hidden"><li v-for="r in rows" :key="r.l.id" :class="['relative flex items-center gap-2 py-2.5 pr-2', r.dim ? 'opacity-55' : '']" :style="{ paddingLeft: (8 + r.d * 16) + 'px' }">
-          <button v-if="r.kids" type="button" @click="toggle(r.l.id)" :disabled="filtering" class="relative z-10 grid h-8 w-7 shrink-0 place-items-center rounded text-muted-foreground" :aria-expanded="filtering || !!S.open[r.l.id]" :aria-label="'Toggle ' + r.l.name"><Icon name="ChevronRight" :size="14" :class="['transition-transform duration-200', (filtering || S.open[r.l.id]) ? 'rotate-90' : '']"/></button><span v-else class="w-7 shrink-0"></span>
-          <span :class="['grid h-8 w-8 shrink-0 place-items-center rounded-md', r.l.type==='org' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary']"><Icon :name="LTYPES[r.l.type].icon" :size="15"/></span>
-          <button type="button" class="min-w-0 flex-1 text-left after:absolute after:inset-0 after:content-['']" @click="openLoc(r.l.id)"><p class="truncate text-sm font-medium">{{ r.l.name }}</p><p class="truncate text-xs text-muted-foreground tnum">{{ LTYPES[r.l.type].label }} · {{ usersAt(r.l.id).length }} people · {{ formsAt(r.l.id).length }} forms</p></button>
-          <span :class="['h-2 w-2 shrink-0 rounded-full', LSTAT[r.l.status].dot]" :aria-label="LSTAT[r.l.status].label"></span>
-          <DropdownMenu class="relative z-10" :items="menu(r.l)" @select="it => onMenu(r.l, it)"><template #trigger><Button variant="ghost" size="icon-sm" :aria-label="'Actions for ' + r.l.name"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu>
-        </li></ul>
-      </div>
-      <div v-else class="grid place-items-center rounded-xl border border-dashed p-10 text-center"><Icon name="MapPinOff" :size="22" class="text-muted-foreground"/><p class="mt-2 font-medium">No locations match</p><p class="text-sm text-muted-foreground">Try other filters, or clear the search.</p><Button class="mt-3" variant="outline" size="sm" @click="G.search=''; LS.clearAll()">Clear search and filters</Button></div>
+      <ListCard :list="LS" :tabs="statusTabs" v-model:quick="quick">
+        <template #actions><Tooltip :content="allOpen ? 'Collapse all' : 'Expand all'" side="left"><Button variant="ghost" size="sm" class="w-8 px-0" :disabled="filtering" @click="expandAll(!allOpen)" :aria-label="allOpen ? 'Collapse all' : 'Expand all'"><Icon :name="allOpen ? 'ChevronsDownUp' : 'ChevronsUpDown'" :size="15"/></Button></Tooltip>
+        <Button v-if="canManageLoc()" size="sm" @click="G.newLoc = true"><Icon name="Plus" :size="15"/>New<span class="hidden sm:inline"> location</span></Button></template>
+        <div v-if="rows.length" style="animation-delay:120ms">
+          <div class="hidden overflow-x-auto sm:block"><table class="w-full min-w-[760px] text-sm">
+            <thead><tr class="border-b text-left text-xs text-muted-foreground"><th class="px-4 py-2.5 font-medium">Location</th><th class="px-3 py-2.5 font-medium">Type</th><th class="px-3 py-2.5 font-medium">People here</th><th class="px-3 py-2.5 text-right font-medium">Forms</th><th class="px-3 py-2.5 text-right font-medium">Responses, 30d</th><th class="px-3 py-2.5 font-medium">Status</th><th class="w-10"></th></tr></thead>
+            <tbody><tr v-for="r in rows" :key="r.l.id" :class="['cursor-pointer border-b last:border-0 hover:bg-muted/50', r.dim ? 'opacity-55' : '']" @click="openLoc(r.l.id)">
+              <td class="py-2 pl-4 pr-3"><div class="flex items-center gap-1.5" :style="{ paddingLeft: (r.d * 22) + 'px' }">
+                <button v-if="r.kids" type="button" @click.stop="toggle(r.l.id)" :disabled="filtering" class="grid h-6 w-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-60" :aria-expanded="filtering || !!S.open[r.l.id]" :aria-label="(S.open[r.l.id] ? 'Collapse ' : 'Expand ') + r.l.name"><Icon name="ChevronRight" :size="14" :class="['transition-transform duration-200', (filtering || S.open[r.l.id]) ? 'rotate-90' : '']"/></button>
+                <span v-else class="w-6 shrink-0"></span>
+                <span :class="['grid h-7 w-7 shrink-0 place-items-center rounded-md', r.l.type==='org' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary']"><Icon :name="LTYPES[r.l.type].icon" :size="14"/></span>
+                <div class="min-w-0 pl-1"><p class="truncate font-medium">{{ r.l.name }}</p><p class="truncate text-xs text-muted-foreground"><span class="font-mono">{{ r.l.code }}</span><template v-if="r.l.region"> · {{ r.l.region }}</template></p></div></div></td>
+              <td class="px-3 py-2 text-muted-foreground">{{ LTYPES[r.l.type].label }}</td>
+              <td class="px-3 py-2"><div v-if="usersAt(r.l.id).length" class="flex items-center"><span v-for="(a, i) in usersAt(r.l.id).slice(0, 3)" :key="a.id" class="-ml-1.5 grid h-6 w-6 place-items-center rounded-full bg-muted text-[9px] font-semibold uppercase ring-2 ring-card first:ml-0" :title="(memberByEmail(a.email)||{}).name">{{ initials((memberByEmail(a.email)||{name:'?'}).name) }}</span><span v-if="usersAt(r.l.id).length > 3" class="ml-1.5 text-xs text-muted-foreground">+{{ usersAt(r.l.id).length - 3 }}</span></div><span v-else class="text-muted-foreground">–</span></td>
+              <td class="px-3 py-2 text-right tnum">{{ formsAt(r.l.id).length || '–' }}</td>
+              <td class="px-3 py-2 text-right tnum">{{ respOf(r.l.id) || '–' }}</td>
+              <td class="px-3 py-2"><span :class="['inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium', LSTAT[r.l.status].cls]"><span :class="['h-1.5 w-1.5 rounded-full', LSTAT[r.l.status].dot]"></span>{{ LSTAT[r.l.status].label }}</span></td>
+              <td class="px-2" @click.stop><DropdownMenu :items="menu(r.l)" @select="it => onMenu(r.l, it)"><template #trigger><Button variant="ghost" size="icon-sm" :aria-label="'Actions for ' + r.l.name"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu></td>
+            </tr></tbody></table></div>
+          <ul class="divide-y sm:hidden"><li v-for="r in rows" :key="r.l.id" :class="['relative flex items-center gap-2 py-2.5 pr-2', r.dim ? 'opacity-55' : '']" :style="{ paddingLeft: (8 + r.d * 16) + 'px' }">
+            <button v-if="r.kids" type="button" @click="toggle(r.l.id)" :disabled="filtering" class="relative z-10 grid h-8 w-7 shrink-0 place-items-center rounded text-muted-foreground" :aria-expanded="filtering || !!S.open[r.l.id]" :aria-label="'Toggle ' + r.l.name"><Icon name="ChevronRight" :size="14" :class="['transition-transform duration-200', (filtering || S.open[r.l.id]) ? 'rotate-90' : '']"/></button><span v-else class="w-7 shrink-0"></span>
+            <span :class="['grid h-8 w-8 shrink-0 place-items-center rounded-md', r.l.type==='org' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary']"><Icon :name="LTYPES[r.l.type].icon" :size="15"/></span>
+            <button type="button" class="min-w-0 flex-1 text-left after:absolute after:inset-0 after:content-['']" @click="openLoc(r.l.id)"><p class="truncate text-sm font-medium">{{ r.l.name }}</p><p class="truncate text-xs text-muted-foreground tnum">{{ LTYPES[r.l.type].label }} · {{ usersAt(r.l.id).length }} people · {{ formsAt(r.l.id).length }} forms</p></button>
+            <span :class="['h-2 w-2 shrink-0 rounded-full', LSTAT[r.l.status].dot]" :aria-label="LSTAT[r.l.status].label"></span>
+            <DropdownMenu class="relative z-10" :items="menu(r.l)" @select="it => onMenu(r.l, it)"><template #trigger><Button variant="ghost" size="icon-sm" :aria-label="'Actions for ' + r.l.name"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu>
+          </li></ul>
+        </div>
+        <div v-else class="grid place-items-center p-10 text-center"><Icon name="MapPinOff" :size="22" class="text-muted-foreground"/><p class="mt-2 font-medium">No locations match</p><p class="text-sm text-muted-foreground">Try other filters, or clear the search.</p><Button class="mt-3" variant="outline" size="sm" @click="G.search=''; LS.clearAll()">Clear search and filters</Button></div>
+      </ListCard>
       <NewLocationDialog/>
     </div>`
   };
@@ -347,6 +347,7 @@
       const loc = computed(() => locById(G.locId));
       watch(() => G.locId, () => { T.tab = 'overview'; T.edit = false; window.scrollTo({ top: 0 }); });
       watch(() => G.pendingTab, (v) => { if (v) T.tab = v; });
+      watch(() => T.tab, (t) => { G.tab = t; }, { immediate: true });   // P39: the tab is part of the link
       const crumbs = computed(() => loc.value ? ancestorsOf(loc.value.id) : []);
       const kids = computed(() => loc.value ? childrenOf(loc.value.id).filter(c => inScope(c.id)) : []);
       const direct = computed(() => loc.value ? usersAt(loc.value.id) : []);
@@ -364,6 +365,22 @@
       });
       const people = computed(() => [...direct.value, ...(T.inherited ? inheritedRows.value : [])]);
       const forms = computed(() => loc.value ? formsAt(loc.value.id, T.incForms).filter(formVisible) : []);
+      /* P39: the Users tab is one list card: own search, quick tabs (here / from above), filters, sort, Export, Copy link */
+      const QU = reactive({ q: '' });
+      const LSU = useList({ noun: 'people', rows: () => [...direct.value, ...inheritedRows.value], query: () => QU.q, search: (a, q) => { const m = memberByEmail(a.email) || {}; return ((m.name || '') + ' ' + a.email + ' ' + a.roles.map(r => (roleById(r) || {}).name).join(' ')).toLowerCase().includes(q); }, sort: 'name', dir: 'asc',
+        sorts: [{ value: 'name', label: 'Name', get: a => ((memberByEmail(a.email) || {}).name || '').toLowerCase() }, { value: 'since', label: 'Since', get: a => a.since || '' }],
+        fields: () => [
+          { key: 'from', label: 'Assigned', type: 'select', options: [{ value: 'here', label: 'Here' }, { value: 'above', label: 'At a location above' }], get: a => a.from ? 'above' : 'here' },
+          { key: 'main', label: 'Main role', type: 'select', options: Object.entries(ROLE).map(([value, label]) => ({ value, label })), get: a => (memberByEmail(a.email) || {}).role },
+          { key: 'overrides', label: 'Overrides', type: 'select', options: [{ value: 'granted', label: 'Has granted permissions' }, { value: 'denied', label: 'Has denied permissions' }, { value: 'none', label: 'No overrides' }], get: a => a.denied.length ? 'denied' : a.granted.length ? 'granted' : 'none' },
+        ] });
+      const uTabs = computed(() => { const all = [...direct.value, ...inheritedRows.value]; return [{ value: 'all', label: 'All', count: all.length }, { value: 'here', label: 'Here', count: direct.value.length }, { value: 'above', label: 'From above', count: inheritedRows.value.length }]; });
+      const uQuick = computed({ get: () => { const f = LSU.S.filters, k = Object.keys(f); if (!k.length) return 'all'; if (k.length === 1 && f.from && f.from.op === 'in' && f.from.value.length === 1) return f.from.value[0]; return ''; },
+        set: v => { LSU.S.filters = v === 'all' ? {} : { from: { op: 'in', value: [v] } }; LSU.refresh(); } });
+      registerUrlList(LSU, { get: () => QU.q, set: v => { QU.q = v; } }, () => T.tab === 'users');
+      watch(() => G.locId, () => { QU.q = ''; LSU.S.filters = {}; });
+      const exportUsers = () => exportList(LSU, [['Person', a => (memberByEmail(a.email) || {}).name], ['Email', a => a.email], ['Main role', a => ROLE[(memberByEmail(a.email) || {}).role]], ['Roles here', a => a.roles.map(r => (roleById(r) || {}).name).join('; ')], ['Assigned at', a => a.from ? a.from.name : loc.value.name], ['Granted', a => a.granted.join('; ')], ['Denied', a => a.denied.join('; ')], ['Since', a => a.since]], 'people', loc.value.name);
+
       const tabs = computed(() => [{ value: 'overview', label: 'Overview' }, { value: 'details', label: 'Details' }, { value: 'users', label: 'Users', count: direct.value.length }, { value: 'forms', label: 'Forms', count: loc.value ? formsAt(loc.value.id, true).filter(formVisible).length : 0 }, { value: 'history', label: 'History' }]);
       const bars = computed(() => {
         if (!loc.value) return [];
@@ -420,7 +437,7 @@
       const toggleRole = (id) => { T.roles = T.roles.includes(id) ? T.roles.filter(x => x !== id) : [...T.roles, id]; };
       function refresh() { if (T.loading) return; T.loading = true; setTimeout(() => { T.loading = false; T.updatedAt = Date.now(); }, 700); }
       function newFormHere() { if (G.viewAs) return readOnly(); nav('builder'); toast('Prototype opens the sample form', 'A real form here starts with location ' + loc.value.code + ' and private to its people.', 'Info'); }
-      return { draft, cancelEdit, H, HIST, moreHist, X, deps, blocking, doDelete, moreItems, onMore, G, T, D, loc, crumbs, kids, direct, people, forms, tabs, bars, kpi, LTYPES, LSTAT, STAT, ACCENTS, ACTIVITY, ROLE, openLoc, nav, memberByEmail, roleById, initials, canEditLoc, canAssign, canViewAs, startEdit, saveEdit, parentOpts, typeOpts, statusOpts, assignable, openAssign, doAssign, userMenu, onUser, customRoles, toggleRole, usersAt, respOf, audienceOf, locName, openForm, newFormHere, refresh, startViewAs, inScope, ME, myPerms, mediaById, subtreeIds, locById };
+      return { QU, LSU, uTabs, uQuick, exportUsers, draft, cancelEdit, H, HIST, moreHist, X, deps, blocking, doDelete, moreItems, onMore, G, T, D, loc, crumbs, kids, direct, people, forms, tabs, bars, kpi, LTYPES, LSTAT, STAT, ACCENTS, ACTIVITY, ROLE, openLoc, nav, memberByEmail, roleById, initials, canEditLoc, canAssign, canViewAs, startEdit, saveEdit, parentOpts, typeOpts, statusOpts, assignable, openAssign, doAssign, userMenu, onUser, customRoles, toggleRole, usersAt, respOf, audienceOf, locName, openForm, newFormHere, refresh, startViewAs, inScope, ME, myPerms, mediaById, subtreeIds, locById };
     },
     template: `<div v-if="!loc || !inScope(loc.id)" class="mx-auto grid max-w-md place-items-center gap-2 py-16 text-center"><span class="grid h-12 w-12 place-items-center rounded-full bg-muted"><Icon name="MapPinOff" :size="22" class="text-muted-foreground"/></span><h2 class="text-lg font-semibold">{{ loc ? 'Not one of their locations' : 'Location not found' }}</h2><p class="text-sm text-muted-foreground">{{ loc ? G.viewAs.name + ' is not assigned here or above it, so this page returns 403 for them.' : 'It may have been removed or belong to another organisation.' }}</p><Button class="mt-2" variant="outline" @click="nav('locations')"><Icon name="ArrowLeft" :size="14"/>All locations</Button></div>
     <div v-else class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">
@@ -527,29 +544,28 @@
 
       <!-- USERS -->
       <template v-if="T.tab==='users'">
-        <div class="flex flex-wrap items-center gap-3">
-          <p class="min-w-0 flex-1 basis-full text-sm text-muted-foreground sm:basis-0">Main role comes from the organisation. Roles here are custom roles for {{ loc.name }} and everything under it.</p>
-          <label class="flex items-center gap-2 text-sm"><Switch v-model="T.inherited"/>Show people from above</label>
-          <Button v-if="canAssign()" @click="openAssign"><Icon name="UserPlus" :size="14"/>Assign person</Button>
-        </div>
-        <div v-if="people.length" class="kpi overflow-hidden rounded-xl border bg-card shadow-sm">
-          <div class="hidden overflow-x-auto md:block"><table class="w-full min-w-[760px] text-sm">
-            <thead><tr class="border-b text-left text-xs text-muted-foreground"><th class="px-4 py-2.5 font-medium">Person</th><th class="px-3 py-2.5 font-medium">Main role</th><th class="px-3 py-2.5 font-medium">Roles here</th><th class="px-3 py-2.5 font-medium">Overrides</th><th class="px-3 py-2.5 font-medium">Since</th><th class="w-24"></th></tr></thead>
-            <tbody><tr v-for="a in people" :key="a.id + (a.from ? a.from.id : '')" :class="['border-b last:border-0', a.from ? 'bg-muted/30' : '']">
-              <td class="px-4 py-2.5"><div class="flex items-center gap-2.5"><span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold uppercase text-primary">{{ initials((memberByEmail(a.email)||{name:'?'}).name) }}</span><div class="min-w-0"><p class="flex items-center gap-1 truncate font-medium">{{ (memberByEmail(a.email)||{name:a.email}).name }}<Tooltip v-if="a.primary && !a.from" content="Primary location"><Icon name="Star" :size="12" class="text-warning" fill="currentColor"/></Tooltip></p><p class="truncate text-xs text-muted-foreground"><template v-if="a.from">Inherited from {{ a.fromAll.join(', ') }}</template><template v-else>{{ a.email }}</template></p></div></div></td>
-              <td class="px-3 py-2.5"><Badge variant="secondary">{{ ROLE[(memberByEmail(a.email)||{}).role] }}</Badge></td>
-              <td class="px-3 py-2.5"><div class="flex flex-wrap gap-1"><Badge v-for="r in a.roles" :key="r" variant="outline"><Icon name="ShieldPlus" :size="11"/>{{ (roleById(r)||{}).name }}</Badge><span v-if="!a.roles.length" class="text-xs text-muted-foreground">None</span></div></td>
-              <td class="px-3 py-2.5"><span v-if="a.granted.length" class="mr-1 inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary" :title="a.granted.join(', ')">+{{ a.granted.length }} granted</span><span v-if="a.denied.length" class="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-1.5 py-0.5 text-[11px] font-medium text-destructive" :title="a.denied.join(', ')">−{{ a.denied.length }} denied</span><span v-if="!a.granted.length && !a.denied.length" class="text-xs text-muted-foreground">–</span></td>
-              <td class="px-3 py-2.5 text-muted-foreground">{{ a.since }}</td>
-              <td class="px-2 py-2.5"><div class="flex justify-end gap-0.5"><Tooltip v-if="canViewAs() && a.email !== ME.email" content="View as" side="left"><Button variant="ghost" size="icon-sm" @click="startViewAs(a.email, a.loc)" :aria-label="'View as ' + (memberByEmail(a.email)||{}).name"><Icon name="Eye" :size="15"/></Button></Tooltip><DropdownMenu :items="userMenu(a)" @select="it => onUser(a, it)"><template #trigger><Button variant="ghost" size="icon-sm" :aria-label="'Actions for ' + (memberByEmail(a.email)||{}).name"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu></div></td>
-            </tr></tbody></table></div>
-          <ul class="divide-y md:hidden"><li v-for="a in people" :key="a.id + (a.from ? a.from.id : '')" :class="['flex items-start gap-3 p-3', a.from ? 'bg-muted/30' : '']">
-            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold uppercase text-primary">{{ initials((memberByEmail(a.email)||{name:'?'}).name) }}</span>
-            <div class="min-w-0 flex-1"><p class="flex items-center gap-1 truncate text-sm font-medium">{{ (memberByEmail(a.email)||{}).name }}<Icon v-if="a.primary && !a.from" name="Star" :size="11" class="text-warning" fill="currentColor"/></p><p class="truncate text-xs text-muted-foreground">{{ ROLE[(memberByEmail(a.email)||{}).role] }}<template v-if="a.from"> · from {{ a.fromAll.join(', ') }}</template></p>
-              <div class="mt-1.5 flex flex-wrap gap-1"><Badge v-for="r in a.roles" :key="r" variant="outline">{{ (roleById(r)||{}).name }}</Badge><span v-if="a.granted.length" class="rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">+{{ a.granted.length }}</span><span v-if="a.denied.length" class="rounded-md bg-destructive/10 px-1.5 py-0.5 text-[11px] font-medium text-destructive">−{{ a.denied.length }}</span></div></div>
-            <DropdownMenu :items="userMenu(a)" @select="it => onUser(a, it)"><template #trigger><Button variant="ghost" size="icon-sm" :aria-label="'Actions for ' + (memberByEmail(a.email)||{}).name"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu></li></ul>
-        </div>
-        <div v-else class="grid place-items-center rounded-xl border border-dashed p-10 text-center"><Icon name="UsersRound" :size="22" class="text-muted-foreground"/><p class="mt-2 font-medium">Nobody here yet</p><p class="text-sm text-muted-foreground">Assign people and give them custom roles for this location.</p></div>
+        <p class="text-sm text-muted-foreground">Main role comes from the organisation. Roles here are custom roles for {{ loc.name }} and everything under it.</p>
+        <ListCard :list="LSU" :tabs="uTabs" v-model:quick="uQuick" v-model:search="QU.q" :refresh="false" placeholder="Search people or roles">
+          <template #actions><ListShare :export-fn="exportUsers"/><Button v-if="canAssign()" size="sm" @click="openAssign"><Icon name="UserPlus" :size="15"/><span class="hidden sm:inline">Assign person</span></Button></template>
+          <div v-if="LSU.rows.value.length">
+            <div class="hidden overflow-x-auto md:block"><table class="w-full min-w-[760px] text-sm">
+              <thead><tr class="border-b text-left text-xs text-muted-foreground"><th class="px-4 py-2.5 font-medium">Person</th><th class="px-3 py-2.5 font-medium">Main role</th><th class="px-3 py-2.5 font-medium">Roles here</th><th class="px-3 py-2.5 font-medium">Overrides</th><th class="px-3 py-2.5 font-medium">Since</th><th class="w-24"></th></tr></thead>
+              <tbody><tr v-for="a in LSU.rows.value" :key="a.id + (a.from ? a.from.id : '')" :class="['border-b last:border-0', a.from ? 'bg-muted/30' : '']">
+                <td class="px-4 py-2.5"><div class="flex items-center gap-2.5"><span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold uppercase text-primary">{{ initials((memberByEmail(a.email)||{name:'?'}).name) }}</span><div class="min-w-0"><p class="flex items-center gap-1 truncate font-medium">{{ (memberByEmail(a.email)||{name:a.email}).name }}<Tooltip v-if="a.primary && !a.from" content="Primary location"><Icon name="Star" :size="12" class="text-warning" fill="currentColor"/></Tooltip></p><p class="truncate text-xs text-muted-foreground"><template v-if="a.from">Inherited from {{ a.fromAll.join(', ') }}</template><template v-else>{{ a.email }}</template></p></div></div></td>
+                <td class="px-3 py-2.5"><Badge variant="secondary">{{ ROLE[(memberByEmail(a.email)||{}).role] }}</Badge></td>
+                <td class="px-3 py-2.5"><div class="flex flex-wrap gap-1"><Badge v-for="r in a.roles" :key="r" variant="outline"><Icon name="ShieldPlus" :size="11"/>{{ (roleById(r)||{}).name }}</Badge><span v-if="!a.roles.length" class="text-xs text-muted-foreground">None</span></div></td>
+                <td class="px-3 py-2.5"><span v-if="a.granted.length" class="mr-1 inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary" :title="a.granted.join(', ')">+{{ a.granted.length }} granted</span><span v-if="a.denied.length" class="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-1.5 py-0.5 text-[11px] font-medium text-destructive" :title="a.denied.join(', ')">−{{ a.denied.length }} denied</span><span v-if="!a.granted.length && !a.denied.length" class="text-xs text-muted-foreground">–</span></td>
+                <td class="px-3 py-2.5 text-muted-foreground">{{ a.since }}</td>
+                <td class="px-2 py-2.5"><div class="flex justify-end gap-0.5"><Tooltip v-if="canViewAs() && a.email !== ME.email" content="View as" side="left"><Button variant="ghost" size="icon-sm" @click="startViewAs(a.email, a.loc)" :aria-label="'View as ' + (memberByEmail(a.email)||{}).name"><Icon name="Eye" :size="15"/></Button></Tooltip><DropdownMenu :items="userMenu(a)" @select="it => onUser(a, it)"><template #trigger><Button variant="ghost" size="icon-sm" :aria-label="'Actions for ' + (memberByEmail(a.email)||{}).name"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu></div></td>
+              </tr></tbody></table></div>
+            <ul class="divide-y md:hidden"><li v-for="a in LSU.rows.value" :key="a.id + (a.from ? a.from.id : '')" :class="['flex items-start gap-3 p-3', a.from ? 'bg-muted/30' : '']">
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold uppercase text-primary">{{ initials((memberByEmail(a.email)||{name:'?'}).name) }}</span>
+              <div class="min-w-0 flex-1"><p class="flex items-center gap-1 truncate text-sm font-medium">{{ (memberByEmail(a.email)||{}).name }}<Icon v-if="a.primary && !a.from" name="Star" :size="11" class="text-warning" fill="currentColor"/></p><p class="truncate text-xs text-muted-foreground">{{ ROLE[(memberByEmail(a.email)||{}).role] }}<template v-if="a.from"> · from {{ a.fromAll.join(', ') }}</template></p>
+                <div class="mt-1.5 flex flex-wrap gap-1"><Badge v-for="r in a.roles" :key="r" variant="outline">{{ (roleById(r)||{}).name }}</Badge><span v-if="a.granted.length" class="rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">+{{ a.granted.length }}</span><span v-if="a.denied.length" class="rounded-md bg-destructive/10 px-1.5 py-0.5 text-[11px] font-medium text-destructive">−{{ a.denied.length }}</span></div></div>
+              <DropdownMenu :items="userMenu(a)" @select="it => onUser(a, it)"><template #trigger><Button variant="ghost" size="icon-sm" :aria-label="'Actions for ' + (memberByEmail(a.email)||{}).name"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu></li></ul>
+          </div>
+          <div v-else class="grid place-items-center p-10 text-center"><Icon name="UsersRound" :size="22" class="text-muted-foreground"/><p class="mt-2 font-medium">{{ QU.q || LSU.activeCount.value ? 'Nobody matches' : 'Nobody here yet' }}</p><p class="text-sm text-muted-foreground">Assign people and give them custom roles for this location.</p><Button v-if="QU.q || LSU.activeCount.value" class="mt-3" variant="outline" size="sm" @click="QU.q=''; LSU.clearAll()">Clear search and filters</Button></div>
+        </ListCard>
         <Dialog v-model:open="T.assign">
           <div class="grid gap-1.5 pr-6"><h2 class="text-lg font-semibold leading-none">Assign to {{ loc.name }}</h2><p class="text-sm text-muted-foreground">Pick a person and the custom roles they hold here.</p></div>
           <div class="grid gap-3"><div class="grid gap-1.5"><span class="text-sm font-medium">Person</span><Select v-model="T.who" :options="assignable" placeholder="Everyone is already here"/></div>

@@ -11,7 +11,7 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `prototype/index.html` | The runnable prototype (open in a browser). The visual source of truth for the shell |
 | `prototype/src/product.js` | **The one file a product edits for branding:** name, tagline, icon, domain, city, storage key |
 | `prototype/src/parts_*.js`, `builder.html`, `assemble.py` | The shell's source, by area. `python3 prototype/src/assemble.py` rebuilds `index.html` and `docs/COMPONENTS.md` |
-| `docs/PLATFORM_DECISIONS.md` | P1–P37: the locked decisions, each with the Fomu decision it came from |
+| `docs/PLATFORM_DECISIONS.md` | P1–P39: the locked decisions, each with the product decision it came from (P38 reserved) |
 | `docs/FRONTEND_RULES.md` | Behaviour rules: Locked / Constrained-creative / Free, plus the review checklist |
 | `docs/COMPONENTS.md`, `docs/components_api.json` | The component library: specs, props, emits, slots, do/don't |
 | `docs/SCREENS.core.md` | The core screens, their routes, permissions and screenshots |
@@ -43,9 +43,11 @@ The prototype still carries **Fomu's modules (Forms, Templates, Builder, Results
 | Records owned by a location | `parts_loc.js` → `formsAt`, `formVisible` | forms per location |
 | Actions behind approvals | `parts_appr.js` → `ACTIONS` + `approvalGate` | publish, export, reset |
 | Screens pill (prototype-only) | `assemble.py` → `ScreensPill` | lists the product's screens |
+| Linkable details routes (P39) | `parts_links.js` → `LINK_DETAIL` | roles, locations, requests; add one entry per details route |
+| Lists that show rows (P39) | `parts_listcard.js` → `ListCard` + `useList({ scope, query })` + `registerUrlList` | Roles, Users, Approvals, Locations, Location › Users tab |
 
 ## Rules of the kit
 
 - The shell is **locked**. Change it only with a new P-decision here, then update the prototype, rules and components in the same commit, and bump `KIT_VERSION` in `product.js`'s neighbour `kit.json`.
-- Products **pull** kit changes; nothing flows the other way without a P.
+- Products **pull** kit changes; nothing flows the other way without a P. A product may test a proposed P first (spec in its `docs/platform/P<nn>-*.md`), then port it here as one pull request.
 - No secrets, no product data beyond demo seeds. The repo is public.

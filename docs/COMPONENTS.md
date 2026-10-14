@@ -7,12 +7,12 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 ## Index
 
 - **Actions**: Button
-- **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), File picker · Media library, API select, Rich text, Date picker
+- **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Locked field, File picker · Media library, API select, Rich text, Date picker
 - **Display**: Badge · Status pill, Card · KPI tile
 - **Navigation**: Tabs, Sidebar item, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, View as banner
-- **Data**: Table · Card list, Charts, List toolbar · Filters, Approval steps
+- **Data**: Table · Card list, Charts, List toolbar · Filters, List card, Approval steps
 
 ## Actions
 
@@ -149,6 +149,29 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: Paste fills all boxes
 - Do: inputmode=numeric
 - Don't: Store OTPs in drafts
+
+### Locked field
+
+`app LockedField`
+
+| Spec | Value |
+| --- | --- |
+| Use | a parent value set by the page you came from (create from a scoped tab) |
+| Look | muted box, value + optional sub line, lock icon; not focusable, not editable |
+| Label | same label as the field it replaces |
+| Variants | with sub line · without |
+| Used in | Create from a details tab (DevBiz: New sale, Take payment, Receive stock, Move money) |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `label` | `string` | `–` | Same label as the field it replaces |
+| `value` | `string` | `–` | The parent's display name |
+| `sub` | `string` | `–` | Optional second line (code, number) |
+
+- Do: Show the parent a form was opened for, instead of its select
+- Do: Keep it read-only; the form sends the parent id
+- Don't: An editable select that happens to be prefilled
+- Don't: Hiding the parent completely: people must see what the record belongs to
 
 ### File picker · Media library
 
@@ -696,7 +719,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | Chips | one chip per active filter + the search, each removable |
 | Phone | icons with counts; dialog becomes a bottom sheet |
 | Variants | with quick-filter tabs above · with layout toggle |
-| Used in | Forms, Users, Locations, Media |
+| Used in | Card grids: Forms (cards view), Media, Delegations (lists that show rows use List card, P39) |
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
@@ -712,6 +735,45 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Don't: Per-page hand-rolled filter dialogs
 - Don't: Export/Import buttons without backend routes
 - Don't: Pill or static select filters for locations, people or forms
+
+### List card
+
+`app ListCard, ListShare + useList({ scope, query }), registerUrlList`
+
+| Spec | Value |
+| --- | --- |
+| Rows | search + quick tabs (share a row only when they fit; wrapped tabs sit left) · filters, clear, sort / actions · chips · summary · rows |
+| Card | one card for controls and rows; rounded-xl, border, shadow-sm |
+| Width | the card picks table (≥ 700px card width) or row cards (< 700px) by container query, not the screen |
+| Search | own search box when scoped or on page-level tabs; otherwise the top bar (P22) shows as a chip |
+| Scoped | parent filter, column and search removed; no Refresh (page header has it); create opens the form with the parent locked |
+| Variants | list page · scoped details tab · page-level tab · with summary strip |
+| Used in | Roles, Users, Approvals, Locations, Location › Users |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `list` | `useList() object` | – | The whole list object (rows, filters, sort, fields) |
+| `tabs` | `{ value, label, count? }[]` | `–` | Quick tabs; counted within the scope |
+| `quick` | `string` | `–` | v-model:quick — the active quick tab, kept in sync with the filters by the page |
+| `search` | `string \| undefined` | `undefined` | v-model:search — pass a string for the list's own search box (scoped lists, page-level tabs); leave undefined to follow the top-bar search (P22) |
+| `placeholder` | `string` | `'Search'` | Own search box placeholder |
+| `refresh` | `boolean` | `true` | false inside details tabs: the page header refreshes |
+
+**Emits:** `update:quick` (quick tab picked), `update:search` (own search typed)
+
+**Slots:** `#actions` Right of the filters row: ListShare (Export, Copy link), then the primary create button, `#tools` Extra ghost buttons after Sort (e.g. expand all), `#summary` Optional strip under the controls (e.g. a ledger's before / in / out / after), `#default` The rows: a sm:block table + sm:hidden ul of row cards, then the empty state; the card switches them by its own width
+
+- Do: Use it for every list that shows rows, on list pages and in details tabs
+- Do: A details tab that shows records = the module's own list with useList({ scope: () => ({ fieldKey: parentId }) }): parent filter, column and search are removed
+- Do: Create from a scoped tab opens the normal form with the parent shown as LockedField
+- Do: Rows in a tab open the record's preview (P26), not a page change
+- Do: Export = CSV of exactly the rows shown, parent in the file name (exportList)
+- Do: Register the list with registerUrlList(LS, q, active?) so search, sort, filters and ?tab= are in the link
+- Don't: A second hand-built table for a tab
+- Don't: A removable chip for the parent scope
+- Don't: Refresh or a context line inside a details tab
+- Don't: Screen breakpoints to place search and tabs (they wrap by content)
+- Don't: Card grids inside the list card (forms, media, delegations keep ListToolbar)
 
 ### Approval steps
 

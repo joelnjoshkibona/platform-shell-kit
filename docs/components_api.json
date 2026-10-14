@@ -1247,5 +1247,122 @@
       "One-click approve links in email",
       "Letting users turn off in-app"
     ]
+  },
+  "List card": {
+    "file": "app ListCard, ListShare + useList({ scope, query }), registerUrlList",
+    "props": [
+      [
+        "list",
+        "useList() object",
+        "",
+        "The whole list object (rows, filters, sort, fields)"
+      ],
+      [
+        "tabs",
+        "{ value, label, count? }[]",
+        "–",
+        "Quick tabs; counted within the scope"
+      ],
+      [
+        "quick",
+        "string",
+        "–",
+        "v-model:quick — the active quick tab, kept in sync with the filters by the page"
+      ],
+      [
+        "search",
+        "string | undefined",
+        "undefined",
+        "v-model:search — pass a string for the list's own search box (scoped lists, page-level tabs); leave undefined to follow the top-bar search (P22)"
+      ],
+      [
+        "placeholder",
+        "string",
+        "'Search'",
+        "Own search box placeholder"
+      ],
+      [
+        "refresh",
+        "boolean",
+        "true",
+        "false inside details tabs: the page header refreshes"
+      ]
+    ],
+    "emits": [
+      [
+        "update:quick",
+        "quick tab picked"
+      ],
+      [
+        "update:search",
+        "own search typed"
+      ]
+    ],
+    "slots": [
+      [
+        "actions",
+        "Right of the filters row: ListShare (Export, Copy link), then the primary create button"
+      ],
+      [
+        "tools",
+        "Extra ghost buttons after Sort (e.g. expand all)"
+      ],
+      [
+        "summary",
+        "Optional strip under the controls (e.g. a ledger's before / in / out / after)"
+      ],
+      [
+        "default",
+        "The rows: a sm:block table + sm:hidden ul of row cards, then the empty state; the card switches them by its own width"
+      ]
+    ],
+    "do": [
+      "Use it for every list that shows rows, on list pages and in details tabs",
+      "A details tab that shows records = the module's own list with useList({ scope: () => ({ fieldKey: parentId }) }): parent filter, column and search are removed",
+      "Create from a scoped tab opens the normal form with the parent shown as LockedField",
+      "Rows in a tab open the record's preview (P26), not a page change",
+      "Export = CSV of exactly the rows shown, parent in the file name (exportList)",
+      "Register the list with registerUrlList(LS, q, active?) so search, sort, filters and ?tab= are in the link"
+    ],
+    "dont": [
+      "A second hand-built table for a tab",
+      "A removable chip for the parent scope",
+      "Refresh or a context line inside a details tab",
+      "Screen breakpoints to place search and tabs (they wrap by content)",
+      "Card grids inside the list card (forms, media, delegations keep ListToolbar)"
+    ]
+  },
+  "Locked field": {
+    "file": "app LockedField",
+    "props": [
+      [
+        "label",
+        "string",
+        "–",
+        "Same label as the field it replaces"
+      ],
+      [
+        "value",
+        "string",
+        "–",
+        "The parent's display name"
+      ],
+      [
+        "sub",
+        "string",
+        "–",
+        "Optional second line (code, number)"
+      ]
+    ],
+    "emits": [],
+    "slots": [],
+    "do": [
+      "Show the parent a form was opened for, instead of its select",
+      "Keep it read-only; the form sends the parent id"
+    ],
+    "dont": [
+      "An editable select that happens to be prefilled",
+      "Hiding the parent completely: people must see what the record belongs to"
+    ]
   }
 }

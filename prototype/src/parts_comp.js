@@ -150,6 +150,7 @@
         fields: () => [{ key: 'type', label: 'Type', type: 'select', options: Object.entries(FTYPE).map(([value, t]) => ({ value, label: t.label })), get: m => m.type }, { key: 'by', label: 'Uploaded by', type: 'select', options: [...new Set(MEDIA.map(m => m.by))].map(v => ({ value: v, label: v })), get: m => m.by }, { key: 'size', label: 'Size (bytes)', type: 'number', get: m => m.size }, { key: 'at', label: 'Uploaded', type: 'date', get: m => m.at }] });
       watchEffect(() => { if (G.view === 'media') listCount.value = (G.search || '').trim().length >= 2 ? LS.rows.value.length : null; });
       const U = reactive({ open: false, files: [], view: null });
+      registerUrlList(LS, { get: () => G.search || '', set: (v) => { G.search = v; } });   // P39: search, sort and filters live in the link
       return { LS, U, fmtSize, FTYPE, fmtDay, G, canManage };
     },
     template: `<div class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">

@@ -82,10 +82,11 @@ Tree table with expand/collapse, filters incl. API-select location filter with "
 
 ### Location details (Arusha)  ·  `/{org}/locations/{uuid}?tab=`
 
-Overview / Details / Users / Forms / History; drafts on edit (D33); delete check + YES gate.
+Overview / Details / Users / Forms / History; drafts on edit (D33); delete check + YES gate. The Users tab is a scoped list card (P39): own search, All / Here / From above, filters, sort, Export, Copy link, Assign person; its view is in the link (`?tab=users&q=…&f[from][op]=in…`).
 
 - **Location details (Arusha)** — [desktop-light](screenshots/location__desktop-light.png), [desktop-dark](screenshots/location__desktop-dark.png), [phone-light](screenshots/location__phone-light.png), [phone-dark](screenshots/location__phone-dark.png)
 - **Location users tab** — [desktop-light](screenshots/location--users__desktop-light.png), [phone-dark](screenshots/location--users__phone-dark.png)
+- **Location users tab, scoped list card (P39)** — [desktop-light](screenshots/location--users-scoped__desktop-light.png), [phone-dark](screenshots/location--users-scoped__phone-dark.png)
 - **Location details tab** — [desktop-light](screenshots/location--details__desktop-light.png), [phone-dark](screenshots/location--details__phone-dark.png)
 
 ### Approvals inbox  ·  `/{org}/approvals`
