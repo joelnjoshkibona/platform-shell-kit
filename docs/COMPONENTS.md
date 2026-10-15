@@ -12,7 +12,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - **Navigation**: Tabs, Sidebar item, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, View as banner
-- **Data**: Table · Card list, Charts, List toolbar · Filters, List card, Approval steps
+- **Data**: List rows, Charts, List toolbar · Filters, List card, Approval steps
 
 ## Actions
 
@@ -655,32 +655,40 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 ## Data
 
-### Table · Card list
+### List rows
 
-`app ListPage pattern`
+`app ListRows inside ListCard (P40)`
 
 | Spec | Value |
 | --- | --- |
-| Header | 12px / 500 muted, 16px x · 10px y, bottom border |
-| Row | 16px x · 10px y, hover accent/50, whole row clickable |
-| Numbers | right-aligned, tabular figures |
-| < 640px | becomes a card list (D11) |
-| Variants | table, card list, empty state |
-| Used in | Forms list, responses, members, menu management. |
+| Grid | one CSS grid per row; identity minmax(40% of card, 1fr), other columns at their min, 16px gaps, chevron column 16px |
+| Header | 12px / 500 muted, 36px tall, bottom border; unfolded columns only; sortable headers clickable |
+| Row | 16px x · 8px y, min 56px, hover accent/60, whole row clickable; identity cell = 40px icon tile + title line + meta line |
+| Numbers | hero right-aligned, 600, tabular; one-word sub-label when not tight |
+| Folding | by the card's own width (ResizeObserver), highest priority number first: status → badge over the hero; identity badges → title line; meta → meta line (two lines) then +N more |
+| Tight | identity minmax(0,1fr), hero max-content, title wraps, identity cell top-aligned, toolbar icon-only |
+| Variants | full table, partly folded, folded row, expanded (+N more strip), empty state |
+| Used in | Every list that shows rows: Users, Roles, Locations, Approvals, product modules. Not Logs or Queue (report tables). |
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `rows` | `array` | – | From useServerTable |
-| `loading` | `boolean` | – | Refetch dims rows; first load shows a spinner |
+| `columns` | `ListColumn[]` | – | key, label, short?, identity?, hero?, priority, fold: 'badge' | 'meta', min (px), sortable?, render? |
+| `rows` | `array` | – | From useList() |
+| `list` | `useList() object` | – | Sort state for the header; folded columns stay sortable through the Sort control |
+| `baseMeta` | `(row) => string` | – | The module's always-on meta text (unit, customer, job); folded meta columns follow it |
 
-**Emits:** `open` (row)
+**Emits:** `open` (row), `sort` (key)
 
-**Slots:** `#actions` Row menu, z-10 above the stretched link
+**Slots:** `#cell-<key>` Custom cell for one column, same slot name folded or not, `#actions` Row menu, z-10 above the stretched link
 
-- Do: Cards below 640px always
-- Do: Numbers right-aligned, tabular
-- Don't: Horizontal page scroll
-- Don't: Kebab menu as the only way to open a row
+- Do: One identity column (never folds, 40% floor) and at most one hero (never folds, right-aligned, tabular)
+- Do: Fold by the card's own width, highest priority number first; status folds right above the hero; identity badges fold to the title line; meta columns fill two lines then a +N more chip
+- Do: Header shows unfolded columns only; header click sorts
+- Do: Top-align the identity cell when the title can wrap; keep the icon level with the first line
+- Don't: A table/cards switch, a view toggle or per-user view memory
+- Don't: Sideways scroll inside a ListCard (report tables with no identity are not ListCards)
+- Don't: A column that hides without folding (every value stays reachable: meta line, strip or details)
+- Don't: Expand state in the URL
 
 ### Charts
 
@@ -713,7 +721,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 | Spec | Value |
 | --- | --- |
-| Order | Refresh · Filters (n) · Clear n · Sort … toggle · New |
+| Order | Refresh · Filters (n) · Clear n · Sort … grid/list toggle (card grids only) · New |
 | Bar | card, 6px padding, rounded-xl; buttons ghost sm |
 | Filters | Simple = natural operator; Advanced = operator per field; one request on Apply |
 | Chips | one chip per active filter + the search, each removable |
@@ -726,7 +734,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | `list` | `ServerTable & ListFilters & ListSort` | – | The whole composable object, not decomposed props |
 | `filterFields[].type` | `'text' \| 'number' \| 'date' \| 'boolean' \| 'select' \| 'select_paginated'` | – | select = short fixed sets (≤ 10, e.g. status); select_paginated = anything that grows (locations, people, forms) and renders a multi API select with its module |
 
-**Slots:** `#default` Right side: layout toggle, Export/Import (only if routes exist), primary New
+**Slots:** `#default` Right side: grid/list layout toggle for card grids only, Export/Import (only if routes exist), primary New
 
 - Do: Order: Refresh · Filters (n) · Clear n · Sort
 - Do: Filter fields come from the endpoint's filterFields
@@ -735,16 +743,17 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Don't: Per-page hand-rolled filter dialogs
 - Don't: Export/Import buttons without backend routes
 - Don't: Pill or static select filters for locations, people or forms
+- Don't: A table/cards toggle: lists that show rows have one mode (P40)
 
 ### List card
 
-`app ListCard, ListShare + useList({ scope, query }), registerUrlList`
+`app ListCard + ListRows, ListShare + useList({ scope, query }), registerUrlList`
 
 | Spec | Value |
 | --- | --- |
-| Rows | search + quick tabs (share a row only when they fit; wrapped tabs sit left) · filters, clear, sort / actions · chips · summary · rows |
+| Rows | toolbar (filters, clear, sort / actions) · quick tabs (own scrollable row, only when declared) · search (own row) · chips · summary · header · rows · footer, in that order at every width (P40) |
 | Card | one card for controls and rows; rounded-xl, border, shadow-sm |
-| Width | the card picks table (≥ 700px card width) or row cards (< 700px) by container query, not the screen |
+| Width | one row shape; columns fold by priority as the card narrows (its own width, not the screen), see List rows (P40) |
 | Search | own search box when scoped or on page-level tabs; otherwise the top bar (P22) shows as a chip |
 | Scoped | parent filter, column and search removed; no Refresh (page header has it); create opens the form with the parent locked |
 | Variants | list page · scoped details tab · page-level tab · with summary strip |
@@ -761,7 +770,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 **Emits:** `update:quick` (quick tab picked), `update:search` (own search typed)
 
-**Slots:** `#actions` Right of the filters row: ListShare (Export, Copy link), then the primary create button, `#tools` Extra ghost buttons after Sort (e.g. expand all), `#summary` Optional strip under the controls (e.g. a ledger's before / in / out / after), `#default` The rows: a sm:block table + sm:hidden ul of row cards, then the empty state; the card switches them by its own width
+**Slots:** `#actions` Right of the toolbar: ListShare (Export, Copy link), then the primary create button, `#tools` Extra ghost buttons after Sort (e.g. expand all), `#summary` Optional strip under the chips (e.g. a ledger's before / in / out / after), `#default` ListRows with the module's columns, then the empty state (P40)
 
 - Do: Use it for every list that shows rows, on list pages and in details tabs
 - Do: A details tab that shows records = the module's own list with useList({ scope: () => ({ fieldKey: parentId }) }): parent filter, column and search are removed
@@ -769,11 +778,14 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: Rows in a tab open the record's preview (P26), not a page change
 - Do: Export = CSV of exactly the rows shown, parent in the file name (exportList)
 - Do: Register the list with registerUrlList(LS, q, active?) so search, sort, filters and ?tab= are in the link
+- Do: Stack: toolbar · quick tabs (own scrollable row, only when declared) · search (own row) · chips · summary · header · rows · footer, at every width (P40)
+- Do: Quick tabs above search: coarse to fine
 - Don't: A second hand-built table for a tab
 - Don't: A removable chip for the parent scope
 - Don't: Refresh or a context line inside a details tab
-- Don't: Screen breakpoints to place search and tabs (they wrap by content)
 - Don't: Card grids inside the list card (forms, media, delegations keep ListToolbar)
+- Don't: Search and tabs sharing a row
+- Don't: A second layout for phones: the folded row is the same component
 
 ### Approval steps
 
