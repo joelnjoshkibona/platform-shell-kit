@@ -430,42 +430,67 @@
       "Toasts for errors that need action (use inline errors)"
     ]
   },
-  "Table · Card list": {
-    "file": "app ListPage pattern",
+  "List rows": {
+    "file": "app ListRows inside ListCard (P40)",
     "props": [
+      [
+        "columns",
+        "ListColumn[]",
+        "",
+        "key, label, short?, identity?, hero?, priority, fold: 'badge' | 'meta', min (px), sortable?, render?"
+      ],
       [
         "rows",
         "array",
         "",
-        "From useServerTable"
+        "From useList()"
       ],
       [
-        "loading",
-        "boolean",
+        "list",
+        "useList() object",
         "",
-        "Refetch dims rows; first load shows a spinner"
+        "Sort state for the header; folded columns stay sortable through the Sort control"
+      ],
+      [
+        "baseMeta",
+        "(row) => string",
+        "",
+        "The module's always-on meta text (unit, customer, job); folded meta columns follow it"
       ]
     ],
     "emits": [
       [
         "open",
         "row",
-        "Row click opens details"
+        "Row click or chevron opens the record (page or preview, P26)"
+      ],
+      [
+        "sort",
+        "key",
+        "Header click on an unfolded sortable column"
       ]
     ],
     "slots": [
+      [
+        "cell-<key>",
+        "Custom cell for one column, same slot name folded or not"
+      ],
       [
         "actions",
         "Row menu, z-10 above the stretched link"
       ]
     ],
     "do": [
-      "Cards below 640px always",
-      "Numbers right-aligned, tabular"
+      "One identity column (never folds, 40% floor) and at most one hero (never folds, right-aligned, tabular)",
+      "Fold by the card's own width, highest priority number first; status folds right above the hero; identity badges fold to the title line; meta columns fill two lines then a +N more chip",
+      "Header shows unfolded columns only; header click sorts",
+      "Top-align the identity cell when the title can wrap; keep the icon level with the first line"
     ],
     "dont": [
-      "Horizontal page scroll",
-      "Kebab menu as the only way to open a row"
+      "A table/cards switch, a view toggle or per-user view memory",
+      "Sideways scroll inside a ListCard (report tables with no identity are not ListCards)",
+      "A column that hides without folding (every value stays reachable: meta line, strip or details)",
+      "Expand state in the URL"
     ]
   },
   "Charts": {
@@ -610,7 +635,7 @@
     "slots": [
       [
         "default",
-        "Right side: layout toggle, Export/Import (only if routes exist), primary New"
+        "Right side: grid/list layout toggle for card grids only, Export/Import (only if routes exist), primary New"
       ]
     ],
     "do": [
@@ -622,7 +647,8 @@
     "dont": [
       "Per-page hand-rolled filter dialogs",
       "Export/Import buttons without backend routes",
-      "Pill or static select filters for locations, people or forms"
+      "Pill or static select filters for locations, people or forms",
+      "A table/cards toggle: lists that show rows have one mode (P40)"
     ]
   },
   "File picker · Media library": {
@@ -1249,7 +1275,7 @@
     ]
   },
   "List card": {
-    "file": "app ListCard, ListShare + useList({ scope, query }), registerUrlList",
+    "file": "app ListCard + ListRows, ListShare + useList({ scope, query }), registerUrlList",
     "props": [
       [
         "list",
@@ -1301,7 +1327,7 @@
     "slots": [
       [
         "actions",
-        "Right of the filters row: ListShare (Export, Copy link), then the primary create button"
+        "Right of the toolbar: ListShare (Export, Copy link), then the primary create button"
       ],
       [
         "tools",
@@ -1309,11 +1335,11 @@
       ],
       [
         "summary",
-        "Optional strip under the controls (e.g. a ledger's before / in / out / after)"
+        "Optional strip under the chips (e.g. a ledger's before / in / out / after)"
       ],
       [
         "default",
-        "The rows: a sm:block table + sm:hidden ul of row cards, then the empty state; the card switches them by its own width"
+        "ListRows with the module's columns, then the empty state (P40)"
       ]
     ],
     "do": [
@@ -1322,14 +1348,17 @@
       "Create from a scoped tab opens the normal form with the parent shown as LockedField",
       "Rows in a tab open the record's preview (P26), not a page change",
       "Export = CSV of exactly the rows shown, parent in the file name (exportList)",
-      "Register the list with registerUrlList(LS, q, active?) so search, sort, filters and ?tab= are in the link"
+      "Register the list with registerUrlList(LS, q, active?) so search, sort, filters and ?tab= are in the link",
+      "Stack: toolbar · quick tabs (own scrollable row, only when declared) · search (own row) · chips · summary · header · rows · footer, at every width (P40)",
+      "Quick tabs above search: coarse to fine"
     ],
     "dont": [
       "A second hand-built table for a tab",
       "A removable chip for the parent scope",
       "Refresh or a context line inside a details tab",
-      "Screen breakpoints to place search and tabs (they wrap by content)",
-      "Card grids inside the list card (forms, media, delegations keep ListToolbar)"
+      "Card grids inside the list card (forms, media, delegations keep ListToolbar)",
+      "Search and tabs sharing a row",
+      "A second layout for phones: the folded row is the same component"
     ]
   },
   "Locked field": {

@@ -77,19 +77,29 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 2. Filters, with the active count: `Filters (2)`
 3. Clear 2 (only when filters are active)
 4. Sort: `Name ↑`
-5. Right side: cards/table toggle, Export / Import only when the backend has those routes, then the primary New button
+5. Right side: Export / Import only when the backend has those routes, then the primary New button. There is no cards/table toggle (P40).
 
 - Every primary action has an icon and visible text on desktop. On phones the toolbar shows icons with counts, and the New button keeps its text.
-- Quick-filter tabs (status) sit above the toolbar and stay in sync with the Filters dialog.
+- Quick-filter tabs (status) sit under the toolbar on their own scrollable row, above the search field (P40), and stay in sync with the Filters dialog.
 
-**One card (P39).** Every list that shows rows, on list pages and in details tabs, is one `ListCard`:
+**One card, one stack (P39, P40).** Every list that shows rows, on list pages and in details tabs, is one `ListCard`, stacked in this order at every width:
 
-1. Search + quick tabs share a row only when they fit: the search grows (`flex: 1 1 16rem`) with the tabs on the right; when the tabs do not fit they wrap and sit on the left while the search fills its row. Decided by content, never by screen breakpoints. Pages that follow the top-bar search show only the tabs.
-2. Filters, Clear, Sort (and Refresh on list pages) on the left; Export, Copy link and the primary create button on the right. Export and Copy link are icon-only below extra-wide screens.
-3. Active-filter chips, an optional summary strip, then the rows and the empty state, inside the same card.
+1. Toolbar: Refresh (list pages only), Filters, Clear, Sort and `#tools` on the left; Export, Copy link and the primary create button on the right. Export and Copy link are icon-only below extra-wide screens.
+2. Quick tabs, only when the module declares them: one horizontally scrollable row of pills with counts and an edge fade. Never wrapped, never on the search row.
+3. Search on its own row: the list's own field, or the top-bar search chip for lists that follow the top bar (P22).
+4. Active-filter chips, then an optional summary strip.
+5. Column header (unfolded columns only), rows or the empty state, footer.
 
-- The card switches table and row cards by its own width (container query): row cards under 700px, table from 700px filling the card with no sideways scroll. The sidebar and zoom change the card width, so check in-between widths with the sidebar open.
-- Card grids (forms in cards view, media, delegations) keep the separate `ListToolbar`: cards inside a card read badly.
+**Priority columns (P40).** The rows are a grid driven by the module's column list; the card measures its own width (never the viewport) and folds columns instead of switching layouts:
+
+- One `identity` column (name or number with its icon tile) never folds and keeps at least 40% of the card while anything else is unfolded. At most one `hero` number never folds: right-aligned, `tabular-nums`, one-word sub-label when there is room.
+- Every other column has a `priority` (2 and up) and a `fold` target. The highest number folds first, until identity + hero + the rest fit with no sideways scroll.
+- Status folds right: a badge level with the title, the hero number directly under it, both top-anchored. Once folded it shows on every row, including the default state, so the numbers line up.
+- Identity badges (SKU, record number; `fold: 'badge'`) fold onto the title line. Meta columns (`fold: 'meta'`) fill the row's meta line after the module's base meta, in priority order, while they fit on two lines; the rest is a `+N more` chip that opens a label/value strip under the row. The chip sits above the row link; the row and the chevron always open the record. Which rows are open is page state, not link state.
+- Tight (identity's own minimum and the hero cannot both be met): identity takes what is left, the hero shrinks to its content, the toolbar goes icon-only, the title may wrap and the identity cell top-aligns so the icon stays level with the first line.
+- Header click sorts an unfolded column; the Sort control lists every sortable column, folded or not.
+- Report tables with no identity (Logs, Queue) are not `ListCard`s and may scroll inside their own card. Card grids (forms in cards view, media, delegations) keep the separate `ListToolbar`: cards inside a card read badly.
+- The reference is `docs/platform/p40-priority-columns.html`; check a list by dragging the card from 1280 to 360 with the sidebar open.
 
 **Filters dialog**
 
@@ -108,10 +118,10 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 
 **Shape (prototype wins, D27)**
 
-- Desktop offers cards or a table, remembered per user. Phones always show cards (D11).
-- A row or card opens on click with a stretched link; its actions menu sits above it (`relative z-10`) (D10).
+- One row shape at every width: the table at the top of the range and the folded row (icon tile, title, badges, meta line, status over the hero, chevron) at the bottom are the same component (P40). No cards/table choice, nothing remembered per user.
+- A row opens on click with a stretched link; its actions menu and the `+N more` chip sit above it (`relative z-10`) (D10).
 - Empty list: centred icon (`size-6`, muted 60%), one specific line ("No forms match."), and Clear filters when filters are active. Never a second New button.
-- No horizontal page scroll at 360px. Tables wider than the screen scroll inside their own card.
+- No horizontal page scroll at 360px, and no sideways scroll inside a `ListCard`: columns fold (P40). Only report tables with no identity column scroll inside their own card.
 
 ## Locked: details pages
 
@@ -269,8 +279,7 @@ shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or
 
 **Constrained-creative** (pick an existing shape):
 
-- List card content: accent bar or icon tile, title, status pill, one meta line, a key number with a sparkline, footer with owner and date. Which fields fill each slot is per module.
-- List table columns: which columns earn a place is per module; the column look is fixed.
+- List rows (P40): which columns a list has, their priorities, which column is the identity and which is the hero, the base meta line, the quick tabs and the search placeholder are per module; the fold mechanics and the column look are fixed. Identity leads with what a person recognises (a name, a document number), never a bare id; the id folds to a mono badge.
 - Details header title: a name, a code or a document number, whichever identifies the record; a person always gets an avatar with initials.
 - Overview cards: field grid inside a card; grouping and card names per module (Information, Amounts, Rule, Timeline).
 - KPI strip: 2 columns on phones, 4 on desktop; each tile = label, icon chip, number, one line of context or a sparkline/progress bar.
@@ -304,9 +313,9 @@ shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or
 - [ ] Checked at 360px and 1280px, light and dark; no horizontal page scroll
 - [ ] Zero console errors and zero console warnings (e2e asserts it)
 - [ ] Every menu, select, popover and tooltip is portalled and stays on screen
-- [ ] Toolbar order is Refresh, Filters, Clear, Sort, then toggle and New; Refresh keeps content visible
+- [ ] Toolbar order is Refresh, Filters, Clear, Sort, then Export / Copy link / New; no cards/table toggle; Refresh keeps content visible
 - [ ] Filters, sort, page and tab are in the URL and survive a reload
-- [ ] Lists that show rows are one ListCard; search and tabs wrap by content; the card switches table/cards by its own width; checked at ~700–1100px with the sidebar open
+- [ ] Lists that show rows are one ListCard stacked toolbar · tabs · search · chips · header · rows · footer; columns fold by priority as the card narrows (dragged from 1280 to 360 with the sidebar open): identity and hero never fold, status folds right above the hero, `+N more` only when the meta line would overflow two lines, nothing scrolls sideways
 - [ ] Tabs that show records use the module list with a scope (parent filter/column/search removed, own search, Export, Copy link, create with the parent locked)
 - [ ] Top-bar search filters this module; "Search everywhere" works
 - [ ] Create/edit form has drafts (or is listed as an exception with a reason)
