@@ -16,6 +16,13 @@ const opt = (k, d) => { const i = args.indexOf('--' + k); return i > -1 ? args[i
 const OUT = path.resolve(__dirname, opt('out', '../../screenshots'));
 const ONLY = (opt('only', '') || '').split(',').filter(Boolean);
 const HTML = fs.readFileSync(path.resolve(__dirname, '../../prototype/index.html'), 'utf8');
+// The prototype loads Geist from Google Fonts; serve the same files from @fontsource (the apps bundle these),
+// so the screenshots render the same font on any machine, offline.
+const FONT_DIRS = ['geist', 'geist-mono'].map(n => path.dirname(require.resolve(`@fontsource/${n}/package.json`)));
+const FONTS_CSS = FONT_DIRS.flatMap(dir => ['400', '500', '600', '700'].map(w => path.join(dir, w + '.css')))
+  .filter(f => fs.existsSync(f))
+  .map(f => fs.readFileSync(f, 'utf8').replace(/url\(\.\/files\/([^)]+)\)/g, (m, file) => `url(http://fonts.local/${path.basename(path.dirname(f))}/${file})`))
+  .join('\n');
 const CSS = fs.readFileSync(path.resolve(__dirname, '.tw.css'), 'utf8');
 
 const COMBOS = {
@@ -85,6 +92,12 @@ const STATES = [
       if (u.includes('cdn.tailwindcss.com')) return r.fulfill({ body: 'window.tailwind={};', contentType: 'text/javascript' });
       if (u.includes('vue.global')) return r.fulfill({ path: require.resolve('vue/dist/vue.global.prod.js') });
       if (u.includes('lucide')) return r.fulfill({ path: require.resolve('lucide/dist/umd/lucide.min.js') });
+      if (u.includes('fonts.googleapis.com')) return r.fulfill({ body: FONTS_CSS, contentType: 'text/css' });
+      if (u.startsWith('http://fonts.local/')) {
+        const [pkg, file] = u.slice('http://fonts.local/'.length).split('/');
+        const dir = FONT_DIRS.find(d => path.basename(d) === pkg);
+        return dir ? r.fulfill({ path: path.join(dir, 'files', file) }) : r.abort();
+      }
       if (u.startsWith('http://proto/')) return r.fulfill({ contentType: 'text/html', body: '<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>' + CSS + '</style></head><body><script>window.__INIT_ROUTE=' + JSON.stringify(s.route) + '</script>' + HTML + '</body></html>' });
       return r.abort();
     });

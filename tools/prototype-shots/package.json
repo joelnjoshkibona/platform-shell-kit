@@ -8,6 +8,8 @@
     "compare": "node compare.js"
   },
   "dependencies": {
+    "@fontsource/geist": "5.2.8",
+    "@fontsource/geist-mono": "5.2.8",
     "lucide": "0.453.0",
     "playwright": "1.56.1",
     "tailwindcss": "3.4.17",
