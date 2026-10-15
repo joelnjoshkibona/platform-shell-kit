@@ -33,7 +33,7 @@ Every list that shows rows is one `ListCard` whose rows are a CSS grid driven by
 3. **Identity badges** (`fold: 'badge'`) go onto the title line after the name.
 4. **Meta columns** (`fold: 'meta'`) fill the row's meta line in priority order (lowest number first), after the module's base meta, separated by `·`, while they fit on **two lines**. What does not fit is counted in a **`+N more`** chip at the end of the meta line.
 5. `+N more` opens a label/value strip under the row listing the fields the meta line could not carry (two columns of `Label … value`, one column when tight). The chip sits above the row link (P5); the row click and the chevron always open the record. Expand state is page state, never URL state (P39 puts list state in the link; which rows are open is not list state).
-6. **Tight**: when even identity's own `min` and the hero cannot both be met (phones), identity takes the remaining width (`minmax(0,1fr)`) and the hero shrinks to its content; the toolbar goes icon-only (P24); the title may wrap; the identity cell top-aligns so the icon stays level with the first line.
+6. **Tight**: when even identity's own `min` and the hero cannot both be met (phones), identity takes the remaining width (`minmax(0,1fr)`) and the hero shrinks to its content; row actions move under the meta line; the toolbar goes icon-only (P24); the title may wrap; the identity cell top-aligns so the icon stays level with the first line.
 7. The column header shows unfolded columns only. Clicking a sortable header sorts; the Sort control lists every sortable column, folded or not.
 8. Nothing inside a `ListCard` scrolls sideways. Report tables (Logs, Queue, anything that is a grid of numbers with no identity) are not `ListCard`s and may keep a real table that scrolls inside its own card.
 
@@ -78,7 +78,7 @@ Which columns a list has, their `priority`, which one is the hero, the base meta
 - `prototype/src/kit.json`: 1.2.0, 40 decisions.
 - `README.md`: P1–P40.
 
-**Prototype parts still to migrate (same PR before merge, or the next commit on this branch):** a `ListRows` component in `parts_listcard.js` (props `columns`, `rows`, `list`, slot per cell; emits `open`) with the fold algorithm from the reference page; the ListCard template reordered to toolbar / tabs / search / chips; every list in `parts_list.js`, `parts_loc.js`, `parts_appr.js` and the Users list converted from `table + ul` to `ListRows` with declared priorities; the `@container lc` rules in `builder.html` removed; the Rules tab text; `tools/prototype-shots` baselines regenerated at 1280/1024/768/390 light and dark. Products pull the kit after that (`kit.json` tells them what changed).
+**Prototype (kit 1.2.1):** `ListRows` in `prototype/src/parts_listcard.js` (registered in `assemble.py`), ListCard reordered toolbar / tabs / search / chips, the `@container lc` rules removed from `builder.html`, and every list that shows rows converted with declared priorities: Roles, Users, Locations (tree: identity indented by depth), Location › Users, Approvals, and the design-system demos. A `success` tone (`--success`, Badge `success`) is added for settled states (paid, delivered). `tools/prototype-shots` selects rows as `[role=link]`. Products pull 1.2.1.
 
 ## Review checklist additions
 

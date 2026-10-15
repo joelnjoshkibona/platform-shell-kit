@@ -77,7 +77,7 @@ for t,cs in _tags.items():
         if a.get('do'): _md += [''] + ['- Do: '+d for d in a['do']]
         if a.get('dont'): _md += ['- Don\'t: '+d for d in a['dont']]
 open(os.path.join(KIT, 'docs', 'COMPONENTS.md'),'w').write('\n'.join(_md)+'\n')
-shell = shell.replace('  return { AuthView, ShellView, comps: {', loc + '\n  return { AuthView, ShellView, comps: { ListCard, ListShare, LockedField, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog,', 1)
+shell = shell.replace('  return { AuthView, ShellView, comps: {', loc + '\n  return { AuthView, ShellView, comps: { ListCard, ListRows, ListShare, LockedField, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog,', 1)
 
 def rep(s, a, b, count=1):
     assert s.count(a) >= 1, ('missing', a[:80])

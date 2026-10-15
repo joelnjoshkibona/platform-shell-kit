@@ -181,7 +181,7 @@
     "props": [
       [
         "variant",
-        "'default' | 'secondary' | 'outline' | 'destructive' | 'warning'",
+        "'default' | 'secondary' | 'outline' | 'destructive' | 'warning' | 'success'",
         "'default'",
         ""
       ],
@@ -431,13 +431,13 @@
     ]
   },
   "List rows": {
-    "file": "app ListRows inside ListCard (P40)",
+    "file": "app ListRows (prototype/src/parts_listcard.js) inside ListCard (P40)",
     "props": [
       [
         "columns",
         "ListColumn[]",
         "",
-        "key, label, short?, identity?, hero?, priority, fold: 'badge' | 'meta', min (px), sortable?, render?"
+        "key, label, short?, identity?, hero?, status?, priority, fold: 'badge' | 'meta', min (px), sort? (a list.sorts value), text(row), variant?(row), mono?, right?, muted?, sub?, indent?(row) for trees"
       ],
       [
         "rows",
@@ -449,42 +449,72 @@
         "list",
         "useList() object",
         "",
-        "Sort state for the header; folded columns stay sortable through the Sort control"
+        "Header sort; folded columns stay sortable through the Sort control"
+      ],
+      [
+        "rowKey",
+        "(row) => string",
+        "r => r.id",
+        ""
       ],
       [
         "baseMeta",
         "(row) => string",
-        "",
+        "() => ''",
         "The module's always-on meta text (unit, customer, job); folded meta columns follow it"
+      ],
+      [
+        "clickable",
+        "boolean",
+        "true",
+        "false for lists with no record page (Users): no link role, no chevron"
+      ],
+      [
+        "rowClass",
+        "(row) => string",
+        "() => ''",
+        "Extra classes per row (dimmed tree matches, inherited rows)"
+      ],
+      [
+        "actionsWidth",
+        "number",
+        "40",
+        "Width the #actions slot needs in the grid; when tight the actions move under the meta line"
+      ],
+      [
+        "empty",
+        "string",
+        "'Nothing matches.'",
+        "Empty-state line when no slot is used"
       ]
     ],
     "emits": [
       [
         "open",
         "row",
-        "Row click or chevron opens the record (page or preview, P26)"
-      ],
-      [
-        "sort",
-        "key",
-        "Header click on an unfolded sortable column"
+        "Row click or chevron opens the record (page or preview, P26); header sort writes list.S directly"
       ]
     ],
     "slots": [
       [
+        "icon",
+        "40px tile or avatar per row (#icon=\"{ row }\")"
+      ],
+      [
         "cell-<key>",
-        "Custom cell for one column, same slot name folded or not"
+        "Grid cell for one column; a status column's slot is reused where it folds"
       ],
       [
         "actions",
-        "Row menu, z-10 above the stretched link"
+        "Row actions above the link; under the meta line when tight"
       ]
     ],
     "do": [
       "One identity column (never folds, 40% floor) and at most one hero (never folds, right-aligned, tabular)",
       "Fold by the card's own width, highest priority number first; status folds right above the hero; identity badges fold to the title line; meta columns fill two lines then a +N more chip",
       "Header shows unfolded columns only; header click sorts",
-      "Top-align the identity cell when the title can wrap; keep the icon level with the first line"
+      "Top-align the identity cell when the title can wrap; keep the icon level with the first line",
+      "Status columns: give them a #cell-<key> slot if they use a custom pill; it renders in the column and in the folded position"
     ],
     "dont": [
       "A table/cards switch, a view toggle or per-user view memory",

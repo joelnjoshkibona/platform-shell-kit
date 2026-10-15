@@ -17,7 +17,7 @@ tailwind.config = {
       accent: { DEFAULT: 'hsl(var(--accent) / <alpha-value>)', foreground: 'hsl(var(--accent-foreground) / <alpha-value>)' },
       popover: { DEFAULT: 'hsl(var(--popover) / <alpha-value>)', foreground: 'hsl(var(--popover-foreground) / <alpha-value>)' },
       card: { DEFAULT: 'hsl(var(--card) / <alpha-value>)', foreground: 'hsl(var(--card-foreground) / <alpha-value>)' },
-      warning: 'hsl(var(--warning) / <alpha-value>)',
+      warning: 'hsl(var(--warning) / <alpha-value>)', success: 'hsl(var(--success) / <alpha-value>)',
       fa: { DEFAULT: 'hsl(var(--form-accent) / <alpha-value>)', fg: 'hsl(var(--form-accent-fg) / <alpha-value>)' },
     },
     borderRadius: { xl: 'calc(var(--radius) + 4px)', lg: 'var(--radius)', md: 'calc(var(--radius) - 2px)', sm: 'calc(var(--radius) - 4px)' },
@@ -36,7 +36,7 @@ tailwind.config = {
   --secondary:240 4.8% 95.9%; --secondary-foreground:240 5.9% 10%;
   --muted:240 4.8% 95.9%; --muted-foreground:240 3.8% 42%;
   --accent:240 4.8% 95.9%; --accent-foreground:240 5.9% 10%;
-  --destructive:0 72% 48%; --destructive-foreground:0 0% 98%; --warning:32 92% 38%;
+  --destructive:0 72% 48%; --destructive-foreground:0 0% 98%; --warning:32 92% 38%; --success:152 64% 28%;
   --border:240 5.9% 90%; --input:240 5.9% 86%; --ring:174 72% 30%; --radius:0.6rem;
   --fa-l:174 72% 26%; --fa-d:170 62% 46%; --form-accent:var(--fa-l); --form-accent-fg:0 0% 100%;
 }
@@ -47,7 +47,7 @@ tailwind.config = {
   --secondary:240 3.7% 15.9%; --secondary-foreground:0 0% 96%;
   --muted:240 3.7% 14%; --muted-foreground:240 5% 64.9%;
   --accent:240 3.7% 15.9%; --accent-foreground:0 0% 96%;
-  --destructive:0 70% 58%; --destructive-foreground:0 0% 98%; --warning:38 92% 56%;
+  --destructive:0 70% 58%; --destructive-foreground:0 0% 98%; --warning:38 92% 56%; --success:152 52% 52%;
   --border:240 3.7% 16%; --input:240 3.7% 20%; --ring:170 62% 46%;
   color-scheme:dark; }
   :root:not([data-theme="light"]) .form-theme{ --form-accent:var(--fa-d); --form-accent-fg:240 10% 4% } }
@@ -58,7 +58,7 @@ tailwind.config = {
   --secondary:240 3.7% 15.9%; --secondary-foreground:0 0% 96%;
   --muted:240 3.7% 14%; --muted-foreground:240 5% 64.9%;
   --accent:240 3.7% 15.9%; --accent-foreground:0 0% 96%;
-  --destructive:0 70% 58%; --destructive-foreground:0 0% 98%; --warning:38 92% 56%;
+  --destructive:0 70% 58%; --destructive-foreground:0 0% 98%; --warning:38 92% 56%; --success:152 52% 52%;
   --border:240 3.7% 16%; --input:240 3.7% 20%; --ring:170 62% 46%;
   color-scheme:dark; }
 :root[data-theme="dark"] .form-theme{ --form-accent:var(--fa-d); --form-accent-fg:240 10% 4% }
@@ -100,18 +100,10 @@ body{font-family:Geist,ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial,sans-seri
 @container (max-width: 560px){ .grid-table{display:none} .grid-stack{display:flex} .r-pad{padding:16px!important} .scale-row{flex-wrap:wrap} }
 .drag-ghost{opacity:.45}
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:hsl(var(--border));border-radius:8px;border:2px solid transparent;background-clip:padding-box}
-  /* P39 one-card lists: the card decides table vs cards by its own width, not the screen's (container query) */
-  [data-list-card]{container-type:inline-size;container-name:lc}
-  @container lc (max-width: 699px){
-    [data-list-card] .sm\:block:has(> table){display:none !important}
-    [data-list-card] ul.sm\:hidden{display:block !important}
-    [data-list-card] .md\:block:has(> table){display:none !important}
-    [data-list-card] ul.md\:hidden{display:block !important}
-  }
-  /* search + tabs row needs no query: search grows (flex 1 1 16rem); when the tabs do not fit they wrap and justify-between puts a lone line at the left */
-  @container lc (min-width: 700px){ [data-list-card] .sm\:block > table, [data-list-card] .md\:block > table{min-width:0 !important} }
-  /* tables and row cards that switch at md follow the card too */
-  @container lc (min-width: 700px){ [data-list-card] .md\:block:has(> table){display:block !important} [data-list-card] ul.md\:hidden{display:none !important} }
+  /* P40: lists that show rows are ListRows (priority columns); the card folds columns by its own width in JS, no container switch.
+     Quick tabs scroll sideways on their own row with an edge fade. */
+  .lc-tabs{scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent)}
+  .lc-tabs::-webkit-scrollbar{display:none}
 </style>
 
 <div id="app" v-cloak></div>
