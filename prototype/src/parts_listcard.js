@@ -82,7 +82,7 @@
         const hero = liveCols.find(c => c.hero); const statusF = folded.find(c => c.status);
         const tpl = liveCols.map(c => c.identity ? (tight ? 'minmax(0,1fr)' : 'minmax(' + Math.max(minOf(c), floor) + 'px,1fr)') : (c.hero && tight ? 'max-content' : minOf(c) + 'px'));
         if (statusF && !hero) tpl.push('max-content');
-        if (actCol) tpl.push('auto');
+        if (actCol) tpl.push(p.actionsWidth + 'px');   // fixed: each row is its own grid, so rows with and without actions line up
         tpl.push(LR_CHEV + 'px');
         const heroW = hero ? (tight ? 110 : minOf(hero)) : 0;
         const identW = tight ? w - LR_PADX - LR_CHEV - LR_GAP * 2 - (hero || statusF ? 110 : 0) : w - (others - (hero ? minOf(hero) - heroW : 0));
