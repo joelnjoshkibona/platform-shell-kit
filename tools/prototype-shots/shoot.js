@@ -27,7 +27,7 @@ const COMBOS = {
 const ALL = Object.keys(COMBOS);
 const KEY = ['desktop-light', 'phone-dark'];
 
-const row = (name) => `main tbody tr:visible:has-text("${name}"), main ul.sm\\:hidden > li:visible:has-text("${name}") button.flex-1`;
+const row = (name) => `main [role=link]:visible:has-text("${name}")`;   // P40: ListRows rows are links at every width
 const scen = async (p, label) => { await p.click('button:has-text("Prototype states")'); await p.waitForTimeout(300); await p.locator('[role=dialog] button:has-text("' + label + '")').first().click(); };
 const tab = (p, label) => p.locator(`main [role=tab]:has-text("${label}")`).first().click();
 

@@ -59,6 +59,7 @@ const Badge = {
     outline: 'text-foreground',
     destructive: 'border-transparent bg-destructive text-destructive-foreground',
     warning: 'border-transparent bg-warning/15 text-warning',
+    success: 'border-transparent bg-success/15 text-success',
   }[this.variant]) } },
   template: `<span :class="cls"><slot/></span>`
 };

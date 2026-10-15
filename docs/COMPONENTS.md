@@ -331,7 +331,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `variant` | `'default' \| 'secondary' \| 'outline' \| 'destructive' \| 'warning'` | `'default'` |  |
+| `variant` | `'default' \| 'secondary' \| 'outline' \| 'destructive' \| 'warning' \| 'success'` | `'default'` |  |
 | `status` | `string` | – | StatusPill: key into the module's status map (label, dot, class) in lib.ts |
 
 **Slots:** `#default` One or two words
@@ -657,7 +657,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 ### List rows
 
-`app ListRows inside ListCard (P40)`
+`app ListRows (prototype/src/parts_listcard.js) inside ListCard (P40)`
 
 | Spec | Value |
 | --- | --- |
@@ -666,25 +666,31 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | Row | 16px x · 8px y, min 56px, hover accent/60, whole row clickable; identity cell = 40px icon tile + title line + meta line |
 | Numbers | hero right-aligned, 600, tabular; one-word sub-label when not tight |
 | Folding | by the card's own width (ResizeObserver), highest priority number first: status → badge over the hero; identity badges → title line; meta → meta line (two lines) then +N more |
-| Tight | identity minmax(0,1fr), hero max-content, title wraps, identity cell top-aligned, toolbar icon-only |
+| Tight | identity minmax(0,1fr), hero max-content, row actions under the meta line, title wraps, identity cell top-aligned, toolbar icon-only |
 | Variants | full table, partly folded, folded row, expanded (+N more strip), empty state |
 | Used in | Every list that shows rows: Users, Roles, Locations, Approvals, product modules. Not Logs or Queue (report tables). |
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `columns` | `ListColumn[]` | – | key, label, short?, identity?, hero?, priority, fold: 'badge' | 'meta', min (px), sortable?, render? |
+| `columns` | `ListColumn[]` | – | key, label, short?, identity?, hero?, status?, priority, fold: 'badge' | 'meta', min (px), sort? (a list.sorts value), text(row), variant?(row), mono?, right?, muted?, sub?, indent?(row) for trees |
 | `rows` | `array` | – | From useList() |
-| `list` | `useList() object` | – | Sort state for the header; folded columns stay sortable through the Sort control |
-| `baseMeta` | `(row) => string` | – | The module's always-on meta text (unit, customer, job); folded meta columns follow it |
+| `list` | `useList() object` | – | Header sort; folded columns stay sortable through the Sort control |
+| `rowKey` | `(row) => string` | `r => r.id` |  |
+| `baseMeta` | `(row) => string` | `() => ''` | The module's always-on meta text (unit, customer, job); folded meta columns follow it |
+| `clickable` | `boolean` | `true` | false for lists with no record page (Users): no link role, no chevron |
+| `rowClass` | `(row) => string` | `() => ''` | Extra classes per row (dimmed tree matches, inherited rows) |
+| `actionsWidth` | `number` | `40` | Width the #actions slot needs in the grid; when tight the actions move under the meta line |
+| `empty` | `string` | `'Nothing matches.'` | Empty-state line when no slot is used |
 
-**Emits:** `open` (row), `sort` (key)
+**Emits:** `open` (row)
 
-**Slots:** `#cell-<key>` Custom cell for one column, same slot name folded or not, `#actions` Row menu, z-10 above the stretched link
+**Slots:** `#icon` 40px tile or avatar per row (#icon="{ row }"), `#cell-<key>` Grid cell for one column; a status column's slot is reused where it folds, `#actions` Row actions above the link; under the meta line when tight
 
 - Do: One identity column (never folds, 40% floor) and at most one hero (never folds, right-aligned, tabular)
 - Do: Fold by the card's own width, highest priority number first; status folds right above the hero; identity badges fold to the title line; meta columns fill two lines then a +N more chip
 - Do: Header shows unfolded columns only; header click sorts
 - Do: Top-align the identity cell when the title can wrap; keep the icon level with the first line
+- Do: Status columns: give them a #cell-<key> slot if they use a custom pill; it renders in the column and in the folded position
 - Don't: A table/cards switch, a view toggle or per-user view memory
 - Don't: Sideways scroll inside a ListCard (report tables with no identity are not ListCards)
 - Don't: A column that hides without folding (every value stays reachable: meta line, strip or details)
