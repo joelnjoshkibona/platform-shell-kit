@@ -100,6 +100,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 **Emits:** `update:modelValue` (value)
 
 - Do: Portal + collision padding 8 (D9)
+- Do: Size it with class (class="w-28") on its root wrapper; in a web port whose root renders no element (reka SelectRoot), add a wrapper div so class and style land, and pass other attributes to the trigger
 - Don't: Native <select> or NativeSelect
 - Don't: More than ~15 static options (use ApiSelect)
 
@@ -679,7 +680,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | `baseMeta` | `(row) => string` | `() => ''` | The module's always-on meta text (unit, customer, job); folded meta columns follow it |
 | `clickable` | `boolean` | `true` | false for lists with no record page (Users): no link role, no chevron |
 | `rowClass` | `(row) => string` | `() => ''` | Extra classes per row (dimmed tree matches, inherited rows) |
-| `actionsWidth` | `number` | `40` | Width the #actions slot needs in the grid; when tight the actions move under the meta line |
+| `actionsWidth` | `number` | `40` | Width of the #actions column, the same on every row whether or not it has actions (each row is its own grid); when tight the actions move under the meta line |
 | `empty` | `string` | `'Nothing matches.'` | Empty-state line when no slot is used |
 
 **Emits:** `open` (row)

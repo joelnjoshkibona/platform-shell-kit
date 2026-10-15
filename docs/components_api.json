@@ -137,7 +137,8 @@
     ],
     "slots": [],
     "do": [
-      "Portal + collision padding 8 (D9)"
+      "Portal + collision padding 8 (D9)",
+      "Size it with class (class=\"w-28\") on its root wrapper; in a web port whose root renders no element (reka SelectRoot), add a wrapper div so class and style land, and pass other attributes to the trigger"
     ],
     "dont": [
       "Native <select> or NativeSelect",
@@ -479,7 +480,7 @@
         "actionsWidth",
         "number",
         "40",
-        "Width the #actions slot needs in the grid; when tight the actions move under the meta line"
+        "Width of the #actions column, the same on every row whether or not it has actions (each row is its own grid); when tight the actions move under the meta line"
       ],
       [
         "empty",
