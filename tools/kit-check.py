@@ -9,6 +9,9 @@ Fails (exit 1) when:
   - kit_version is not MAJOR.MINOR.PATCH;
   - with --base: a P row was added or changed but kit_version did not get at least a minor bump,
     or anything else changed but kit_version did not move at all.
+    A row marked "Withdrawn:" on a number that was never decided (or was already withdrawn), and a note in another
+    row about such a number in parentheses, need only a patch: nothing changes for products. Withdrawing a decided
+    P still needs a minor bump.
 """
 import json, re, subprocess, sys, os
 
@@ -22,6 +25,13 @@ def read(path, ref=None):
 
 def rows(text):
     return {int(m.group(1)): line for line in text.splitlines() if (m := re.match(r'\| P(\d+) \|', line))}
+
+def withdrawn(line):
+    return bool(line) and line.split('|')[2].strip().startswith('Withdrawn:')
+
+def plain(line, gone):
+    # A row without its parenthetical notes about withdrawn numbers, e.g. "(P38 is reserved for ...)".
+    return re.sub(r' \(P(\d+) [^)]*\)', lambda m: '' if int(m.group(1)) in gone else m.group(0), line or '')
 
 def ver(v):
     m = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)', v or '')
@@ -39,7 +49,9 @@ if not v: errors.append(f"kit_version {kit.get('kit_version')!r} is not MAJOR.MI
 if '--base' in sys.argv and v:
     base = sys.argv[sys.argv.index('--base') + 1]
     bkit = json.loads(read(KJ, base)); bv = ver(bkit.get('kit_version')); before = rows(read(PD, base))
-    decided = sorted(n for n in set(now) | set(before) if now.get(n) != before.get(n))
+    gone = {n for n in now if withdrawn(now[n]) and (n not in before or withdrawn(before[n]))}
+    decided = sorted(n for n in set(now) | set(before)
+                     if n not in gone and plain(now.get(n), gone) != plain(before.get(n), gone))
     changed = subprocess.run(['git', '-C', ROOT, 'diff', '--name-only', base, '--'], capture_output=True, text=True).stdout.split()
     if decided and not (v[0] > bv[0] or (v[0] == bv[0] and v[1] > bv[1])):
         errors.append(f"P{', P'.join(map(str, decided))} added or changed: kit_version needs a minor bump from {bkit['kit_version']} (or major, if products must change code)")
