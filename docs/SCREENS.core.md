@@ -119,7 +119,7 @@ Media library; the same library opens from the FilePicker.
 
 ### Settings  ·  `/{org}/settings`
 
-Org identity, security (2FA, timeout), quiet hours (D44), chart view defaults.
+One page of tabs (P42), `?tab=` in the link: General (identity, branding, brand colour) · product tabs (Fomu: Results, chart view defaults) · Notifications (quiet hours, D44) · Security (2FA, timeout).
 
 - **Settings** — [desktop-light](screenshots/workspace__desktop-light.png), [desktop-dark](screenshots/workspace__desktop-dark.png), [phone-light](screenshots/workspace__phone-light.png), [phone-dark](screenshots/workspace__phone-dark.png)
 
