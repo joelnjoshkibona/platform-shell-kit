@@ -50,6 +50,21 @@ The prototype still carries **Fomu's modules (Forms, Templates, Builder, Results
 
 ## Rules of the kit
 
-- The shell is **locked**. Change it only with a new P-decision here, then update the prototype, rules and components in the same commit, and bump `KIT_VERSION` in `product.js`'s neighbour `kit.json`.
+- The shell is **locked**. Change it only with a new P-decision here, then update the prototype, rules and components in the same commit, and bump `kit_version` in `prototype/src/kit.json` (see Versioning).
 - Products **pull** kit changes; nothing flows the other way without a P. A product may test a proposed P first (spec in its `docs/platform/P<nn>-*.md`), then port it here as one pull request.
 - No secrets, no product data beyond demo seeds. The repo is public.
+
+## Versioning
+
+`prototype/src/kit.json` carries `kit_version` (MAJOR.MINOR.PATCH) and `platform_decisions` (the highest P number). Every pull request that is merged moves the version once, in the pull request itself:
+
+| Bump | When | Example |
+|---|---|---|
+| **Major** (2.0.0) | A P removes or renames something products build against (an extension point, a component prop, a core table or route), so pulling the kit means changing product code | a new list API replacing `useList` |
+| **Minor** (1.4.0) | A P is added or amended. One bump per pull request, however many P's it carries | P47 workflow statuses |
+| **Patch** (1.3.1) | Fixes with no decision change: prototype bugs, docs, screenshots, tools | this section |
+
+- Two pull requests in flight both bump from the same version; the one merged second rebases and takes the next number, the same way it renumbers its P.
+- Products pin all three in their own `kit.json`: `kit_version`, `kit_commit` (the merge commit they pulled) and `platform_decisions`.
+- Check before opening a pull request: `python3 tools/kit-check.py --base origin/main`. It fails when `platform_decisions` is not the highest P, or when the bump is smaller than the changes need.
+- **1.3.0** is P42–P47, merged on 17 Oct 2026 in #7–#9 without separate bumps. The rule applies from 1.3.1.
