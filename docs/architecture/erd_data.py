@@ -25,7 +25,17 @@ ent("01", "STATUSES", [
     ("string", "name", "UK", "Active, Pending, Inactive, Suspended..."),
     ("string", "color", "", "default #6b7280"),
     ("text", "description", "", ""),
-], "Cobley core. Master-data tables (users, organisations, locations, roles, request types) use status_id. Workflow states (forms, attempts, responses, requests) stay as enums.")
+], "Cobley core. Master-data tables (users, organisations, locations, roles, request types) use status_id. Workflow states use one lookup table per workflow (P42, amends P16).")
+ent("01", "WORKFLOW_STATUSES (pattern)", [
+    ("bigint", "id", "PK", "one table per workflow, e.g. request_statuses (P42)"),
+    ("bigint", "organization_id", "FK", "tenant; seeded per organisation"),
+    ("string", "code", "UK", "UNIQUE(organization_id, code); fixed after seeding"),
+    ("string", "label", "", "editable"),
+    ("string", "label_sw", "", "second locale, editable"),
+    ("string", "tone", "", "muted | info | wait | warn | live | ok | bad | off"),
+    ("smallint", "sort_order", "", "editable"),
+    ("boolean", "is_terminal", "", "seeded"),
+], "Code compares code only; labels, tone and order are edited in Settings › Statuses. Pipeline states nobody relabels (deliveries, tokens, exports, webhooks) stay enums.")
 
 ent("01", "USERS", [
     ("bigint", "id", "PK", ""),
@@ -223,7 +233,7 @@ ent("01C", "REQUESTS", [
     ("json", "subject_meta", "", "D41: e.g. export format, filters, row count; part of the duplicate-open check"),
     ("decimal", "amount", "", "nullable"),
     ("text", "reason", "", ""),
-    ("enum", "status", "", "draft | submitted | in_review | approved | rejected | cancelled"),
+    ("bigint", "request_status_id", "FK", "request_statuses (P42): draft | submitted | in_review | approved | rejected | cancelled"),
     ("int", "current_step", "", ""),
 ] + STD, "Cobley core + organization_id. Request items (request_items) are kept for Cobley types and unused by Fomu.")
 
@@ -290,7 +300,7 @@ ent("02", "FORMS", [
     ("text", "description", "", "nullable"),
     ("string", "slug", "UK", "public URL /f/{slug}"),
     ("enum", "visibility", "", "public | private"),
-    ("enum", "status", "", "draft | published | closed | archived"),
+    ("bigint", "form_status_id", "FK", "form_statuses (P42): draft | published | closed | archived"),
     ("bigint", "current_version_id", "FK", "live version, NULL until first publish"),
     ("json", "draft_definition", "", "builder autosave target"),
     ("timestamp", "draft_updated_at", "", "draft ahead of live when > published_at"),
@@ -357,7 +367,7 @@ ent("03", "FORM_INVITATIONS", [
     ("ulid", "form_id", "FK", ""),
     ("string", "email", "", "lower-cased"),
     ("char", "token_hash", "", "sha256 of emailed token"),
-    ("enum", "status", "", "pending | sent | opened | responded | revoked"),
+    ("bigint", "invitation_status_id", "FK", "invitation_statuses (P42): pending | sent | opened | responded | revoked"),
     ("bigint", "invited_by", "FK", "users.id"),
     ("timestamp", "sent_at", "", ""),
     ("timestamp", "opened_at", "", ""),
@@ -397,7 +407,7 @@ ent("04", "FORM_ATTEMPTS", [
     ("enum", "purpose", "", "new | edit"),
     ("char", "token_hash", "", "attempt session token"),
     ("string", "active_key", "", "respondent_id while in_progress, else NULL"),
-    ("enum", "status", "", "in_progress | submitted | expired | voided | abandoned"),
+    ("bigint", "attempt_status_id", "FK", "attempt_statuses (P42): in_progress | submitted | expired | voided | abandoned"),
     ("json", "rules_snapshot", "", "form settings frozen at start"),
     ("timestamp", "started_at", "", "set when Start + fullscreen succeeds"),
     ("timestamp", "deadline_at", "", "whole_form timer, server clock"),
@@ -445,7 +455,7 @@ ent("05", "FORM_RESPONSES", [
     ("string", "dedupe_key", "", "email when one_response, else NULL"),
     ("bigint", "location_id", "FK", "snapshot: respondent's location at submit (form location or their primary)"),
     ("bigint", "current_revision_id", "FK", "latest revision, NULL when voided by violation"),
-    ("enum", "status", "", "submitted | voided"),
+    ("bigint", "response_status_id", "FK", "response_statuses (P42): submitted | voided"),
     ("enum", "void_reason", "", "violation | owner, nullable"),
     ("bigint", "voided_by", "FK", "users.id, NULL for violation voids"),
     ("timestamp", "voided_at", "", ""),

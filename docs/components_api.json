@@ -187,10 +187,16 @@
         ""
       ],
       [
-        "status",
+        "workflow",
         "string",
         "",
-        "StatusPill: key into the module's status map (label, dot, class) in lib.ts"
+        "StatusPill (P42): the workflow key, e.g. 'request', 'booking'"
+      ],
+      [
+        "code",
+        "string",
+        "",
+        "StatusPill (P42): the record's status code; label, Swahili and tone come from the workflow's lookup table"
       ]
     ],
     "emits": [],
@@ -201,12 +207,14 @@
       ]
     ],
     "do": [
-      "Status pill = dot + word; map lives in the module lib.ts",
-      "warning token for 'approaching a limit'"
+      "Status pill = dot + word; label and tone from the workflow lookup (P42)",
+      "warning token for 'approaching a limit'",
+      "Compare codes in code, show labels to people"
     ],
     "dont": [
       "Colour without a word",
-      "Raw coloured spans"
+      "Raw coloured spans",
+      "if (status.label === …): labels are editable"
     ]
   },
   "Tabs": {
