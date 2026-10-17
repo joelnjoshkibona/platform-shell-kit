@@ -78,11 +78,20 @@ function accentCss(t) {
   return ':root:root{' + L + '}@media (prefers-color-scheme: dark){:root:root:not([data-theme="light"]){' + D + '}}:root:root[data-theme="dark"]{' + D + '}';
 }
 function accChip(value) { const t = deriveAccent(value) || deriveAccent(PRODUCT.accent || 'teal'); return { '--a-l': t.l, '--a-lfg': t.lfg, '--a-d': t.d, '--a-dfg': t.dfg }; }
+function setFavicon(t) {   // P48: the product's mark (or initial) on the organisation's accent
+  const fg = 'hsl(' + t.lfg + ')', bg = 'hsl(' + t.l + ')';
+  const inner = PRODUCT.logo ? PRODUCT.logo.replace('<svg', '<svg x="6" y="6" width="20" height="20"').replace(/currentColor/g, fg)
+    : '<text x="16" y="22" text-anchor="middle" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="' + fg + '">' + PRODUCT.name[0] + '</text>';
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="' + bg + '"/>' + inner + '</svg>';
+  let l = document.querySelector('link[rel=icon]'); if (!l) { l = document.createElement('link'); l.rel = 'icon'; document.head.appendChild(l); }
+  l.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
 function applyAccent(value) {   // sign-in, organisation switch, first load, and the moment the owner changes it
   const t = deriveAccent(value) || deriveAccent(PRODUCT.accent || 'teal');
   let el = document.getElementById('org-accent'); if (!el) { el = document.createElement('style'); el.id = 'org-accent'; document.head.appendChild(el); }
   const css = accentCss(t); el.textContent = css;
   try { localStorage.setItem(PRODUCT.storageKey + '-accent', css); } catch (e) {}
+  setFavicon(t);
   return t;
 }
 

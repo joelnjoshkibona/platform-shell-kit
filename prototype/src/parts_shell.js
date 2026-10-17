@@ -194,19 +194,13 @@ const ShellMod = (() => {
     <div class="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <!-- brand panel -->
       <aside class="relative hidden overflow-hidden bg-primary text-primary-foreground lg:flex lg:flex-col lg:justify-between lg:p-10">
-        <div class="flex items-center gap-2.5"><span class="grid h-9 w-9 place-items-center rounded-lg bg-primary-foreground/15"><Icon :name="PRODUCT.icon" :size="18"/></span><span class="text-lg font-semibold tracking-tight">{{ PRODUCT.name }}</span></div>
+        <div class="flex items-center gap-2.5"><span class="grid h-9 w-9 place-items-center rounded-lg bg-primary-foreground/15"><BrandMark :size="18"/></span><span class="text-lg font-semibold tracking-tight">{{ PRODUCT.name }}</span></div>
         <div class="relative">
-          <!-- mini product mock -->
-          <div class="pointer-events-none relative mx-auto h-64 max-w-sm select-none" aria-hidden="true">
-            <div class="absolute left-8 right-0 top-0 rotate-[4deg] rounded-xl bg-primary-foreground/10 p-4 ring-1 ring-primary-foreground/15"><div class="h-2 w-24 rounded bg-primary-foreground/30"></div><div class="mt-3 grid grid-cols-5 items-end gap-1.5 h-20"><span class="rounded-t bg-primary-foreground/40" style="height:30%"></span><span class="rounded-t bg-primary-foreground/40" style="height:55%"></span><span class="rounded-t bg-primary-foreground/40" style="height:40%"></span><span class="rounded-t bg-primary-foreground/80" style="height:95%"></span><span class="rounded-t bg-primary-foreground/40" style="height:62%"></span></div></div>
-            <div class="absolute left-0 right-10 top-24 -rotate-[2deg] rounded-xl bg-background p-4 text-foreground shadow-2xl"><div class="flex items-center justify-between"><div class="h-2 w-32 rounded bg-foreground/20"></div><span class="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-semibold text-warning"><Icon name="Timer" :size="10"/>4:12</span></div>
-              <div class="mt-3 grid gap-2"><div class="flex items-center gap-2 text-xs"><span class="h-3.5 w-3.5 rounded-full border-2 border-primary grid place-items-center"><span class="h-1.5 w-1.5 rounded-full bg-primary"></span></span>M-Pesa</div><div class="flex items-center gap-2 text-xs text-muted-foreground"><span class="h-3.5 w-3.5 rounded-full border-2 border-muted-foreground/40"></span>Tigo Pesa</div><div class="flex items-center gap-2 text-xs text-muted-foreground"><span class="h-3.5 w-3.5 rounded-full border-2 border-muted-foreground/40"></span>Airtel Money</div></div></div>
-          </div>
-          <h2 class="mt-6 max-w-md text-3xl font-semibold leading-tight tracking-tight" style="text-wrap:balance">Assessments and surveys your teams can trust.</h2>
+          <!-- P48: product content (PRODUCT.signin): illustration component, headline, three points -->
+          <component v-if="PRODUCT.signin.art" :is="PRODUCT.signin.art"/>
+          <h2 class="mt-6 max-w-md text-3xl font-semibold leading-tight tracking-tight" style="text-wrap:balance">{{ PRODUCT.signin.headline }}</h2>
           <ul class="mt-5 grid gap-2.5 text-sm text-primary-foreground/85">
-            <li class="flex items-center gap-2.5"><Icon name="Timer" :size="16"/>Timed sections the server keeps honest</li>
-            <li class="flex items-center gap-2.5"><Icon name="ShieldCheck" :size="16"/>Full screen, one tab, no copy and paste</li>
-            <li class="flex items-center gap-2.5"><Icon name="ChartBarBig" :size="16"/>Live results, filters and Excel export</li>
+            <li v-for="pt in PRODUCT.signin.points" :key="pt[1]" class="flex items-center gap-2.5"><Icon :name="pt[0]" :size="16"/>{{ pt[1] }}</li>
           </ul>
         </div>
         <p class="text-xs text-primary-foreground/60">© 2026 {{ PRODUCT.name }} · {{ PRODUCT.city }}</p>
@@ -214,7 +208,7 @@ const ShellMod = (() => {
 
       <!-- form side -->
       <main class="flex flex-col px-4 py-8 sm:px-8">
-        <div class="flex items-center justify-between"><div class="flex items-center gap-2 lg:invisible"><span class="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground"><Icon :name="PRODUCT.icon" :size="16"/></span><span class="font-semibold">{{ PRODUCT.name }}</span></div>
+        <div class="flex items-center justify-between"><div class="flex items-center gap-2 lg:invisible"><span class="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground"><BrandMark :size="16"/></span><span class="font-semibold">{{ PRODUCT.name }}</span></div>
           <DropdownMenu :items="['light','dark','system'].map(id=>({id,label:id[0].toUpperCase()+id.slice(1),icon:{light:'Sun',dark:'Moon',system:'Laptop'}[id],checked:G.theme===id}))" @select="it=>G.theme=it.id"><template #trigger><Button variant="ghost" size="icon-sm" aria-label="Theme"><Icon :name="G.theme==='dark'?'Moon':G.theme==='light'?'Sun':'Laptop'"/></Button></template></DropdownMenu></div>
         <div class="mx-auto my-auto w-full max-w-sm py-10">
           <Transition name="fade" mode="out-in">
@@ -282,6 +276,19 @@ const ShellMod = (() => {
       </main>
     </div>`
   };
+
+  /* ---------- P48: the product's mark (PRODUCT.logo, an inline 24×24 SVG in currentColor) or its Lucide icon */
+  const BrandMark = {
+    props: { size: { default: 16 } },
+    setup(p) { const svg = computed(() => PRODUCT.logo ? PRODUCT.logo.replace('<svg', '<svg width="' + p.size + '" height="' + p.size + '" aria-hidden="true"') : ''); return { svg }; },
+    template: `<span v-if="svg" class="inline-grid place-items-center" v-html="svg"></span><Icon v-else :name="PRODUCT.icon" :size="size"/>`
+  };
+  /* Fomu's sign-in illustration (example product content, P48): replace with the product's own via PRODUCT.signin.art */
+  const FomuSignInArt = { template: `          <div class="pointer-events-none relative mx-auto h-64 max-w-sm select-none" aria-hidden="true">
+            <div class="absolute left-8 right-0 top-0 rotate-[4deg] rounded-xl bg-primary-foreground/10 p-4 ring-1 ring-primary-foreground/15"><div class="h-2 w-24 rounded bg-primary-foreground/30"></div><div class="mt-3 grid grid-cols-5 items-end gap-1.5 h-20"><span class="rounded-t bg-primary-foreground/40" style="height:30%"></span><span class="rounded-t bg-primary-foreground/40" style="height:55%"></span><span class="rounded-t bg-primary-foreground/40" style="height:40%"></span><span class="rounded-t bg-primary-foreground/80" style="height:95%"></span><span class="rounded-t bg-primary-foreground/40" style="height:62%"></span></div></div>
+            <div class="absolute left-0 right-10 top-24 -rotate-[2deg] rounded-xl bg-background p-4 text-foreground shadow-2xl"><div class="flex items-center justify-between"><div class="h-2 w-32 rounded bg-foreground/20"></div><span class="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-semibold text-warning"><Icon name="Timer" :size="10"/>4:12</span></div>
+              <div class="mt-3 grid gap-2"><div class="flex items-center gap-2 text-xs"><span class="h-3.5 w-3.5 rounded-full border-2 border-primary grid place-items-center"><span class="h-1.5 w-1.5 rounded-full bg-primary"></span></span>M-Pesa</div><div class="flex items-center gap-2 text-xs text-muted-foreground"><span class="h-3.5 w-3.5 rounded-full border-2 border-muted-foreground/40"></span>Tigo Pesa</div><div class="flex items-center gap-2 text-xs text-muted-foreground"><span class="h-3.5 w-3.5 rounded-full border-2 border-muted-foreground/40"></span>Airtel Money</div></div></div>
+          </div>` };
 
   /* ---------- Organisation switcher */
   const OrgAvatar = {
@@ -1462,12 +1469,12 @@ const ShellMod = (() => {
     <div class="flex min-h-screen">
       <!-- desktop sidebar -->
       <aside :class="['sticky top-0 hidden h-screen shrink-0 border-r bg-background transition-[width] duration-200 lg:block', G.navCollapsed ? 'w-16' : 'w-60']" aria-label="Main navigation">
-        <div class="flex h-14 items-center gap-2 border-b px-4"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground"><Icon :name="PRODUCT.icon" :size="14"/></span><span v-if="!G.navCollapsed" class="font-semibold tracking-tight">{{ PRODUCT.name }}</span></div>
+        <div class="flex h-14 items-center gap-2 border-b px-4"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground"><BrandMark :size="14"/></span><span v-if="!G.navCollapsed" class="font-semibold tracking-tight">{{ PRODUCT.name }}</span></div>
         <div class="h-[calc(100vh-3.5rem)]"><SideNav :collapsed="G.navCollapsed"/></div>
       </aside>
       <!-- phone sidebar -->
       <Sheet v-model:open="G.mobileNav" side="left">
-        <div class="flex h-14 items-center gap-2 border-b px-4"><span class="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground"><Icon :name="PRODUCT.icon" :size="14"/></span><span class="font-semibold">{{ PRODUCT.name }}</span></div>
+        <div class="flex h-14 items-center gap-2 border-b px-4"><span class="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground"><BrandMark :size="14"/></span><span class="font-semibold">{{ PRODUCT.name }}</span></div>
         <div class="flex-1 overflow-auto"><SideNav/></div>
       </Sheet>
 
@@ -1832,5 +1839,5 @@ const ShellMod = (() => {
     </div>`
   };
 
-  return { AuthView, ShellView, comps: { StatusPill, StatusesCard, NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, ResultChartSettings, Spark, OrgAvatar, AccentPicker, OrgSwitcher, NewOrgDialog } };
+  return { AuthView, ShellView, comps: { BrandMark, FomuSignInArt, StatusPill, StatusesCard, NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, ResultChartSettings, Spark, OrgAvatar, AccentPicker, OrgSwitcher, NewOrgDialog } };
 })();

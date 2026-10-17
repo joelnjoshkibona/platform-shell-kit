@@ -1,6 +1,6 @@
 # Platform shell kit
 
-The admin-app shell every product on the Cobley core inherits: tokens, components, sidebar, navbar, search, page curtain, lists, details pages, forms and pickers, drafts, Users, Roles, Locations, Settings, Menus, Media, Dashboard, approvals and notifications. All of it is already decided (`docs/PLATFORM_DECISIONS.md`, P1–P47) and already built as a clickable prototype.
+The admin-app shell every product on the Cobley core inherits: tokens, components, sidebar, navbar, search, page curtain, lists, details pages, forms and pickers, drafts, Users, Roles, Locations, Settings, Menus, Media, Dashboard, approvals and notifications. All of it is already decided (`docs/PLATFORM_DECISIONS.md`, P1–P48) and already built as a clickable prototype.
 
 A new product **starts from this kit and adds only its own modules.** It never re-decides the shell.
 
@@ -11,7 +11,7 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `prototype/index.html` | The runnable prototype (open in a browser). The visual source of truth for the shell |
 | `prototype/src/product.js` | **The one file a product edits for branding:** name, tagline, icon, domain, city, storage key |
 | `prototype/src/parts_*.js`, `builder.html`, `assemble.py` | The shell's source, by area. `python3 prototype/src/assemble.py` rebuilds `index.html` and `docs/COMPONENTS.md` |
-| `docs/PLATFORM_DECISIONS.md` | P1–P47: the locked decisions, each with the decision it came from (P38 withdrawn) |
+| `docs/PLATFORM_DECISIONS.md` | P1–P48: the locked decisions, each with the decision it came from (P38 withdrawn) |
 | `docs/FRONTEND_RULES.md` | Behaviour rules: Locked / Constrained-creative / Free, plus the review checklist |
 | `docs/COMPONENTS.md`, `docs/components_api.json` | The component library: specs, props, emits, slots, do/don't |
 | `docs/SCREENS.core.md` | The core screens, their routes, permissions and screenshots |
@@ -42,6 +42,7 @@ The prototype still carries **Fomu's modules (Forms, Templates, Builder, Results
 | Demo data per organisation | `parts_shell.js` → `ORGS` / `FORMS` | the three demo organisations |
 | Records owned by a location | `parts_loc.js` → `formsAt`, `formVisible` | forms per location |
 | Actions behind approvals | `parts_appr.js` → `ACTIONS` + `approvalGate` | publish, export, reset |
+| Sign-in panel and mark (P48) | `product.js` → `signin`, `logo`; art component registered in `comps` | Fomu's headline, points and `FomuSignInArt` |
 | Settings tabs (P42) | `parts_shell.js` → `SETTINGS_TABS` | Fomu's Results tab (chart defaults) |
 | Recent activity (P45) | `parts_loc.js` → `ACTIVITY` per organisation + `logActivity` | form, people and location events per demo organisation |
 | Screens pill (prototype-only) | `assemble.py` → `ScreensPill` | lists the product's screens |

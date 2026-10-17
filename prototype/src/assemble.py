@@ -267,15 +267,15 @@ const ScreensPill = {
 };
 const ROUTE_LABEL = new Proxy({ login: 'Sign in', twofa: 'Sign in', orgpick: 'Organisations', forgot: 'Sign in', forms: 'Forms', templates: 'Templates', members: 'Users', workspace: 'Settings', menus: 'Menu Management', design: 'Design system', builder: 'Builder', responses: 'Results', respondent: 'Live form' }, { get: (t, k) => t[k] || (typeof k === 'string' ? k.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase()) : undefined) });
 const Curtain = {
-  setup() { return { G, ROUTE_LABEL }; },
+  setup() { return { G, ROUTE_LABEL, PRODUCT }; },
   template: `<div class="curtain pointer-events-none fixed inset-0 z-[120]" :data-state="G.curtain" aria-hidden="true" :class="G.curtain!=='idle' && 'pointer-events-auto'">
     <div class="half half-l"></div><div class="half half-r"></div>
     <div class="curtain-loader" role="status" :aria-hidden="G.curtain!=='closed'">
       <div class="relative grid h-16 w-16 place-items-center">
         <span class="absolute inset-0 animate-spin rounded-full border-2" style="animation-duration:.8s;border-color:hsl(var(--curtain-fg) / .25);border-top-color:hsl(var(--curtain-fg))"></span>
-        <span class="grid h-11 w-11 place-items-center rounded-xl" style="background:hsl(var(--curtain-fg) / .15);color:hsl(var(--curtain-fg))"><Icon name="ClipboardList" :size="20"/></span>
+        <span class="grid h-11 w-11 place-items-center rounded-xl" style="background:hsl(var(--curtain-fg) / .15);color:hsl(var(--curtain-fg))"><BrandMark :size="20"/></span>
       </div>
-      <p class="mt-4 text-sm font-medium" style="color:hsl(var(--curtain-fg))">{{ G.booting ? 'Loading ' + PNAME + '…' : 'Opening ' + (ROUTE_LABEL[G.route] || 'page') + '…' }}</p>
+      <p class="mt-4 text-sm font-medium" style="color:hsl(var(--curtain-fg))">{{ G.booting ? 'Loading ' + PRODUCT.name + '…' : 'Opening ' + (ROUTE_LABEL[G.route] || 'page') + '…' }}</p>
     </div></div>`
 };
 const PhoneFrame = {
@@ -286,7 +286,7 @@ const PhoneFrame = {
     onBeforeUnmount(() => window.removeEventListener('resize', fit));
     const doc = __SRC.replace(/<head([^>]*)>/i, (m) => m + '<script>window.__PHONE=true;window.__INIT_ROUTE=' + JSON.stringify(G.route) + ';<\/script>');
     const clock = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    return { G, scale, doc, clock };
+    return { G, scale, doc, clock, PRODUCT };
   },
   template: `<div class="fixed inset-0 z-[80] flex flex-col items-center overflow-auto bg-canvas px-4 py-4">
     <div class="mb-3 flex w-full max-w-md items-center justify-between gap-3">
@@ -298,7 +298,7 @@ const PhoneFrame = {
           <div class="relative flex h-11 shrink-0 items-center justify-between bg-background px-7 text-[13px] font-semibold tnum"><span>{{ clock }}</span>
             <span class="absolute left-1/2 top-2 h-7 w-28 -translate-x-1/2 rounded-full bg-[#18181b]" aria-hidden="true"></span>
             <span class="flex items-center gap-1"><Icon name="Signal" :size="14"/><Icon name="Wifi" :size="14"/><Icon name="BatteryFull" :size="16"/></span></div>
-          <iframe :srcdoc="doc" title="' + PNAME + ' on a phone" class="block w-full flex-1 border-0 bg-background"></iframe>
+          <iframe :srcdoc="doc" :title="PRODUCT.name + ' on a phone'" class="block w-full flex-1 border-0 bg-background"></iframe>
           <div class="flex h-6 shrink-0 items-center justify-center bg-background"><span class="h-1 w-32 rounded-full bg-foreground/80"></span></div>
         </div></div></div>
     <p class="mt-3 max-w-md text-center text-xs text-muted-foreground">The phone runs its own copy of the prototype. Use its Screens button to move around.</p>
@@ -344,15 +344,17 @@ app.mount('#app');
 </script>
 '''
 
+_logo = _re0.search(r"logo:\s*'(<svg[^']*)'", _prod)
+BOOT_MARK = _logo.group(1).replace('<svg', '<svg width="20" height="20" aria-hidden="true"', 1) if _logo else PNAME[0]   # P48: the product's mark, else its initial
 BOOT = '''<div id="boot-curtain" class="curtain" data-state="closed" aria-hidden="true" style="position:fixed;inset:0;z-index:121">
   <div class="half half-l"></div><div class="half half-r"></div>
   <div class="curtain-loader" style="opacity:1;transform:none;transition:none">
     <div style="position:relative;width:64px;height:64px;display:grid;place-items:center">
       <span class="boot-spin"></span>
-      <span style="display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:hsl(var(--curtain-fg) / .15);color:hsl(var(--curtain-fg))"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></span>
+      <span style="display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:hsl(var(--curtain-fg) / .15);color:hsl(var(--curtain-fg));font:600 18px/1 Geist,system-ui,sans-serif">' + BOOT_MARK + '</span>
     </div>
     <p style="margin-top:16px;font:500 14px/1.4 Geist,system-ui,sans-serif;color:hsl(var(--curtain-fg))">Loading ' + PNAME + '…</p>
-  </div></div>'''
+  </div></div>'''.replace("' + BOOT_MARK + '", BOOT_MARK).replace("' + PNAME + '", PNAME)   # the boot curtain is plain HTML: fill the product's mark and name
 BOOT_ACCENT = '<script>/* P46: last accent this browser saw, before anything paints */try{var __a=localStorage.getItem(' + repr(PKEY + '-accent') + ');if(__a){var __s=document.createElement("style");__s.id="org-accent";__s.textContent=__a;document.head.appendChild(__s)}}catch(e){}</script>\n'
 out = head + BOOT_ACCENT + BOOT + '<div id="app"></div>\n<script>\n' + helpers + shared + atoms + builder_mod + respondent_mod + responses_mod + shell + root
 open(os.path.join(KIT, 'prototype', 'index.html'), 'w').write(out)
