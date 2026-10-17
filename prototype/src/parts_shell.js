@@ -17,13 +17,60 @@ const ShellMod = (() => {
     { id: 'f8', loc: 'cz', inc: true, title: 'Cashier Certification Test', status: 'closed', responses: 64, spark: sp([9, 12, 10, 8, 7, 6, 5, 4, 3, 0]), closes: 'Closed 25 Sep', accent: 'teal', timed: true, priv: true, sections: 4, questions: 30, owner: 'Amina Juma', edited: '3 weeks ago', flagged: 11 },
     { id: 'f9', title: 'Holiday Roster Preferences 2025', status: 'archived', responses: 52, spark: null, closes: 'Archived', accent: 'blue', timed: false, priv: false, sections: 1, questions: 4, owner: 'Neema Kimaro', edited: 'Jan 2026', flagged: 0 },
   ]);
-  const STAT = {
-    live: { label: 'Live', cls: 'bg-c1/15 text-foreground', dot: 'bg-c1 animate-pulse' },
-    draft: { label: 'Draft', cls: 'bg-muted text-muted-foreground', dot: 'bg-muted-foreground' },
-    closed: { label: 'Closed', cls: 'bg-warning/15 text-warning', dot: 'bg-warning' },
-    archived: { label: 'Archived', cls: 'bg-muted text-muted-foreground', dot: 'bg-muted-foreground/50' },
+  /* ---------- P47: workflow statuses are lookup rows. code is fixed (code compares it); label, Swahili, tone and order are
+     edited in Settings › Statuses. Tone maps to tokens, never raw colours. STAT / RQ_STATUS stay maps (code → label, cls, dot)
+     derived from the lookup, so every existing pill and filter reads the editable label. */
+  const WF_TONES = {
+    muted: { name: 'Muted', cls: 'bg-muted text-muted-foreground', dot: 'bg-muted-foreground' },
+    info: { name: 'Info', cls: 'bg-c3/15 text-foreground', dot: 'bg-c3' },
+    wait: { name: 'Waiting', cls: 'bg-warning/15 text-warning', dot: 'bg-warning animate-pulse' },
+    warn: { name: 'Warning', cls: 'bg-warning/15 text-warning', dot: 'bg-warning' },
+    live: { name: 'Live', cls: 'bg-c1/15 text-foreground', dot: 'bg-c1 animate-pulse' },
+    ok: { name: 'Done', cls: 'bg-success/15 text-foreground', dot: 'bg-success' },
+    bad: { name: 'Problem', cls: 'bg-destructive/10 text-destructive', dot: 'bg-destructive' },
+    off: { name: 'Off', cls: 'bg-muted text-muted-foreground', dot: 'bg-muted-foreground/50' },
   };
-  const MEMBERS = reactive([
+  const WORKFLOWS = reactive({});   // key → { key, name, seed: [...], rows: [{ code, label, label_sw, tone, sort_order, is_terminal }] }
+  function defineWorkflow(key, name, seedRows) {
+    const seed = seedRows.map(([code, label, tone, sw = '', terminal = false], i) => ({ code, label, label_sw: sw, tone, sort_order: i + 1, is_terminal: terminal }));
+    WORKFLOWS[key] = { key, name, seed, rows: seed.map(r => ({ ...r })) };
+    const map = reactive({});   // code → { code, label, label_sw, tone, cls, dot }, kept in sort order and in step with edits
+    watchEffect(() => { const rows = [...WORKFLOWS[key].rows].sort((a, b) => a.sort_order - b.sort_order); Object.keys(map).forEach(k => delete map[k]); rows.forEach(r => { map[r.code] = { ...r, ...WF_TONES[r.tone] }; }); });
+    return map;
+  }
+  const statusOf = (wf, code) => { const w = WORKFLOWS[wf]; const r = w && w.rows.find(x => x.code === code); return r ? { ...r, ...WF_TONES[r.tone] } : { code, label: code, ...WF_TONES.muted }; };
+  const STAT = defineWorkflow('form', 'Forms', [['draft', 'Draft', 'muted', 'Rasimu'], ['live', 'Live', 'live', 'Inapokea majibu'], ['closed', 'Closed', 'warn', 'Imefungwa'], ['archived', 'Archived', 'off', 'Imehifadhiwa', true]]);
+  /* StatusPill (P47): dot + word from the workflow lookup */
+  const StatusPill = {
+    props: { workflow: String, code: String },
+    setup(p) { const s = computed(() => statusOf(p.workflow, p.code)); return { s }; },
+    template: `<span :class="['inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium', s.cls]" :title="s.label_sw ? 'Kiswahili: ' + s.label_sw : null"><span :class="['h-1.5 w-1.5 rounded-full', s.dot]"></span>{{ s.label }}</span>`
+  };
+  /* Settings › Statuses (P47): rename, translate, recolour, reorder; codes read-only; Reset to defaults */
+  const StatusesCard = {
+    setup() {
+      const S = reactive({ wf: 'request' });
+      const wfOpts = computed(() => Object.values(WORKFLOWS).map(w => ({ value: w.key, label: w.name })));
+      const rows = computed(() => [...(WORKFLOWS[S.wf] || { rows: [] }).rows].sort((a, b) => a.sort_order - b.sort_order));
+      const tones = Object.entries(WF_TONES).map(([value, t]) => ({ value, label: t.name }));
+      const saved = (what) => G.toast('Saved', what + '. Everyone sees it from their next page; the change is in the audit log.', 'Check');
+      function move(r, d) { const list = rows.value, i = list.indexOf(r), o = list[i + d]; if (!o) return; [r.sort_order, o.sort_order] = [o.sort_order, r.sort_order]; saved('Order'); }
+      function reset() { const w = WORKFLOWS[S.wf]; w.rows.splice(0, w.rows.length, ...w.seed.map(r => ({ ...r }))); G.toast('Defaults restored', 'Labels, colours and order for ' + w.name + '. Codes never change.', 'RotateCcw'); }
+      return { S, wfOpts, rows, tones, move, reset, saved, statusOf };
+    },
+    template: `<Card class="kpi"><div class="grid gap-3 p-4 sm:p-5">
+      <div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><h3 class="font-semibold">Statuses</h3><p class="text-sm text-muted-foreground">Rename, translate, recolour and reorder. Codes are fixed: the system runs on them (P47).</p></div><Button variant="outline" size="sm" @click="reset"><Icon name="RotateCcw" :size="14"/>Reset to defaults</Button></div>
+      <div class="grid min-w-0 gap-1.5 sm:max-w-xs"><span class="text-sm font-medium">Workflow</span><Select v-model="S.wf" :options="wfOpts"/></div>
+      <div class="grid gap-2">
+        <div v-for="(r, i) in rows" :key="S.wf + r.code" class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 rounded-lg border p-2.5 sm:grid-cols-[auto_minmax(0,13rem)_minmax(0,1fr)_minmax(0,1fr)_8rem]">
+          <div class="flex flex-col"><button type="button" class="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30" :disabled="i===0" :aria-label="'Move ' + r.label + ' up'" @click="move(r,-1)"><Icon name="ChevronUp" :size="14"/></button><button type="button" class="rounded p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30" :disabled="i===rows.length-1" :aria-label="'Move ' + r.label + ' down'" @click="move(r,1)"><Icon name="ChevronDown" :size="14"/></button></div>
+          <div class="flex min-w-0 flex-wrap items-center gap-2"><code class="truncate rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground" title="Code (fixed)">{{ r.code }}</code><StatusPill :workflow="S.wf" :code="r.code"/></div>
+          <Input v-model="r.label" :aria-label="'Label for ' + r.code" class="col-span-2 sm:col-span-1" @change="saved('Label')"/>
+          <Input v-model="r.label_sw" :aria-label="'Swahili for ' + r.code" placeholder="Kiswahili" class="col-span-2 sm:col-span-1" @change="saved('Swahili label')"/>
+          <div class="col-span-2 sm:col-span-1"><Select :model-value="r.tone" :options="tones" :aria-label="'Colour for ' + r.code" @update:model-value="t => { r.tone = t; saved('Colour'); }"/></div>
+        </div></div>
+      <p class="text-xs text-muted-foreground">Adding a status is a release, not a setting: it needs a new transition in code. Products add their workflows (bookings, invoices, orders) to this list.</p></div></Card>`
+  };  const MEMBERS = reactive([
     { name: 'Amina Juma', email: 'amina.juma@kilimaretail.co.tz', phone: '+255 712 345 678', username: 'amina.j', role: 'owner', twofa: true, active: 'Now' },
     { name: 'Neema Kimaro', email: 'neema.kimaro@kilimaretail.co.tz', phone: '+255 754 220 913', username: 'neema.k', role: 'admin', twofa: true, active: '1h ago' },
     { name: 'Baraka Mushi', email: 'baraka.mushi@kilimaretail.co.tz', phone: '+255 689 401 118', username: 'baraka', role: 'editor', twofa: true, active: 'Today' },
@@ -1115,8 +1162,8 @@ const ShellMod = (() => {
       demo: `<div class="grid max-w-xs gap-2"><Select v-model="s.sel" :options="[{value:'single_choice',label:'Multiple choice',icon:'CircleDot'},{value:'multi_choice',label:'Checkboxes',icon:'SquareCheck'},{value:'rating',label:'Rating',icon:'Star'}]"/><Select size="sm" v-model="s.sel2" :options="[{value:'a',label:'Last edited'},{value:'b',label:'Most responses'}]"/></div>` },
     { name: 'Checkbox · Switch · Radio', ui: 'Checkbox, Switch, RadioGroup', tag: 'Forms', specs: [['Checkbox', '16×16, rounded-sm, 1px primary border, check 12px stroke 3'], ['Switch', '36×20 track, 16px thumb, moves 16px'], ['Radio', '16×16 circle, 8px dot'], ['Hit area', 'wrap in a label row ≥ 36px tall (44px on respondent forms)']], variants: 'checked, unchecked, indeterminate (tree parents), disabled', used: 'Permissions, settings, grant dialog, respondent answers.',
       demo: `<div class="flex flex-wrap items-center gap-5"><label class="flex items-center gap-2 text-sm"><Checkbox v-model="s.cb"/>Checkbox</label><label class="flex items-center gap-2 text-sm"><Switch v-model="s.sw"/>Switch</label><label class="flex items-center gap-2 text-sm"><RadioGroupItem :checked="s.rd==='a'" @select="s.rd='a'"/>Radio A</label><label class="flex items-center gap-2 text-sm"><RadioGroupItem :checked="s.rd==='b'" @select="s.rd='b'"/>Radio B</label><span class="flex items-center gap-2 text-sm"><span class="grid h-4 w-4 place-items-center rounded-sm border border-primary bg-primary text-primary-foreground"><Icon name="Minus" :size="12" stroke-width="3"/></span>Indeterminate</span></div>` },
-    { name: 'Badge · Status pill', ui: 'Badge', tag: 'Display', specs: [['Badge', '12px / 600, 8px x · 2px y, rounded-md'], ['Pill', '11px / 500, 8px x · 2px y, rounded-full, 6px dot'], ['Colour', 'state colour at 15% fill, text in text token (never series colour)']], variants: 'default, secondary, outline, destructive, warning; Live/Draft/Closed/Archived pills', used: 'Form status, invite status, roles, violations.',
-      demo: `<div class="flex flex-wrap items-center gap-2"><Badge>Default</Badge><Badge variant="secondary">Secondary</Badge><Badge variant="outline">Outline</Badge><Badge variant="warning"><Icon name="Timer" :size="12"/>Timed</Badge><Badge variant="destructive">Voided</Badge><span class="inline-flex items-center gap-1.5 rounded-full bg-c1/15 px-2 py-0.5 text-[11px] font-medium"><span class="h-1.5 w-1.5 animate-pulse rounded-full bg-c1"></span>Live</span><span class="inline-flex items-center gap-1.5 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-medium text-warning"><span class="h-1.5 w-1.5 rounded-full bg-warning"></span>Closed</span></div>` },
+    { name: 'Badge · Status pill', ui: 'Badge', tag: 'Display', specs: [['Badge', '12px / 600, 8px x · 2px y, rounded-md'], ['Pill', '11px / 500, 8px x · 2px y, rounded-full, 6px dot'], ['Colour', 'state colour at 15% fill, text in text token (never series colour)']], variants: 'default, secondary, outline, destructive, warning, success; StatusPill (P47) reads label and tone from the workflow lookup', used: 'Form status, request status, invite status, roles, violations.',
+      demo: `<div class="flex flex-wrap items-center gap-2"><Badge>Default</Badge><Badge variant="secondary">Secondary</Badge><Badge variant="outline">Outline</Badge><Badge variant="warning"><Icon name="Timer" :size="12"/>Timed</Badge><Badge variant="destructive">Voided</Badge><StatusPill workflow="form" code="live"/><StatusPill workflow="form" code="closed"/><StatusPill workflow="request" code="in_review"/><StatusPill workflow="request" code="approved"/><StatusPill workflow="request" code="not_seeded"/></div>` },
     { name: 'Tabs', ui: 'Tabs, TabsList, TabsTrigger', tag: 'Navigation', specs: [['Track', '36px, muted fill, 4px padding, rounded-lg'], ['Trigger', '12px x, 4px y, 14px / 500, active = background + shadow'], ['Count', '11px pill inside the trigger'], ['Overflow', 'wrapper scrolls sideways on phones']], variants: 'inline, full width (phone header row)', used: 'Builder tabs, results sub-tabs, roles detail, status filters.',
       demo: `<Tabs v-model="s.tab" :items="[{value:'q',label:'Questions'},{value:'r',label:'Responses',count:142},{value:'s',label:'Settings'}]"/>` },
     { name: 'Card · KPI tile', ui: 'Card (+ app pattern)', tag: 'Display', specs: [['Card', 'rounded-xl, 1px border, card fill, shadow-sm; padding 16px (sm: 20px)'], ['KPI tile', '14px padding, label 12px/500, value 24px/600 tabular, icon chip 24×24 rounded-md'], ['Gap', '8px between tiles, 12px between cards'], ['Motion', 'rise-in 420ms, stagger 60ms, count-up 700ms']], variants: 'plain, with top accent strip (4px), KPI with sparkline or meter', used: 'All dashboards and lists.',
@@ -1510,9 +1557,9 @@ const ShellMod = (() => {
       watch(() => L.view, v => { try { localStorage.setItem(PRODUCT.storageKey + '-forms-view', v) } catch (e) {} });
       const VF = computed(() => FORMS.filter(formVisible));
       const counts = computed(() => ({ all: VF.value.length, live: VF.value.filter(f => f.status === 'live').length, draft: VF.value.filter(f => f.status === 'draft').length, closed: VF.value.filter(f => f.status === 'closed').length, archived: VF.value.filter(f => f.status === 'archived').length }));
-      const tabs = computed(() => [{ value: 'all', label: 'All', count: counts.value.all }, { value: 'live', label: 'Live', count: counts.value.live }, { value: 'draft', label: 'Drafts', count: counts.value.draft }, { value: 'closed', label: 'Closed', count: counts.value.closed }, { value: 'archived', label: 'Archived', count: counts.value.archived }]);
+      const tabs = computed(() => [{ value: 'all', label: 'All', count: counts.value.all }, { value: 'live', label: STAT.live.label, count: counts.value.live }, { value: 'draft', label: STAT.draft.label, count: counts.value.draft }, { value: 'closed', label: STAT.closed.label, count: counts.value.closed }, { value: 'archived', label: 'Archived', count: counts.value.archived }]);
       /* D31: toolbar + Filters (simple/advanced) + Sort; status tabs are quick filters kept in sync */
-      const STATUS_OPTS = [{ value: 'live', label: 'Live' }, { value: 'draft', label: 'Draft' }, { value: 'closed', label: 'Closed' }, { value: 'archived', label: 'Archived' }];
+      const STATUS_OPTS = Object.values(STAT).map(x => ({ value: x.code, label: x.label }));   // P47: from the lookup, in its order
       const LS = useList({ noun: 'forms', rows: () => VF.value, search: (f, q) => f.title.toLowerCase().includes(q), sort: 'edited', dir: 'desc',
         sorts: [{ value: 'edited', label: 'Last edited', get: f => relToIso(f.edited) }, { value: 'responses', label: 'Responses', get: f => f.responses }, { value: 'name', label: 'Name', get: f => f.title.toLowerCase() }],
         fields: () => [
@@ -1739,7 +1786,7 @@ const ShellMod = (() => {
       const W = reactive({ tz: 'Africa/Dar_es_Salaam', timeout: '120' });
       watch(() => G.org, o => { if (!o.quiet) o.quiet = reactive({ on: true, from: '20:00', to: '07:00' }); }, { immediate: true });
       const HOURS = Array.from({ length: 24 }, (_, h) => ({ value: String(h).padStart(2, '0') + ':00', label: String(h).padStart(2, '0') + ':00' }));
-      const tabs = computed(() => [{ value: 'general', label: 'General' }, ...SETTINGS_TABS.filter(t => !t.perm || myPerms.value.includes(t.perm)), { value: 'notifications', label: 'Notifications' }, { value: 'security', label: 'Security' }]);
+      const tabs = computed(() => [{ value: 'general', label: 'General' }, ...SETTINGS_TABS.filter(t => !t.perm || myPerms.value.includes(t.perm)), { value: 'statuses', label: 'Statuses' }, { value: 'notifications', label: 'Notifications' }, { value: 'security', label: 'Security' }]);   // P47: Statuses is a core tab
       const S = reactive({ tab: G.pendingTab || 'general' });
       watch(() => G.pendingTab, (v) => { if (v) S.tab = v; });
       watch(() => S.tab, (t) => { G.tab = t === 'general' ? null : t; }, { immediate: true });   // P42 + P39: the tab is part of the link; General is the bare address
@@ -1766,6 +1813,7 @@ const ShellMod = (() => {
         <AccentPicker v-model="G.org.accent" id-prefix="w-acc" @change="accSaved"/></div></Card>
       </template>
       <component v-else-if="product" :is="product.comp"/>
+      <template v-else-if="S.tab==='statuses'"><StatusesCard/></template>
       <template v-else-if="S.tab==='notifications'">
       <Card class="kpi"><div class="p-4 sm:p-5"><h3 class="font-semibold">Quiet hours</h3>
         <div class="mt-1 divide-y">
@@ -1784,5 +1832,5 @@ const ShellMod = (() => {
     </div>`
   };
 
-  return { AuthView, ShellView, comps: { NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, ResultChartSettings, Spark, OrgAvatar, AccentPicker, OrgSwitcher, NewOrgDialog } };
+  return { AuthView, ShellView, comps: { StatusPill, StatusesCard, NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, ResultChartSettings, Spark, OrgAvatar, AccentPicker, OrgSwitcher, NewOrgDialog } };
 })();

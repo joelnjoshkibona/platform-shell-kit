@@ -6,7 +6,7 @@ Builds on P11 (core modules: Settings), P26 (details tabs in `?tab=`) and P39 (e
 ## Decision
 
 - Settings (`/{org}/settings`, `Settings.manage`) is **one page with tabs**, not one long column of cards.
-- Tab order is fixed: **General** first, then the **product's tabs** in the order the product declares them, then the core **Notifications** and **Security** tabs last.
+- Tab order is fixed: **General** first, then the **product's tabs** in the order the product declares them, then the core **Statuses** (P47), **Notifications** and **Security** tabs last.
   - General: organisation name, address, time zone, branding (logo, email footer), brand colour (P41).
   - Notifications: quiet hours (P36). Notification channels and reminders join here when they get organisation settings.
   - Security: require two-step verification, sign out after inactivity.

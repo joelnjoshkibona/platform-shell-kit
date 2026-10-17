@@ -658,6 +658,20 @@
     "file": "role--leave-guard__phone-dark.png"
   },
   {
+    "name": "workspace--statuses",
+    "route": "workspace",
+    "title": "Settings › Statuses: rename, translate, recolour and reorder a workflow's statuses (P47)",
+    "combo": "desktop-light",
+    "file": "workspace--statuses__desktop-light.png"
+  },
+  {
+    "name": "workspace--statuses",
+    "route": "workspace",
+    "title": "Settings › Statuses: rename, translate, recolour and reorder a workflow's statuses (P47)",
+    "combo": "phone-dark",
+    "file": "workspace--statuses__phone-dark.png"
+  },
+  {
     "name": "workspace--custom-accent",
     "route": "workspace",
     "title": "Brand colour: a custom colour, adjusted for readability, with the light and dark preview (P46)",

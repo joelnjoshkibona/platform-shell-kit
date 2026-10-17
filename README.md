@@ -1,6 +1,6 @@
 # Platform shell kit
 
-The admin-app shell every product on the Cobley core inherits: tokens, components, sidebar, navbar, search, page curtain, lists, details pages, forms and pickers, drafts, Users, Roles, Locations, Settings, Menus, Media, Dashboard, approvals and notifications. All of it is already decided (`docs/PLATFORM_DECISIONS.md`, P1–P46) and already built as a clickable prototype.
+The admin-app shell every product on the Cobley core inherits: tokens, components, sidebar, navbar, search, page curtain, lists, details pages, forms and pickers, drafts, Users, Roles, Locations, Settings, Menus, Media, Dashboard, approvals and notifications. All of it is already decided (`docs/PLATFORM_DECISIONS.md`, P1–P47) and already built as a clickable prototype.
 
 A new product **starts from this kit and adds only its own modules.** It never re-decides the shell.
 
@@ -11,7 +11,7 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `prototype/index.html` | The runnable prototype (open in a browser). The visual source of truth for the shell |
 | `prototype/src/product.js` | **The one file a product edits for branding:** name, tagline, icon, domain, city, storage key |
 | `prototype/src/parts_*.js`, `builder.html`, `assemble.py` | The shell's source, by area. `python3 prototype/src/assemble.py` rebuilds `index.html` and `docs/COMPONENTS.md` |
-| `docs/PLATFORM_DECISIONS.md` | P1–P46: the locked decisions, each with the decision it came from (P38 reserved) |
+| `docs/PLATFORM_DECISIONS.md` | P1–P47: the locked decisions, each with the decision it came from (P38 reserved) |
 | `docs/FRONTEND_RULES.md` | Behaviour rules: Locked / Constrained-creative / Free, plus the review checklist |
 | `docs/COMPONENTS.md`, `docs/components_api.json` | The component library: specs, props, emits, slots, do/don't |
 | `docs/SCREENS.core.md` | The core screens, their routes, permissions and screenshots |

@@ -355,20 +355,23 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | Badge | 12px / 600, 8px x · 2px y, rounded-md |
 | Pill | 11px / 500, 8px x · 2px y, rounded-full, 6px dot |
 | Colour | state colour at 15% fill, text in text token (never series colour) |
-| Variants | default, secondary, outline, destructive, warning; Live/Draft/Closed/Archived pills |
-| Used in | Form status, invite status, roles, violations. |
+| Variants | default, secondary, outline, destructive, warning, success; StatusPill (P47) reads label and tone from the workflow lookup |
+| Used in | Form status, request status, invite status, roles, violations. |
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `variant` | `'default' \| 'secondary' \| 'outline' \| 'destructive' \| 'warning' \| 'success'` | `'default'` |  |
-| `status` | `string` | – | StatusPill: key into the module's status map (label, dot, class) in lib.ts |
+| `workflow` | `string` | – | StatusPill (P47): the workflow key, e.g. 'request', 'booking' |
+| `code` | `string` | – | StatusPill (P47): the record's status code; label, Swahili and tone come from the workflow's lookup table |
 
 **Slots:** `#default` One or two words
 
-- Do: Status pill = dot + word; map lives in the module lib.ts
+- Do: Status pill = dot + word; label and tone from the workflow lookup (P47)
 - Do: warning token for 'approaching a limit'
+- Do: Compare codes in code, show labels to people
 - Don't: Colour without a word
 - Don't: Raw coloured spans
+- Don't: if (status.label === …): labels are editable
 
 ### Card · KPI tile
 

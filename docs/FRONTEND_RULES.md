@@ -288,6 +288,7 @@ shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or
 - **Radius**: `rounded-md` controls, `rounded-lg` dialogs and popovers, `rounded-xl` cards, `rounded-full` pills and avatars.
 - **Icons**: Lucide, `size-4` next to text, `size-6` for empty states. Same field shape, same icon everywhere.
 - **Status**: short badges or pills with a dot; colour never carries meaning alone (always a word).
+- **Workflow status (P47)**: a pill reads its label and tone from the workflow's lookup table (`StatusPill workflow="request" :code="r.status"`). Code, filters, quick tabs and sort compare the `code`, never the label; tone is one of muted, info, wait, warn, live, ok, bad, off and maps to tokens (`ok` = `--success`, `wait`/`warn` = `--warning`, `bad` = `--destructive`, `live` pulses). Quick tabs, filter options and lane order follow the table's `sort_order`. An unknown code shows as a muted pill with the raw code.
 - **Motion**: cards rise in with a 40–60ms stagger, sparklines draw in, bars grow from the left; 150–250ms for UI transitions. Everything decorative stops under `prefers-reduced-motion`.
 - **Dark mode**: every screen is checked in light and dark before merging. Theme choice: Light, Dark, System.
 - **Responsive**: built and checked at 360, 390, 768, 1280px. Grid children get `min-w-0`; no horizontal page scroll; tap targets at least 40px on phones; safe-area insets respected.
@@ -341,6 +342,7 @@ shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or
 - [ ] No native pickers; required asterisks are CSS; errors sit under fields
 - [ ] Buttons and menus respect permissions; a direct URL without permission shows No access
 - [ ] Delete uses the delete check and the YES gate
+- [ ] Status pills come from the workflow lookup (P47); no code compares a label; filters and quick tabs follow the table's order
 - [ ] Strings in English and Swahili
 - [ ] Built only from components in `COMPONENTS.md`; new ones added to the library first
 - [ ] Rule changes copied to the doc, `FRONTEND_RULES.md` and the Rules tab

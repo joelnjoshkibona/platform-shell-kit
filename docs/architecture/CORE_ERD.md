@@ -14,6 +14,16 @@ erDiagram
         string color "default #6b7280"
         text description
     }
+    WORKFLOW_STATUSES {
+        bigint id PK "pattern (P47): one table per workflow, e.g. request_statuses"
+        bigint organization_id FK "tenant; seeded per organisation"
+        string code UK "UNIQUE(organization_id, code); fixed after seeding, the only value code compares"
+        string label "editable by admins"
+        string label_sw "second locale, editable"
+        string tone "muted | info | wait | warn | live | ok | bad | off"
+        smallint sort_order "editable"
+        boolean is_terminal "seeded, not editable"
+    }
     USERS {
         bigint id PK
         string name
@@ -143,7 +153,8 @@ erDiagram
     LOCATIONS |o--o{ IMPERSONATION_SESSIONS : "context of"
 ```
 
-- **STATUSES**: Cobley core. Master-data tables (users, organisations, locations, roles, request types) use status_id. Workflow states (forms, attempts, responses, requests) stay as enums.
+- **STATUSES**: Cobley core. Master-data tables (users, organisations, locations, roles, request types) use status_id. Workflow states use one lookup table per workflow (P47, amends P16).
+- **WORKFLOW_STATUSES (pattern)**: P47. Every workflow people see and filter by (requests in the core; forms, attempts, responses, invitations in Fomu; a product's bookings, invoices, orders) has its own `<workflow>_statuses` table. Code, transitions, guards, posting rules, tests and reports use `code` only; labels, Swahili, tone and order are edited in Settings › Statuses and audited. Adding a code is a migration plus a transition in code, never an admin action. Records hold `<workflow>_status_id`; no denormalised code copy. Technical pipeline states nobody relabels (notification deliveries, device tokens, exports, webhook deliveries) stay enums.
 - **USERS**: Cobley users + Fomu 2FA columns. Global: one user can belong to several organisations. Related Cobley auth tables kept as-is: otps, user_invitations, force_password_resets, personal_access_tokens, user_device_tokens.
 - **USER_TRUSTED_DEVICES**: Fomu addition. Skips the 2FA step on a remembered device.
 - **ORGANIZATIONS**: Fomu tenant. Every tenant-owned table carries organization_id behind a global scope. The org is also the root node of its location tree.
@@ -255,6 +266,12 @@ Cobley approval workflow: request types with ordered steps (roles, permissions o
 
 ```mermaid
 erDiagram
+    REQUEST_STATUSES {
+        bigint id PK
+        string code UK "draft | submitted | in_review | approved | rejected | cancelled"
+        string label "editable (P47)"
+        string tone ""
+    }
     REQUEST_TYPES {
         bigint id PK
         bigint organization_id FK "tenant"
@@ -298,7 +315,7 @@ erDiagram
         json subject_meta "D41: e.g. export format, filters, row count; part of the duplicate-open check"
         decimal amount "nullable"
         text reason
-        enum status "draft | submitted | in_review | approved | rejected | cancelled"
+        bigint request_status_id FK "request_statuses (P47): draft | submitted | in_review | approved | rejected | cancelled"
         int current_step
         bigint created_by_id FK "users.id"
         bigint updated_by_id FK "users.id, nullable"
@@ -381,6 +398,7 @@ erDiagram
     USERS ||--o{ APPROVAL_DELEGATIONS : "delegates"
     REQUEST_TYPES |o--o{ APPROVAL_DELEGATIONS : "limits"
     APPROVAL_DELEGATIONS |o--o{ REQUEST_APPROVALS : "acted under"
+    REQUEST_STATUSES ||--o{ REQUESTS : "state of"
     REQUESTS ||--o{ NOTIFICATION_DELIVERIES : "notifies"
     USERS ||--o{ NOTIFICATION_DELIVERIES : "receives"
     USERS ||--o{ USER_NOTIFICATION_PREFERENCES : "sets"
@@ -388,7 +406,7 @@ erDiagram
 
 - **REQUEST_TYPES**: Cobley core + organization_id. Cannot be activated or saved while a step fails the D40 capacity rule.
 - **REQUEST_TYPE_STEPS**: Cobley core. Approvers are resolved at the request's location (and its ancestors) using the effective-permission rule (D21).
-- **REQUESTS**: Cobley core + organization_id. Request items (request_items) are kept for Cobley types and unused by Fomu.
+- **REQUESTS**: Cobley core + organization_id. Status is `request_status_id` into request_statuses (P47); the engine compares codes only. Request items (request_items) are kept for Cobley types and unused by Fomu.
 - **REQUEST_APPROVALS**: Cobley core.
 - **NOTIFICATION_DELIVERIES**: D43. One row per recipient x channel x event; Laravel notification channels write it; reminders are a scheduled job that reads open requests.
 - **USER_NOTIFICATION_PREFERENCES**: D43. UNIQUE(organization_id, user_id, category, channel). Ignored when the step sets notify_required.
@@ -414,6 +432,8 @@ erDiagram
 
 
 ## 09. Status lifecycles
+
+The states below are the seeded codes of each workflow's lookup table (P47). Transitions live in code, keyed by code; the tables hold only labels, tone and order.
 
 - **FORMS.status**: draft → published → closed → archived — closed → published reopens. Publish creates a FORM_VERSIONS row each time.
 - **FORM_ATTEMPTS.status**: in_progress → submitted | expired | voided | abandoned — expired = deadline passed (answers auto-submitted unless empty). voided = violation_policy void. Tab closed on a timed form: resume_policy resume keeps it in_progress with the clock running; auto_submit submits on heartbeat loss. abandoned = untimed, no heartbeat for 30 min.
