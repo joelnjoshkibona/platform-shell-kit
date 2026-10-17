@@ -17,7 +17,7 @@ const ShellMod = (() => {
     { id: 'f8', loc: 'cz', inc: true, title: 'Cashier Certification Test', status: 'closed', responses: 64, spark: sp([9, 12, 10, 8, 7, 6, 5, 4, 3, 0]), closes: 'Closed 25 Sep', accent: 'teal', timed: true, priv: true, sections: 4, questions: 30, owner: 'Amina Juma', edited: '3 weeks ago', flagged: 11 },
     { id: 'f9', title: 'Holiday Roster Preferences 2025', status: 'archived', responses: 52, spark: null, closes: 'Archived', accent: 'blue', timed: false, priv: false, sections: 1, questions: 4, owner: 'Neema Kimaro', edited: 'Jan 2026', flagged: 0 },
   ]);
-  /* ---------- P42: workflow statuses are lookup rows. code is fixed (code compares it); label, Swahili, tone and order are
+  /* ---------- P47: workflow statuses are lookup rows. code is fixed (code compares it); label, Swahili, tone and order are
      edited in Settings › Statuses. Tone maps to tokens, never raw colours. STAT / RQ_STATUS stay maps (code → label, cls, dot)
      derived from the lookup, so every existing pill and filter reads the editable label. */
   const WF_TONES = {
@@ -40,13 +40,13 @@ const ShellMod = (() => {
   }
   const statusOf = (wf, code) => { const w = WORKFLOWS[wf]; const r = w && w.rows.find(x => x.code === code); return r ? { ...r, ...WF_TONES[r.tone] } : { code, label: code, ...WF_TONES.muted }; };
   const STAT = defineWorkflow('form', 'Forms', [['draft', 'Draft', 'muted', 'Rasimu'], ['live', 'Live', 'live', 'Inapokea majibu'], ['closed', 'Closed', 'warn', 'Imefungwa'], ['archived', 'Archived', 'off', 'Imehifadhiwa', true]]);
-  /* StatusPill (P42): dot + word from the workflow lookup */
+  /* StatusPill (P47): dot + word from the workflow lookup */
   const StatusPill = {
     props: { workflow: String, code: String },
     setup(p) { const s = computed(() => statusOf(p.workflow, p.code)); return { s }; },
     template: `<span :class="['inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium', s.cls]" :title="s.label_sw ? 'Kiswahili: ' + s.label_sw : null"><span :class="['h-1.5 w-1.5 rounded-full', s.dot]"></span>{{ s.label }}</span>`
   };
-  /* Settings › Statuses (P42): rename, translate, recolour, reorder; codes read-only; Reset to defaults */
+  /* Settings › Statuses (P47): rename, translate, recolour, reorder; codes read-only; Reset to defaults */
   const StatusesCard = {
     setup() {
       const S = reactive({ wf: 'request' });
@@ -58,8 +58,8 @@ const ShellMod = (() => {
       function reset() { const w = WORKFLOWS[S.wf]; w.rows.splice(0, w.rows.length, ...w.seed.map(r => ({ ...r }))); G.toast('Defaults restored', 'Labels, colours and order for ' + w.name + '. Codes never change.', 'RotateCcw'); }
       return { S, wfOpts, rows, tones, move, reset, saved, statusOf };
     },
-    template: `<Card class="kpi" style="animation-delay:150ms"><div class="grid gap-3 p-4 sm:p-5">
-      <div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><h3 class="font-semibold">Statuses</h3><p class="text-sm text-muted-foreground">Rename, translate, recolour and reorder. Codes are fixed: the system runs on them (P42).</p></div><Button variant="outline" size="sm" @click="reset"><Icon name="RotateCcw" :size="14"/>Reset to defaults</Button></div>
+    template: `<Card class="kpi"><div class="grid gap-3 p-4 sm:p-5">
+      <div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><h3 class="font-semibold">Statuses</h3><p class="text-sm text-muted-foreground">Rename, translate, recolour and reorder. Codes are fixed: the system runs on them (P47).</p></div><Button variant="outline" size="sm" @click="reset"><Icon name="RotateCcw" :size="14"/>Reset to defaults</Button></div>
       <div class="grid min-w-0 gap-1.5 sm:max-w-xs"><span class="text-sm font-medium">Workflow</span><Select v-model="S.wf" :options="wfOpts"/></div>
       <div class="grid gap-2">
         <div v-for="(r, i) in rows" :key="S.wf + r.code" class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 rounded-lg border p-2.5 sm:grid-cols-[auto_minmax(0,13rem)_minmax(0,1fr)_minmax(0,1fr)_8rem]">
@@ -138,7 +138,7 @@ const ShellMod = (() => {
     ORGS.push(o); switchOrg(o.id);
     setTimeout(() => toast(`${name} created`, 'You are the owner. Invite your team from Members.', 'Building2'), 500);
   }
-  G.switchOrg = switchOrg;
+  G.switchOrg = switchOrg; G.orgs = ORGS;
   G.locId = 'aru'; G.viewAs = null; G.viewAsPick = false; G.assignEdit = null; G.newLoc = false;
   watchEffect(() => { G.navRoute = G.route === 'location' ? 'locations' : G.route === 'request' ? 'approvals' : G.route === 'role' ? 'roles' : G.route; });
   const sidebarNav = computed(() => [
@@ -286,8 +286,55 @@ const ShellMod = (() => {
   /* ---------- Organisation switcher */
   const OrgAvatar = {
     props: { org: Object, size: { default: 'md' } },
-    setup() { return { ACCENTS }; },
-    template: `<span :class="['form-theme grid shrink-0 place-items-center rounded-md bg-fa font-bold text-fa-fg', size==='sm' ? 'h-6 w-6 text-[11px]' : size==='lg' ? 'h-10 w-10 text-base' : 'h-8 w-8 text-sm']" :style="{ '--fa-l': ACCENTS[org.accent].l, '--fa-d': ACCENTS[org.accent].d }">{{ org.initial }}</span>`
+    setup() { return { accChip }; },
+    template: `<span :class="['acc-chip grid shrink-0 place-items-center rounded-md font-bold', size==='sm' ? 'h-6 w-6 text-[11px]' : size==='lg' ? 'h-10 w-10 text-base' : 'h-8 w-8 text-sm']" :style="accChip(org.accent)">{{ org.initial }}</span>`
+  };
+
+  /* ---------- Accent picker (P46): presets plus any colour; contrast is checked and fixed, never trusted */
+  const ACC_MORE = ['#166445', '#15803d', '#0e7490', '#0369a1', '#4338ca', '#a21caf', '#be185d', '#b91c1c', '#c2410c', '#4d7c0f', '#78350f', '#1f2937'];
+  const AccentPicker = {
+    props: { modelValue: String, compact: Boolean, idPrefix: { default: 'acc' } }, emits: ['update:modelValue', 'change'],
+    setup(props, { emit }) {
+      const P = reactive({ open: false, hex: accIsHex(props.modelValue) ? props.modelValue : '' });
+      watch(() => props.modelValue, v => { if (accIsHex(v) && v.toLowerCase() !== (P.hex || '').toLowerCase()) P.hex = v; });
+      const isCustom = computed(() => accIsHex(props.modelValue));
+      const t = computed(() => deriveAccent(props.modelValue) || deriveAccent(PRODUCT.accent || 'teal'));
+      const checks = computed(() => accentChecks(t.value));
+      const draftOk = computed(() => accIsHex(P.hex));
+      const name = computed(() => ACCENTS[props.modelValue] ? ACCENTS[props.modelValue].label : isCustom.value ? 'Custom ' + props.modelValue.toUpperCase() : '');
+      function pick(v) { emit('update:modelValue', v); emit('change', v); }
+      function custom() { P.open = true; if (!P.hex) P.hex = accToHex(t.value.l); pick(P.hex.toLowerCase()); }
+      function onHex(v) { let x = v.trim(); if (x && x[0] !== '#') x = '#' + x; P.hex = x.slice(0, 7); if (accIsHex(P.hex)) emit('update:modelValue', P.hex.toLowerCase()); }
+      function setHex(h) { P.hex = h; P.open = true; pick(h); }
+      const PAGE = { light: { background: '#ffffff', color: 'hsl(240 10% 3.9%)', borderColor: 'hsl(240 5.9% 90%)' }, dark: { background: 'hsl(240 10% 3.9%)', color: 'hsl(0 0% 96%)', borderColor: 'hsl(240 3.7% 16%)' } };
+      const tok = (th) => th === 'light' ? { p: t.value.l, fg: t.value.lfg, c: t.value.cl, cfg: t.value.clfg } : { p: t.value.d, fg: t.value.dfg, c: t.value.cd, cfg: t.value.cdfg };
+      return { P, isCustom, t, checks, draftOk, name, pick, custom, onHex, setHex, PAGE, tok, ACCENTS, ACC_MORE, accChip };
+    },
+    template: `<div class="grid gap-3">
+      <div role="radiogroup" aria-label="Brand colour" class="flex flex-wrap items-center gap-2.5">
+        <button v-for="(a, k) in ACCENTS" :key="k" type="button" role="radio" :aria-checked="modelValue===k" :aria-label="a.label" @click="pick(k)" class="acc-chip grid h-9 w-9 place-items-center rounded-full ring-offset-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" :class="modelValue===k ? 'ring-2 ring-foreground' : ''" :style="accChip(k)"><Icon v-if="modelValue===k" name="Check" :size="16"/></button>
+        <button type="button" role="radio" :aria-checked="isCustom" aria-label="Custom colour" @click="custom" :class="['grid h-9 w-9 place-items-center rounded-full ring-offset-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', isCustom ? 'acc-chip ring-2 ring-foreground' : 'border border-dashed text-muted-foreground hover:bg-accent']" :style="isCustom ? accChip(modelValue) : null"><Icon :name="isCustom ? 'Check' : 'Pipette'" :size="15"/></button>
+        <span class="text-sm text-muted-foreground">{{ name }}</span></div>
+      <div v-if="isCustom || P.open" class="grid gap-2">
+        <label :for="idPrefix + '-hex'" class="text-sm font-medium">Custom colour</label>
+        <div class="flex flex-wrap items-center gap-2">
+          <div :class="['flex h-9 w-36 items-center gap-2 rounded-md border px-2 shadow-sm focus-within:ring-1 focus-within:ring-ring', P.hex && !draftOk ? 'border-destructive' : 'border-input']">
+            <span class="acc-chip h-5 w-5 shrink-0 rounded" :style="accChip(draftOk ? P.hex : modelValue)" aria-hidden="true"></span>
+            <input :id="idPrefix + '-hex'" :value="P.hex" @input="onHex($event.target.value)" maxlength="7" spellcheck="false" autocomplete="off" placeholder="#166445" class="h-full min-w-0 flex-1 bg-transparent font-mono text-sm uppercase outline-none"></div>
+          <div class="flex flex-wrap gap-1.5" role="group" aria-label="More colours"><button v-for="h in ACC_MORE" :key="h" type="button" @click="setHex(h)" :aria-label="h.toUpperCase()" :aria-pressed="modelValue===h" :class="['h-6 w-6 rounded-full ring-offset-1 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', modelValue===h ? 'ring-2 ring-foreground' : '']" :style="{ background: h }"></button></div></div>
+        <p v-if="P.hex && !draftOk" class="text-xs text-destructive">Use six hex digits, like #166445.</p>
+        <p v-else class="text-xs text-muted-foreground">This is the light-theme colour. The dark-theme shade, button text and the curtain are worked out from it.</p></div>
+      <p v-if="t.adjusted" class="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm" role="status"><Icon name="Contrast" :size="16" class="mt-0.5 shrink-0 text-warning"/><span><span class="font-medium">Adjusted for readability.</span> <span class="inline-flex items-center gap-1 align-middle font-mono text-xs"><span class="h-3.5 w-3.5 rounded-sm border" :style="{ background: t.adjusted.from }"></span>{{ t.adjusted.from.toUpperCase() }}<Icon name="ArrowRight" :size="12"/><span class="h-3.5 w-3.5 rounded-sm border" :style="{ background: t.adjusted.to }"></span>{{ t.adjusted.to.toUpperCase() }}</span> in light mode, so white button text and links on a white page stay readable.</span></p>
+      <div v-if="!compact" class="grid gap-3 sm:grid-cols-2">
+        <div v-for="th in ['light', 'dark']" :key="th" class="grid gap-3 rounded-lg border p-3" :style="PAGE[th]" :data-preview="th">
+          <p class="text-xs font-medium opacity-70">{{ th === 'light' ? 'Light' : 'Dark' }}</p>
+          <div class="flex flex-wrap items-center gap-3"><span class="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium" :style="{ background: 'hsl(' + tok(th).p + ')', color: 'hsl(' + tok(th).fg + ')' }"><Icon name="Check" :size="14"/>Save</span>
+            <span class="text-sm font-medium underline-offset-4" :style="{ color: 'hsl(' + tok(th).p + ')' }">View details</span>
+            <span class="h-8 w-20 rounded-md border" :style="{ borderColor: 'hsl(' + tok(th).p + ')', boxShadow: '0 0 0 2px hsl(' + tok(th).p + ' / .35)' }" aria-hidden="true"></span></div>
+          <div class="grid h-12 place-items-center rounded-md text-xs font-medium" :style="{ background: 'hsl(' + tok(th).c + ')', color: 'hsl(' + tok(th).cfg + ')' }">Loading {{ PRODUCT.name }}…</div>
+          <ul class="grid gap-1 text-xs"><li v-for="c in checks.filter(x => x.theme===th)" :key="c.what" class="flex items-center gap-1.5"><Icon :name="c.pass ? 'CircleCheck' : 'CircleAlert'" :size="13" :style="{ color: c.pass ? (th==='light' ? 'hsl(152 64% 28%)' : 'hsl(152 52% 52%)') : 'hsl(0 72% 48%)' }"/><span class="flex-1 opacity-80">{{ c.what }}</span><span class="tnum font-medium">{{ c.ratio.toFixed(1) }}:1</span><span class="w-14 text-right tnum opacity-60">min {{ c.min }}</span></li></ul>
+        </div></div>
+    </div>`
   };
   const OrgSwitcher = {
     props: { collapsed: Boolean },
@@ -1115,7 +1162,7 @@ const ShellMod = (() => {
       demo: `<div class="grid max-w-xs gap-2"><Select v-model="s.sel" :options="[{value:'single_choice',label:'Multiple choice',icon:'CircleDot'},{value:'multi_choice',label:'Checkboxes',icon:'SquareCheck'},{value:'rating',label:'Rating',icon:'Star'}]"/><Select size="sm" v-model="s.sel2" :options="[{value:'a',label:'Last edited'},{value:'b',label:'Most responses'}]"/></div>` },
     { name: 'Checkbox · Switch · Radio', ui: 'Checkbox, Switch, RadioGroup', tag: 'Forms', specs: [['Checkbox', '16×16, rounded-sm, 1px primary border, check 12px stroke 3'], ['Switch', '36×20 track, 16px thumb, moves 16px'], ['Radio', '16×16 circle, 8px dot'], ['Hit area', 'wrap in a label row ≥ 36px tall (44px on respondent forms)']], variants: 'checked, unchecked, indeterminate (tree parents), disabled', used: 'Permissions, settings, grant dialog, respondent answers.',
       demo: `<div class="flex flex-wrap items-center gap-5"><label class="flex items-center gap-2 text-sm"><Checkbox v-model="s.cb"/>Checkbox</label><label class="flex items-center gap-2 text-sm"><Switch v-model="s.sw"/>Switch</label><label class="flex items-center gap-2 text-sm"><RadioGroupItem :checked="s.rd==='a'" @select="s.rd='a'"/>Radio A</label><label class="flex items-center gap-2 text-sm"><RadioGroupItem :checked="s.rd==='b'" @select="s.rd='b'"/>Radio B</label><span class="flex items-center gap-2 text-sm"><span class="grid h-4 w-4 place-items-center rounded-sm border border-primary bg-primary text-primary-foreground"><Icon name="Minus" :size="12" stroke-width="3"/></span>Indeterminate</span></div>` },
-    { name: 'Badge · Status pill', ui: 'Badge', tag: 'Display', specs: [['Badge', '12px / 600, 8px x · 2px y, rounded-md'], ['Pill', '11px / 500, 8px x · 2px y, rounded-full, 6px dot'], ['Colour', 'state colour at 15% fill, text in text token (never series colour)']], variants: 'default, secondary, outline, destructive, warning, success; StatusPill (P42) reads label and tone from the workflow lookup', used: 'Form status, request status, invite status, roles, violations.',
+    { name: 'Badge · Status pill', ui: 'Badge', tag: 'Display', specs: [['Badge', '12px / 600, 8px x · 2px y, rounded-md'], ['Pill', '11px / 500, 8px x · 2px y, rounded-full, 6px dot'], ['Colour', 'state colour at 15% fill, text in text token (never series colour)']], variants: 'default, secondary, outline, destructive, warning, success; StatusPill (P47) reads label and tone from the workflow lookup', used: 'Form status, request status, invite status, roles, violations.',
       demo: `<div class="flex flex-wrap items-center gap-2"><Badge>Default</Badge><Badge variant="secondary">Secondary</Badge><Badge variant="outline">Outline</Badge><Badge variant="warning"><Icon name="Timer" :size="12"/>Timed</Badge><Badge variant="destructive">Voided</Badge><StatusPill workflow="form" code="live"/><StatusPill workflow="form" code="closed"/><StatusPill workflow="request" code="in_review"/><StatusPill workflow="request" code="approved"/><StatusPill workflow="request" code="not_seeded"/></div>` },
     { name: 'Tabs', ui: 'Tabs, TabsList, TabsTrigger', tag: 'Navigation', specs: [['Track', '36px, muted fill, 4px padding, rounded-lg'], ['Trigger', '12px x, 4px y, 14px / 500, active = background + shadow'], ['Count', '11px pill inside the trigger'], ['Overflow', 'wrapper scrolls sideways on phones']], variants: 'inline, full width (phone header row)', used: 'Builder tabs, results sub-tabs, roles detail, status filters.',
       demo: `<Tabs v-model="s.tab" :items="[{value:'q',label:'Questions'},{value:'r',label:'Responses',count:142},{value:'s',label:'Settings'}]"/>` },
@@ -1163,6 +1210,8 @@ const ShellMod = (() => {
       demo: `<div class="grid max-w-md gap-2 text-sm"><div class="relative"><Icon name="Search" :size="14" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/><div class="flex h-9 items-center rounded-md border border-input pl-8 pr-2 text-muted-foreground shadow-sm">Search forms<span class="ml-auto rounded border bg-muted px-1.5 text-[10px]">Forms</span></div></div><div class="rounded-lg border p-1.5 shadow-sm"><p class="px-2 py-1 text-xs text-muted-foreground">3 forms match "staff" · shown below</p><div class="-mx-1.5 my-1 h-px bg-border"></div><p class="flex items-center gap-2 rounded-md bg-accent px-2 py-2"><Icon name="Globe" :size="15" class="text-muted-foreground"/>Search everywhere for "staff"</p></div></div>` },
     { name: 'Organisation switcher', ui: 'OrgSwitcher (Popover)', tag: 'Navigation', specs: [['Trigger', 'avatar 32px, name 14/600, role · address 12px'], ['Popover', '288px, portalled, opens right of the rail when collapsed'], ['Row', 'avatar, name, role · form count, check or ⌥n shortcut'], ['Footer', 'Create organisation']], variants: 'expanded · rail', used: 'Sidebar top',
       demo: `<div class="w-64 rounded-lg border bg-popover p-1.5 shadow-md"><p class="px-2 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Your organisations</p><div class="flex items-center gap-2.5 rounded-md bg-accent p-2"><span class="grid h-8 w-8 place-items-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">K</span><span class="min-w-0 flex-1"><span class="block text-sm font-medium">Kilima Retail</span><span class="block text-xs text-muted-foreground">Owner · 8 forms</span></span><Icon name="Check" :size="15" class="text-primary"/></div></div>` },
+    { name: 'Accent picker', ui: 'AccentPicker (P46)', tag: 'Forms', specs: [['Swatches', 'six presets + Custom, 36px round, radiogroup; selected = 2px foreground ring + check'], ['Custom', 'hex field (mono, #RRGGBB) with live chip + 12 suggested colours; no native colour picker'], ['Derived', 'dark shade, button text and curtain pair come from the one colour'], ['Adjusted', 'warning-tint note with before → after chips when the light colour had to darken'], ['Preview', 'light and dark panels: button, link, focus ring, curtain, the six contrast ratios with their minimums']], variants: 'full (Settings) · compact (create organisation)', used: 'Settings › Brand colour, Create organisation',
+      demo: `<AccentPicker model-value="#ffd400" id-prefix="ds-acc"/>` },
     { name: 'View as banner', ui: 'ViewAsBanner, ViewAsDialog', tag: 'Feedback', specs: [['Banner', 'warning tint, 36px, eye icon, who · role · location · read-only, Exit'], ['Header', 'Exit view button stays visible while scrolling'], ['Dialog', 'person list with role and primary location, start location select, audit note']], variants: '—', used: 'Everywhere while viewing as',
       demo: `<div class="flex flex-wrap items-center gap-3 rounded-md border border-warning/40 bg-warning/15 px-3 py-2 text-sm"><Icon name="Eye" :size="16" class="text-warning"/><p class="min-w-0 flex-1"><span class="font-semibold">Viewing as Hamisi Swai</span><span class="text-muted-foreground"> · Viewer · Branch supervisor at Arusha Branch · read-only</span></p><Button size="sm" variant="outline" class="h-7 bg-background"><Icon name="LogOut" :size="13"/>Exit</Button></div>` },
     { name: 'Approval steps', ui: 'ApprovalSteps, ApproveDialog', tag: 'Data', specs: [['Step', '32px state circle (done teal, waiting amber, rejected red), name 14/500, rule 12px muted'], ['Approvers', 'chips with initials + why (role at which location)'], ['Escalation', 'amber chip when nobody holds the role at the location chain'], ['Decision', 'tinted card: who, decision, delegated-by note, quoted comment'], ['Compact', 'row dots, 20×6px each']], variants: 'full timeline · compact dots', used: 'Approvals inbox and request page',
@@ -1179,7 +1228,7 @@ const ShellMod = (() => {
       const mq = window.matchMedia('(prefers-color-scheme: dark)'); const onMq = () => readTokens(); mq.addEventListener('change', onMq); onBeforeUnmount(() => mq.removeEventListener('change', onMq));
       const tags = ['All', ...new Set(DS_COMPONENTS.map(c => c.tag))];
       const comps = computed(() => DS_COMPONENTS.filter(c => (D.tag === 'All' || c.tag === D.tag) && (!D.q || (c.name + c.ui + c.used).toLowerCase().includes(D.q.toLowerCase()))));
-      const demoState = reactive({ text: '', sel: 'single_choice', sel2: 'a', cb: true, sw: true, rd: 'a', tab: 'r', dlg: false, sheet: false, grow: true, files: [], file1: 'm2', api1: 'aru', api2: ['kko', 'mlc'], ward: 'Kati', rich: '<p>Entrance faces <strong>Sokoine Road</strong>.</p><ul><li>Parking behind the building</li></ul>', date: '2026-10-10', del: false, fail: false, req: REQS.k[0], log: SELECT_LOG,
+      const demoState = reactive({ text: '', sel: 'single_choice', sel2: 'a', cb: true, sw: true, rd: 'a', tab: 'r', dlg: false, sheet: false, grow: true, files: [], file1: 'm2', api1: 'aru', api2: ['kko', 'mlc'], ward: 'Kati', rich: '<p>Entrance faces <strong>Sokoine Road</strong>.</p><ul><li>Parking behind the building</li></ul>', date: '2026-10-12', del: false, fail: false, req: REQS.k[0], log: SELECT_LOG,
         loadRecord() { ['mwz', 'kko', 'shy', 'zz9'].forEach(id => delete LABELS[lkey('locations', id)]); delete LABELS[lkey('wards', 'Mawenzi')]; demoState.api1 = ''; demoState.api2 = []; demoState.ward = ''; setTimeout(() => { demoState.api1 = 'mwz'; demoState.api2 = ['kko', 'shy', 'zz9']; demoState.ward = 'Mawenzi'; }, 50); },
         list: markRaw(useList({ noun: 'samples', rows: () => [{ n: 'Alpha', k: 'a', v: 12 }, { n: 'Bravo', k: 'b', v: 40 }, { n: 'Charlie', k: 'a', v: 7 }, { n: 'Delta', k: 'c', v: 88 }, { n: 'Echo', k: 'b', v: 23 }, { n: 'Foxtrot', k: 'c', v: 61 }], search: (r, q) => r.n.toLowerCase().includes(q), sorts: [{ value: 'n', label: 'Name', get: r => r.n }, { value: 'v', label: 'Value', get: r => r.v }], fields: [{ key: 'k', label: 'Kind', type: 'select', options: [{ value: 'a', label: 'Kind A' }, { value: 'b', label: 'Kind B' }, { value: 'c', label: 'Kind C' }], get: r => r.k }, { key: 'v', label: 'Value', type: 'number', get: r => r.v }] })),
         cols: [{ key: 'n', label: 'Name', identity: true, priority: 1, min: 180, sort: 'n', text: r => r.n }, { key: 'k', label: 'Kind', priority: 3, min: 90, fold: 'badge', text: r => 'Kind ' + r.k.toUpperCase() }, { key: 'note', label: 'Note', priority: 4, min: 160, fold: 'meta', text: r => r.v > 50 ? 'Above target' : 'Within range' }, { key: 'state', label: 'State', status: true, priority: 2, min: 100, text: r => r.v > 50 ? 'High' : 'Normal', variant: r => r.v > 50 ? 'warning' : 'secondary' }, { key: 'v', label: 'Value', hero: true, priority: 1, min: 90, sort: 'v', sub: 'units', text: r => String(r.v) }],
@@ -1430,7 +1479,7 @@ const ShellMod = (() => {
           <h1 class="min-w-0 truncate text-sm font-semibold sm:text-base">{{ titles[G.view] }}</h1>
           <div v-if="SEARCH_SCOPE[G.view]" class="ml-auto hidden w-full max-w-sm md:block"><HeaderSearch :key="G.view"/></div>
           <div v-if="G.mSearch && SEARCH_SCOPE[G.view]" class="absolute inset-0 z-10 flex items-center bg-background px-2 md:hidden"><HeaderSearch phone :key="'m' + G.view"/></div>
-          <div class="ml-auto flex items-center gap-1 md:ml-2">
+          <div :class="['ml-auto flex shrink-0 items-center gap-1', SEARCH_SCOPE[G.view] && 'md:ml-2']">
             <Button v-if="SEARCH_SCOPE[G.view]" variant="ghost" size="icon" class="md:hidden" :aria-label="SEARCH_SCOPE[G.view].ph" @click="G.mSearch = true"><Icon name="Search"/></Button>
             <Tooltip v-if="canViewAs()" content="View as a person or role" side="bottom"><Button variant="ghost" size="icon" aria-label="View as someone" @click="G.viewAsPick = true"><Icon name="Eye"/></Button></Tooltip>
             <Button v-if="G.viewAs" variant="outline" size="sm" class="h-8 border-warning/50 text-warning" @click="exitViewAs" :aria-label="'Exit viewing as ' + G.viewAs.name"><Icon name="EyeOff" :size="14"/><span class="hidden sm:inline">Exit view</span></Button>
@@ -1480,12 +1529,12 @@ const ShellMod = (() => {
 
   const NewOrgDialog = {
     setup() {
-      const N = reactive({ name: '', slug: '', touched: false, accent: 'teal' });
+      const N = reactive({ name: '', slug: '', touched: false, accent: PRODUCT.accent || 'teal' });
       const slugify = (v) => v.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
       watch(() => N.name, v => { if (!N.touched) N.slug = slugify(v); });
       const taken = computed(() => ORGS.some(o => o.slug === N.slug));
       const ok = computed(() => N.name.trim().length > 1 && N.slug && !taken.value);
-      function submit() { if (!ok.value) return; createOrg({ name: N.name.trim(), slug: N.slug, accent: N.accent }); G.newOrg = false; Object.assign(N, { name: '', slug: '', touched: false, accent: 'teal' }); }
+      function submit() { if (!ok.value) return; createOrg({ name: N.name.trim(), slug: N.slug, accent: N.accent }); G.newOrg = false; Object.assign(N, { name: '', slug: '', touched: false, accent: PRODUCT.accent || 'teal' }); }
       return { G, N, taken, ok, submit, ACCENTS, slugify };
     },
     template: `<Dialog :open="G.newOrg" @update:open="v => G.newOrg = v">
@@ -1495,8 +1544,7 @@ const ShellMod = (() => {
         <div class="grid gap-1.5"><label for="no-s" class="text-sm font-medium">Address</label>
           <div :class="['flex h-9 items-center overflow-hidden rounded-md border text-sm shadow-sm', taken ? 'border-destructive' : 'border-input']"><span class="border-r bg-muted/50 px-2.5 py-2 text-xs text-muted-foreground">{{ PRODUCT.domain }}/</span><input id="no-s" :value="N.slug" @input="N.touched=true; N.slug=slugify($event.target.value)" class="h-full min-w-0 flex-1 bg-transparent px-2 outline-none"></div>
           <p v-if="taken" class="text-xs text-destructive">That address is already used. Try another.</p></div>
-        <div class="grid gap-2"><span class="text-sm font-medium">Brand colour</span><div class="flex flex-wrap gap-2.5">
-          <button v-for="(a, k) in ACCENTS" :key="k" type="button" @click="N.accent=k" :aria-label="a.label" :aria-pressed="N.accent===k" class="form-theme grid h-8 w-8 place-items-center rounded-full ring-offset-2 ring-offset-background" :class="N.accent===k ? 'ring-2 ring-foreground' : ''" :style="{ '--fa-l': a.l, '--fa-d': a.d, background: 'hsl(var(--form-accent))' }"><Icon v-if="N.accent===k" name="Check" :size="14" class="text-fa-fg"/></button></div></div>
+        <div class="grid gap-2"><span class="text-sm font-medium">Brand colour</span><AccentPicker v-model="N.accent" compact id-prefix="no-acc"/><p class="text-xs text-muted-foreground">You can change it later in Settings.</p></div>
         <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button variant="outline" @click="G.newOrg=false">Cancel</Button><Button type="submit" :disabled="!ok"><Icon name="Building2" :size="14"/>Create organisation</Button></div>
       </form></Dialog>`
   };
@@ -1511,7 +1559,7 @@ const ShellMod = (() => {
       const counts = computed(() => ({ all: VF.value.length, live: VF.value.filter(f => f.status === 'live').length, draft: VF.value.filter(f => f.status === 'draft').length, closed: VF.value.filter(f => f.status === 'closed').length, archived: VF.value.filter(f => f.status === 'archived').length }));
       const tabs = computed(() => [{ value: 'all', label: 'All', count: counts.value.all }, { value: 'live', label: STAT.live.label, count: counts.value.live }, { value: 'draft', label: STAT.draft.label, count: counts.value.draft }, { value: 'closed', label: STAT.closed.label, count: counts.value.closed }, { value: 'archived', label: 'Archived', count: counts.value.archived }]);
       /* D31: toolbar + Filters (simple/advanced) + Sort; status tabs are quick filters kept in sync */
-      const STATUS_OPTS = Object.values(STAT).map(x => ({ value: x.code, label: x.label }));   // P42: from the lookup, in its order
+      const STATUS_OPTS = Object.values(STAT).map(x => ({ value: x.code, label: x.label }));   // P47: from the lookup, in its order
       const LS = useList({ noun: 'forms', rows: () => VF.value, search: (f, q) => f.title.toLowerCase().includes(q), sort: 'edited', dir: 'desc',
         sorts: [{ value: 'edited', label: 'Last edited', get: f => relToIso(f.edited) }, { value: 'responses', label: 'Responses', get: f => f.responses }, { value: 'name', label: 'Name', get: f => f.title.toLowerCase() }],
         fields: () => [
@@ -1704,34 +1752,22 @@ const ShellMod = (() => {
       </Dialog></div>`
   };
 
-  const WorkspacePage = {
+  /* P42: Settings is one page of tabs, ?tab= in the link. General first, then the product's tabs (SETTINGS_TABS, in the
+     product's order), then the core Notifications and Security tabs. Each product tab is a component that renders its cards. */
+  const SETTINGS_TABS = [
+    { value: 'results', label: 'Results', icon: 'ChartBarBig', comp: 'ResultChartSettings' },   // Fomu's example tab: replace with the product's own
+  ];
+  const ResultChartSettings = {
     setup() {
-      const tz = [{ value: 'Africa/Dar_es_Salaam', label: 'East Africa Time (Dar es Salaam)' }, { value: 'Africa/Nairobi', label: 'East Africa Time (Nairobi)' }, { value: 'UTC', label: 'UTC' }];
-      const timeout = [{ value: '30', label: '30 minutes' }, { value: '120', label: '2 hours' }, { value: '480', label: '8 hours' }];
-      const W = reactive({ tz: 'Africa/Dar_es_Salaam', timeout: '120' });
-      watch(() => G.org, o => { if (!o.quiet) o.quiet = reactive({ on: true, from: '20:00', to: '07:00' }); }, { immediate: true });
-      const HOURS = Array.from({ length: 24 }, (_, h) => ({ value: String(h).padStart(2, '0') + ':00', label: String(h).padStart(2, '0') + ':00' }));
       const types = TYPES.map(t => ({ ...t, opts: TYPE_VIEWS[t.value].map((v, i) => ({ value: v, label: VIEWS[v].label + (i === 0 ? ' (built-in)' : ''), icon: VIEWS[v].icon })) }));
       const viewOf = (t) => G.org.viewDefaults[t] || TYPE_VIEWS[t][0];
       function setView(t, v) { if (v === TYPE_VIEWS[t][0]) delete G.org.viewDefaults[t]; else G.org.viewDefaults[t] = v; G.toast('Default view saved', 'Applies to every form without its own choice for that question.', 'ChartBarBig'); }
       const changed = computed(() => Object.keys(G.org.viewDefaults).length);
       function resetViews() { Object.keys(G.org.viewDefaults).forEach(k => delete G.org.viewDefaults[k]); G.toast('Chart views reset', 'Every type uses its built-in default.', 'RotateCcw'); }
-      return { HOURS, G, W, tz, timeout, types, viewOf, setView, changed, resetViews, ACCENTS, canManage };
+      return { G, types, viewOf, setView, changed, resetViews };
     },
-    template: `<div class="mx-auto grid max-w-[820px] grid-cols-[minmax(0,1fr)] gap-3">
-      <div><h2 class="text-xl font-semibold tracking-tight">Workspace settings</h2><p class="text-sm text-muted-foreground">Applies to everyone in {{ G.org.name }}.</p></div>
-      <p v-if="!canManage()" class="flex items-center gap-2 rounded-lg border bg-muted/60 p-3 text-sm text-muted-foreground"><Icon name="Lock" :size="15"/>Only owners and admins can change these settings.</p>
-      <fieldset :disabled="!canManage()" class="grid gap-3 disabled:opacity-70">
-      <Card class="kpi"><div class="grid gap-4 p-4 sm:p-5"><h3 class="font-semibold">General</h3>
-        <div class="grid gap-3 sm:grid-cols-2"><div class="grid gap-1.5"><label for="w-n" class="text-sm font-medium">Organisation name</label><Input id="w-n" v-model="G.org.name"/></div>
-          <div class="grid gap-1.5"><label for="w-s" class="text-sm font-medium">Address</label><div class="flex h-9 items-center rounded-md border border-input text-sm shadow-sm"><span class="border-r bg-muted/50 px-2.5 py-2 text-xs text-muted-foreground">{{ PRODUCT.domain }}/</span><input id="w-s" v-model="G.org.slug" class="h-full min-w-0 flex-1 bg-transparent px-2 outline-none"></div></div>
-          <div class="grid gap-1.5 sm:col-span-2"><span class="text-sm font-medium">Time zone</span><Select v-model="W.tz" :options="tz"/></div></div></div></Card>
-      <Card class="kpi" style="animation-delay:40ms"><div class="grid gap-4 p-4 sm:p-5"><div><h3 class="font-semibold">Branding</h3><p class="text-sm text-muted-foreground">Shown on sign-in, invitations and public forms.</p></div>
-        <FilePicker v-model="G.org.logo" accept="image" :max-size="2" label="Logo" help="Square PNG or SVG works best, at least 256 × 256 px."/>
-        <RichText v-model="G.org.footer" label="Invitation email footer" :max="400" placeholder="Contact details, office hours, a short note…" help="Added under every invitation and reminder email."/></div></Card>
-      <Card class="kpi" style="animation-delay:60ms"><div class="p-4 sm:p-5"><h3 class="font-semibold">Brand colour</h3><p class="text-sm text-muted-foreground">Default accent for new forms. Each form can still pick its own.</p>
-        <div class="mt-3 flex flex-wrap gap-3"><button v-for="(a, k) in ACCENTS" :key="k" type="button" @click="G.org.accent=k" :aria-label="a.label" :aria-pressed="G.org.accent===k" class="form-theme grid h-9 w-9 place-items-center rounded-full ring-offset-2 ring-offset-background" :class="G.org.accent===k ? 'ring-2 ring-foreground' : ''" :style="{ '--fa-l': a.l, '--fa-d': a.d, background: 'hsl(var(--form-accent))' }"><Icon v-if="G.org.accent===k" name="Check" :size="16" class="text-fa-fg"/></button></div></div></Card>
-      <Card class="kpi" style="animation-delay:120ms"><div class="p-4 sm:p-5">
+    template: `<div class="grid gap-3">
+      <Card class="kpi"><div class="p-4 sm:p-5">
         <div class="flex flex-wrap items-start justify-between gap-2"><div><h3 class="font-semibold">Result chart defaults</h3><p class="text-sm text-muted-foreground">How each question type is charted in Results. Someone can still change the view on a single question; that choice wins for that form.</p></div>
           <Button v-if="changed" variant="ghost" size="sm" @click="resetViews"><Icon name="RotateCcw" :size="14"/>Reset {{ changed }}</Button></div>
         <ol class="mt-3 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground" aria-label="Which view wins"><li class="rounded-md bg-muted px-2 py-1">Built-in default</li><Icon name="ChevronRight" :size="12"/><li class="rounded-md bg-primary/10 px-2 py-1 font-medium text-foreground">Workspace default (here)</li><Icon name="ChevronRight" :size="12"/><li class="rounded-md bg-muted px-2 py-1">Per question on a form</li></ol>
@@ -1740,17 +1776,61 @@ const ShellMod = (() => {
             <span class="flex min-w-0 flex-1 items-center gap-2 text-sm"><Icon :name="t.icon" :size="15" class="text-muted-foreground"/>{{ t.label }}<Badge v-if="G.org.viewDefaults[t.value]" variant="outline" class="ml-1">Changed</Badge></span>
             <Select size="sm" class="w-48" :model-value="viewOf(t.value)" @update:model-value="v => setView(t.value, v)" :options="t.opts" align="end" :disabled="t.opts.length < 2"/>
           </div></div></div></Card>
-      <StatusesCard/>
-      <Card class="kpi" style="animation-delay:180ms"><div class="p-4 sm:p-5"><h3 class="font-semibold">Security</h3>
+    </div>`
+  };
+
+  const WorkspacePage = {
+    setup() {
+      const tz = [{ value: 'Africa/Dar_es_Salaam', label: 'East Africa Time (Dar es Salaam)' }, { value: 'Africa/Nairobi', label: 'East Africa Time (Nairobi)' }, { value: 'UTC', label: 'UTC' }];
+      const timeout = [{ value: '30', label: '30 minutes' }, { value: '120', label: '2 hours' }, { value: '480', label: '8 hours' }];
+      const W = reactive({ tz: 'Africa/Dar_es_Salaam', timeout: '120' });
+      watch(() => G.org, o => { if (!o.quiet) o.quiet = reactive({ on: true, from: '20:00', to: '07:00' }); }, { immediate: true });
+      const HOURS = Array.from({ length: 24 }, (_, h) => ({ value: String(h).padStart(2, '0') + ':00', label: String(h).padStart(2, '0') + ':00' }));
+      const tabs = computed(() => [{ value: 'general', label: 'General' }, ...SETTINGS_TABS.filter(t => !t.perm || myPerms.value.includes(t.perm)), { value: 'statuses', label: 'Statuses' }, { value: 'notifications', label: 'Notifications' }, { value: 'security', label: 'Security' }]);   // P47: Statuses is a core tab
+      const S = reactive({ tab: G.pendingTab || 'general' });
+      watch(() => G.pendingTab, (v) => { if (v) S.tab = v; });
+      watch(() => S.tab, (t) => { G.tab = t === 'general' ? null : t; }, { immediate: true });   // P42 + P39: the tab is part of the link; General is the bare address
+      watch(tabs, (ts) => { if (!ts.some(t => t.value === S.tab)) S.tab = 'general'; }, { immediate: true });
+      const product = computed(() => SETTINGS_TABS.find(t => t.value === S.tab));
+      let accT = 0; function accSaved() { clearTimeout(accT); accT = setTimeout(() => G.toast('Brand colour saved', 'Everyone in ' + G.org.name + ' sees it from their next page.', 'Palette'), 250); }
+      watch(() => G.org.accent, (v, o) => { if (o !== undefined && accIsHex(v)) accSaved(); });
+      return { HOURS, G, W, S, tabs, product, tz, timeout, ACCENTS, canManage, accSaved };
+    },
+    template: `<div :class="['mx-auto grid grid-cols-[minmax(0,1fr)] gap-3', product && product.wide ? 'max-w-[1000px]' : 'max-w-[820px]']">
+      <div><h2 class="text-xl font-semibold tracking-tight">Settings</h2><p class="text-sm text-muted-foreground">Applies to everyone in {{ G.org.name }}.</p></div>
+      <div class="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:overflow-visible sm:px-0"><Tabs v-model="S.tab" :items="tabs" class="sm:h-auto sm:flex-wrap sm:justify-start"/></div>
+      <p v-if="!canManage()" class="flex items-center gap-2 rounded-lg border bg-muted/60 p-3 text-sm text-muted-foreground"><Icon name="Lock" :size="15"/>Only owners and admins can change these settings.</p>
+      <fieldset :key="S.tab" :disabled="!canManage()" class="grid min-w-0 gap-3 disabled:opacity-70">
+      <template v-if="S.tab==='general'">
+      <Card class="kpi"><div class="grid gap-4 p-4 sm:p-5"><h3 class="font-semibold">General</h3>
+        <div class="grid gap-3 sm:grid-cols-2"><div class="grid gap-1.5"><label for="w-n" class="text-sm font-medium">Organisation name</label><Input id="w-n" v-model="G.org.name"/></div>
+          <div class="grid gap-1.5"><label for="w-s" class="text-sm font-medium">Address</label><div class="flex h-9 items-center rounded-md border border-input text-sm shadow-sm"><span class="border-r bg-muted/50 px-2.5 py-2 text-xs text-muted-foreground">{{ PRODUCT.domain }}/</span><input id="w-s" v-model="G.org.slug" class="h-full min-w-0 flex-1 bg-transparent px-2 outline-none"></div></div>
+          <div class="grid gap-1.5 sm:col-span-2"><span class="text-sm font-medium">Time zone</span><Select v-model="W.tz" :options="tz"/></div></div></div></Card>
+      <Card class="kpi" style="animation-delay:40ms"><div class="grid gap-4 p-4 sm:p-5"><div><h3 class="font-semibold">Branding</h3><p class="text-sm text-muted-foreground">Shown on sign-in, invitations and public forms.</p></div>
+        <FilePicker v-model="G.org.logo" accept="image" :max-size="2" label="Logo" help="Square PNG or SVG works best, at least 256 × 256 px."/>
+        <RichText v-model="G.org.footer" label="Invitation email footer" :max="400" placeholder="Contact details, office hours, a short note…" help="Added under every invitation and reminder email."/></div></Card>
+      <Card class="kpi" style="animation-delay:60ms"><div class="grid gap-3 p-4 sm:p-5"><div><h3 class="font-semibold">Brand colour</h3><p class="text-sm text-muted-foreground">Buttons, links, focus rings, sign-in and the page curtain use it, for everyone in {{ G.org.name }} from their next page. Status and chart colours never change.</p></div>
+        <AccentPicker v-model="G.org.accent" id-prefix="w-acc" @change="accSaved"/></div></Card>
+      </template>
+      <component v-else-if="product" :is="product.comp"/>
+      <template v-else-if="S.tab==='statuses'"><StatusesCard/></template>
+      <template v-else-if="S.tab==='notifications'">
+      <Card class="kpi"><div class="p-4 sm:p-5"><h3 class="font-semibold">Quiet hours</h3>
+        <div class="mt-1 divide-y">
+          <div class="grid gap-3 py-3"><div class="flex items-start justify-between gap-6"><div><label for="w-quiet" class="text-sm font-medium">Hold SMS and push overnight</label><p class="mt-1 text-sm text-muted-foreground">Approval texts and push notifications wait until the window ends. In-app and email still go. Steps marked required ignore this.</p></div><Switch id="w-quiet" v-model="G.org.quiet.on"/></div>
+            <div v-if="G.org.quiet.on" class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">From<Select size="sm" class="w-24" v-model="G.org.quiet.from" :options="HOURS" aria-label="Quiet from"/>to<Select size="sm" class="w-24" v-model="G.org.quiet.to" :options="HOURS" aria-label="Quiet until"/><span>{{ W.tz === 'UTC' ? 'UTC' : 'EAT' }}</span></div></div>
+        </div></div></Card>
+      </template>
+      <template v-else-if="S.tab==='security'">
+      <Card class="kpi" ><div class="p-4 sm:p-5"><h3 class="font-semibold">Security</h3>
         <div class="mt-1 divide-y">
           <div class="flex items-start justify-between gap-6 py-3"><div><label for="w-2fa" class="text-sm font-medium">Require two-step verification</label><p class="mt-1 text-sm text-muted-foreground">Members without it are asked to set it up before they can continue. 2 members still need to.</p></div><Switch id="w-2fa" v-model="G.org.require2fa"/></div>
           <div class="flex items-start justify-between gap-6 py-3"><div><span class="text-sm font-medium">Sign out after inactivity</span><p class="mt-1 text-sm text-muted-foreground">Applies to builder and results, not to respondents.</p></div><Select size="sm" class="w-36" v-model="W.timeout" :options="timeout" align="end"/></div>
-          <div class="grid gap-3 py-3"><div class="flex items-start justify-between gap-6"><div><label for="w-quiet" class="text-sm font-medium">Quiet hours for SMS and push</label><p class="mt-1 text-sm text-muted-foreground">Approval texts and push notifications wait until the window ends. In-app and email still go. Steps marked required ignore this.</p></div><Switch id="w-quiet" v-model="G.org.quiet.on"/></div>
-            <div v-if="G.org.quiet.on" class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">From<Select size="sm" class="w-24" v-model="G.org.quiet.from" :options="HOURS" aria-label="Quiet from"/>to<Select size="sm" class="w-24" v-model="G.org.quiet.to" :options="HOURS" aria-label="Quiet until"/><span>{{ W.tz === 'UTC' ? 'UTC' : 'EAT' }}</span></div></div>
         </div></div></Card>
+      </template>
       </fieldset>
     </div>`
   };
 
-  return { AuthView, ShellView, comps: { StatusPill, StatusesCard, NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, Spark, OrgAvatar, OrgSwitcher, NewOrgDialog } };
+  return { AuthView, ShellView, comps: { StatusPill, StatusesCard, NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, ResultChartSettings, Spark, OrgAvatar, AccentPicker, OrgSwitcher, NewOrgDialog } };
 })();

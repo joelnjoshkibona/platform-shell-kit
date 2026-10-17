@@ -5,6 +5,7 @@ KIT = os.path.abspath(os.path.join(ROOT, '..', '..'))           # kit root
 _prod = open(os.path.join(ROOT, 'product.js')).read()
 PNAME = _re0.search(r"name:\s*'([^']+)'", _prod).group(1)
 PTAG = _re0.search(r"tagline:\s*'([^']+)'", _prod).group(1)
+PKEY = _re0.search(r"storageKey:\s*'([^']+)'", _prod).group(1)
 import re
 SP = ROOT + '/'
 B = open(os.path.join(ROOT, 'builder.html')).read()
@@ -96,7 +97,11 @@ extra_css = '''
 @keyframes rise{from{opacity:.001;transform:translateY(6px)}to{opacity:1;transform:none}}
 .spark{stroke-dasharray:300;stroke-dashoffset:300;animation:draw 900ms 200ms ease-out forwards}
 @keyframes draw{to{stroke-dashoffset:0}}
-/* page transition curtain: bright teal in light mode, deep green in dark mode */
+/* P46: anything drawn in an organisation's accent outside the primary tokens (org badge, swatches) */
+.acc-chip{background:hsl(var(--a-l));color:hsl(var(--a-lfg))}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .acc-chip{background:hsl(var(--a-d));color:hsl(var(--a-dfg))} }
+:root[data-theme="dark"] .acc-chip{background:hsl(var(--a-d));color:hsl(var(--a-dfg))}
+/* page transition curtain: the product default here; the organisation's accent overrides it (P41, P46) */
 :root{ --curtain:170 62% 46%; --curtain-fg:174 80% 8% }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --curtain:166 58% 13%; --curtain-fg:166 40% 92% } }
 :root[data-theme="dark"]{ --curtain:166 58% 13%; --curtain-fg:166 40% 92% }
@@ -302,6 +307,8 @@ const PhoneFrame = {
 const RootApp = {
   setup() {
     watch(() => G.theme, applyGlobalTheme, { immediate: true });
+    // P46: the organisation's accent applies once someone is signed in (sign-in, switch, first load); sign-in keeps the last one this browser saw
+    watch(() => [G.org && G.org.accent, AREA(G.view) === 'auth'], ([a, auth]) => { if (!auth && a) applyAccent(a); }, { immediate: true });
     // initial load: curtain starts closed (also in the static HTML), opens once the app is ready (D13)
     onMounted(async () => {
       const pre = document.getElementById('boot-curtain'); if (pre) pre.remove();
@@ -346,6 +353,7 @@ BOOT = '''<div id="boot-curtain" class="curtain" data-state="closed" aria-hidden
     </div>
     <p style="margin-top:16px;font:500 14px/1.4 Geist,system-ui,sans-serif;color:hsl(var(--curtain-fg))">Loading ' + PNAME + '…</p>
   </div></div>'''
-out = head + BOOT + '<div id="app"></div>\n<script>\n' + helpers + shared + atoms + builder_mod + respondent_mod + responses_mod + shell + root
+BOOT_ACCENT = '<script>/* P46: last accent this browser saw, before anything paints */try{var __a=localStorage.getItem(' + repr(PKEY + '-accent') + ');if(__a){var __s=document.createElement("style");__s.id="org-accent";__s.textContent=__a;document.head.appendChild(__s)}}catch(e){}</script>\n'
+out = head + BOOT_ACCENT + BOOT + '<div id="app"></div>\n<script>\n' + helpers + shared + atoms + builder_mod + respondent_mod + responses_mod + shell + root
 open(os.path.join(KIT, 'prototype', 'index.html'), 'w').write(out)
 print('ok', len(out))

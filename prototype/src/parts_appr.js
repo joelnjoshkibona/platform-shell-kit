@@ -1,6 +1,6 @@
 
   /* ================================================================ APPROVALS (Cobley core, D25): request types + steps, requests, approvals, delegations */
-  /* P42: approval request statuses are a workflow lookup (codes fixed, labels/tone/order editable in Settings › Statuses) */
+  /* P47: approval request statuses are a workflow lookup (codes fixed, labels/tone/order editable in Settings › Statuses) */
   const RQ_STATUS = defineWorkflow('request', 'Approval requests', [['draft', 'Draft', 'muted', 'Rasimu'], ['submitted', 'Submitted', 'info', 'Imetumwa'], ['in_review', 'In review', 'wait', 'Inakaguliwa'], ['approved', 'Approved', 'ok', 'Imeidhinishwa', true], ['rejected', 'Rejected', 'bad', 'Imekataliwa', true], ['cancelled', 'Cancelled', 'off', 'Imeghairiwa', true]]);
   const OPEN_RQ = ['submitted', 'in_review'];
   const ACTIONS = { 'Forms.publish': { label: 'Publish a form', icon: 'Send', effect: 'The form goes live and starts accepting responses.' }, 'Responses.export': { label: 'Export responses', icon: 'FileSpreadsheet', effect: 'The export is generated and the requester gets a download link valid for 24 hours.' }, 'Responses.void': { label: 'Reset a respondent', icon: 'RotateCcw', effect: 'The respondent can answer the form again; their old response is voided.' }, 'Locations.manage': { label: 'Deactivate a location', icon: 'MapPinOff', effect: 'The location is deactivated and its forms stop accepting responses.' } };

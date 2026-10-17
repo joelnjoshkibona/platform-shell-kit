@@ -107,7 +107,7 @@ It runs on the **Cobley platform core** (D18): users, locations, roles, menus, s
 
 ## Look and feel
 
-- **Visual base:** shadcn-vue in a neutral zinc base with one brand accent (teal) that tenants can override. Font: Geist.
+- **Visual base:** shadcn-vue in a neutral zinc base with one brand accent (a preset or any colour, P46; set `PRODUCT.accent`) that each organisation can change in Settings. Font: Geist.
 - **Every screen:**
   - works in light and dark, and responsive from 360px to desktop;
   - has the page-transition curtain (bright teal in light, deep green in dark);

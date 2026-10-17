@@ -34,6 +34,23 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 - Buttons the user cannot use are hidden, not disabled, unless the reason helps them (then a tooltip says why).
 - Effective permission at a location = main role + custom roles here and above + granted − denied; deny wins (D21).
 
+**Top bar (P43)**
+
+- Menu · title on the left; the module search when the page has one; the actions (View as, theme, notifications, account) always at the right edge, on every page. The title truncates first.
+
+**Settings (P42)**
+
+- One page of tabs, `?tab=` in the link: General first, the product's tabs (`SETTINGS_TABS`) in their order, then Notifications and Security last. A product tab is one component of cards; it can need a permission and can ask for the wide (1000px) layout.
+- One lock banner and one read-only fieldset for people who cannot manage settings. Fields save as they change. The tab strip wraps from 640px and scrolls in its own row on phones.
+
+**Recent activity (P45)**
+
+- Current organisation only; a location page shows its subtree; View as narrows it; session actions appear at once; an empty feed says so.
+
+**Demo clock (P44)**
+
+- Prototype dates come from `TODAY` (a weekday, Mon 12 Oct 2026). Never hard-code today's date in a part.
+
 **Search (D29, D30)**
 
 - The top-bar box follows the page. In a module it searches that module only and filters the list in place through the module's `search` filter, kept in the URL.
@@ -258,19 +275,20 @@ shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
-| `--primary` | teal `174 72% 26%` | teal `170 62% 46%` | Primary buttons, focus, active nav |
+| `--primary`, `--ring`, `--primary-foreground` | the organisation's accent (product default: teal `174 72% 26%`) | derived (teal `170 62% 46%`) | Primary buttons, links, focus, active controls. Set by `applyAccent` from the organisation's brand colour (P41, P46), never by hand |
 | Neutrals | zinc scale | zinc scale | Background, cards, borders, muted text |
 | `--warning` / `--destructive` | semantic | semantic | Approaching a limit / errors and danger |
 | Chart c1–c5 | #14937f #d06d0a #2f6fe0 #d6456a #7c5ad8 | #1f9e89 #c97514 #4c82e8 #dc5577 #8f73e3 | Charts only, max 5 series then Other (#94a3b8 / #64748b) |
-| `--curtain` | `170 62% 46%`, dark text | `166 58% 13%`, light text | Page transition only |
+| `--curtain`, `--curtain-fg` | derived from the accent (teal: `170 62% 46%`, dark text) | derived (teal: `166 58% 13%`, light text) | Page transition only; at least 6:1 |
 | Form accent | per form | per form | A form's own brand colour, tenant-overridable |
 
+- **Brand colour (P46)**: the organisation picks a preset or any hex; everything else is derived and checked (button text ≥ 4.5:1, primary vs page ≥ 3:1, curtain ≥ 6:1, both themes). Nothing but primary, ring, the curtain and the org badge follows it: never status, chart, background or border colours. Components never read the accent value; they use `primary` (or `.acc-chip` + `accChip()` for another organisation's colour, e.g. the switcher).
 - **Type**: Geist. Page title `text-xl font-semibold` (`text-2xl` from `sm`), body `text-sm`, meta `text-xs`, group labels `text-[11px]` uppercase semibold, KPI numbers `text-2xl` with tabular figures, codes and permission names in mono `text-xs`.
 - **Spacing**: `gap-4` between sections and fields, `p-4` card padding (`p-3.5` for KPI tiles), `gap-1.5` inside a label/input/error stack, `gap-2` between inline items.
 - **Radius**: `rounded-md` controls, `rounded-lg` dialogs and popovers, `rounded-xl` cards, `rounded-full` pills and avatars.
 - **Icons**: Lucide, `size-4` next to text, `size-6` for empty states. Same field shape, same icon everywhere.
 - **Status**: short badges or pills with a dot; colour never carries meaning alone (always a word).
-- **Workflow status (P42)**: a pill reads its label and tone from the workflow's lookup table (`StatusPill workflow="request" :code="r.status"`). Code, filters, quick tabs and sort compare the `code`, never the label; tone is one of muted, info, wait, warn, live, ok, bad, off and maps to tokens (`ok` = `--success`, `wait`/`warn` = `--warning`, `bad` = `--destructive`, `live` pulses). Quick tabs, filter options and lane order follow the table's `sort_order`. An unknown code shows as a muted pill with the raw code.
+- **Workflow status (P47)**: a pill reads its label and tone from the workflow's lookup table (`StatusPill workflow="request" :code="r.status"`). Code, filters, quick tabs and sort compare the `code`, never the label; tone is one of muted, info, wait, warn, live, ok, bad, off and maps to tokens (`ok` = `--success`, `wait`/`warn` = `--warning`, `bad` = `--destructive`, `live` pulses). Quick tabs, filter options and lane order follow the table's `sort_order`. An unknown code shows as a muted pill with the raw code.
 - **Motion**: cards rise in with a 40–60ms stagger, sparklines draw in, bars grow from the left; 150–250ms for UI transitions. Everything decorative stops under `prefers-reduced-motion`.
 - **Dark mode**: every screen is checked in light and dark before merging. Theme choice: Light, Dark, System.
 - **Responsive**: built and checked at 360, 390, 768, 1280px. Grid children get `min-w-0`; no horizontal page scroll; tap targets at least 40px on phones; safe-area insets respected.
@@ -318,12 +336,13 @@ shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or
 - [ ] Filters, sort, page and tab are in the URL and survive a reload
 - [ ] Lists that show rows are one ListCard stacked toolbar · tabs · search · chips · header · rows · footer; columns fold by priority as the card narrows (dragged from 1280 to 360 with the sidebar open): identity and hero never fold, status folds right above the hero, `+N more` only when the meta line would overflow two lines, nothing scrolls sideways
 - [ ] Tabs that show records use the module list with a scope (parent filter/column/search removed, own search, Export, Copy link, create with the parent locked)
-- [ ] Top-bar search filters this module; "Search everywhere" works
+- [ ] Top-bar search filters this module; "Search everywhere" works; top-bar actions sit at the right edge with or without search
+- [ ] Activity, KPIs and lists show only the current organisation after a switch
 - [ ] Create/edit form has drafts (or is listed as an exception with a reason)
 - [ ] No native pickers; required asterisks are CSS; errors sit under fields
 - [ ] Buttons and menus respect permissions; a direct URL without permission shows No access
 - [ ] Delete uses the delete check and the YES gate
-- [ ] Status pills come from the workflow lookup (P42); no code compares a label; filters and quick tabs follow the table's order
+- [ ] Status pills come from the workflow lookup (P47); no code compares a label; filters and quick tabs follow the table's order
 - [ ] Strings in English and Swahili
 - [ ] Built only from components in `COMPONENTS.md`; new ones added to the library first
 - [ ] Rule changes copied to the doc, `FRONTEND_RULES.md` and the Rules tab

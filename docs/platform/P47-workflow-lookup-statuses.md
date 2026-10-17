@@ -1,4 +1,4 @@
-# P42 · Workflow statuses as lookup tables
+# P47 · Workflow statuses as lookup tables
 
 Status: **decided when this note merges**, from KilierERP (built and tested in its prototype, 2026-10-16: eleven workflows, the booking spine among them, with a Settings › Statuses card).
 Amends **P16**: its first sentence stays (master-data status uses the `statuses` table); its second sentence ("workflow states that drive code stay ENUM columns") is replaced by this note.
@@ -41,7 +41,7 @@ Records hold `<workflow>_status_id` (FK). No denormalised code copy beside it (R
 
 - `StatusPill workflow="request" :code="r.status"`: dot + word from the lookup. The Swahili label is the `title`.
 - Filter options, quick-tab labels and lane order read the lookup in `sort_order`.
-- Settings › Statuses: pick a workflow → reorderable rows (code read-only, label, Swahili, tone) and Reset to defaults. Products add their workflows to the list.
+- Settings › Statuses (its own core tab, after the product's tabs and before Notifications; P42): pick a workflow → reorderable rows (code read-only, label, Swahili, tone) and Reset to defaults. Products add their workflows to the list.
 
 ### API
 
@@ -53,7 +53,7 @@ Records hold `<workflow>_status_id` (FK). No denormalised code copy beside it (R
 
 | Area | Change |
 |---|---|
-| `docs/PLATFORM_DECISIONS.md` | P42 row; P16 points to P42 for workflow states |
+| `docs/PLATFORM_DECISIONS.md` | P47 row; P16 points to P47 for workflow states |
 | `docs/architecture/CORE_ERD.md`, `erd_data.py` | `WORKFLOW_STATUSES` pattern table; `REQUESTS.request_status_id` → `request_statuses`; Fomu's forms, invitations, attempts and responses get `*_status_id` (pipeline states stay enums) |
 | `docs/FRONTEND_RULES.md` | Visual rule for workflow status, review checklist item |
 | `docs/components_api.json`, `docs/COMPONENTS.md` | StatusPill takes `workflow` + `code` |

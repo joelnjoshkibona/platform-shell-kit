@@ -190,13 +190,13 @@
         "workflow",
         "string",
         "",
-        "StatusPill (P42): the workflow key, e.g. 'request', 'booking'"
+        "StatusPill (P47): the workflow key, e.g. 'request', 'booking'"
       ],
       [
         "code",
         "string",
         "",
-        "StatusPill (P42): the record's status code; label, Swahili and tone come from the workflow's lookup table"
+        "StatusPill (P47): the record's status code; label, Swahili and tone come from the workflow's lookup table"
       ]
     ],
     "emits": [],
@@ -207,7 +207,7 @@
       ]
     ],
     "do": [
-      "Status pill = dot + word; label and tone from the workflow lookup (P42)",
+      "Status pill = dot + word; label and tone from the workflow lookup (P47)",
       "warning token for 'approaching a limit'",
       "Compare codes in code, show labels to people"
     ],
@@ -1431,6 +1431,46 @@
     "dont": [
       "An editable select that happens to be prefilled",
       "Hiding the parent completely: people must see what the record belongs to"
+    ]
+  },
+  "Accent picker": {
+    "file": "src/components/app/AccentPicker.vue",
+    "props": [
+      [
+        "modelValue",
+        "string",
+        "product accent",
+        "A preset key (teal, blue, violet, rose, amber, slate) or '#rrggbb'"
+      ],
+      [
+        "compact",
+        "boolean",
+        "false",
+        "Swatches and hex field only, no preview (create organisation)"
+      ]
+    ],
+    "emits": [
+      [
+        "update:modelValue",
+        "string",
+        "On every valid value, so the preview and the app follow live"
+      ],
+      [
+        "change",
+        "string",
+        "On a deliberate pick (swatch, suggested colour): save and toast"
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Save the value the owner picked; the API derives and stores the tokens and returns them",
+      "Show the adjusted note whenever the light colour had to change",
+      "Keep the preview in both themes next to the picker"
+    ],
+    "dont": [
+      "Let anyone type a foreground or curtain colour: they are always derived",
+      "Use the accent for status, chart or background colours",
+      "Use a native colour input"
     ]
   }
 }
