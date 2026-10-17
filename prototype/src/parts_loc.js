@@ -49,12 +49,27 @@
       A('godfrey@pwaniagro.co.tz', 'p0', [], { primary: true }), A('happiness@pwaniagro.co.tz', 'pbg', ['supervisor'], { primary: true }), A('amina.juma@kilimaretail.co.tz', 'p0', [], { primary: true }),
     ],
   });
-  const ACTIVITY = [
-    { icon: 'Send', text: 'Form published', who: 'Baraka Mushi', when: '2h ago', what: 'Customer Feedback' },
-    { icon: 'UserPlus', text: 'Person assigned', who: 'Neema Kimaro', when: 'Yesterday', what: 'Branch auditor' },
-    { icon: 'FileSpreadsheet', text: 'Results exported', who: 'Hamisi Swai', when: '3 days ago', what: 'xlsx' },
-    { icon: 'Pencil', text: 'Opening hours changed', who: 'Baraka Mushi', when: 'Last week', what: '' },
-  ];
+  /* P45: recent activity belongs to one organisation; each entry names the location it happened at (null = the organisation itself) */
+  const ACTIVITY = reactive({
+    k: [
+      { icon: 'Send', text: 'Form published', who: 'Baraka Mushi', when: '2h ago', what: 'Customer Feedback: Mwanza Branch', loc: 'mwz' },
+      { icon: 'UserPlus', text: 'Person assigned', who: 'Neema Kimaro', when: 'Yesterday', what: 'Branch auditor, Arusha Branch', loc: 'aru' },
+      { icon: 'FileSpreadsheet', text: 'Results exported', who: 'Hamisi Swai', when: '3 days ago', what: 'Solar Home Systems training, xlsx', loc: 'nz' },
+      { icon: 'Pencil', text: 'Opening hours changed', who: 'Baraka Mushi', when: 'Last week', what: 'Kariakoo Branch', loc: 'kko' },
+      { icon: 'Shield', text: 'Role changed', who: 'Amina Juma', when: 'Last week', what: 'Supervisor', loc: null },
+    ],
+    w: [
+      { icon: 'Send', text: 'Form published', who: 'Juma Mrema', when: 'Today', what: 'Distributor Credit Application Review', loc: null },
+      { icon: 'ClipboardCheck', text: 'Inspection submitted', who: 'Saidi Ngowi', when: 'Yesterday', what: 'Warehouse Safety Inspection', loc: 'wdc' },
+      { icon: 'Lock', text: 'Form closed', who: 'Amina Juma', when: 'Last week', what: 'Quarterly Stock Count Sign-off', loc: 'wad' },
+    ],
+    p: [
+      { icon: 'UserPlus', text: 'Person assigned', who: 'Godfrey Laizer', when: '3 days ago', what: 'Shop supervisor, Bagamoyo Shop', loc: 'pbg' },
+    ],
+  });
+  /* the organisation's feed, narrowed to a location's subtree (location page) and to what the viewer can see (View as, P23) */
+  const activityOf = (locId) => { const ids = locId ? new Set(subtreeIds(locId)) : null; return (ACTIVITY[G.org.id] || []).filter(e => (!ids || (e.loc && ids.has(e.loc))) && (!e.loc || inScope(e.loc))).slice(0, 5); };
+  const logActivity = (e) => { (ACTIVITY[G.org.id] || (ACTIVITY[G.org.id] = [])).unshift({ who: ME.name, when: 'Just now', loc: null, what: '', ...e }); };
 
   const locsOf = () => LOCS[G.org.id] || (LOCS[G.org.id] = [L(G.org.id + '0', G.org.name, G.org.initial, 'org', null, { region: 'Dar es Salaam' })]);
   const assignsOf = () => ASSIGN[G.org.id] || (ASSIGN[G.org.id] = []);
@@ -421,7 +436,7 @@
       const parentOpts = computed(() => { if (!loc.value) return []; const ban = new Set(subtreeIds(loc.value.id)); return locsOf().filter(l => !ban.has(l.id)).map(l => ({ value: l.id, label: ' '.repeat(depthOf(l.id) * 3) + l.name })); });
       const typeOpts = Object.entries(LTYPES).filter(([k]) => k !== 'org').map(([value, t]) => ({ value, label: t.label, icon: t.icon }));
       const statusOpts = [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }];
-      function saveEdit() { const moved = D.parent !== loc.value.parent; const n = subtreeIds(loc.value.id).length; Object.assign(loc.value, D, { updatedAt: '10 Oct 2026', updatedBy: ME.email }); draft.onSuccess(); T.edit = false; toast('Location saved', moved ? `Moved under ${locById(D.parent).name}. Closure rebuilt for ${n} location${n > 1 ? 's' : ''}; people below keep inherited roles from the new parent.` : 'Change written to the activity log.', 'MapPin'); }
+      function saveEdit() { const moved = D.parent !== loc.value.parent; const n = subtreeIds(loc.value.id).length; Object.assign(loc.value, D, { updatedAt: fmtDay(isoDay(TODAY)), updatedBy: ME.email }); logActivity({ icon: moved ? 'Move' : 'Pencil', text: moved ? 'Location moved' : 'Location changed', what: loc.value.name, loc: loc.value.id }); draft.onSuccess(); T.edit = false; toast('Location saved', moved ? `Moved under ${locById(D.parent).name}. Closure rebuilt for ${n} location${n > 1 ? 's' : ''}; people below keep inherited roles from the new parent.` : 'Change written to the activity log.', 'MapPin'); }
       /* users */
       const assignable = computed(() => MEMBERS.filter(m => !direct.value.some(a => a.email === m.email)).map(m => ({ value: m.email, label: m.name + ' · ' + ROLE[m.role] })));
       function openAssign() { if (G.viewAs) return readOnly(); Object.assign(T, { assign: true, who: (assignable.value[0] || {}).value || '', roles: [], primary: false }); }
@@ -439,7 +454,7 @@
       const toggleRole = (id) => { T.roles = T.roles.includes(id) ? T.roles.filter(x => x !== id) : [...T.roles, id]; };
       function refresh() { if (T.loading) return; T.loading = true; setTimeout(() => { T.loading = false; T.updatedAt = Date.now(); }, 700); }
       function newFormHere() { if (G.viewAs) return readOnly(); nav('builder'); toast('Prototype opens the sample form', 'A real form here starts with location ' + loc.value.code + ' and private to its people.', 'Info'); }
-      return { QU, LSU, ucols, uTabs, uQuick, exportUsers, draft, cancelEdit, H, HIST, moreHist, X, deps, blocking, doDelete, moreItems, onMore, G, T, D, loc, crumbs, kids, direct, people, forms, tabs, bars, kpi, LTYPES, LSTAT, STAT, ACCENTS, ACTIVITY, ROLE, openLoc, nav, memberByEmail, roleById, initials, canEditLoc, canAssign, canViewAs, startEdit, saveEdit, parentOpts, typeOpts, statusOpts, assignable, openAssign, doAssign, userMenu, onUser, customRoles, toggleRole, usersAt, respOf, audienceOf, locName, openForm, newFormHere, refresh, startViewAs, inScope, ME, myPerms, mediaById, subtreeIds, locById };
+      return { QU, LSU, ucols, uTabs, uQuick, exportUsers, draft, cancelEdit, H, HIST, moreHist, X, deps, blocking, doDelete, moreItems, onMore, G, T, D, loc, crumbs, kids, direct, people, forms, tabs, bars, kpi, LTYPES, LSTAT, STAT, ACCENTS, activityOf, ROLE, openLoc, nav, memberByEmail, roleById, initials, canEditLoc, canAssign, canViewAs, startEdit, saveEdit, parentOpts, typeOpts, statusOpts, assignable, openAssign, doAssign, userMenu, onUser, customRoles, toggleRole, usersAt, respOf, audienceOf, locName, openForm, newFormHere, refresh, startViewAs, inScope, ME, myPerms, mediaById, subtreeIds, locById };
     },
     template: `<div v-if="!loc || !inScope(loc.id)" class="mx-auto grid max-w-md place-items-center gap-2 py-16 text-center"><span class="grid h-12 w-12 place-items-center rounded-full bg-muted"><Icon name="MapPinOff" :size="22" class="text-muted-foreground"/></span><h2 class="text-lg font-semibold">{{ loc ? 'Not one of their locations' : 'Location not found' }}</h2><p class="text-sm text-muted-foreground">{{ loc ? G.viewAs.name + ' is not assigned here or above it, so this page returns 403 for them.' : 'It may have been removed or belong to another organisation.' }}</p><Button class="mt-2" variant="outline" @click="nav('locations')"><Icon name="ArrowLeft" :size="14"/>All locations</Button></div>
     <div v-else class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">
@@ -477,7 +492,7 @@
           <Card v-if="kids.length" class="kpi" style="animation-delay:300ms"><div class="p-4"><h3 class="text-sm font-semibold">Under {{ loc.name }}</h3>
             <ul class="mt-2 divide-y"><li v-for="k in kids" :key="k.id"><button type="button" class="flex w-full items-center gap-2.5 py-2 text-left hover:bg-muted/40" @click="openLoc(k.id)"><span class="grid h-7 w-7 place-items-center rounded-md bg-primary/10 text-primary"><Icon :name="LTYPES[k.type].icon" :size="13"/></span><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ k.name }}</span><span class="block text-xs text-muted-foreground tnum">{{ usersAt(k.id).length }} people · {{ respOf(k.id) }} responses</span></span><span :class="['h-2 w-2 rounded-full', LSTAT[k.status].dot]"></span><Icon name="ChevronRight" :size="14" class="text-muted-foreground"/></button></li></ul></div></Card>
           <Card class="kpi" style="animation-delay:340ms"><div class="p-4"><h3 class="text-sm font-semibold">Recent activity</h3>
-            <ol class="mt-2 grid gap-3"><li v-for="(e, i) in ACTIVITY" :key="i" class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"><Icon :name="e.icon" :size="13"/></span><div class="min-w-0 text-sm"><p><span class="font-medium">{{ e.text }}</span><span v-if="e.what" class="text-muted-foreground"> · {{ e.what }}</span></p><p class="text-xs text-muted-foreground">{{ e.who }} · {{ e.when }}</p></div></li></ol></div></Card>
+            <ol v-if="activityOf(loc.id).length" class="mt-2 grid gap-3"><li v-for="(e, i) in activityOf(loc.id)" :key="i" class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"><Icon :name="e.icon" :size="13"/></span><div class="min-w-0 text-sm"><p><span class="font-medium">{{ e.text }}</span><span v-if="e.what" class="text-muted-foreground"> · {{ e.what }}</span></p><p class="text-xs text-muted-foreground">{{ e.who }} · {{ e.when }}</p></div></li></ol><p v-else class="mt-4 text-sm text-muted-foreground">Nothing has happened here recently.</p></div></Card>
         </div>
       </template>
 
