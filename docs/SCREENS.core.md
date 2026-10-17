@@ -119,9 +119,10 @@ Media library; the same library opens from the FilePicker.
 
 ### Settings  ·  `/{org}/settings`
 
-Org identity, security (2FA, timeout), quiet hours (D44), chart view defaults.
+Org identity, brand colour (preset or any colour, derived and contrast-checked, light and dark preview; P41, P42), security (2FA, timeout), quiet hours (D44), chart view defaults.
 
 - **Settings** — [desktop-light](screenshots/workspace__desktop-light.png), [desktop-dark](screenshots/workspace__desktop-dark.png), [phone-light](screenshots/workspace__phone-light.png), [phone-dark](screenshots/workspace__phone-dark.png)
+- **Brand colour: custom, adjusted for readability (P42)** — [desktop-light](screenshots/workspace--custom-accent__desktop-light.png), [desktop-dark](screenshots/workspace--custom-accent__desktop-dark.png), [phone-light](screenshots/workspace--custom-accent__phone-light.png)
 
 ### Menu management  ·  `/{org}/menus`
 

@@ -5,7 +5,8 @@
   "scripts": {
     "css": "tailwindcss -c tw.config.js -i in.css -o .tw.css",
     "shots": "npm run css && node shoot.js",
-    "compare": "node compare.js"
+    "compare": "node compare.js",
+    "accent": "node accent.test.js"
   },
   "dependencies": {
     "@fontsource/geist": "5.2.8",

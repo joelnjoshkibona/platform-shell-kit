@@ -1424,5 +1424,45 @@
       "An editable select that happens to be prefilled",
       "Hiding the parent completely: people must see what the record belongs to"
     ]
+  },
+  "Accent picker": {
+    "file": "src/components/app/AccentPicker.vue",
+    "props": [
+      [
+        "modelValue",
+        "string",
+        "product accent",
+        "A preset key (teal, blue, violet, rose, amber, slate) or '#rrggbb'"
+      ],
+      [
+        "compact",
+        "boolean",
+        "false",
+        "Swatches and hex field only, no preview (create organisation)"
+      ]
+    ],
+    "emits": [
+      [
+        "update:modelValue",
+        "string",
+        "On every valid value, so the preview and the app follow live"
+      ],
+      [
+        "change",
+        "string",
+        "On a deliberate pick (swatch, suggested colour): save and toast"
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Save the value the owner picked; the API derives and stores the tokens and returns them",
+      "Show the adjusted note whenever the light colour had to change",
+      "Keep the preview in both themes next to the picker"
+    ],
+    "dont": [
+      "Let anyone type a foreground or curtain colour: they are always derived",
+      "Use the accent for status, chart or background colours",
+      "Use a native colour input"
+    ]
   }
 }
