@@ -41,7 +41,7 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 **Settings (P42)**
 
 - One page of tabs, `?tab=` in the link: General first, the product's tabs (`SETTINGS_TABS`) in their order, then Notifications and Security last. A product tab is one component of cards; it can need a permission and can ask for the wide (1000px) layout.
-- One lock banner and one read-only fieldset for people who cannot manage settings. Fields save as they change.
+- One lock banner and one read-only fieldset for people who cannot manage settings. Fields save as they change. The tab strip wraps from 640px and scrolls in its own row on phones.
 
 **Recent activity (P45)**
 

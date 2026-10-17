@@ -1701,7 +1701,7 @@ const ShellMod = (() => {
     },
     template: `<div :class="['mx-auto grid grid-cols-[minmax(0,1fr)] gap-3', product && product.wide ? 'max-w-[1000px]' : 'max-w-[820px]']">
       <div><h2 class="text-xl font-semibold tracking-tight">Settings</h2><p class="text-sm text-muted-foreground">Applies to everyone in {{ G.org.name }}.</p></div>
-      <div class="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:px-0"><Tabs v-model="S.tab" :items="tabs"/></div>
+      <div class="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:overflow-visible sm:px-0"><Tabs v-model="S.tab" :items="tabs" class="sm:h-auto sm:flex-wrap sm:justify-start"/></div>
       <p v-if="!canManage()" class="flex items-center gap-2 rounded-lg border bg-muted/60 p-3 text-sm text-muted-foreground"><Icon name="Lock" :size="15"/>Only owners and admins can change these settings.</p>
       <fieldset :key="S.tab" :disabled="!canManage()" class="grid min-w-0 gap-3 disabled:opacity-70">
       <template v-if="S.tab==='general'">

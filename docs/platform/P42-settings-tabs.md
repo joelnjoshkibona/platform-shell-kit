@@ -13,7 +13,7 @@ Builds on P11 (core modules: Settings), P26 (details tabs in `?tab=`) and P39 (e
 - The tab is in the link as `?tab=<key>` (P39). General is the bare address. Back/forward, reload and pasted links reopen the tab.
 - A product tab is a component that renders its own cards. It may need a permission (`perm`); without it the tab is not shown, and a link to it opens General. It may ask for the wide layout (`wide: true`, 1000px instead of 820px) when it has a side column such as a scope picker.
 - One lock banner under the tabs when the person cannot manage settings; every field in the tab is read-only for them (one `fieldset`).
-- On phones the tab strip scrolls sideways inside its own row; the page never does.
+- From 640px the tab strip wraps onto a second row when the tabs do not fit, so every tab stays visible. On phones it scrolls sideways inside its own row; the page never does.
 - Fields save as they change (no Save bar). A tab that needs a confirm step (for example a reset) uses the normal dialog.
 
 ## Why
