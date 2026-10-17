@@ -354,7 +354,7 @@ BOOT = '''<div id="boot-curtain" class="curtain" data-state="closed" aria-hidden
       <span style="display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:hsl(var(--curtain-fg) / .15);color:hsl(var(--curtain-fg));font:600 18px/1 Geist,system-ui,sans-serif">' + BOOT_MARK + '</span>
     </div>
     <p style="margin-top:16px;font:500 14px/1.4 Geist,system-ui,sans-serif;color:hsl(var(--curtain-fg))">Loading ' + PNAME + '…</p>
-  </div></div>'''
+  </div></div>'''.replace("' + BOOT_MARK + '", BOOT_MARK).replace("' + PNAME + '", PNAME)   # the boot curtain is plain HTML: fill the product's mark and name
 BOOT_ACCENT = '<script>/* P46: last accent this browser saw, before anything paints */try{var __a=localStorage.getItem(' + repr(PKEY + '-accent') + ');if(__a){var __s=document.createElement("style");__s.id="org-accent";__s.textContent=__a;document.head.appendChild(__s)}}catch(e){}</script>\n'
 out = head + BOOT_ACCENT + BOOT + '<div id="app"></div>\n<script>\n' + helpers + shared + atoms + builder_mod + respondent_mod + responses_mod + shell + root
 open(os.path.join(KIT, 'prototype', 'index.html'), 'w').write(out)
