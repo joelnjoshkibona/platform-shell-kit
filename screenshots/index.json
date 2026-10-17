@@ -1,0 +1,1052 @@
+[
+  {
+    "name": "login",
+    "route": "login",
+    "title": "Sign in",
+    "combo": "desktop-light",
+    "file": "login__desktop-light.png"
+  },
+  {
+    "name": "login",
+    "route": "login",
+    "title": "Sign in",
+    "combo": "desktop-dark",
+    "file": "login__desktop-dark.png"
+  },
+  {
+    "name": "login",
+    "route": "login",
+    "title": "Sign in",
+    "combo": "phone-light",
+    "file": "login__phone-light.png"
+  },
+  {
+    "name": "login",
+    "route": "login",
+    "title": "Sign in",
+    "combo": "phone-dark",
+    "file": "login__phone-dark.png"
+  },
+  {
+    "name": "twofa",
+    "route": "twofa",
+    "title": "Two-step verification",
+    "combo": "desktop-light",
+    "file": "twofa__desktop-light.png"
+  },
+  {
+    "name": "twofa",
+    "route": "twofa",
+    "title": "Two-step verification",
+    "combo": "desktop-dark",
+    "file": "twofa__desktop-dark.png"
+  },
+  {
+    "name": "twofa",
+    "route": "twofa",
+    "title": "Two-step verification",
+    "combo": "phone-light",
+    "file": "twofa__phone-light.png"
+  },
+  {
+    "name": "twofa",
+    "route": "twofa",
+    "title": "Two-step verification",
+    "combo": "phone-dark",
+    "file": "twofa__phone-dark.png"
+  },
+  {
+    "name": "orgpick",
+    "route": "orgpick",
+    "title": "Choose organisation",
+    "combo": "desktop-light",
+    "file": "orgpick__desktop-light.png"
+  },
+  {
+    "name": "orgpick",
+    "route": "orgpick",
+    "title": "Choose organisation",
+    "combo": "desktop-dark",
+    "file": "orgpick__desktop-dark.png"
+  },
+  {
+    "name": "orgpick",
+    "route": "orgpick",
+    "title": "Choose organisation",
+    "combo": "phone-light",
+    "file": "orgpick__phone-light.png"
+  },
+  {
+    "name": "orgpick",
+    "route": "orgpick",
+    "title": "Choose organisation",
+    "combo": "phone-dark",
+    "file": "orgpick__phone-dark.png"
+  },
+  {
+    "name": "dashboard",
+    "route": "dashboard",
+    "title": "Dashboard",
+    "combo": "desktop-light",
+    "file": "dashboard__desktop-light.png"
+  },
+  {
+    "name": "dashboard",
+    "route": "dashboard",
+    "title": "Dashboard",
+    "combo": "desktop-dark",
+    "file": "dashboard__desktop-dark.png"
+  },
+  {
+    "name": "dashboard",
+    "route": "dashboard",
+    "title": "Dashboard",
+    "combo": "phone-light",
+    "file": "dashboard__phone-light.png"
+  },
+  {
+    "name": "dashboard",
+    "route": "dashboard",
+    "title": "Dashboard",
+    "combo": "phone-dark",
+    "file": "dashboard__phone-dark.png"
+  },
+  {
+    "name": "forms",
+    "route": "forms",
+    "title": "Forms list",
+    "combo": "desktop-light",
+    "file": "forms__desktop-light.png"
+  },
+  {
+    "name": "forms",
+    "route": "forms",
+    "title": "Forms list",
+    "combo": "desktop-dark",
+    "file": "forms__desktop-dark.png"
+  },
+  {
+    "name": "forms",
+    "route": "forms",
+    "title": "Forms list",
+    "combo": "phone-light",
+    "file": "forms__phone-light.png"
+  },
+  {
+    "name": "forms",
+    "route": "forms",
+    "title": "Forms list",
+    "combo": "phone-dark",
+    "file": "forms__phone-dark.png"
+  },
+  {
+    "name": "templates",
+    "route": "templates",
+    "title": "Templates",
+    "combo": "desktop-light",
+    "file": "templates__desktop-light.png"
+  },
+  {
+    "name": "templates",
+    "route": "templates",
+    "title": "Templates",
+    "combo": "desktop-dark",
+    "file": "templates__desktop-dark.png"
+  },
+  {
+    "name": "templates",
+    "route": "templates",
+    "title": "Templates",
+    "combo": "phone-light",
+    "file": "templates__phone-light.png"
+  },
+  {
+    "name": "templates",
+    "route": "templates",
+    "title": "Templates",
+    "combo": "phone-dark",
+    "file": "templates__phone-dark.png"
+  },
+  {
+    "name": "members",
+    "route": "members",
+    "title": "Users",
+    "combo": "desktop-light",
+    "file": "members__desktop-light.png"
+  },
+  {
+    "name": "members",
+    "route": "members",
+    "title": "Users",
+    "combo": "desktop-dark",
+    "file": "members__desktop-dark.png"
+  },
+  {
+    "name": "members",
+    "route": "members",
+    "title": "Users",
+    "combo": "phone-light",
+    "file": "members__phone-light.png"
+  },
+  {
+    "name": "members",
+    "route": "members",
+    "title": "Users",
+    "combo": "phone-dark",
+    "file": "members__phone-dark.png"
+  },
+  {
+    "name": "roles",
+    "route": "roles",
+    "title": "Roles list",
+    "combo": "desktop-light",
+    "file": "roles__desktop-light.png"
+  },
+  {
+    "name": "roles",
+    "route": "roles",
+    "title": "Roles list",
+    "combo": "desktop-dark",
+    "file": "roles__desktop-dark.png"
+  },
+  {
+    "name": "roles",
+    "route": "roles",
+    "title": "Roles list",
+    "combo": "phone-light",
+    "file": "roles__phone-light.png"
+  },
+  {
+    "name": "roles",
+    "route": "roles",
+    "title": "Roles list",
+    "combo": "phone-dark",
+    "file": "roles__phone-dark.png"
+  },
+  {
+    "name": "role",
+    "route": "role",
+    "title": "Role details (Editor)",
+    "combo": "desktop-light",
+    "file": "role__desktop-light.png"
+  },
+  {
+    "name": "role",
+    "route": "role",
+    "title": "Role details (Editor)",
+    "combo": "desktop-dark",
+    "file": "role__desktop-dark.png"
+  },
+  {
+    "name": "role",
+    "route": "role",
+    "title": "Role details (Editor)",
+    "combo": "phone-light",
+    "file": "role__phone-light.png"
+  },
+  {
+    "name": "role",
+    "route": "role",
+    "title": "Role details (Editor)",
+    "combo": "phone-dark",
+    "file": "role__phone-dark.png"
+  },
+  {
+    "name": "locations",
+    "route": "locations",
+    "title": "Locations list",
+    "combo": "desktop-light",
+    "file": "locations__desktop-light.png"
+  },
+  {
+    "name": "locations",
+    "route": "locations",
+    "title": "Locations list",
+    "combo": "desktop-dark",
+    "file": "locations__desktop-dark.png"
+  },
+  {
+    "name": "locations",
+    "route": "locations",
+    "title": "Locations list",
+    "combo": "phone-light",
+    "file": "locations__phone-light.png"
+  },
+  {
+    "name": "locations",
+    "route": "locations",
+    "title": "Locations list",
+    "combo": "phone-dark",
+    "file": "locations__phone-dark.png"
+  },
+  {
+    "name": "location",
+    "route": "location",
+    "title": "Location details (Arusha)",
+    "combo": "desktop-light",
+    "file": "location__desktop-light.png"
+  },
+  {
+    "name": "location",
+    "route": "location",
+    "title": "Location details (Arusha)",
+    "combo": "desktop-dark",
+    "file": "location__desktop-dark.png"
+  },
+  {
+    "name": "location",
+    "route": "location",
+    "title": "Location details (Arusha)",
+    "combo": "phone-light",
+    "file": "location__phone-light.png"
+  },
+  {
+    "name": "location",
+    "route": "location",
+    "title": "Location details (Arusha)",
+    "combo": "phone-dark",
+    "file": "location__phone-dark.png"
+  },
+  {
+    "name": "approvals",
+    "route": "approvals",
+    "title": "Approvals inbox",
+    "combo": "desktop-light",
+    "file": "approvals__desktop-light.png"
+  },
+  {
+    "name": "approvals",
+    "route": "approvals",
+    "title": "Approvals inbox",
+    "combo": "desktop-dark",
+    "file": "approvals__desktop-dark.png"
+  },
+  {
+    "name": "approvals",
+    "route": "approvals",
+    "title": "Approvals inbox",
+    "combo": "phone-light",
+    "file": "approvals__phone-light.png"
+  },
+  {
+    "name": "approvals",
+    "route": "approvals",
+    "title": "Approvals inbox",
+    "combo": "phone-dark",
+    "file": "approvals__phone-dark.png"
+  },
+  {
+    "name": "request-types",
+    "route": "request-types",
+    "title": "Approval workflows",
+    "combo": "desktop-light",
+    "file": "request-types__desktop-light.png"
+  },
+  {
+    "name": "request-types",
+    "route": "request-types",
+    "title": "Approval workflows",
+    "combo": "desktop-dark",
+    "file": "request-types__desktop-dark.png"
+  },
+  {
+    "name": "request-types",
+    "route": "request-types",
+    "title": "Approval workflows",
+    "combo": "phone-light",
+    "file": "request-types__phone-light.png"
+  },
+  {
+    "name": "request-types",
+    "route": "request-types",
+    "title": "Approval workflows",
+    "combo": "phone-dark",
+    "file": "request-types__phone-dark.png"
+  },
+  {
+    "name": "delegations",
+    "route": "delegations",
+    "title": "Delegations",
+    "combo": "desktop-light",
+    "file": "delegations__desktop-light.png"
+  },
+  {
+    "name": "delegations",
+    "route": "delegations",
+    "title": "Delegations",
+    "combo": "desktop-dark",
+    "file": "delegations__desktop-dark.png"
+  },
+  {
+    "name": "delegations",
+    "route": "delegations",
+    "title": "Delegations",
+    "combo": "phone-light",
+    "file": "delegations__phone-light.png"
+  },
+  {
+    "name": "delegations",
+    "route": "delegations",
+    "title": "Delegations",
+    "combo": "phone-dark",
+    "file": "delegations__phone-dark.png"
+  },
+  {
+    "name": "media",
+    "route": "media",
+    "title": "Media library",
+    "combo": "desktop-light",
+    "file": "media__desktop-light.png"
+  },
+  {
+    "name": "media",
+    "route": "media",
+    "title": "Media library",
+    "combo": "desktop-dark",
+    "file": "media__desktop-dark.png"
+  },
+  {
+    "name": "media",
+    "route": "media",
+    "title": "Media library",
+    "combo": "phone-light",
+    "file": "media__phone-light.png"
+  },
+  {
+    "name": "media",
+    "route": "media",
+    "title": "Media library",
+    "combo": "phone-dark",
+    "file": "media__phone-dark.png"
+  },
+  {
+    "name": "workspace",
+    "route": "workspace",
+    "title": "Settings",
+    "combo": "desktop-light",
+    "file": "workspace__desktop-light.png"
+  },
+  {
+    "name": "workspace",
+    "route": "workspace",
+    "title": "Settings",
+    "combo": "desktop-dark",
+    "file": "workspace__desktop-dark.png"
+  },
+  {
+    "name": "workspace",
+    "route": "workspace",
+    "title": "Settings",
+    "combo": "phone-light",
+    "file": "workspace__phone-light.png"
+  },
+  {
+    "name": "workspace",
+    "route": "workspace",
+    "title": "Settings",
+    "combo": "phone-dark",
+    "file": "workspace__phone-dark.png"
+  },
+  {
+    "name": "menus",
+    "route": "menus",
+    "title": "Menu management",
+    "combo": "desktop-light",
+    "file": "menus__desktop-light.png"
+  },
+  {
+    "name": "menus",
+    "route": "menus",
+    "title": "Menu management",
+    "combo": "desktop-dark",
+    "file": "menus__desktop-dark.png"
+  },
+  {
+    "name": "menus",
+    "route": "menus",
+    "title": "Menu management",
+    "combo": "phone-light",
+    "file": "menus__phone-light.png"
+  },
+  {
+    "name": "menus",
+    "route": "menus",
+    "title": "Menu management",
+    "combo": "phone-dark",
+    "file": "menus__phone-dark.png"
+  },
+  {
+    "name": "design",
+    "route": "design",
+    "title": "Design system (tokens, components, rules)",
+    "combo": "desktop-light",
+    "file": "design__desktop-light.png"
+  },
+  {
+    "name": "design",
+    "route": "design",
+    "title": "Design system (tokens, components, rules)",
+    "combo": "desktop-dark",
+    "file": "design__desktop-dark.png"
+  },
+  {
+    "name": "design",
+    "route": "design",
+    "title": "Design system (tokens, components, rules)",
+    "combo": "phone-light",
+    "file": "design__phone-light.png"
+  },
+  {
+    "name": "design",
+    "route": "design",
+    "title": "Design system (tokens, components, rules)",
+    "combo": "phone-dark",
+    "file": "design__phone-dark.png"
+  },
+  {
+    "name": "builder",
+    "route": "builder",
+    "title": "Form builder",
+    "combo": "desktop-light",
+    "file": "builder__desktop-light.png"
+  },
+  {
+    "name": "builder",
+    "route": "builder",
+    "title": "Form builder",
+    "combo": "desktop-dark",
+    "file": "builder__desktop-dark.png"
+  },
+  {
+    "name": "builder",
+    "route": "builder",
+    "title": "Form builder",
+    "combo": "phone-light",
+    "file": "builder__phone-light.png"
+  },
+  {
+    "name": "builder",
+    "route": "builder",
+    "title": "Form builder",
+    "combo": "phone-dark",
+    "file": "builder__phone-dark.png"
+  },
+  {
+    "name": "responses",
+    "route": "responses",
+    "title": "Results and responses",
+    "combo": "desktop-light",
+    "file": "responses__desktop-light.png"
+  },
+  {
+    "name": "responses",
+    "route": "responses",
+    "title": "Results and responses",
+    "combo": "desktop-dark",
+    "file": "responses__desktop-dark.png"
+  },
+  {
+    "name": "responses",
+    "route": "responses",
+    "title": "Results and responses",
+    "combo": "phone-light",
+    "file": "responses__phone-light.png"
+  },
+  {
+    "name": "responses",
+    "route": "responses",
+    "title": "Results and responses",
+    "combo": "phone-dark",
+    "file": "responses__phone-dark.png"
+  },
+  {
+    "name": "respondent",
+    "route": "respondent",
+    "title": "Respondent (live form)",
+    "combo": "desktop-light",
+    "file": "respondent__desktop-light.png"
+  },
+  {
+    "name": "respondent",
+    "route": "respondent",
+    "title": "Respondent (live form)",
+    "combo": "desktop-dark",
+    "file": "respondent__desktop-dark.png"
+  },
+  {
+    "name": "respondent",
+    "route": "respondent",
+    "title": "Respondent (live form)",
+    "combo": "phone-light",
+    "file": "respondent__phone-light.png"
+  },
+  {
+    "name": "respondent",
+    "route": "respondent",
+    "title": "Respondent (live form)",
+    "combo": "phone-dark",
+    "file": "respondent__phone-dark.png"
+  },
+  {
+    "name": "forms--filters-dialog",
+    "route": "forms",
+    "title": "List filters (simple/advanced)",
+    "combo": "desktop-light",
+    "file": "forms--filters-dialog__desktop-light.png"
+  },
+  {
+    "name": "forms--filters-dialog",
+    "route": "forms",
+    "title": "List filters (simple/advanced)",
+    "combo": "phone-dark",
+    "file": "forms--filters-dialog__phone-dark.png"
+  },
+  {
+    "name": "dashboard--global-search",
+    "route": "dashboard",
+    "title": "Global search results",
+    "combo": "desktop-light",
+    "file": "dashboard--global-search__desktop-light.png"
+  },
+  {
+    "name": "dashboard--global-search",
+    "route": "dashboard",
+    "title": "Global search results",
+    "combo": "phone-dark",
+    "file": "dashboard--global-search__phone-dark.png"
+  },
+  {
+    "name": "roles--zone-manager-overview",
+    "route": "roles",
+    "title": "Role details overview",
+    "combo": "desktop-light",
+    "file": "roles--zone-manager-overview__desktop-light.png"
+  },
+  {
+    "name": "roles--zone-manager-overview",
+    "route": "roles",
+    "title": "Role details overview",
+    "combo": "phone-dark",
+    "file": "roles--zone-manager-overview__phone-dark.png"
+  },
+  {
+    "name": "role--save-bar",
+    "route": "roles",
+    "title": "Staged permission edits + save bar (D42)",
+    "combo": "desktop-light",
+    "file": "role--save-bar__desktop-light.png"
+  },
+  {
+    "name": "role--save-bar",
+    "route": "roles",
+    "title": "Staged permission edits + save bar (D42)",
+    "combo": "phone-dark",
+    "file": "role--save-bar__phone-dark.png"
+  },
+  {
+    "name": "role--leave-guard",
+    "route": "roles",
+    "title": "Leave without saving dialog",
+    "combo": "desktop-light",
+    "file": "role--leave-guard__desktop-light.png"
+  },
+  {
+    "name": "role--leave-guard",
+    "route": "roles",
+    "title": "Leave without saving dialog",
+    "combo": "phone-dark",
+    "file": "role--leave-guard__phone-dark.png"
+  },
+  {
+    "name": "location--users",
+    "route": "location",
+    "title": "Location users tab",
+    "combo": "desktop-light",
+    "file": "location--users__desktop-light.png"
+  },
+  {
+    "name": "location--users",
+    "route": "location",
+    "title": "Location users tab",
+    "combo": "phone-dark",
+    "file": "location--users__phone-dark.png"
+  },
+  {
+    "name": "location--users-scoped",
+    "route": "location",
+    "title": "Location users tab as a scoped list card: own search + quick tab in the link (P39)",
+    "combo": "desktop-light",
+    "file": "location--users-scoped__desktop-light.png"
+  },
+  {
+    "name": "location--users-scoped",
+    "route": "location",
+    "title": "Location users tab as a scoped list card: own search + quick tab in the link (P39)",
+    "combo": "phone-dark",
+    "file": "location--users-scoped__phone-dark.png"
+  },
+  {
+    "name": "location--details",
+    "route": "location",
+    "title": "Location details tab",
+    "combo": "desktop-light",
+    "file": "location--details__desktop-light.png"
+  },
+  {
+    "name": "location--details",
+    "route": "location",
+    "title": "Location details tab",
+    "combo": "phone-dark",
+    "file": "location--details__phone-dark.png"
+  },
+  {
+    "name": "request-types--editor",
+    "route": "request-types",
+    "title": "Workflow editor with notifications + capacity error (D40, D43)",
+    "combo": "desktop-light",
+    "file": "request-types--editor__desktop-light.png"
+  },
+  {
+    "name": "request-types--editor",
+    "route": "request-types",
+    "title": "Workflow editor with notifications + capacity error (D40, D43)",
+    "combo": "phone-dark",
+    "file": "request-types--editor__phone-dark.png"
+  },
+  {
+    "name": "request--details",
+    "route": "approvals",
+    "title": "Request details (two-step publish)",
+    "combo": "desktop-light",
+    "file": "request--details__desktop-light.png"
+  },
+  {
+    "name": "request--details",
+    "route": "approvals",
+    "title": "Request details (two-step publish)",
+    "combo": "desktop-dark",
+    "file": "request--details__desktop-dark.png"
+  },
+  {
+    "name": "request--details",
+    "route": "approvals",
+    "title": "Request details (two-step publish)",
+    "combo": "phone-light",
+    "file": "request--details__phone-light.png"
+  },
+  {
+    "name": "request--details",
+    "route": "approvals",
+    "title": "Request details (two-step publish)",
+    "combo": "phone-dark",
+    "file": "request--details__phone-dark.png"
+  },
+  {
+    "name": "request--notifications",
+    "route": "approvals",
+    "title": "Request notifications tab (D43)",
+    "combo": "desktop-light",
+    "file": "request--notifications__desktop-light.png"
+  },
+  {
+    "name": "request--notifications",
+    "route": "approvals",
+    "title": "Request notifications tab (D43)",
+    "combo": "phone-dark",
+    "file": "request--notifications__phone-dark.png"
+  },
+  {
+    "name": "request--short-step",
+    "route": "approvals",
+    "title": "Short step, Owner completes (D40)",
+    "combo": "desktop-light",
+    "file": "request--short-step__desktop-light.png"
+  },
+  {
+    "name": "request--short-step",
+    "route": "approvals",
+    "title": "Short step, Owner completes (D40)",
+    "combo": "phone-dark",
+    "file": "request--short-step__phone-dark.png"
+  },
+  {
+    "name": "responses--export-needs-approval",
+    "route": "responses",
+    "title": "Export behind approval (D41)",
+    "combo": "desktop-light",
+    "file": "responses--export-needs-approval__desktop-light.png"
+  },
+  {
+    "name": "responses--export-needs-approval",
+    "route": "responses",
+    "title": "Export behind approval (D41)",
+    "combo": "phone-dark",
+    "file": "responses--export-needs-approval__phone-dark.png"
+  },
+  {
+    "name": "user-menu--notification-settings",
+    "route": "dashboard",
+    "title": "Personal notification settings (D43)",
+    "combo": "desktop-light",
+    "file": "user-menu--notification-settings__desktop-light.png"
+  },
+  {
+    "name": "user-menu--notification-settings",
+    "route": "dashboard",
+    "title": "Personal notification settings (D43)",
+    "combo": "phone-dark",
+    "file": "user-menu--notification-settings__phone-dark.png"
+  },
+  {
+    "name": "builder--settings",
+    "route": "builder",
+    "title": "Builder settings tab",
+    "combo": "desktop-light",
+    "file": "builder--settings__desktop-light.png"
+  },
+  {
+    "name": "builder--settings",
+    "route": "builder",
+    "title": "Builder settings tab",
+    "combo": "phone-dark",
+    "file": "builder--settings__phone-dark.png"
+  },
+  {
+    "name": "responses--individual",
+    "route": "responses",
+    "title": "Individual responses table",
+    "combo": "desktop-light",
+    "file": "responses--individual__desktop-light.png"
+  },
+  {
+    "name": "responses--individual",
+    "route": "responses",
+    "title": "Individual responses table",
+    "combo": "phone-dark",
+    "file": "responses--individual__phone-dark.png"
+  },
+  {
+    "name": "responses--response-sheet",
+    "route": "responses",
+    "title": "One response in a side sheet",
+    "combo": "desktop-light",
+    "file": "responses--response-sheet__desktop-light.png"
+  },
+  {
+    "name": "responses--response-sheet",
+    "route": "responses",
+    "title": "One response in a side sheet",
+    "combo": "phone-dark",
+    "file": "responses--response-sheet__phone-dark.png"
+  },
+  {
+    "name": "respondent--running",
+    "route": "respondent",
+    "title": "Respondent Answering (timer pill, section)",
+    "combo": "desktop-light",
+    "file": "respondent--running__desktop-light.png"
+  },
+  {
+    "name": "respondent--running",
+    "route": "respondent",
+    "title": "Respondent Answering (timer pill, section)",
+    "combo": "phone-dark",
+    "file": "respondent--running__phone-dark.png"
+  },
+  {
+    "name": "respondent--not_open",
+    "route": "respondent",
+    "title": "Respondent Gate: not open yet",
+    "combo": "desktop-light",
+    "file": "respondent--not_open__desktop-light.png"
+  },
+  {
+    "name": "respondent--not_open",
+    "route": "respondent",
+    "title": "Respondent Gate: not open yet",
+    "combo": "phone-dark",
+    "file": "respondent--not_open__phone-dark.png"
+  },
+  {
+    "name": "respondent--closed",
+    "route": "respondent",
+    "title": "Respondent Gate: closed",
+    "combo": "desktop-light",
+    "file": "respondent--closed__desktop-light.png"
+  },
+  {
+    "name": "respondent--closed",
+    "route": "respondent",
+    "title": "Respondent Gate: closed",
+    "combo": "phone-dark",
+    "file": "respondent--closed__phone-dark.png"
+  },
+  {
+    "name": "respondent--max",
+    "route": "respondent",
+    "title": "Respondent Gate: response limit",
+    "combo": "desktop-light",
+    "file": "respondent--max__desktop-light.png"
+  },
+  {
+    "name": "respondent--max",
+    "route": "respondent",
+    "title": "Respondent Gate: response limit",
+    "combo": "phone-dark",
+    "file": "respondent--max__phone-dark.png"
+  },
+  {
+    "name": "respondent--responded",
+    "route": "respondent",
+    "title": "Respondent Gate: already responded",
+    "combo": "desktop-light",
+    "file": "respondent--responded__desktop-light.png"
+  },
+  {
+    "name": "respondent--responded",
+    "route": "respondent",
+    "title": "Respondent Gate: already responded",
+    "combo": "phone-dark",
+    "file": "respondent--responded__phone-dark.png"
+  },
+  {
+    "name": "respondent--voided",
+    "route": "respondent",
+    "title": "Respondent Gate: earlier attempt voided",
+    "combo": "desktop-light",
+    "file": "respondent--voided__desktop-light.png"
+  },
+  {
+    "name": "respondent--voided",
+    "route": "respondent",
+    "title": "Respondent Gate: earlier attempt voided",
+    "combo": "phone-dark",
+    "file": "respondent--voided__phone-dark.png"
+  },
+  {
+    "name": "respondent--not_invited",
+    "route": "respondent",
+    "title": "Respondent Gate: not invited",
+    "combo": "desktop-light",
+    "file": "respondent--not_invited__desktop-light.png"
+  },
+  {
+    "name": "respondent--not_invited",
+    "route": "respondent",
+    "title": "Respondent Gate: not invited",
+    "combo": "phone-dark",
+    "file": "respondent--not_invited__phone-dark.png"
+  },
+  {
+    "name": "respondent--device",
+    "route": "respondent",
+    "title": "Respondent Gate: device blocked",
+    "combo": "desktop-light",
+    "file": "respondent--device__desktop-light.png"
+  },
+  {
+    "name": "respondent--device",
+    "route": "respondent",
+    "title": "Respondent Gate: device blocked",
+    "combo": "phone-dark",
+    "file": "respondent--device__phone-dark.png"
+  },
+  {
+    "name": "respondent--second_tab",
+    "route": "respondent",
+    "title": "Respondent Gate: open in another tab",
+    "combo": "desktop-light",
+    "file": "respondent--second_tab__desktop-light.png"
+  },
+  {
+    "name": "respondent--second_tab",
+    "route": "respondent",
+    "title": "Respondent Gate: open in another tab",
+    "combo": "phone-dark",
+    "file": "respondent--second_tab__phone-dark.png"
+  },
+  {
+    "name": "respondent--resume",
+    "route": "respondent",
+    "title": "Respondent Gate: resume timed attempt",
+    "combo": "desktop-light",
+    "file": "respondent--resume__desktop-light.png"
+  },
+  {
+    "name": "respondent--resume",
+    "route": "respondent",
+    "title": "Respondent Gate: resume timed attempt",
+    "combo": "phone-dark",
+    "file": "respondent--resume__phone-dark.png"
+  },
+  {
+    "name": "respondent--left_submitted",
+    "route": "respondent",
+    "title": "Respondent Gate: left tab, auto-submitted",
+    "combo": "desktop-light",
+    "file": "respondent--left_submitted__desktop-light.png"
+  },
+  {
+    "name": "respondent--left_submitted",
+    "route": "respondent",
+    "title": "Respondent Gate: left tab, auto-submitted",
+    "combo": "phone-dark",
+    "file": "respondent--left_submitted__phone-dark.png"
+  },
+  {
+    "name": "respondent--violation-tab_hidden",
+    "route": "respondent",
+    "title": "Violation overlay: Switch tab",
+    "combo": "desktop-light",
+    "file": "respondent--violation-tab_hidden__desktop-light.png"
+  },
+  {
+    "name": "respondent--violation-tab_hidden",
+    "route": "respondent",
+    "title": "Violation overlay: Switch tab",
+    "combo": "phone-dark",
+    "file": "respondent--violation-tab_hidden__phone-dark.png"
+  },
+  {
+    "name": "respondent--violation-fullscreen_exit",
+    "route": "respondent",
+    "title": "Violation overlay: Exit full screen",
+    "combo": "desktop-light",
+    "file": "respondent--violation-fullscreen_exit__desktop-light.png"
+  },
+  {
+    "name": "respondent--violation-fullscreen_exit",
+    "route": "respondent",
+    "title": "Violation overlay: Exit full screen",
+    "combo": "phone-dark",
+    "file": "respondent--violation-fullscreen_exit__phone-dark.png"
+  },
+  {
+    "name": "respondent--violation-copy_attempt",
+    "route": "respondent",
+    "title": "Violation overlay: Copy attempt",
+    "combo": "desktop-light",
+    "file": "respondent--violation-copy_attempt__desktop-light.png"
+  },
+  {
+    "name": "respondent--violation-copy_attempt",
+    "route": "respondent",
+    "title": "Violation overlay: Copy attempt",
+    "combo": "phone-dark",
+    "file": "respondent--violation-copy_attempt__phone-dark.png"
+  },
+  {
+    "name": "respondent--timer-warning",
+    "route": "respondent",
+    "title": "Timer under one minute",
+    "combo": "desktop-light",
+    "file": "respondent--timer-warning__desktop-light.png"
+  },
+  {
+    "name": "respondent--timer-warning",
+    "route": "respondent",
+    "title": "Timer under one minute",
+    "combo": "phone-dark",
+    "file": "respondent--timer-warning__phone-dark.png"
+  }
+]
