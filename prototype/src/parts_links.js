@@ -83,3 +83,32 @@
   window.addEventListener('popstate', () => { const h = location.hash; if (h && h !== '#' + lastHash) { lastHash = h.slice(1); openLink(h); } });
   window.addEventListener('hashchange', () => { if (applying) return; const h = location.hash; if (h && h !== '#' + lastHash) { lastHash = h.slice(1); openLink(h); } });
   setTimeout(() => { const h = location.hash; if (h && h.length > 2) openLink(h); }, 600);
+
+  /* ================================================================ BACK (P49): every record page starts its breadcrumb with Back.
+     A trail of the screens visited (route + its record + tab); Back returns to the one you came from (a list with its
+     filters, another record, Home…) and, with no trail (a pasted link, a reload), goes to the record's list.
+     EXTENSION POINT: BACK_PARENT maps a record route to its list; a product adds its own, e.g. BACK_PARENT.customer = 'customers'. */
+  const BACK_PARENT = { role: 'roles', location: 'locations', request: 'approvals' };
+  const TRAIL = []; let here = null, backing = false;
+  const snapNow = () => ({ route: G.route, rec: LINK_DETAIL[G.route] ? LINK_DETAIL[G.route].get() : null, tab: G.tab });
+  watch(() => { const s = snapNow(); return s.route + '|' + s.rec; }, () => {
+    const now = snapNow();
+    if (backing) { backing = false; here = now; return; }
+    if (here && AREA(here.route) !== 'auth') { TRAIL.push(here); if (TRAIL.length > 30) TRAIL.shift(); }
+    here = now;
+  }, { immediate: true });
+  function goBack() {
+    let prev = TRAIL.pop();
+    while (prev && prev.route === G.route && prev.rec === snapNow().rec) prev = TRAIL.pop();
+    if (!prev) { nav(BACK_PARENT[G.route] || 'dashboard'); return; }
+    backing = true;
+    if (prev.rec != null && LINK_DETAIL[prev.route]) LINK_DETAIL[prev.route].set(prev.rec);
+    nav(prev.route, prev.tab);
+  }
+  const BackButton = {
+    setup() {
+      const label = computed(() => { const p = TRAIL[TRAIL.length - 1]; return ROUTE_LABEL[p ? p.route : (BACK_PARENT[G.route] || 'dashboard')]; });
+      return { goBack, label };
+    },
+    template: `<button type="button" @click="goBack" class="-ml-1.5 mr-1.5 inline-flex h-7 items-center gap-1 rounded-md border bg-card px-2 text-xs font-medium text-foreground shadow-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" :aria-label="'Back to ' + label"><Icon name="ArrowLeft" :size="14"/>Back</button>`
+  };

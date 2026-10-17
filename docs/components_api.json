@@ -1493,5 +1493,26 @@
       "Hard-code a Lucide icon for the product",
       "Colour the SVG itself: it draws in currentColor"
     ]
+  },
+  "Back button": {
+    "file": "src/components/app/BackButton.vue",
+    "props": [
+      [
+        "fallback",
+        "route",
+        "the record's list",
+        "Where Back goes with no trail (a pasted link, a reload)"
+      ]
+    ],
+    "emits": [],
+    "slots": [],
+    "do": [
+      "Put it first in every record page's breadcrumb (P49)",
+      "Return to the screen the person came from, with its tab and list view"
+    ],
+    "dont": [
+      "Leave a record page with only the breadcrumb or the browser's back",
+      "Use router.back(): a pasted link has no history in the app"
+    ]
   }
 }
