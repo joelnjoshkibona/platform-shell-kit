@@ -283,6 +283,7 @@ shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or
 | Form accent | per form | per form | A form's own brand colour, tenant-overridable |
 
 - **Brand colour (P46)**: the organisation picks a preset or any hex; everything else is derived and checked (button text ≥ 4.5:1, primary vs page ≥ 3:1, curtain ≥ 6:1, both themes). Nothing but primary, ring, the curtain and the org badge follows it: never status, chart, background or border colours. Components never read the accent value; they use `primary` (or `.acc-chip` + `accChip()` for another organisation's colour, e.g. the switcher).
+- **Product identity (P48)**: name, mark (`BrandMark`), sign-in headline, points and art come from the product config only; the shell never hard-codes a product's icon, words or picture. The mark is a 24×24 SVG in `currentColor`.
 - **Type**: Geist. Page title `text-xl font-semibold` (`text-2xl` from `sm`), body `text-sm`, meta `text-xs`, group labels `text-[11px]` uppercase semibold, KPI numbers `text-2xl` with tabular figures, codes and permission names in mono `text-xs`.
 - **Spacing**: `gap-4` between sections and fields, `p-4` card padding (`p-3.5` for KPI tiles), `gap-1.5` inside a label/input/error stack, `gap-2` between inline items.
 - **Radius**: `rounded-md` controls, `rounded-lg` dialogs and popovers, `rounded-xl` cards, `rounded-full` pills and avatars.

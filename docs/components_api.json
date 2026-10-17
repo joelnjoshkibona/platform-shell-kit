@@ -1472,5 +1472,26 @@
       "Use the accent for status, chart or background colours",
       "Use a native colour input"
     ]
+  },
+  "Brand mark": {
+    "file": "src/components/app/BrandMark.vue",
+    "props": [
+      [
+        "size",
+        "number",
+        "16",
+        "Pixel size; the mark is square"
+      ]
+    ],
+    "emits": [],
+    "slots": [],
+    "do": [
+      "Use it wherever the product identifies itself: sidebar header, sign-in, curtain",
+      "Put it on a primary or primary-foreground/15 tile so it follows the brand colour"
+    ],
+    "dont": [
+      "Hard-code a Lucide icon for the product",
+      "Colour the SVG itself: it draws in currentColor"
+    ]
   }
 }

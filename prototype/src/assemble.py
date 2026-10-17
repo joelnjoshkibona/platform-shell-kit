@@ -273,7 +273,7 @@ const Curtain = {
     <div class="curtain-loader" role="status" :aria-hidden="G.curtain!=='closed'">
       <div class="relative grid h-16 w-16 place-items-center">
         <span class="absolute inset-0 animate-spin rounded-full border-2" style="animation-duration:.8s;border-color:hsl(var(--curtain-fg) / .25);border-top-color:hsl(var(--curtain-fg))"></span>
-        <span class="grid h-11 w-11 place-items-center rounded-xl" style="background:hsl(var(--curtain-fg) / .15);color:hsl(var(--curtain-fg))"><Icon name="ClipboardList" :size="20"/></span>
+        <span class="grid h-11 w-11 place-items-center rounded-xl" style="background:hsl(var(--curtain-fg) / .15);color:hsl(var(--curtain-fg))"><BrandMark :size="20"/></span>
       </div>
       <p class="mt-4 text-sm font-medium" style="color:hsl(var(--curtain-fg))">{{ G.booting ? 'Loading ' + PNAME + '…' : 'Opening ' + (ROUTE_LABEL[G.route] || 'page') + '…' }}</p>
     </div></div>`
@@ -344,12 +344,14 @@ app.mount('#app');
 </script>
 '''
 
+_logo = _re0.search(r"logo:\s*'(<svg[^']*)'", _prod)
+BOOT_MARK = _logo.group(1).replace('<svg', '<svg width="20" height="20" aria-hidden="true"', 1) if _logo else PNAME[0]   # P48: the product's mark, else its initial
 BOOT = '''<div id="boot-curtain" class="curtain" data-state="closed" aria-hidden="true" style="position:fixed;inset:0;z-index:121">
   <div class="half half-l"></div><div class="half half-r"></div>
   <div class="curtain-loader" style="opacity:1;transform:none;transition:none">
     <div style="position:relative;width:64px;height:64px;display:grid;place-items:center">
       <span class="boot-spin"></span>
-      <span style="display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:hsl(var(--curtain-fg) / .15);color:hsl(var(--curtain-fg))"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></span>
+      <span style="display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:hsl(var(--curtain-fg) / .15);color:hsl(var(--curtain-fg));font:600 18px/1 Geist,system-ui,sans-serif">' + BOOT_MARK + '</span>
     </div>
     <p style="margin-top:16px;font:500 14px/1.4 Geist,system-ui,sans-serif;color:hsl(var(--curtain-fg))">Loading ' + PNAME + '…</p>
   </div></div>'''
