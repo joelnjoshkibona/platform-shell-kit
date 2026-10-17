@@ -7,7 +7,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 ## Index
 
 - **Actions**: Button
-- **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Locked field, File picker · Media library, API select, Rich text, Date picker
+- **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Locked field, File picker · Media library, API select, Rich text, Date picker, Accent picker
 - **Display**: Badge · Status pill, Card · KPI tile
 - **Navigation**: Tabs, Sidebar item, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet
@@ -315,6 +315,34 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: Ranges = two pickers, From and To, with min/max linking them
 - Don't: <input type=date>
 - Don't: Month/year selects outside the calendar card
+
+### Accent picker
+
+`src/components/app/AccentPicker.vue`
+
+| Spec | Value |
+| --- | --- |
+| Swatches | six presets + Custom, 36px round, radiogroup; selected = 2px foreground ring + check |
+| Custom | hex field (mono, #RRGGBB) with live chip + 12 suggested colours; no native colour picker |
+| Derived | dark shade, button text and curtain pair come from the one colour |
+| Adjusted | warning-tint note with before → after chips when the light colour had to darken |
+| Preview | light and dark panels: button, link, focus ring, curtain, the six contrast ratios with their minimums |
+| Variants | full (Settings) · compact (create organisation) |
+| Used in | Settings › Brand colour, Create organisation |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `modelValue` | `string` | `product accent` | A preset key (teal, blue, violet, rose, amber, slate) or '#rrggbb' |
+| `compact` | `boolean` | `false` | Swatches and hex field only, no preview (create organisation) |
+
+**Emits:** `update:modelValue` (string), `change` (string)
+
+- Do: Save the value the owner picked; the API derives and stores the tokens and returns them
+- Do: Show the adjusted note whenever the light colour had to change
+- Do: Keep the preview in both themes next to the picker
+- Don't: Let anyone type a foreground or curtain colour: they are always derived
+- Don't: Use the accent for status, chart or background colours
+- Don't: Use a native colour input
 
 ## Display
 

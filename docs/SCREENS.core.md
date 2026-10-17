@@ -119,9 +119,10 @@ Media library; the same library opens from the FilePicker.
 
 ### Settings  ·  `/{org}/settings`
 
-One page of tabs (P42), `?tab=` in the link: General (identity, branding, brand colour) · product tabs (Fomu: Results, chart view defaults) · Notifications (quiet hours, D44) · Security (2FA, timeout).
+One page of tabs (P42), `?tab=` in the link: General (identity, branding, brand colour: preset or any colour, derived and contrast-checked, light and dark preview; P41, P46) · product tabs (Fomu: Results, chart view defaults) · Notifications (quiet hours, D44) · Security (2FA, timeout).
 
 - **Settings** — [desktop-light](screenshots/workspace__desktop-light.png), [desktop-dark](screenshots/workspace__desktop-dark.png), [phone-light](screenshots/workspace__phone-light.png), [phone-dark](screenshots/workspace__phone-dark.png)
+- **Brand colour: custom, adjusted for readability (P46)** — [desktop-light](screenshots/workspace--custom-accent__desktop-light.png), [desktop-dark](screenshots/workspace--custom-accent__desktop-dark.png), [phone-light](screenshots/workspace--custom-accent__phone-light.png)
 
 ### Menu management  ·  `/{org}/menus`
 

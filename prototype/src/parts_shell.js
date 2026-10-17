@@ -91,7 +91,7 @@ const ShellMod = (() => {
     ORGS.push(o); switchOrg(o.id);
     setTimeout(() => toast(`${name} created`, 'You are the owner. Invite your team from Members.', 'Building2'), 500);
   }
-  G.switchOrg = switchOrg;
+  G.switchOrg = switchOrg; G.orgs = ORGS;
   G.locId = 'aru'; G.viewAs = null; G.viewAsPick = false; G.assignEdit = null; G.newLoc = false;
   watchEffect(() => { G.navRoute = G.route === 'location' ? 'locations' : G.route === 'request' ? 'approvals' : G.route === 'role' ? 'roles' : G.route; });
   const sidebarNav = computed(() => [
@@ -239,8 +239,55 @@ const ShellMod = (() => {
   /* ---------- Organisation switcher */
   const OrgAvatar = {
     props: { org: Object, size: { default: 'md' } },
-    setup() { return { ACCENTS }; },
-    template: `<span :class="['form-theme grid shrink-0 place-items-center rounded-md bg-fa font-bold text-fa-fg', size==='sm' ? 'h-6 w-6 text-[11px]' : size==='lg' ? 'h-10 w-10 text-base' : 'h-8 w-8 text-sm']" :style="{ '--fa-l': ACCENTS[org.accent].l, '--fa-d': ACCENTS[org.accent].d }">{{ org.initial }}</span>`
+    setup() { return { accChip }; },
+    template: `<span :class="['acc-chip grid shrink-0 place-items-center rounded-md font-bold', size==='sm' ? 'h-6 w-6 text-[11px]' : size==='lg' ? 'h-10 w-10 text-base' : 'h-8 w-8 text-sm']" :style="accChip(org.accent)">{{ org.initial }}</span>`
+  };
+
+  /* ---------- Accent picker (P46): presets plus any colour; contrast is checked and fixed, never trusted */
+  const ACC_MORE = ['#166445', '#15803d', '#0e7490', '#0369a1', '#4338ca', '#a21caf', '#be185d', '#b91c1c', '#c2410c', '#4d7c0f', '#78350f', '#1f2937'];
+  const AccentPicker = {
+    props: { modelValue: String, compact: Boolean, idPrefix: { default: 'acc' } }, emits: ['update:modelValue', 'change'],
+    setup(props, { emit }) {
+      const P = reactive({ open: false, hex: accIsHex(props.modelValue) ? props.modelValue : '' });
+      watch(() => props.modelValue, v => { if (accIsHex(v) && v.toLowerCase() !== (P.hex || '').toLowerCase()) P.hex = v; });
+      const isCustom = computed(() => accIsHex(props.modelValue));
+      const t = computed(() => deriveAccent(props.modelValue) || deriveAccent(PRODUCT.accent || 'teal'));
+      const checks = computed(() => accentChecks(t.value));
+      const draftOk = computed(() => accIsHex(P.hex));
+      const name = computed(() => ACCENTS[props.modelValue] ? ACCENTS[props.modelValue].label : isCustom.value ? 'Custom ' + props.modelValue.toUpperCase() : '');
+      function pick(v) { emit('update:modelValue', v); emit('change', v); }
+      function custom() { P.open = true; if (!P.hex) P.hex = accToHex(t.value.l); pick(P.hex.toLowerCase()); }
+      function onHex(v) { let x = v.trim(); if (x && x[0] !== '#') x = '#' + x; P.hex = x.slice(0, 7); if (accIsHex(P.hex)) emit('update:modelValue', P.hex.toLowerCase()); }
+      function setHex(h) { P.hex = h; P.open = true; pick(h); }
+      const PAGE = { light: { background: '#ffffff', color: 'hsl(240 10% 3.9%)', borderColor: 'hsl(240 5.9% 90%)' }, dark: { background: 'hsl(240 10% 3.9%)', color: 'hsl(0 0% 96%)', borderColor: 'hsl(240 3.7% 16%)' } };
+      const tok = (th) => th === 'light' ? { p: t.value.l, fg: t.value.lfg, c: t.value.cl, cfg: t.value.clfg } : { p: t.value.d, fg: t.value.dfg, c: t.value.cd, cfg: t.value.cdfg };
+      return { P, isCustom, t, checks, draftOk, name, pick, custom, onHex, setHex, PAGE, tok, ACCENTS, ACC_MORE, accChip };
+    },
+    template: `<div class="grid gap-3">
+      <div role="radiogroup" aria-label="Brand colour" class="flex flex-wrap items-center gap-2.5">
+        <button v-for="(a, k) in ACCENTS" :key="k" type="button" role="radio" :aria-checked="modelValue===k" :aria-label="a.label" @click="pick(k)" class="acc-chip grid h-9 w-9 place-items-center rounded-full ring-offset-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" :class="modelValue===k ? 'ring-2 ring-foreground' : ''" :style="accChip(k)"><Icon v-if="modelValue===k" name="Check" :size="16"/></button>
+        <button type="button" role="radio" :aria-checked="isCustom" aria-label="Custom colour" @click="custom" :class="['grid h-9 w-9 place-items-center rounded-full ring-offset-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', isCustom ? 'acc-chip ring-2 ring-foreground' : 'border border-dashed text-muted-foreground hover:bg-accent']" :style="isCustom ? accChip(modelValue) : null"><Icon :name="isCustom ? 'Check' : 'Pipette'" :size="15"/></button>
+        <span class="text-sm text-muted-foreground">{{ name }}</span></div>
+      <div v-if="isCustom || P.open" class="grid gap-2">
+        <label :for="idPrefix + '-hex'" class="text-sm font-medium">Custom colour</label>
+        <div class="flex flex-wrap items-center gap-2">
+          <div :class="['flex h-9 w-36 items-center gap-2 rounded-md border px-2 shadow-sm focus-within:ring-1 focus-within:ring-ring', P.hex && !draftOk ? 'border-destructive' : 'border-input']">
+            <span class="acc-chip h-5 w-5 shrink-0 rounded" :style="accChip(draftOk ? P.hex : modelValue)" aria-hidden="true"></span>
+            <input :id="idPrefix + '-hex'" :value="P.hex" @input="onHex($event.target.value)" maxlength="7" spellcheck="false" autocomplete="off" placeholder="#166445" class="h-full min-w-0 flex-1 bg-transparent font-mono text-sm uppercase outline-none"></div>
+          <div class="flex flex-wrap gap-1.5" role="group" aria-label="More colours"><button v-for="h in ACC_MORE" :key="h" type="button" @click="setHex(h)" :aria-label="h.toUpperCase()" :aria-pressed="modelValue===h" :class="['h-6 w-6 rounded-full ring-offset-1 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', modelValue===h ? 'ring-2 ring-foreground' : '']" :style="{ background: h }"></button></div></div>
+        <p v-if="P.hex && !draftOk" class="text-xs text-destructive">Use six hex digits, like #166445.</p>
+        <p v-else class="text-xs text-muted-foreground">This is the light-theme colour. The dark-theme shade, button text and the curtain are worked out from it.</p></div>
+      <p v-if="t.adjusted" class="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm" role="status"><Icon name="Contrast" :size="16" class="mt-0.5 shrink-0 text-warning"/><span><span class="font-medium">Adjusted for readability.</span> <span class="inline-flex items-center gap-1 align-middle font-mono text-xs"><span class="h-3.5 w-3.5 rounded-sm border" :style="{ background: t.adjusted.from }"></span>{{ t.adjusted.from.toUpperCase() }}<Icon name="ArrowRight" :size="12"/><span class="h-3.5 w-3.5 rounded-sm border" :style="{ background: t.adjusted.to }"></span>{{ t.adjusted.to.toUpperCase() }}</span> in light mode, so white button text and links on a white page stay readable.</span></p>
+      <div v-if="!compact" class="grid gap-3 sm:grid-cols-2">
+        <div v-for="th in ['light', 'dark']" :key="th" class="grid gap-3 rounded-lg border p-3" :style="PAGE[th]" :data-preview="th">
+          <p class="text-xs font-medium opacity-70">{{ th === 'light' ? 'Light' : 'Dark' }}</p>
+          <div class="flex flex-wrap items-center gap-3"><span class="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium" :style="{ background: 'hsl(' + tok(th).p + ')', color: 'hsl(' + tok(th).fg + ')' }"><Icon name="Check" :size="14"/>Save</span>
+            <span class="text-sm font-medium underline-offset-4" :style="{ color: 'hsl(' + tok(th).p + ')' }">View details</span>
+            <span class="h-8 w-20 rounded-md border" :style="{ borderColor: 'hsl(' + tok(th).p + ')', boxShadow: '0 0 0 2px hsl(' + tok(th).p + ' / .35)' }" aria-hidden="true"></span></div>
+          <div class="grid h-12 place-items-center rounded-md text-xs font-medium" :style="{ background: 'hsl(' + tok(th).c + ')', color: 'hsl(' + tok(th).cfg + ')' }">Loading {{ PRODUCT.name }}…</div>
+          <ul class="grid gap-1 text-xs"><li v-for="c in checks.filter(x => x.theme===th)" :key="c.what" class="flex items-center gap-1.5"><Icon :name="c.pass ? 'CircleCheck' : 'CircleAlert'" :size="13" :style="{ color: c.pass ? (th==='light' ? 'hsl(152 64% 28%)' : 'hsl(152 52% 52%)') : 'hsl(0 72% 48%)' }"/><span class="flex-1 opacity-80">{{ c.what }}</span><span class="tnum font-medium">{{ c.ratio.toFixed(1) }}:1</span><span class="w-14 text-right tnum opacity-60">min {{ c.min }}</span></li></ul>
+        </div></div>
+    </div>`
   };
   const OrgSwitcher = {
     props: { collapsed: Boolean },
@@ -1116,6 +1163,8 @@ const ShellMod = (() => {
       demo: `<div class="grid max-w-md gap-2 text-sm"><div class="relative"><Icon name="Search" :size="14" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/><div class="flex h-9 items-center rounded-md border border-input pl-8 pr-2 text-muted-foreground shadow-sm">Search forms<span class="ml-auto rounded border bg-muted px-1.5 text-[10px]">Forms</span></div></div><div class="rounded-lg border p-1.5 shadow-sm"><p class="px-2 py-1 text-xs text-muted-foreground">3 forms match "staff" · shown below</p><div class="-mx-1.5 my-1 h-px bg-border"></div><p class="flex items-center gap-2 rounded-md bg-accent px-2 py-2"><Icon name="Globe" :size="15" class="text-muted-foreground"/>Search everywhere for "staff"</p></div></div>` },
     { name: 'Organisation switcher', ui: 'OrgSwitcher (Popover)', tag: 'Navigation', specs: [['Trigger', 'avatar 32px, name 14/600, role · address 12px'], ['Popover', '288px, portalled, opens right of the rail when collapsed'], ['Row', 'avatar, name, role · form count, check or ⌥n shortcut'], ['Footer', 'Create organisation']], variants: 'expanded · rail', used: 'Sidebar top',
       demo: `<div class="w-64 rounded-lg border bg-popover p-1.5 shadow-md"><p class="px-2 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Your organisations</p><div class="flex items-center gap-2.5 rounded-md bg-accent p-2"><span class="grid h-8 w-8 place-items-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">K</span><span class="min-w-0 flex-1"><span class="block text-sm font-medium">Kilima Retail</span><span class="block text-xs text-muted-foreground">Owner · 8 forms</span></span><Icon name="Check" :size="15" class="text-primary"/></div></div>` },
+    { name: 'Accent picker', ui: 'AccentPicker (P46)', tag: 'Forms', specs: [['Swatches', 'six presets + Custom, 36px round, radiogroup; selected = 2px foreground ring + check'], ['Custom', 'hex field (mono, #RRGGBB) with live chip + 12 suggested colours; no native colour picker'], ['Derived', 'dark shade, button text and curtain pair come from the one colour'], ['Adjusted', 'warning-tint note with before → after chips when the light colour had to darken'], ['Preview', 'light and dark panels: button, link, focus ring, curtain, the six contrast ratios with their minimums']], variants: 'full (Settings) · compact (create organisation)', used: 'Settings › Brand colour, Create organisation',
+      demo: `<AccentPicker model-value="#ffd400" id-prefix="ds-acc"/>` },
     { name: 'View as banner', ui: 'ViewAsBanner, ViewAsDialog', tag: 'Feedback', specs: [['Banner', 'warning tint, 36px, eye icon, who · role · location · read-only, Exit'], ['Header', 'Exit view button stays visible while scrolling'], ['Dialog', 'person list with role and primary location, start location select, audit note']], variants: '—', used: 'Everywhere while viewing as',
       demo: `<div class="flex flex-wrap items-center gap-3 rounded-md border border-warning/40 bg-warning/15 px-3 py-2 text-sm"><Icon name="Eye" :size="16" class="text-warning"/><p class="min-w-0 flex-1"><span class="font-semibold">Viewing as Hamisi Swai</span><span class="text-muted-foreground"> · Viewer · Branch supervisor at Arusha Branch · read-only</span></p><Button size="sm" variant="outline" class="h-7 bg-background"><Icon name="LogOut" :size="13"/>Exit</Button></div>` },
     { name: 'Approval steps', ui: 'ApprovalSteps, ApproveDialog', tag: 'Data', specs: [['Step', '32px state circle (done teal, waiting amber, rejected red), name 14/500, rule 12px muted'], ['Approvers', 'chips with initials + why (role at which location)'], ['Escalation', 'amber chip when nobody holds the role at the location chain'], ['Decision', 'tinted card: who, decision, delegated-by note, quoted comment'], ['Compact', 'row dots, 20×6px each']], variants: 'full timeline · compact dots', used: 'Approvals inbox and request page',
@@ -1433,12 +1482,12 @@ const ShellMod = (() => {
 
   const NewOrgDialog = {
     setup() {
-      const N = reactive({ name: '', slug: '', touched: false, accent: 'teal' });
+      const N = reactive({ name: '', slug: '', touched: false, accent: PRODUCT.accent || 'teal' });
       const slugify = (v) => v.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
       watch(() => N.name, v => { if (!N.touched) N.slug = slugify(v); });
       const taken = computed(() => ORGS.some(o => o.slug === N.slug));
       const ok = computed(() => N.name.trim().length > 1 && N.slug && !taken.value);
-      function submit() { if (!ok.value) return; createOrg({ name: N.name.trim(), slug: N.slug, accent: N.accent }); G.newOrg = false; Object.assign(N, { name: '', slug: '', touched: false, accent: 'teal' }); }
+      function submit() { if (!ok.value) return; createOrg({ name: N.name.trim(), slug: N.slug, accent: N.accent }); G.newOrg = false; Object.assign(N, { name: '', slug: '', touched: false, accent: PRODUCT.accent || 'teal' }); }
       return { G, N, taken, ok, submit, ACCENTS, slugify };
     },
     template: `<Dialog :open="G.newOrg" @update:open="v => G.newOrg = v">
@@ -1448,8 +1497,7 @@ const ShellMod = (() => {
         <div class="grid gap-1.5"><label for="no-s" class="text-sm font-medium">Address</label>
           <div :class="['flex h-9 items-center overflow-hidden rounded-md border text-sm shadow-sm', taken ? 'border-destructive' : 'border-input']"><span class="border-r bg-muted/50 px-2.5 py-2 text-xs text-muted-foreground">{{ PRODUCT.domain }}/</span><input id="no-s" :value="N.slug" @input="N.touched=true; N.slug=slugify($event.target.value)" class="h-full min-w-0 flex-1 bg-transparent px-2 outline-none"></div>
           <p v-if="taken" class="text-xs text-destructive">That address is already used. Try another.</p></div>
-        <div class="grid gap-2"><span class="text-sm font-medium">Brand colour</span><div class="flex flex-wrap gap-2.5">
-          <button v-for="(a, k) in ACCENTS" :key="k" type="button" @click="N.accent=k" :aria-label="a.label" :aria-pressed="N.accent===k" class="form-theme grid h-8 w-8 place-items-center rounded-full ring-offset-2 ring-offset-background" :class="N.accent===k ? 'ring-2 ring-foreground' : ''" :style="{ '--fa-l': a.l, '--fa-d': a.d, background: 'hsl(var(--form-accent))' }"><Icon v-if="N.accent===k" name="Check" :size="14" class="text-fa-fg"/></button></div></div>
+        <div class="grid gap-2"><span class="text-sm font-medium">Brand colour</span><AccentPicker v-model="N.accent" compact id-prefix="no-acc"/><p class="text-xs text-muted-foreground">You can change it later in Settings.</p></div>
         <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button variant="outline" @click="G.newOrg=false">Cancel</Button><Button type="submit" :disabled="!ok"><Icon name="Building2" :size="14"/>Create organisation</Button></div>
       </form></Dialog>`
   };
@@ -1697,7 +1745,9 @@ const ShellMod = (() => {
       watch(() => S.tab, (t) => { G.tab = t === 'general' ? null : t; }, { immediate: true });   // P42 + P39: the tab is part of the link; General is the bare address
       watch(tabs, (ts) => { if (!ts.some(t => t.value === S.tab)) S.tab = 'general'; }, { immediate: true });
       const product = computed(() => SETTINGS_TABS.find(t => t.value === S.tab));
-      return { HOURS, G, W, S, tabs, product, tz, timeout, ACCENTS, canManage };
+      let accT = 0; function accSaved() { clearTimeout(accT); accT = setTimeout(() => G.toast('Brand colour saved', 'Everyone in ' + G.org.name + ' sees it from their next page.', 'Palette'), 250); }
+      watch(() => G.org.accent, (v, o) => { if (o !== undefined && accIsHex(v)) accSaved(); });
+      return { HOURS, G, W, S, tabs, product, tz, timeout, ACCENTS, canManage, accSaved };
     },
     template: `<div :class="['mx-auto grid grid-cols-[minmax(0,1fr)] gap-3', product && product.wide ? 'max-w-[1000px]' : 'max-w-[820px]']">
       <div><h2 class="text-xl font-semibold tracking-tight">Settings</h2><p class="text-sm text-muted-foreground">Applies to everyone in {{ G.org.name }}.</p></div>
@@ -1712,8 +1762,8 @@ const ShellMod = (() => {
       <Card class="kpi" style="animation-delay:40ms"><div class="grid gap-4 p-4 sm:p-5"><div><h3 class="font-semibold">Branding</h3><p class="text-sm text-muted-foreground">Shown on sign-in, invitations and public forms.</p></div>
         <FilePicker v-model="G.org.logo" accept="image" :max-size="2" label="Logo" help="Square PNG or SVG works best, at least 256 × 256 px."/>
         <RichText v-model="G.org.footer" label="Invitation email footer" :max="400" placeholder="Contact details, office hours, a short note…" help="Added under every invitation and reminder email."/></div></Card>
-      <Card class="kpi" style="animation-delay:60ms"><div class="p-4 sm:p-5"><h3 class="font-semibold">Brand colour</h3><p class="text-sm text-muted-foreground">Default accent for new forms. Each form can still pick its own.</p>
-        <div class="mt-3 flex flex-wrap gap-3"><button v-for="(a, k) in ACCENTS" :key="k" type="button" @click="G.org.accent=k" :aria-label="a.label" :aria-pressed="G.org.accent===k" class="form-theme grid h-9 w-9 place-items-center rounded-full ring-offset-2 ring-offset-background" :class="G.org.accent===k ? 'ring-2 ring-foreground' : ''" :style="{ '--fa-l': a.l, '--fa-d': a.d, background: 'hsl(var(--form-accent))' }"><Icon v-if="G.org.accent===k" name="Check" :size="16" class="text-fa-fg"/></button></div></div></Card>
+      <Card class="kpi" style="animation-delay:60ms"><div class="grid gap-3 p-4 sm:p-5"><div><h3 class="font-semibold">Brand colour</h3><p class="text-sm text-muted-foreground">Buttons, links, focus rings, sign-in and the page curtain use it, for everyone in {{ G.org.name }} from their next page. Status and chart colours never change.</p></div>
+        <AccentPicker v-model="G.org.accent" id-prefix="w-acc" @change="accSaved"/></div></Card>
       </template>
       <component v-else-if="product" :is="product.comp"/>
       <template v-else-if="S.tab==='notifications'">
@@ -1734,5 +1784,5 @@ const ShellMod = (() => {
     </div>`
   };
 
-  return { AuthView, ShellView, comps: { NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, ResultChartSettings, Spark, OrgAvatar, OrgSwitcher, NewOrgDialog } };
+  return { AuthView, ShellView, comps: { NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, ResultChartSettings, Spark, OrgAvatar, AccentPicker, OrgSwitcher, NewOrgDialog } };
 })();

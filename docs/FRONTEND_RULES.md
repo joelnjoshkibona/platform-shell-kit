@@ -275,13 +275,14 @@ shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
-| `--primary` | teal `174 72% 26%` | teal `170 62% 46%` | Primary buttons, focus, active nav |
+| `--primary`, `--ring`, `--primary-foreground` | the organisation's accent (product default: teal `174 72% 26%`) | derived (teal `170 62% 46%`) | Primary buttons, links, focus, active controls. Set by `applyAccent` from the organisation's brand colour (P41, P46), never by hand |
 | Neutrals | zinc scale | zinc scale | Background, cards, borders, muted text |
 | `--warning` / `--destructive` | semantic | semantic | Approaching a limit / errors and danger |
 | Chart c1–c5 | #14937f #d06d0a #2f6fe0 #d6456a #7c5ad8 | #1f9e89 #c97514 #4c82e8 #dc5577 #8f73e3 | Charts only, max 5 series then Other (#94a3b8 / #64748b) |
-| `--curtain` | `170 62% 46%`, dark text | `166 58% 13%`, light text | Page transition only |
+| `--curtain`, `--curtain-fg` | derived from the accent (teal: `170 62% 46%`, dark text) | derived (teal: `166 58% 13%`, light text) | Page transition only; at least 6:1 |
 | Form accent | per form | per form | A form's own brand colour, tenant-overridable |
 
+- **Brand colour (P46)**: the organisation picks a preset or any hex; everything else is derived and checked (button text ≥ 4.5:1, primary vs page ≥ 3:1, curtain ≥ 6:1, both themes). Nothing but primary, ring, the curtain and the org badge follows it: never status, chart, background or border colours. Components never read the accent value; they use `primary` (or `.acc-chip` + `accChip()` for another organisation's colour, e.g. the switcher).
 - **Type**: Geist. Page title `text-xl font-semibold` (`text-2xl` from `sm`), body `text-sm`, meta `text-xs`, group labels `text-[11px]` uppercase semibold, KPI numbers `text-2xl` with tabular figures, codes and permission names in mono `text-xs`.
 - **Spacing**: `gap-4` between sections and fields, `p-4` card padding (`p-3.5` for KPI tiles), `gap-1.5` inside a label/input/error stack, `gap-2` between inline items.
 - **Radius**: `rounded-md` controls, `rounded-lg` dialogs and popovers, `rounded-xl` cards, `rounded-full` pills and avatars.

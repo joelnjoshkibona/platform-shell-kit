@@ -1,6 +1,7 @@
 # P41 · The organisation's accent recolours primary and the curtain
 
 Status: **decided when this note merges**, from DevBiz D92, D93 and D95 (built and tested in DevBiz Phase 2: unit tests for every accent and theme, visual tests in light and dark).
+**Amended by P46:** any colour is allowed, derived and contrast-checked; the six below stay as presets. See `P46-any-accent.md`.
 Builds on P8 (page transitions: the curtain) and the organisation's branding setting (the accent chosen when the organisation is created, today shown only on its badge in the switcher and the picker).
 
 ## Decision

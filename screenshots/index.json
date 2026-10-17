@@ -658,6 +658,27 @@
     "file": "role--leave-guard__phone-dark.png"
   },
   {
+    "name": "workspace--custom-accent",
+    "route": "workspace",
+    "title": "Brand colour: a custom colour, adjusted for readability, with the light and dark preview (P46)",
+    "combo": "desktop-light",
+    "file": "workspace--custom-accent__desktop-light.png"
+  },
+  {
+    "name": "workspace--custom-accent",
+    "route": "workspace",
+    "title": "Brand colour: a custom colour, adjusted for readability, with the light and dark preview (P46)",
+    "combo": "desktop-dark",
+    "file": "workspace--custom-accent__desktop-dark.png"
+  },
+  {
+    "name": "workspace--custom-accent",
+    "route": "workspace",
+    "title": "Brand colour: a custom colour, adjusted for readability, with the light and dark preview (P46)",
+    "combo": "phone-light",
+    "file": "workspace--custom-accent__phone-light.png"
+  },
+  {
     "name": "location--users",
     "route": "location",
     "title": "Location users tab",

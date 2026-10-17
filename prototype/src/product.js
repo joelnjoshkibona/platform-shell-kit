@@ -6,5 +6,6 @@ const PRODUCT = {
   icon: 'ClipboardList',        // Lucide icon next to the name
   domain: 'fomu.app',           // used in copied links
   city: 'Dar es Salaam',        // footer
-  storageKey: 'fomu',           // prefix for localStorage keys (theme, list views, recent searches)
+  storageKey: 'fomu',           // prefix for localStorage keys (theme, list views, recent searches, last accent)
+  accent: 'teal',               // default brand colour: a preset key or '#rrggbb' (P46); the tokens in builder.html are its values
 };
