@@ -3,6 +3,7 @@
  *
  *   npm install && npm run shots                 # every screen + key states into ../../docs/design/screenshots
  *   node shoot.js --out out --only forms,roles   # a subset, somewhere else
+ *   SHOT_WORKERS=4 npm run shots                 # shots run side by side (default: from free memory and CPUs)
  *
  * The prototype loads Vue, lucide and the Tailwind play CDN from the internet. This script serves them
  * from node_modules and a locally compiled Tailwind file instead, so it works offline and is deterministic.
@@ -10,6 +11,7 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf('--' + k); return i > -1 ? args[i + 1] : d; };
@@ -85,8 +87,12 @@ const STATES = [
   fs.mkdirSync(OUT, { recursive: true });
   const b = await chromium.launch();
   const list = [...SCREENS, ...STATES].filter(s => !ONLY.length || ONLY.includes(s.name) || ONLY.includes(s.route));
-  const index = [];
-  for (const s of list) for (const c of s.combos) {
+  // Every shot is its own context, so they run side by side: SHOT_WORKERS, else from free memory and CPUs (like the
+  // visual tests). index.json keeps the screen-list order whatever order the shots finish in.
+  const jobs = list.flatMap(s => s.combos.map(c => ({ s, c })));
+  const WORKERS = Math.max(1, +process.env.SHOT_WORKERS || Math.min(8, os.cpus().length - 2, Math.floor(os.freemem() / 400e6)) || 1);
+  const index = new Array(jobs.length); let next = 0;
+  const shootOne = async ({ s, c }, at) => {
     const ctx = await b.newContext({ ...COMBOS[c], reducedMotion: 'reduce' });
     const p = await ctx.newPage(); const errs = [];
     p.on('pageerror', e => errs.push(e.message));
@@ -109,10 +115,11 @@ const STATES = [
     catch (e) { errs.push('state step failed: ' + e.message.split('\n')[0]); }
     const file = `${s.name}__${c}.png`;
     await p.screenshot({ path: path.join(OUT, file), fullPage: !!s.full });
-    index.push({ name: s.name, route: s.route, title: s.title, combo: c, file });
+    index[at] = { name: s.name, route: s.route, title: s.title, combo: c, file };
     console.log(file, errs.length ? 'ERRORS: ' + errs.join(' | ') : 'ok');
     await ctx.close();
-  }
+  };
+  await Promise.all(Array.from({ length: Math.min(WORKERS, jobs.length) }, async () => { while (next < jobs.length) { const at = next++; await shootOne(jobs[at], at); } }));
   await b.close();
   if (!ONLY.length) fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 2));
 })();
