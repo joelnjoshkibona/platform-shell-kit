@@ -68,7 +68,7 @@ const optLabel = (q, k) => (q.options.find(o => o.key === k) || {}).label || '';
 
 /* filtering */
 const RANGES = [{ value: 'all', label: 'All time' }, { value: '7', label: 'Last 7 days' }, { value: '3', label: 'Last 3 days' }];
-const NOW = new Date('2026-10-10T15:00:00+03:00').getTime();
+const NOW = new Date('2026-10-12T15:00:00+03:00').getTime();   // P44: same day as TODAY
 const filtered = computed(() => RESP.filter(r => {
   if (S.range !== 'all' && r.at.getTime() < NOW - (+S.range) * 86400000) return false;
   return S.filters.every(f => { const v = r.answers[f.q]; return Array.isArray(v) ? v.includes(f.o) : v === f.o; });

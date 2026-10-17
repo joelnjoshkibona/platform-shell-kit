@@ -7,5 +7,5 @@ const PRODUCT = {
   domain: 'fomu.app',           // used in copied links
   city: 'Dar es Salaam',        // footer
   storageKey: 'fomu',           // prefix for localStorage keys (theme, list views, recent searches, last accent)
-  accent: 'teal',               // default brand colour: a preset key or '#rrggbb' (P42); the tokens in builder.html are its values
+  accent: 'teal',               // default brand colour: a preset key or '#rrggbb' (P46); the tokens in builder.html are its values
 };

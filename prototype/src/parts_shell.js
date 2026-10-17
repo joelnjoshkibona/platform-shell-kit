@@ -243,7 +243,7 @@ const ShellMod = (() => {
     template: `<span :class="['acc-chip grid shrink-0 place-items-center rounded-md font-bold', size==='sm' ? 'h-6 w-6 text-[11px]' : size==='lg' ? 'h-10 w-10 text-base' : 'h-8 w-8 text-sm']" :style="accChip(org.accent)">{{ org.initial }}</span>`
   };
 
-  /* ---------- Accent picker (P42): presets plus any colour; contrast is checked and fixed, never trusted */
+  /* ---------- Accent picker (P46): presets plus any colour; contrast is checked and fixed, never trusted */
   const ACC_MORE = ['#166445', '#15803d', '#0e7490', '#0369a1', '#4338ca', '#a21caf', '#be185d', '#b91c1c', '#c2410c', '#4d7c0f', '#78350f', '#1f2937'];
   const AccentPicker = {
     props: { modelValue: String, compact: Boolean, idPrefix: { default: 'acc' } }, emits: ['update:modelValue', 'change'],
@@ -1163,7 +1163,7 @@ const ShellMod = (() => {
       demo: `<div class="grid max-w-md gap-2 text-sm"><div class="relative"><Icon name="Search" :size="14" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/><div class="flex h-9 items-center rounded-md border border-input pl-8 pr-2 text-muted-foreground shadow-sm">Search forms<span class="ml-auto rounded border bg-muted px-1.5 text-[10px]">Forms</span></div></div><div class="rounded-lg border p-1.5 shadow-sm"><p class="px-2 py-1 text-xs text-muted-foreground">3 forms match "staff" · shown below</p><div class="-mx-1.5 my-1 h-px bg-border"></div><p class="flex items-center gap-2 rounded-md bg-accent px-2 py-2"><Icon name="Globe" :size="15" class="text-muted-foreground"/>Search everywhere for "staff"</p></div></div>` },
     { name: 'Organisation switcher', ui: 'OrgSwitcher (Popover)', tag: 'Navigation', specs: [['Trigger', 'avatar 32px, name 14/600, role · address 12px'], ['Popover', '288px, portalled, opens right of the rail when collapsed'], ['Row', 'avatar, name, role · form count, check or ⌥n shortcut'], ['Footer', 'Create organisation']], variants: 'expanded · rail', used: 'Sidebar top',
       demo: `<div class="w-64 rounded-lg border bg-popover p-1.5 shadow-md"><p class="px-2 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Your organisations</p><div class="flex items-center gap-2.5 rounded-md bg-accent p-2"><span class="grid h-8 w-8 place-items-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">K</span><span class="min-w-0 flex-1"><span class="block text-sm font-medium">Kilima Retail</span><span class="block text-xs text-muted-foreground">Owner · 8 forms</span></span><Icon name="Check" :size="15" class="text-primary"/></div></div>` },
-    { name: 'Accent picker', ui: 'AccentPicker (P42)', tag: 'Forms', specs: [['Swatches', 'six presets + Custom, 36px round, radiogroup; selected = 2px foreground ring + check'], ['Custom', 'hex field (mono, #RRGGBB) with live chip + 12 suggested colours; no native colour picker'], ['Derived', 'dark shade, button text and curtain pair come from the one colour'], ['Adjusted', 'warning-tint note with before → after chips when the light colour had to darken'], ['Preview', 'light and dark panels: button, link, focus ring, curtain, the six contrast ratios with their minimums']], variants: 'full (Settings) · compact (create organisation)', used: 'Settings › Brand colour, Create organisation',
+    { name: 'Accent picker', ui: 'AccentPicker (P46)', tag: 'Forms', specs: [['Swatches', 'six presets + Custom, 36px round, radiogroup; selected = 2px foreground ring + check'], ['Custom', 'hex field (mono, #RRGGBB) with live chip + 12 suggested colours; no native colour picker'], ['Derived', 'dark shade, button text and curtain pair come from the one colour'], ['Adjusted', 'warning-tint note with before → after chips when the light colour had to darken'], ['Preview', 'light and dark panels: button, link, focus ring, curtain, the six contrast ratios with their minimums']], variants: 'full (Settings) · compact (create organisation)', used: 'Settings › Brand colour, Create organisation',
       demo: `<AccentPicker model-value="#ffd400" id-prefix="ds-acc"/>` },
     { name: 'View as banner', ui: 'ViewAsBanner, ViewAsDialog', tag: 'Feedback', specs: [['Banner', 'warning tint, 36px, eye icon, who · role · location · read-only, Exit'], ['Header', 'Exit view button stays visible while scrolling'], ['Dialog', 'person list with role and primary location, start location select, audit note']], variants: '—', used: 'Everywhere while viewing as',
       demo: `<div class="flex flex-wrap items-center gap-3 rounded-md border border-warning/40 bg-warning/15 px-3 py-2 text-sm"><Icon name="Eye" :size="16" class="text-warning"/><p class="min-w-0 flex-1"><span class="font-semibold">Viewing as Hamisi Swai</span><span class="text-muted-foreground"> · Viewer · Branch supervisor at Arusha Branch · read-only</span></p><Button size="sm" variant="outline" class="h-7 bg-background"><Icon name="LogOut" :size="13"/>Exit</Button></div>` },
@@ -1181,7 +1181,7 @@ const ShellMod = (() => {
       const mq = window.matchMedia('(prefers-color-scheme: dark)'); const onMq = () => readTokens(); mq.addEventListener('change', onMq); onBeforeUnmount(() => mq.removeEventListener('change', onMq));
       const tags = ['All', ...new Set(DS_COMPONENTS.map(c => c.tag))];
       const comps = computed(() => DS_COMPONENTS.filter(c => (D.tag === 'All' || c.tag === D.tag) && (!D.q || (c.name + c.ui + c.used).toLowerCase().includes(D.q.toLowerCase()))));
-      const demoState = reactive({ text: '', sel: 'single_choice', sel2: 'a', cb: true, sw: true, rd: 'a', tab: 'r', dlg: false, sheet: false, grow: true, files: [], file1: 'm2', api1: 'aru', api2: ['kko', 'mlc'], ward: 'Kati', rich: '<p>Entrance faces <strong>Sokoine Road</strong>.</p><ul><li>Parking behind the building</li></ul>', date: '2026-10-10', del: false, fail: false, req: REQS.k[0], log: SELECT_LOG,
+      const demoState = reactive({ text: '', sel: 'single_choice', sel2: 'a', cb: true, sw: true, rd: 'a', tab: 'r', dlg: false, sheet: false, grow: true, files: [], file1: 'm2', api1: 'aru', api2: ['kko', 'mlc'], ward: 'Kati', rich: '<p>Entrance faces <strong>Sokoine Road</strong>.</p><ul><li>Parking behind the building</li></ul>', date: '2026-10-12', del: false, fail: false, req: REQS.k[0], log: SELECT_LOG,
         loadRecord() { ['mwz', 'kko', 'shy', 'zz9'].forEach(id => delete LABELS[lkey('locations', id)]); delete LABELS[lkey('wards', 'Mawenzi')]; demoState.api1 = ''; demoState.api2 = []; demoState.ward = ''; setTimeout(() => { demoState.api1 = 'mwz'; demoState.api2 = ['kko', 'shy', 'zz9']; demoState.ward = 'Mawenzi'; }, 50); },
         list: markRaw(useList({ noun: 'samples', rows: () => [{ n: 'Alpha', k: 'a', v: 12 }, { n: 'Bravo', k: 'b', v: 40 }, { n: 'Charlie', k: 'a', v: 7 }, { n: 'Delta', k: 'c', v: 88 }, { n: 'Echo', k: 'b', v: 23 }, { n: 'Foxtrot', k: 'c', v: 61 }], search: (r, q) => r.n.toLowerCase().includes(q), sorts: [{ value: 'n', label: 'Name', get: r => r.n }, { value: 'v', label: 'Value', get: r => r.v }], fields: [{ key: 'k', label: 'Kind', type: 'select', options: [{ value: 'a', label: 'Kind A' }, { value: 'b', label: 'Kind B' }, { value: 'c', label: 'Kind C' }], get: r => r.k }, { key: 'v', label: 'Value', type: 'number', get: r => r.v }] })),
         cols: [{ key: 'n', label: 'Name', identity: true, priority: 1, min: 180, sort: 'n', text: r => r.n }, { key: 'k', label: 'Kind', priority: 3, min: 90, fold: 'badge', text: r => 'Kind ' + r.k.toUpperCase() }, { key: 'note', label: 'Note', priority: 4, min: 160, fold: 'meta', text: r => r.v > 50 ? 'Above target' : 'Within range' }, { key: 'state', label: 'State', status: true, priority: 2, min: 100, text: r => r.v > 50 ? 'High' : 'Normal', variant: r => r.v > 50 ? 'warning' : 'secondary' }, { key: 'v', label: 'Value', hero: true, priority: 1, min: 90, sort: 'v', sub: 'units', text: r => String(r.v) }],
@@ -1432,7 +1432,7 @@ const ShellMod = (() => {
           <h1 class="min-w-0 truncate text-sm font-semibold sm:text-base">{{ titles[G.view] }}</h1>
           <div v-if="SEARCH_SCOPE[G.view]" class="ml-auto hidden w-full max-w-sm md:block"><HeaderSearch :key="G.view"/></div>
           <div v-if="G.mSearch && SEARCH_SCOPE[G.view]" class="absolute inset-0 z-10 flex items-center bg-background px-2 md:hidden"><HeaderSearch phone :key="'m' + G.view"/></div>
-          <div class="ml-auto flex items-center gap-1 md:ml-2">
+          <div :class="['ml-auto flex shrink-0 items-center gap-1', SEARCH_SCOPE[G.view] && 'md:ml-2']">
             <Button v-if="SEARCH_SCOPE[G.view]" variant="ghost" size="icon" class="md:hidden" :aria-label="SEARCH_SCOPE[G.view].ph" @click="G.mSearch = true"><Icon name="Search"/></Button>
             <Tooltip v-if="canViewAs()" content="View as a person or role" side="bottom"><Button variant="ghost" size="icon" aria-label="View as someone" @click="G.viewAsPick = true"><Icon name="Eye"/></Button></Tooltip>
             <Button v-if="G.viewAs" variant="outline" size="sm" class="h-8 border-warning/50 text-warning" @click="exitViewAs" :aria-label="'Exit viewing as ' + G.viewAs.name"><Icon name="EyeOff" :size="14"/><span class="hidden sm:inline">Exit view</span></Button>
@@ -1705,6 +1705,33 @@ const ShellMod = (() => {
       </Dialog></div>`
   };
 
+  /* P42: Settings is one page of tabs, ?tab= in the link. General first, then the product's tabs (SETTINGS_TABS, in the
+     product's order), then the core Notifications and Security tabs. Each product tab is a component that renders its cards. */
+  const SETTINGS_TABS = [
+    { value: 'results', label: 'Results', icon: 'ChartBarBig', comp: 'ResultChartSettings' },   // Fomu's example tab: replace with the product's own
+  ];
+  const ResultChartSettings = {
+    setup() {
+      const types = TYPES.map(t => ({ ...t, opts: TYPE_VIEWS[t.value].map((v, i) => ({ value: v, label: VIEWS[v].label + (i === 0 ? ' (built-in)' : ''), icon: VIEWS[v].icon })) }));
+      const viewOf = (t) => G.org.viewDefaults[t] || TYPE_VIEWS[t][0];
+      function setView(t, v) { if (v === TYPE_VIEWS[t][0]) delete G.org.viewDefaults[t]; else G.org.viewDefaults[t] = v; G.toast('Default view saved', 'Applies to every form without its own choice for that question.', 'ChartBarBig'); }
+      const changed = computed(() => Object.keys(G.org.viewDefaults).length);
+      function resetViews() { Object.keys(G.org.viewDefaults).forEach(k => delete G.org.viewDefaults[k]); G.toast('Chart views reset', 'Every type uses its built-in default.', 'RotateCcw'); }
+      return { G, types, viewOf, setView, changed, resetViews };
+    },
+    template: `<div class="grid gap-3">
+      <Card class="kpi"><div class="p-4 sm:p-5">
+        <div class="flex flex-wrap items-start justify-between gap-2"><div><h3 class="font-semibold">Result chart defaults</h3><p class="text-sm text-muted-foreground">How each question type is charted in Results. Someone can still change the view on a single question; that choice wins for that form.</p></div>
+          <Button v-if="changed" variant="ghost" size="sm" @click="resetViews"><Icon name="RotateCcw" :size="14"/>Reset {{ changed }}</Button></div>
+        <ol class="mt-3 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground" aria-label="Which view wins"><li class="rounded-md bg-muted px-2 py-1">Built-in default</li><Icon name="ChevronRight" :size="12"/><li class="rounded-md bg-primary/10 px-2 py-1 font-medium text-foreground">Workspace default (here)</li><Icon name="ChevronRight" :size="12"/><li class="rounded-md bg-muted px-2 py-1">Per question on a form</li></ol>
+        <div class="mt-3 divide-y rounded-lg border">
+          <div v-for="t in types" :key="t.value" class="flex flex-wrap items-center gap-3 px-3 py-2.5">
+            <span class="flex min-w-0 flex-1 items-center gap-2 text-sm"><Icon :name="t.icon" :size="15" class="text-muted-foreground"/>{{ t.label }}<Badge v-if="G.org.viewDefaults[t.value]" variant="outline" class="ml-1">Changed</Badge></span>
+            <Select size="sm" class="w-48" :model-value="viewOf(t.value)" @update:model-value="v => setView(t.value, v)" :options="t.opts" align="end" :disabled="t.opts.length < 2"/>
+          </div></div></div></Card>
+    </div>`
+  };
+
   const WorkspacePage = {
     setup() {
       const tz = [{ value: 'Africa/Dar_es_Salaam', label: 'East Africa Time (Dar es Salaam)' }, { value: 'Africa/Nairobi', label: 'East Africa Time (Nairobi)' }, { value: 'UTC', label: 'UTC' }];
@@ -1712,19 +1739,22 @@ const ShellMod = (() => {
       const W = reactive({ tz: 'Africa/Dar_es_Salaam', timeout: '120' });
       watch(() => G.org, o => { if (!o.quiet) o.quiet = reactive({ on: true, from: '20:00', to: '07:00' }); }, { immediate: true });
       const HOURS = Array.from({ length: 24 }, (_, h) => ({ value: String(h).padStart(2, '0') + ':00', label: String(h).padStart(2, '0') + ':00' }));
-      const types = TYPES.map(t => ({ ...t, opts: TYPE_VIEWS[t.value].map((v, i) => ({ value: v, label: VIEWS[v].label + (i === 0 ? ' (built-in)' : ''), icon: VIEWS[v].icon })) }));
-      const viewOf = (t) => G.org.viewDefaults[t] || TYPE_VIEWS[t][0];
-      function setView(t, v) { if (v === TYPE_VIEWS[t][0]) delete G.org.viewDefaults[t]; else G.org.viewDefaults[t] = v; G.toast('Default view saved', 'Applies to every form without its own choice for that question.', 'ChartBarBig'); }
-      const changed = computed(() => Object.keys(G.org.viewDefaults).length);
-      function resetViews() { Object.keys(G.org.viewDefaults).forEach(k => delete G.org.viewDefaults[k]); G.toast('Chart views reset', 'Every type uses its built-in default.', 'RotateCcw'); }
+      const tabs = computed(() => [{ value: 'general', label: 'General' }, ...SETTINGS_TABS.filter(t => !t.perm || myPerms.value.includes(t.perm)), { value: 'notifications', label: 'Notifications' }, { value: 'security', label: 'Security' }]);
+      const S = reactive({ tab: G.pendingTab || 'general' });
+      watch(() => G.pendingTab, (v) => { if (v) S.tab = v; });
+      watch(() => S.tab, (t) => { G.tab = t === 'general' ? null : t; }, { immediate: true });   // P42 + P39: the tab is part of the link; General is the bare address
+      watch(tabs, (ts) => { if (!ts.some(t => t.value === S.tab)) S.tab = 'general'; }, { immediate: true });
+      const product = computed(() => SETTINGS_TABS.find(t => t.value === S.tab));
       let accT = 0; function accSaved() { clearTimeout(accT); accT = setTimeout(() => G.toast('Brand colour saved', 'Everyone in ' + G.org.name + ' sees it from their next page.', 'Palette'), 250); }
       watch(() => G.org.accent, (v, o) => { if (o !== undefined && accIsHex(v)) accSaved(); });
-      return { HOURS, G, W, tz, timeout, types, viewOf, setView, changed, resetViews, ACCENTS, canManage, accSaved };
+      return { HOURS, G, W, S, tabs, product, tz, timeout, ACCENTS, canManage, accSaved };
     },
-    template: `<div class="mx-auto grid max-w-[820px] grid-cols-[minmax(0,1fr)] gap-3">
-      <div><h2 class="text-xl font-semibold tracking-tight">Workspace settings</h2><p class="text-sm text-muted-foreground">Applies to everyone in {{ G.org.name }}.</p></div>
+    template: `<div :class="['mx-auto grid grid-cols-[minmax(0,1fr)] gap-3', product && product.wide ? 'max-w-[1000px]' : 'max-w-[820px]']">
+      <div><h2 class="text-xl font-semibold tracking-tight">Settings</h2><p class="text-sm text-muted-foreground">Applies to everyone in {{ G.org.name }}.</p></div>
+      <div class="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:overflow-visible sm:px-0"><Tabs v-model="S.tab" :items="tabs" class="sm:h-auto sm:flex-wrap sm:justify-start"/></div>
       <p v-if="!canManage()" class="flex items-center gap-2 rounded-lg border bg-muted/60 p-3 text-sm text-muted-foreground"><Icon name="Lock" :size="15"/>Only owners and admins can change these settings.</p>
-      <fieldset :disabled="!canManage()" class="grid gap-3 disabled:opacity-70">
+      <fieldset :key="S.tab" :disabled="!canManage()" class="grid min-w-0 gap-3 disabled:opacity-70">
+      <template v-if="S.tab==='general'">
       <Card class="kpi"><div class="grid gap-4 p-4 sm:p-5"><h3 class="font-semibold">General</h3>
         <div class="grid gap-3 sm:grid-cols-2"><div class="grid gap-1.5"><label for="w-n" class="text-sm font-medium">Organisation name</label><Input id="w-n" v-model="G.org.name"/></div>
           <div class="grid gap-1.5"><label for="w-s" class="text-sm font-medium">Address</label><div class="flex h-9 items-center rounded-md border border-input text-sm shadow-sm"><span class="border-r bg-muted/50 px-2.5 py-2 text-xs text-muted-foreground">{{ PRODUCT.domain }}/</span><input id="w-s" v-model="G.org.slug" class="h-full min-w-0 flex-1 bg-transparent px-2 outline-none"></div></div>
@@ -1734,25 +1764,25 @@ const ShellMod = (() => {
         <RichText v-model="G.org.footer" label="Invitation email footer" :max="400" placeholder="Contact details, office hours, a short note…" help="Added under every invitation and reminder email."/></div></Card>
       <Card class="kpi" style="animation-delay:60ms"><div class="grid gap-3 p-4 sm:p-5"><div><h3 class="font-semibold">Brand colour</h3><p class="text-sm text-muted-foreground">Buttons, links, focus rings, sign-in and the page curtain use it, for everyone in {{ G.org.name }} from their next page. Status and chart colours never change.</p></div>
         <AccentPicker v-model="G.org.accent" id-prefix="w-acc" @change="accSaved"/></div></Card>
-      <Card class="kpi" style="animation-delay:120ms"><div class="p-4 sm:p-5">
-        <div class="flex flex-wrap items-start justify-between gap-2"><div><h3 class="font-semibold">Result chart defaults</h3><p class="text-sm text-muted-foreground">How each question type is charted in Results. Someone can still change the view on a single question; that choice wins for that form.</p></div>
-          <Button v-if="changed" variant="ghost" size="sm" @click="resetViews"><Icon name="RotateCcw" :size="14"/>Reset {{ changed }}</Button></div>
-        <ol class="mt-3 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground" aria-label="Which view wins"><li class="rounded-md bg-muted px-2 py-1">Built-in default</li><Icon name="ChevronRight" :size="12"/><li class="rounded-md bg-primary/10 px-2 py-1 font-medium text-foreground">Workspace default (here)</li><Icon name="ChevronRight" :size="12"/><li class="rounded-md bg-muted px-2 py-1">Per question on a form</li></ol>
-        <div class="mt-3 divide-y rounded-lg border">
-          <div v-for="t in types" :key="t.value" class="flex flex-wrap items-center gap-3 px-3 py-2.5">
-            <span class="flex min-w-0 flex-1 items-center gap-2 text-sm"><Icon :name="t.icon" :size="15" class="text-muted-foreground"/>{{ t.label }}<Badge v-if="G.org.viewDefaults[t.value]" variant="outline" class="ml-1">Changed</Badge></span>
-            <Select size="sm" class="w-48" :model-value="viewOf(t.value)" @update:model-value="v => setView(t.value, v)" :options="t.opts" align="end" :disabled="t.opts.length < 2"/>
-          </div></div></div></Card>
-      <Card class="kpi" style="animation-delay:180ms"><div class="p-4 sm:p-5"><h3 class="font-semibold">Security</h3>
+      </template>
+      <component v-else-if="product" :is="product.comp"/>
+      <template v-else-if="S.tab==='notifications'">
+      <Card class="kpi"><div class="p-4 sm:p-5"><h3 class="font-semibold">Quiet hours</h3>
+        <div class="mt-1 divide-y">
+          <div class="grid gap-3 py-3"><div class="flex items-start justify-between gap-6"><div><label for="w-quiet" class="text-sm font-medium">Hold SMS and push overnight</label><p class="mt-1 text-sm text-muted-foreground">Approval texts and push notifications wait until the window ends. In-app and email still go. Steps marked required ignore this.</p></div><Switch id="w-quiet" v-model="G.org.quiet.on"/></div>
+            <div v-if="G.org.quiet.on" class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">From<Select size="sm" class="w-24" v-model="G.org.quiet.from" :options="HOURS" aria-label="Quiet from"/>to<Select size="sm" class="w-24" v-model="G.org.quiet.to" :options="HOURS" aria-label="Quiet until"/><span>{{ W.tz === 'UTC' ? 'UTC' : 'EAT' }}</span></div></div>
+        </div></div></Card>
+      </template>
+      <template v-else-if="S.tab==='security'">
+      <Card class="kpi" ><div class="p-4 sm:p-5"><h3 class="font-semibold">Security</h3>
         <div class="mt-1 divide-y">
           <div class="flex items-start justify-between gap-6 py-3"><div><label for="w-2fa" class="text-sm font-medium">Require two-step verification</label><p class="mt-1 text-sm text-muted-foreground">Members without it are asked to set it up before they can continue. 2 members still need to.</p></div><Switch id="w-2fa" v-model="G.org.require2fa"/></div>
           <div class="flex items-start justify-between gap-6 py-3"><div><span class="text-sm font-medium">Sign out after inactivity</span><p class="mt-1 text-sm text-muted-foreground">Applies to builder and results, not to respondents.</p></div><Select size="sm" class="w-36" v-model="W.timeout" :options="timeout" align="end"/></div>
-          <div class="grid gap-3 py-3"><div class="flex items-start justify-between gap-6"><div><label for="w-quiet" class="text-sm font-medium">Quiet hours for SMS and push</label><p class="mt-1 text-sm text-muted-foreground">Approval texts and push notifications wait until the window ends. In-app and email still go. Steps marked required ignore this.</p></div><Switch id="w-quiet" v-model="G.org.quiet.on"/></div>
-            <div v-if="G.org.quiet.on" class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">From<Select size="sm" class="w-24" v-model="G.org.quiet.from" :options="HOURS" aria-label="Quiet from"/>to<Select size="sm" class="w-24" v-model="G.org.quiet.to" :options="HOURS" aria-label="Quiet until"/><span>{{ W.tz === 'UTC' ? 'UTC' : 'EAT' }}</span></div></div>
         </div></div></Card>
+      </template>
       </fieldset>
     </div>`
   };
 
-  return { AuthView, ShellView, comps: { NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, Spark, OrgAvatar, AccentPicker, OrgSwitcher, NewOrgDialog } };
+  return { AuthView, ShellView, comps: { NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, ResultChartSettings, Spark, OrgAvatar, AccentPicker, OrgSwitcher, NewOrgDialog } };
 })();

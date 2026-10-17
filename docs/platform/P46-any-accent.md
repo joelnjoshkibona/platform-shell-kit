@@ -1,4 +1,4 @@
-# P42 · Any brand colour, with contrast enforced
+# P46 · Any brand colour, with contrast enforced
 
 Status: **decided when this note merges** (kit, 2026-10-17, from the Pangisha build: its deep green is not one of the six P41 accents).
 Builds on P41 (the organisation's accent recolours primary and the curtain) and P8 (the page curtain). **Amends P41:** the accent is no longer limited to six keys.
@@ -49,7 +49,7 @@ The reference implementation is `deriveAccent` and `accentChecks` in `prototype/
   - `PATCH` the organisation's `branding.accent` with a preset key or `#rrggbb`.
   - Anything else gets **422** with `branding.accent: "Pick a preset or a colour like #166445."`. That is the only refusal; a colour that fails contrast is adjusted, never refused.
   - The server runs the same derivation (a PHP port) and stores `branding.accent` (what was picked) and `branding.accent_tokens` (the ten derived values plus `adjusted`). The response returns both.
-  - The port must reproduce `docs/platform/p42-accent-vectors.json` exactly (a unit test). Server and web therefore never disagree, and the stored tokens are what every client paints.
+  - The port must reproduce `docs/platform/p46-accent-vectors.json` exactly (a unit test). Server and web therefore never disagree, and the stored tokens are what every client paints.
   - Existing P41 rows (`teal` … `slate`) need no migration.
 - **Web.**
   - `applyAccent(value)` writes one `<style id="org-accent">` with both themes (`:root:root` so it outranks the product tokens wherever it lands). It also stores that CSS under `<storageKey>-accent` for the boot script.

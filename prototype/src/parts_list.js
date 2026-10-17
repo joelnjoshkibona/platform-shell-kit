@@ -1,6 +1,6 @@
 
   /* ================================================================ LISTS, REFRESH, SEARCH, DASHBOARD (D29–D32) */
-  const TODAY = new Date('2026-10-10T12:00:00');
+  const TODAY = new Date('2026-10-12T12:00:00');   // P44: the kit clock is a weekday (Mon 12 Oct 2026, EAT); every seeded date derives from it
   const isoDay = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   const daysAgo = (n) => { const d = new Date(TODAY); d.setDate(d.getDate() - n); return isoDay(d); };
   /* the mock data carries "2h ago"-style strings; turn them into dates so date filters have something real to compare */
@@ -355,7 +355,7 @@
       const attention = computed(() => { const out = []; const wq = waitingForMe.value.length; if (wq) out.push({ icon: 'Stamp', tone: 'warning', text: wq + ' request' + (wq > 1 ? 's' : '') + ' waiting for your approval', go: () => nav('approvals') }); const fl = VF.value.reduce((a, f) => a + (f.flagged || 0), 0); if (fl) out.push({ icon: 'TriangleAlert', tone: 'warning', text: fl + ' responses with violations to review', go: () => nav('responses') }); const dr = VF.value.filter(f => f.status === 'draft').length; if (dr) out.push({ icon: 'FilePen', tone: 'muted', text: dr + ' draft forms not published yet', go: () => nav('forms') }); const no2 = MEMBERS.filter(m => !m.twofa && !m.invited).length; if (no2 && !G.viewAs) out.push({ icon: 'ShieldAlert', tone: 'warning', text: no2 + ' people without two-step verification', go: () => nav('members') }); const inact = locsOf().filter(l => l.status === 'inactive' && inScope(l.id)).length; if (inact) out.push({ icon: 'MapPinOff', tone: 'muted', text: inact + ' inactive location' + (inact > 1 ? 's' : ''), go: () => nav('locations') }); return out; });
       const hour = TODAY.getHours();
       const peopleCount = computed(() => { if (!G.viewAs) return MEMBERS.length; const ids = new Set(locsOf().filter(l => inScope(l.id)).map(l => l.id)); return new Set(assignsOf().filter(a => ids.has(a.loc) && a.email !== PREVIEW_EMAIL).map(a => a.email)).size; });
-      return { ACCENTS, peopleCount, G, R, refresh, VF, live, week, byLoc, closing, attention, ACTIVITY, openForm, openLoc, nav, ROLE, root, greeting: hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening', respList };
+      return { ACCENTS, peopleCount, G, R, refresh, VF, live, week, byLoc, closing, attention, activityOf, openForm, openLoc, nav, ROLE, root, greeting: hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening', respList };
     },
     template: `<div class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">
       <div class="flex flex-wrap items-end justify-between gap-3">
@@ -386,7 +386,7 @@
             <ul v-if="closing.length" class="mt-2 divide-y"><li v-for="f in closing" :key="f.id"><button type="button" @click="openForm(f)" class="flex w-full items-center gap-3 py-2 text-left hover:bg-muted/40"><span class="form-theme h-8 w-1 shrink-0 rounded-full bg-fa" :style="{ '--fa-l': ACCENTS[f.accent].l, '--fa-d': ACCENTS[f.accent].d }"></span><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ f.title }}</span><span class="block text-xs text-muted-foreground tnum">{{ f.responses }} responses · {{ f.closes }}</span></span><Spark v-if="f.spark" :data="f.spark" class="h-6 w-16"/></button></li></ul>
             <p v-else class="mt-4 text-sm text-muted-foreground">No live forms with a close date.</p></div></Card>
           <Card class="kpi" style="animation-delay:340ms"><div class="p-4"><h3 class="text-sm font-semibold">Recent activity</h3>
-            <ol class="mt-2 grid gap-3"><li v-for="(e, i) in ACTIVITY" :key="i" class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"><Icon :name="e.icon" :size="13"/></span><div class="min-w-0 text-sm"><p><span class="font-medium">{{ e.text }}</span><span v-if="e.what" class="text-muted-foreground"> · {{ e.what }}</span></p><p class="text-xs text-muted-foreground">{{ e.who }} · {{ e.when }}</p></div></li></ol></div></Card>
+            <ol v-if="activityOf().length" class="mt-2 grid gap-3"><li v-for="(e, i) in activityOf()" :key="i" class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"><Icon :name="e.icon" :size="13"/></span><div class="min-w-0 text-sm"><p><span class="font-medium">{{ e.text }}</span><span v-if="e.what" class="text-muted-foreground"> · {{ e.what }}</span></p><p class="text-xs text-muted-foreground">{{ e.who }} · {{ e.when }}</p></div></li></ol><p v-else class="mt-4 text-sm text-muted-foreground">Nothing has happened in {{ G.org.name }} yet.</p></div></Card>
         </div>
       </div>
     </div>`

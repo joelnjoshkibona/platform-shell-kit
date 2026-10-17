@@ -59,7 +59,7 @@ ent("01", "ORGANIZATIONS", [
     ("string", "name", "", ""),
     ("string", "slug", "UK", "path segment /{org}"),
     ("bigint", "root_location_id", "FK", "locations.id of type organization"),
-    ("json", "branding", "", "logo, accent (preset key or #rrggbb), accent_tokens (derived, P42), default theme"),
+    ("json", "branding", "", "logo, accent (preset key or #rrggbb), accent_tokens (derived, P46), default theme"),
     ("string", "timezone", "", "default Africa/Dar_es_Salaam"),
     ("json", "summary_view_defaults", "", "per question type chart view"),
     ("boolean", "require_2fa", "", ""),

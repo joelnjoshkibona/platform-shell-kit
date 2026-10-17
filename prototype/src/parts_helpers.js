@@ -16,7 +16,7 @@ const TYPES = [
 ];
 const TYPE = Object.fromEntries(TYPES.map(t => [t.value, t]));
 
-const ACCENTS = {   // P41 presets: primary light/dark, dark-theme foreground where it differs, curtain pairs (all pass the P42 checks)
+const ACCENTS = {   // P41 presets: primary light/dark, dark-theme foreground where it differs, curtain pairs (all pass the P46 checks)
   teal:   { label: 'Teal',   l: '174 72% 26%', d: '170 62% 46%', cl: '170 62% 46%', clfg: '174 80% 8%', cd: '166 58% 13%', cdfg: '166 40% 92%' },
   blue:   { label: 'Blue',   l: '221 83% 45%', d: '217 91% 64%', dfg: '222 47% 8%', cl: '217 91% 64%', clfg: '221 80% 8%', cd: '217 58% 13%', cdfg: '217 40% 92%' },
   violet: { label: 'Violet', l: '262 62% 50%', d: '262 80% 72%', cl: '262 80% 72%', clfg: '262 80% 8%', cd: '262 58% 13%', cdfg: '262 40% 92%' },
@@ -25,8 +25,8 @@ const ACCENTS = {   // P41 presets: primary light/dark, dark-theme foreground wh
   slate:  { label: 'Slate',  l: '215 25% 27%', d: '215 20% 72%', cl: '215 20% 72%', clfg: '215 80% 8%', cd: '215 25% 15%', cdfg: '215 20% 92%' },
 };
 
-/* ---------------------------------------------------------------- P42: the organisation's accent (any colour, contrast enforced)
-   One input (a preset key or #rrggbb) -> every token, both themes. The server runs the same derivation (docs/platform/p42-accent-vectors.json)
+/* ---------------------------------------------------------------- P46: the organisation's accent (any colour, contrast enforced)
+   One input (a preset key or #rrggbb) -> every token, both themes. The server runs the same derivation (docs/platform/p46-accent-vectors.json)
    and stores the result; the web only derives for the live preview. ACCENT-CORE-START */
 const ACC_PAGE = { l: [0, 0, 100], d: [240, 10, 3.9] };            // --background per theme
 const ACC_INK = { light: [0, 0, 98], dark: [240, 10, 4] };          // button text: near-white (light theme), near-black (dark theme)
