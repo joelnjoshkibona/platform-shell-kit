@@ -1224,6 +1224,8 @@ const ShellMod = (() => {
       demo: `<div class="flex flex-wrap items-center gap-3 rounded-md border border-warning/40 bg-warning/15 px-3 py-2 text-sm"><Icon name="Eye" :size="16" class="text-warning"/><p class="min-w-0 flex-1"><span class="font-semibold">Viewing as Hamisi Swai</span><span class="text-muted-foreground"> · Viewer · Branch supervisor at Arusha Branch · read-only</span></p><Button size="sm" variant="outline" class="h-7 bg-background"><Icon name="LogOut" :size="13"/>Exit</Button></div>` },
     { name: 'Approval steps', ui: 'ApprovalSteps, ApproveDialog', tag: 'Data', specs: [['Step', '32px state circle (done teal, waiting amber, rejected red), name 14/500, rule 12px muted'], ['Approvers', 'chips with initials + why (role at which location)'], ['Escalation', 'amber chip when nobody holds the role at the location chain'], ['Decision', 'tinted card: who, decision, delegated-by note, quoted comment'], ['Compact', 'row dots, 20×6px each']], variants: 'full timeline · compact dots', used: 'Approvals inbox and request page',
       demo: `<div class="grid gap-4"><ApprovalSteps :req="s.req" compact/><ApprovalSteps :req="s.req"/></div>` },
+    { name: 'App icon and splash', ui: 'AppIcon, AppSplash', tag: 'Display', specs: [['Icon', 'the product mark (BrandMark) on the default brand colour; adaptive icon, mark at 46% of the tile, corner 22%'], ['Splash', 'the closed boot curtain: --curtain background, the mark in a 15% tile, "Loading <product>…"'], ['Sizes', '512 store · 192 · 96 · 48 launcher']], variants: 'icon, splash', used: 'The phone app only (P55). The splash, the first frame and the web view\'s first paint are one picture.',
+      demo: `<div class="flex flex-wrap items-end gap-5"><AppIcon :size="96"/><AppIcon :size="64"/><AppIcon :size="48"/><div class="grid h-48 w-28 place-items-center rounded-2xl border" style="background:hsl(var(--curtain));color:hsl(var(--curtain-fg))"><div class="grid justify-items-center"><span class="grid h-10 w-10 place-items-center rounded-xl" style="background:hsl(var(--curtain-fg) / .15)"><BrandMark :size="18"/></span><p class="mt-2 text-[10px] font-medium">Loading {{ PRODUCT.name }}…</p></div></div></div>` },
   ];
 
   const DesignPage = {
@@ -1498,7 +1500,9 @@ const ShellMod = (() => {
           </div>
         </header>
         <main class="flex-1 px-3 pb-24 pt-4 sm:px-5 lg:pb-10">
-          <div v-if="G.switching" class="mx-auto grid max-w-[1200px] gap-4" aria-busy="true" aria-label="Loading organisation">
+          <AppUpdateBanner/><ConnectionNotice v-if="G.app.conn==='banner'" variant="banner"/>
+          <ConnectionNotice v-if="G.app.conn==='page'" variant="page"/>
+          <div v-else-if="G.switching" class="mx-auto grid max-w-[1200px] gap-4" aria-busy="true" aria-label="Loading organisation">
             <div class="flex items-center gap-3"><div class="h-10 w-10 animate-pulse rounded-md bg-muted"></div><div class="grid gap-2"><div class="h-3 w-24 animate-pulse rounded bg-muted"></div><div class="h-5 w-56 animate-pulse rounded bg-muted"></div></div></div>
             <div class="grid grid-cols-2 gap-2 lg:grid-cols-4"><div v-for="n in 4" :key="n" class="h-24 animate-pulse rounded-xl bg-muted/70"></div></div>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"><div v-for="n in 6" :key="n" class="h-40 animate-pulse rounded-xl bg-muted/70"></div></div>
@@ -1529,6 +1533,7 @@ const ShellMod = (() => {
       <MyDraftsSheet/>
       <NotifPrefsSheet/>
       <NewRequestDialog/>
+      <AppNotifsAsk/><AppUpdateRequired/><AppBackHint/><AppSplash/>
       <div class="pointer-events-none fixed inset-x-0 bottom-4 z-[60] flex flex-col items-center gap-2 px-3 lg:left-auto lg:right-4 lg:items-end" aria-live="polite">
         <TransitionGroup name="toast"><div v-for="t in T.toasts" :key="t.id" class="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border bg-popover p-3.5 text-popover-foreground shadow-lg"><Icon :name="t.icon" class="mt-0.5 text-primary"/><div class="min-w-0"><p class="text-sm font-medium">{{ t.title }}</p><p v-if="t.desc" class="text-xs text-muted-foreground">{{ t.desc }}</p></div></div></TransitionGroup>
       </div>

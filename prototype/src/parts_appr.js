@@ -386,6 +386,7 @@
     template: `<Sheet :open="!!G.myNotifs" @update:open="v => G.myNotifs = v">
       <div class="border-b p-4 pr-12"><h2 class="font-semibold">Notification settings</h2><p class="text-sm text-muted-foreground">How approval requests reach you. In-app always stays on.</p></div>
       <div class="grid content-start gap-3 overflow-y-auto p-4">
+        <AppNotifsRow/>
         <div v-for="(c, k) in CHANNELS" :key="k" class="flex items-center gap-3 rounded-lg border p-3">
           <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Icon :name="c.icon" :size="16"/></span>
           <div class="min-w-0 flex-1"><p class="text-sm font-medium">{{ c.label }}</p><p class="truncate text-xs text-muted-foreground">{{ k==='inapp' ? 'Bell and Approvals badge' : k==='email' ? me.email : k==='sms' ? (me.phone || 'Add a phone number first') : (APP_USERS.has(ME.email) ? 'Fomu app on your phone' : 'Install the app to get push') }}</p></div>

@@ -21,6 +21,7 @@ loc += open(SP + 'parts_listcard.js').read()   # P39: ListCard, ListShare, Locke
 loc += open(SP + 'parts_comp.js').read()
 loc += open(SP + 'parts_appr.js').read()
 loc += open(SP + 'parts_links.js').read()   # P39: every view has an address (keep last)
+loc += open(SP + 'parts_appshell.js').read()   # P51–P55: the phone app's own states (after links: Back uses its trail)
 # ---- Rules tab: FRONTEND_RULES.md -> sections of HTML (one source, D27)
 import html as _h, json as _j
 def _inline(t):
@@ -78,7 +79,7 @@ for t,cs in _tags.items():
         if a.get('do'): _md += [''] + ['- Do: '+d for d in a['do']]
         if a.get('dont'): _md += ['- Don\'t: '+d for d in a['dont']]
 open(os.path.join(KIT, 'docs', 'COMPONENTS.md'),'w').write('\n'.join(_md)+'\n')
-shell = shell.replace('  return { AuthView, ShellView, comps: {', loc + '\n  return { AuthView, ShellView, comps: { ListCard, ListRows, ListShare, LockedField, BackButton, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog,', 1)
+shell = shell.replace('  return { AuthView, ShellView, comps: {', loc + '\n  return { AuthView, ShellView, comps: { ListCard, ListRows, ListShare, LockedField, BackButton, ConnectionNotice, AppUpdateBanner, AppUpdateRequired, AppNotifsAsk, AppNotifsRow, AppBackHint, AppSplash, AppIcon, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog,', 1)
 
 def rep(s, a, b, count=1):
     assert s.count(a) >= 1, ('missing', a[:80])
@@ -249,8 +250,10 @@ const ScreensPill = {
     onMounted(() => document.addEventListener('pointerdown', onDoc));
     onBeforeUnmount(() => document.removeEventListener('pointerdown', onDoc));
     function go(r) { open.value = false; nav(r); }
+    const appItems = [['conn-page', 'No connection: a page', 'WifiOff'], ['conn-banner', 'No connection: a loaded page', 'WifiOff'], ['update', 'Update available', 'Download'], ['update-required', 'Update required', 'CircleArrowUp'], ['notifs', 'Turn on notifications?', 'BellRing'], ['notifs-settings', 'Notifications on this phone', 'Smartphone'], ['back', 'Back on the first screen', 'Undo2'], ['splash', 'Splash screen', 'Sparkles']];
+    function app(k) { open.value = false; G.appState && G.appState(k); }
     function phone(v) { open.value = false; G.phone = v; }
-    return { open, root, groups, go, G, phone, IN_PHONE };
+    return { open, root, groups, go, G, phone, IN_PHONE, appItems, app };
   },
   template: `<div ref="root" :class="['fixed z-[45]', G.route==='builder' ? 'bottom-20 lg:bottom-4' : 'bottom-4', G.isShell(G.route) ? (G.navCollapsed ? 'left-3 lg:left-[76px]' : 'left-3 lg:left-[252px]') : 'left-3']" style="margin-bottom:env(safe-area-inset-bottom,0px)">
     <div v-if="open" class="pop absolute bottom-full left-0 mb-2 w-72 rounded-lg border bg-popover p-1.5 text-popover-foreground shadow-xl" role="menu">
@@ -261,6 +264,8 @@ const ScreensPill = {
       <p class="px-2 pb-1 pt-1.5 text-xs text-muted-foreground">Jump to any screen in the prototype.</p>
       <template v-for="g in groups" :key="g.label"><p class="px-2 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{{ g.label }}</p>
         <button v-for="it in g.items" :key="it[0]" type="button" role="menuitem" @click="go(it[0])" :class="['flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent', G.route===it[0] ? 'bg-accent font-medium' : '']"><Icon :name="it[2]" :size="15" class="text-muted-foreground"/>{{ it[1] }}</button></template>
+      <p class="px-2 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Phone app</p>
+      <button v-for="it in appItems" :key="it[0]" type="button" role="menuitem" @click="app(it[0])" class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent"><Icon :name="it[2]" :size="15" class="text-muted-foreground"/>{{ it[1] }}</button>
     </div>
     <button type="button" @click="open=!open" :aria-expanded="open" class="inline-flex items-center gap-2 rounded-full border bg-popover px-3 py-2 text-xs font-medium text-popover-foreground shadow-lg hover:bg-accent"><Icon name="Map" :size="14"/>Screens</button>
   </div>`
@@ -286,7 +291,9 @@ const PhoneFrame = {
     onBeforeUnmount(() => window.removeEventListener('resize', fit));
     const doc = __SRC.replace(/<head([^>]*)>/i, (m) => m + '<script>window.__PHONE=true;window.__INIT_ROUTE=' + JSON.stringify(G.route) + ';<\/script>');
     const clock = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    return { G, scale, doc, clock, PRODUCT };
+    const frame = ref(null);
+    function back() { const w = frame.value && frame.value.contentWindow; if (w && w.G && w.G.phoneBack) w.G.phoneBack(); }   // P52: the Android Back key
+    return { G, scale, doc, clock, PRODUCT, frame, back };
   },
   template: `<div class="fixed inset-0 z-[80] flex flex-col items-center overflow-auto bg-canvas px-4 py-4">
     <div class="mb-3 flex w-full max-w-md items-center justify-between gap-3">
@@ -298,8 +305,8 @@ const PhoneFrame = {
           <div class="relative flex h-11 shrink-0 items-center justify-between bg-background px-7 text-[13px] font-semibold tnum"><span>{{ clock }}</span>
             <span class="absolute left-1/2 top-2 h-7 w-28 -translate-x-1/2 rounded-full bg-[#18181b]" aria-hidden="true"></span>
             <span class="flex items-center gap-1"><Icon name="Signal" :size="14"/><Icon name="Wifi" :size="14"/><Icon name="BatteryFull" :size="16"/></span></div>
-          <iframe :srcdoc="doc" :title="PRODUCT.name + ' on a phone'" class="block w-full flex-1 border-0 bg-background"></iframe>
-          <div class="flex h-6 shrink-0 items-center justify-center bg-background"><span class="h-1 w-32 rounded-full bg-foreground/80"></span></div>
+          <iframe ref="frame" :srcdoc="doc" :title="PRODUCT.name + ' on a phone'" class="block w-full flex-1 border-0 bg-background"></iframe>
+          <div class="relative flex h-6 shrink-0 items-center justify-center bg-background"><button type="button" class="absolute left-10 grid h-6 w-10 place-items-center text-foreground/70 hover:text-foreground" aria-label="Phone back button" @click="back"><Icon name="ChevronLeft" :size="18"/></button><span class="h-1 w-32 rounded-full bg-foreground/80"></span></div>
         </div></div></div>
     <p class="mt-3 max-w-md text-center text-xs text-muted-foreground">The phone runs its own copy of the prototype. Use its Screens button to move around.</p>
   </div>`

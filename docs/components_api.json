@@ -1514,5 +1514,97 @@
       "Leave a record page with only the breadcrumb or the browser's back",
       "Use router.back(): a pasted link has no history in the app"
     ]
+  },
+  "Connection notice": {
+    "file": "src/components/app/states/ConnectionNotice.vue",
+    "props": [
+      [
+        "variant",
+        "'page' | 'banner'",
+        "'page'",
+        "page: in place of a page that never loaded; banner: above a page that did"
+      ]
+    ],
+    "emits": [],
+    "slots": [],
+    "do": [
+      "Drive it from one connection state fed by the API client (answered / not answered)",
+      "Recover by itself: retry on a timer, on the online event and on Try again"
+    ],
+    "dont": [
+      "Show empty lists or zero totals when a request had no answer",
+      "Queue writes while offline (online first)"
+    ]
+  },
+  "App update": {
+    "file": "src/components/app/app/AppUpdate.vue",
+    "props": [
+      [
+        "latest",
+        "string",
+        "",
+        "Newest version from the server"
+      ],
+      [
+        "minimum",
+        "string",
+        "",
+        "Oldest version the server still works with"
+      ]
+    ],
+    "emits": [
+      [
+        "update",
+        "open the store or the download"
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Banner with Later below latest; full screen below minimum (P53)"
+    ],
+    "dont": [
+      "Block the app for an optional update"
+    ]
+  },
+  "Notification ask": {
+    "file": "src/components/app/app/NotificationAsk.vue",
+    "props": [],
+    "emits": [
+      [
+        "enable",
+        "then the system prompt"
+      ],
+      [
+        "later",
+        ""
+      ]
+    ],
+    "slots": [],
+    "do": [
+      "Explain what will arrive before the system prompt (P54)",
+      "Offer it again only from Notification settings"
+    ],
+    "dont": [
+      "Trigger the system prompt on first launch"
+    ]
+  },
+  "App icon": {
+    "file": "src/components/app/app/AppIcon.vue",
+    "props": [
+      [
+        "size",
+        "number",
+        "96",
+        "Pixel size"
+      ]
+    ],
+    "emits": [],
+    "slots": [],
+    "do": [
+      "The product mark on the default brand colour (P55)"
+    ],
+    "dont": [
+      "Draw a different logo for the app"
+    ]
   }
 }
