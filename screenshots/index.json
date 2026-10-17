@@ -1083,5 +1083,117 @@
     "title": "Timer under one minute",
     "combo": "phone-dark",
     "file": "respondent--timer-warning__phone-dark.png"
+  },
+  {
+    "name": "app--no-connection",
+    "route": "members",
+    "title": "No connection: a page that never loaded (P51)",
+    "combo": "phone-dark",
+    "file": "app--no-connection__phone-dark.png"
+  },
+  {
+    "name": "app--no-connection",
+    "route": "members",
+    "title": "No connection: a page that never loaded (P51)",
+    "combo": "phone-light",
+    "file": "app--no-connection__phone-light.png"
+  },
+  {
+    "name": "app--offline-banner",
+    "route": "dashboard",
+    "title": "No connection: a loaded page keeps its figures (P51)",
+    "combo": "phone-dark",
+    "file": "app--offline-banner__phone-dark.png"
+  },
+  {
+    "name": "app--offline-banner",
+    "route": "dashboard",
+    "title": "No connection: a loaded page keeps its figures (P51)",
+    "combo": "phone-light",
+    "file": "app--offline-banner__phone-light.png"
+  },
+  {
+    "name": "app--update",
+    "route": "dashboard",
+    "title": "A new version is ready (P53)",
+    "combo": "phone-dark",
+    "file": "app--update__phone-dark.png"
+  },
+  {
+    "name": "app--update",
+    "route": "dashboard",
+    "title": "A new version is ready (P53)",
+    "combo": "phone-light",
+    "file": "app--update__phone-light.png"
+  },
+  {
+    "name": "app--update-required",
+    "route": "dashboard",
+    "title": "Update required: the app waits (P53)",
+    "combo": "phone-dark",
+    "file": "app--update-required__phone-dark.png"
+  },
+  {
+    "name": "app--update-required",
+    "route": "dashboard",
+    "title": "Update required: the app waits (P53)",
+    "combo": "phone-light",
+    "file": "app--update-required__phone-light.png"
+  },
+  {
+    "name": "app--notifications",
+    "route": "dashboard",
+    "title": "Turn on notifications? Explain first (P54)",
+    "combo": "phone-dark",
+    "file": "app--notifications__phone-dark.png"
+  },
+  {
+    "name": "app--notifications",
+    "route": "dashboard",
+    "title": "Turn on notifications? Explain first (P54)",
+    "combo": "phone-light",
+    "file": "app--notifications__phone-light.png"
+  },
+  {
+    "name": "app--notifications-settings",
+    "route": "dashboard",
+    "title": "Notification settings: on this phone (P54)",
+    "combo": "phone-dark",
+    "file": "app--notifications-settings__phone-dark.png"
+  },
+  {
+    "name": "app--notifications-settings",
+    "route": "dashboard",
+    "title": "Notification settings: on this phone (P54)",
+    "combo": "phone-light",
+    "file": "app--notifications-settings__phone-light.png"
+  },
+  {
+    "name": "app--back-twice",
+    "route": "dashboard",
+    "title": "Back on the first screen: press again to leave (P52)",
+    "combo": "phone-dark",
+    "file": "app--back-twice__phone-dark.png"
+  },
+  {
+    "name": "app--back-twice",
+    "route": "dashboard",
+    "title": "Back on the first screen: press again to leave (P52)",
+    "combo": "phone-light",
+    "file": "app--back-twice__phone-light.png"
+  },
+  {
+    "name": "app--splash",
+    "route": "dashboard",
+    "title": "Splash: the closed boot curtain (P55)",
+    "combo": "phone-dark",
+    "file": "app--splash__phone-dark.png"
+  },
+  {
+    "name": "app--splash",
+    "route": "dashboard",
+    "title": "Splash: the closed boot curtain (P55)",
+    "combo": "phone-light",
+    "file": "app--splash__phone-light.png"
   }
 ]

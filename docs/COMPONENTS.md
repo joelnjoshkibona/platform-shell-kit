@@ -8,7 +8,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 - **Actions**: Button
 - **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Locked field, File picker · Media library, API select, Rich text, Date picker, Accent picker
-- **Display**: Badge · Status pill, Card · KPI tile
+- **Display**: Badge · Status pill, Card · KPI tile, App icon and splash
 - **Navigation**: Tabs, Sidebar item, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, View as banner
@@ -398,6 +398,18 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: 2 columns on phones, 4 on desktop
 - Do: kpi class for the rise-in stagger
 - Don't: More than 4 KPIs in one strip
+
+### App icon and splash
+
+`AppIcon, AppSplash`
+
+| Spec | Value |
+| --- | --- |
+| Icon | the product mark (BrandMark) on the default brand colour; adaptive icon, mark at 46% of the tile, corner 22% |
+| Splash | the closed boot curtain: --curtain background, the mark in a 15% tile, "Loading <product>…" |
+| Sizes | 512 store · 192 · 96 · 48 launcher |
+| Variants | icon, splash |
+| Used in | The phone app only (P55). The splash, the first frame and the web view's first paint are one picture. |
 
 ## Navigation
 
