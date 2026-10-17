@@ -98,12 +98,19 @@
     here = now;
   }, { immediate: true });
   function goBack() {
-    let prev = TRAIL.pop();
-    while (prev && prev.route === G.route && prev.rec === snapNow().rec) prev = TRAIL.pop();
-    if (!prev) { nav(BACK_PARENT[G.route] || 'dashboard'); return; }
-    backing = true;
-    if (prev.rec != null && LINK_DETAIL[prev.route]) LINK_DETAIL[prev.route].set(prev.rec);
-    nav(prev.route, prev.tab);
+    let i = TRAIL.length - 1;
+    while (i >= 0 && TRAIL[i].route === G.route && TRAIL[i].rec === snapNow().rec) i--;
+    const prev = i >= 0 ? TRAIL[i] : null;
+    // the whole step runs only once the page lets go: unsaved edits ask first, and Stay keeps the record and the trail
+    const go = () => {
+      TRAIL.length = Math.max(0, i);
+      if (!prev) { nav(BACK_PARENT[G.route] || 'dashboard'); return; }
+      backing = true;
+      if (prev.rec != null && LINK_DETAIL[prev.route]) LINK_DETAIL[prev.route].set(prev.rec);
+      nav(prev.route, prev.tab);
+    };
+    if (G.leaveGuard && G.leaveGuard(prev ? prev.route : (BACK_PARENT[G.route] || 'dashboard'), prev && prev.tab, go)) return;
+    go();
   }
   const BackButton = {
     setup() {

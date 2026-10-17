@@ -913,14 +913,15 @@ const ShellMod = (() => {
       /* D42: ticks are staged in a draft; a save bar shows the diff and who it affects */
       const reseed = () => { R2.draft = role.value ? [...role.value.perms] : []; };
       reseed();
-      watch(() => G.roleId, () => { reseed(); R2.tab = 'overview'; R2.filter = 'all'; R2.q = ''; window.scrollTo({ top: 0 }); });
+      // sync: another role opened from this page (Back, a link) must not be checked against this role's staged ticks
+      watch(() => G.roleId, () => { reseed(); R2.tab = 'overview'; R2.filter = 'all'; R2.q = ''; window.scrollTo({ top: 0 }); }, { flush: 'sync' });
       const diff = computed(() => { if (!role.value) return { add: [], remove: [] }; const saved = role.value.perms; return { add: R2.draft.filter(p => !saved.includes(p)), remove: saved.filter(p => !R2.draft.includes(p)) }; });
       const dirty = computed(() => diff.value.add.length + diff.value.remove.length > 0);
       function saveDraft() { const n = holders.value.length; role.value.perms.splice(0, role.value.perms.length, ...R2.draft); Object.assign(role.value, { updatedAt: 'Today', updatedBy: ME.name }); G.toast('Role saved', n ? 'Applies to ' + n + (n === 1 ? ' person' : ' people') + ' on their next request.' : 'Nobody holds it yet.', 'Shield'); }
       function discardDraft() { reseed(); }
       /* leaving with unsaved changes asks first (sidebar, breadcrumb, search, anything that uses nav) */
-      G.leaveGuard = (route, sub) => { if (!dirty.value) return false; R2.leave = { route, sub }; return true; };
-      function leaveAnyway() { const l = R2.leave; R2.leave = null; reseed(); nav(l.route, l.sub); }
+      G.leaveGuard = (route, sub, then) => { if (!dirty.value) return false; R2.leave = { route, sub, then }; return true; };   // then: a caller's own step (Back, P49) instead of nav
+      function leaveAnyway() { const l = R2.leave; R2.leave = null; reseed(); if (l.then) l.then(); else nav(l.route, l.sub); }
       const onUnload = (e) => { if (dirty.value) { e.preventDefault(); e.returnValue = ''; } };
       onMounted(() => window.addEventListener('beforeunload', onUnload));
       onBeforeUnmount(() => { G.leaveGuard = null; window.removeEventListener('beforeunload', onUnload); });
