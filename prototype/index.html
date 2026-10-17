@@ -6848,7 +6848,7 @@ const ScreensPill = {
 };
 const ROUTE_LABEL = new Proxy({ login: 'Sign in', twofa: 'Sign in', orgpick: 'Organisations', forgot: 'Sign in', forms: 'Forms', templates: 'Templates', members: 'Users', workspace: 'Settings', menus: 'Menu Management', design: 'Design system', builder: 'Builder', responses: 'Results', respondent: 'Live form' }, { get: (t, k) => t[k] || (typeof k === 'string' ? k.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase()) : undefined) });
 const Curtain = {
-  setup() { return { G, ROUTE_LABEL }; },
+  setup() { return { G, ROUTE_LABEL, PRODUCT }; },
   template: `<div class="curtain pointer-events-none fixed inset-0 z-[120]" :data-state="G.curtain" aria-hidden="true" :class="G.curtain!=='idle' && 'pointer-events-auto'">
     <div class="half half-l"></div><div class="half half-r"></div>
     <div class="curtain-loader" role="status" :aria-hidden="G.curtain!=='closed'">
@@ -6856,7 +6856,7 @@ const Curtain = {
         <span class="absolute inset-0 animate-spin rounded-full border-2" style="animation-duration:.8s;border-color:hsl(var(--curtain-fg) / .25);border-top-color:hsl(var(--curtain-fg))"></span>
         <span class="grid h-11 w-11 place-items-center rounded-xl" style="background:hsl(var(--curtain-fg) / .15);color:hsl(var(--curtain-fg))"><BrandMark :size="20"/></span>
       </div>
-      <p class="mt-4 text-sm font-medium" style="color:hsl(var(--curtain-fg))">{{ G.booting ? 'Loading ' + PNAME + '…' : 'Opening ' + (ROUTE_LABEL[G.route] || 'page') + '…' }}</p>
+      <p class="mt-4 text-sm font-medium" style="color:hsl(var(--curtain-fg))">{{ G.booting ? 'Loading ' + PRODUCT.name + '…' : 'Opening ' + (ROUTE_LABEL[G.route] || 'page') + '…' }}</p>
     </div></div>`
 };
 const PhoneFrame = {
@@ -6867,7 +6867,7 @@ const PhoneFrame = {
     onBeforeUnmount(() => window.removeEventListener('resize', fit));
     const doc = __SRC.replace(/<head([^>]*)>/i, (m) => m + '<script>window.__PHONE=true;window.__INIT_ROUTE=' + JSON.stringify(G.route) + ';<\/script>');
     const clock = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    return { G, scale, doc, clock };
+    return { G, scale, doc, clock, PRODUCT };
   },
   template: `<div class="fixed inset-0 z-[80] flex flex-col items-center overflow-auto bg-canvas px-4 py-4">
     <div class="mb-3 flex w-full max-w-md items-center justify-between gap-3">
@@ -6879,7 +6879,7 @@ const PhoneFrame = {
           <div class="relative flex h-11 shrink-0 items-center justify-between bg-background px-7 text-[13px] font-semibold tnum"><span>{{ clock }}</span>
             <span class="absolute left-1/2 top-2 h-7 w-28 -translate-x-1/2 rounded-full bg-[#18181b]" aria-hidden="true"></span>
             <span class="flex items-center gap-1"><Icon name="Signal" :size="14"/><Icon name="Wifi" :size="14"/><Icon name="BatteryFull" :size="16"/></span></div>
-          <iframe :srcdoc="doc" title="' + PNAME + ' on a phone" class="block w-full flex-1 border-0 bg-background"></iframe>
+          <iframe :srcdoc="doc" :title="PRODUCT.name + ' on a phone'" class="block w-full flex-1 border-0 bg-background"></iframe>
           <div class="flex h-6 shrink-0 items-center justify-center bg-background"><span class="h-1 w-32 rounded-full bg-foreground/80"></span></div>
         </div></div></div>
     <p class="mt-3 max-w-md text-center text-xs text-muted-foreground">The phone runs its own copy of the prototype. Use its Screens button to move around.</p>
