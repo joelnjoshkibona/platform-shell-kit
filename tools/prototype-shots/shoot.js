@@ -13,9 +13,10 @@ const path = require('path');
 
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf('--' + k); return i > -1 ? args[i + 1] : d; };
-const OUT = path.resolve(__dirname, opt('out', '../../screenshots'));
+const L = require('./layout');
+const OUT = opt('out') ? path.resolve(opt('out')) : L.SHOTS;
 const ONLY = (opt('only', '') || '').split(',').filter(Boolean);
-const HTML = fs.readFileSync(path.resolve(__dirname, '../../prototype/index.html'), 'utf8');
+const HTML = fs.readFileSync(L.HTML, 'utf8');
 // The prototype loads Geist from Google Fonts; serve the same files from @fontsource (the apps bundle these),
 // so the screenshots render the same font on any machine, offline.
 const FONT_DIRS = ['geist', 'geist-mono'].map(n => path.dirname(require.resolve(`@fontsource/${n}/package.json`)));

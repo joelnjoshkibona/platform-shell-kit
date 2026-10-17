@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf('--' + k); return i > -1 ? args[i + 1] : d; };
-const PROTO = path.resolve(__dirname, '../../screenshots');
+const PROTO = require('./layout').SHOTS;
 const APP = path.resolve(opt('app', '../../web/tests/visual/__screenshots__'));
 const OUT = path.resolve(opt('out', 'out/compare.html'));
 const index = JSON.parse(fs.readFileSync(path.join(PROTO, 'index.json'), 'utf8'));

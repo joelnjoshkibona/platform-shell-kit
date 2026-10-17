@@ -12,10 +12,11 @@ const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
 
-const SRC = fs.readFileSync(path.resolve(__dirname, '../../prototype/src/parts_helpers.js'), 'utf8');
+const L = require('./layout');
+const SRC = fs.readFileSync(path.join(L.SRC, 'parts_helpers.js'), 'utf8');
 const core = SRC.slice(SRC.indexOf('const ACCENTS = {'), SRC.indexOf('/* ACCENT-CORE-END */'));
 const A = new Function(core + ';return { ACCENTS, deriveAccent, accentChecks, accToHex };')();
-const VEC = path.resolve(__dirname, '../../docs/platform/p46-accent-vectors.json');
+const VEC = path.join(L.ROOT, 'docs/platform/p46-accent-vectors.json');
 let failed = 0; const fail = (m) => { failed++; console.log('FAIL', m); };
 
 // ---- unit
@@ -35,7 +36,7 @@ if (process.argv.includes('--write')) { fs.writeFileSync(VEC, json); console.log
 else if (!fs.existsSync(VEC) || fs.readFileSync(VEC, 'utf8') !== json) fail('docs/platform/p46-accent-vectors.json is out of date: run node accent.test.js --write');
 
 // ---- browser
-const HTML = fs.readFileSync(path.resolve(__dirname, '../../prototype/index.html'), 'utf8');
+const HTML = fs.readFileSync(L.HTML, 'utf8');
 const CSS = fs.readFileSync(path.resolve(__dirname, '.tw.css'), 'utf8');
 async function page(ctx, route, noApp) {
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
