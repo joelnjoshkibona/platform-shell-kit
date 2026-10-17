@@ -3614,14 +3614,15 @@ const ShellMod = (() => {
       /* D42: ticks are staged in a draft; a save bar shows the diff and who it affects */
       const reseed = () => { R2.draft = role.value ? [...role.value.perms] : []; };
       reseed();
-      watch(() => G.roleId, () => { reseed(); R2.tab = 'overview'; R2.filter = 'all'; R2.q = ''; window.scrollTo({ top: 0 }); });
+      // sync: another role opened from this page (Back, a link) must not be checked against this role's staged ticks
+      watch(() => G.roleId, () => { reseed(); R2.tab = 'overview'; R2.filter = 'all'; R2.q = ''; window.scrollTo({ top: 0 }); }, { flush: 'sync' });
       const diff = computed(() => { if (!role.value) return { add: [], remove: [] }; const saved = role.value.perms; return { add: R2.draft.filter(p => !saved.includes(p)), remove: saved.filter(p => !R2.draft.includes(p)) }; });
       const dirty = computed(() => diff.value.add.length + diff.value.remove.length > 0);
       function saveDraft() { const n = holders.value.length; role.value.perms.splice(0, role.value.perms.length, ...R2.draft); Object.assign(role.value, { updatedAt: 'Today', updatedBy: ME.name }); G.toast('Role saved', n ? 'Applies to ' + n + (n === 1 ? ' person' : ' people') + ' on their next request.' : 'Nobody holds it yet.', 'Shield'); }
       function discardDraft() { reseed(); }
       /* leaving with unsaved changes asks first (sidebar, breadcrumb, search, anything that uses nav) */
-      G.leaveGuard = (route, sub) => { if (!dirty.value) return false; R2.leave = { route, sub }; return true; };
-      function leaveAnyway() { const l = R2.leave; R2.leave = null; reseed(); nav(l.route, l.sub); }
+      G.leaveGuard = (route, sub, then) => { if (!dirty.value) return false; R2.leave = { route, sub, then }; return true; };   // then: a caller's own step (Back, P49) instead of nav
+      function leaveAnyway() { const l = R2.leave; R2.leave = null; reseed(); if (l.then) l.then(); else nav(l.route, l.sub); }
       const onUnload = (e) => { if (dirty.value) { e.preventDefault(); e.returnValue = ''; } };
       onMounted(() => window.addEventListener('beforeunload', onUnload));
       onBeforeUnmount(() => { G.leaveGuard = null; window.removeEventListener('beforeunload', onUnload); });
@@ -6829,12 +6830,19 @@ const ShellMod = (() => {
     here = now;
   }, { immediate: true });
   function goBack() {
-    let prev = TRAIL.pop();
-    while (prev && prev.route === G.route && prev.rec === snapNow().rec) prev = TRAIL.pop();
-    if (!prev) { nav(BACK_PARENT[G.route] || 'dashboard'); return; }
-    backing = true;
-    if (prev.rec != null && LINK_DETAIL[prev.route]) LINK_DETAIL[prev.route].set(prev.rec);
-    nav(prev.route, prev.tab);
+    let i = TRAIL.length - 1;
+    while (i >= 0 && TRAIL[i].route === G.route && TRAIL[i].rec === snapNow().rec) i--;
+    const prev = i >= 0 ? TRAIL[i] : null;
+    // the whole step runs only once the page lets go: unsaved edits ask first, and Stay keeps the record and the trail
+    const go = () => {
+      TRAIL.length = Math.max(0, i);
+      if (!prev) { nav(BACK_PARENT[G.route] || 'dashboard'); return; }
+      backing = true;
+      if (prev.rec != null && LINK_DETAIL[prev.route]) LINK_DETAIL[prev.route].set(prev.rec);
+      nav(prev.route, prev.tab);
+    };
+    if (G.leaveGuard && G.leaveGuard(prev ? prev.route : (BACK_PARENT[G.route] || 'dashboard'), prev && prev.tab, go)) return;
+    go();
   }
   const BackButton = {
     setup() {
