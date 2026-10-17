@@ -18,4 +18,4 @@ module.exports = Object.assign({
     borderRadius: { xl: 'calc(var(--radius) + 4px)', lg: 'var(--radius)', md: 'calc(var(--radius) - 2px)', sm: 'calc(var(--radius) - 4px)' },
     fontFamily: { sans: ['Geist', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'], mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'] },
   } }
-},{content:['../../prototype/index.html']});
+},{content:['../../prototype/index.html', '../../docs/design/prototype/index.html']});
