@@ -11,7 +11,7 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `prototype/index.html` | The runnable prototype (open in a browser). The visual source of truth for the shell |
 | `prototype/src/product.js` | **The one file a product edits for branding:** name, tagline, icon, domain, city, storage key |
 | `prototype/src/parts_*.js`, `builder.html`, `assemble.py` | The shell's source, by area. `python3 prototype/src/assemble.py` rebuilds `index.html` and `docs/COMPONENTS.md` |
-| `docs/PLATFORM_DECISIONS.md` | P1–P47: the locked decisions, each with the decision it came from (P38 reserved) |
+| `docs/PLATFORM_DECISIONS.md` | P1–P47: the locked decisions, each with the decision it came from (P38 withdrawn) |
 | `docs/FRONTEND_RULES.md` | Behaviour rules: Locked / Constrained-creative / Free, plus the review checklist |
 | `docs/COMPONENTS.md`, `docs/components_api.json` | The component library: specs, props, emits, slots, do/don't |
 | `docs/SCREENS.core.md` | The core screens, their routes, permissions and screenshots |
@@ -66,5 +66,6 @@ The prototype still carries **Fomu's modules (Forms, Templates, Builder, Results
 
 - Two pull requests in flight both bump from the same version; the one merged second rebases and takes the next number, the same way it renumbers its P.
 - Products pin all three in their own `kit.json`: `kit_version`, `kit_commit` (the merge commit they pulled) and `platform_decisions`.
+- **Withdrawing** a number that was never decided (a reserved P) is a patch: its row says `Withdrawn:` and why, and notes about it elsewhere may go. Withdrawing a decided P is at least minor.
 - Check before opening a pull request: `python3 tools/kit-check.py --base origin/main`. It fails when `platform_decisions` is not the highest P, or when the bump is smaller than the changes need.
 - **1.3.0** is P42–P47, merged on 17 Oct 2026 in #7–#9 without separate bumps. The rule applies from 1.3.1.
