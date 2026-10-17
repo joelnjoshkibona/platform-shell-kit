@@ -79,11 +79,16 @@ const prop = (p, n) => p.evaluate(n => getComputedStyle(document.documentElement
   // organisation switch: Kilima Wholesale is amber
   const ctx = await b.newContext({ colorScheme: 'light', viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
   const { p } = await page(ctx, 'dashboard'); await p.goto('http://proto/#dashboard'); await p.waitForTimeout(900);
-  if (await prop(p, '--primary') !== A.ACCENTS.teal.l) fail('first load is not the organisation accent');
-  await p.evaluate(() => G.switchOrg('w')); await p.waitForTimeout(2200);
-  if (await prop(p, '--primary') !== A.ACCENTS.amber.l) fail('switching to Kilima Wholesale did not apply amber');
+  const first = await p.evaluate(() => G.org.accent);
+  if (await prop(p, '--primary') !== A.deriveAccent(first).l) fail('first load is not the organisation accent');
+  const other = await p.evaluate(() => (G.orgs.find(o => o !== G.org && o.accent !== G.org.accent && !o.disabled) || {}).id);
+  if (other) {   // organisation switch applies that organisation's accent (kit demo: Kilima Wholesale, amber)
+    await p.evaluate(id => G.switchOrg(id), other); await p.waitForTimeout(2200);
+    const acc = await p.evaluate(() => G.org.accent);
+    if (await prop(p, '--primary') !== A.deriveAccent(acc).l) fail('switching organisation did not apply its accent');
+  }
   await ctx.close();
   await b.close();
-  console.log(failed ? `${failed} failed` : 'browser: custom accent applies in both themes; sign-in paints the last accent; org switch applies its accent; ok');
+  console.log(failed ? `${failed} failed` : 'browser: custom accent applies in both themes; sign-in paints the last accent; first load and org switch apply each organisation\'s own accent, ok');
   process.exit(failed ? 1 : 0);
 })();

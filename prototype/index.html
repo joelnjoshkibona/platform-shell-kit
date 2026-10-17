@@ -2777,7 +2777,7 @@ const ShellMod = (() => {
     ORGS.push(o); switchOrg(o.id);
     setTimeout(() => toast(`${name} created`, 'You are the owner. Invite your team from Members.', 'Building2'), 500);
   }
-  G.switchOrg = switchOrg;
+  G.switchOrg = switchOrg; G.orgs = ORGS;
   G.locId = 'aru'; G.viewAs = null; G.viewAsPick = false; G.assignEdit = null; G.newLoc = false;
   watchEffect(() => { G.navRoute = G.route === 'location' ? 'locations' : G.route === 'request' ? 'approvals' : G.route === 'role' ? 'roles' : G.route; });
   const sidebarNav = computed(() => [
