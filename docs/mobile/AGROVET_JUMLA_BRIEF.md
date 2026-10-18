@@ -3,6 +3,17 @@
 Read on 2026-10-18: every page and shared component of both apps (about 29,000 lines), in five slices. This is what we take,
 what we change and what we leave. It feeds the phone prototype; nothing here is a decision until the owner picks (section 5).
 
+## 0. Mobile only (owner, 2026-10-18)
+
+The phone app is its own app, drawn for a phone and nothing else. It is not the web layout narrowed. So:
+
+- No breakpoints, no `sm:` / `lg:` classes, no "below 640px". One layout, 360 to 430px wide, always the phone shell.
+- Its own kit: its own components, its own Design system page, its own prototype and screenshots. The web kit and the
+  phone kit share the API, the money and stock rules, formatters and the brand tokens, not components or layouts.
+- ListRows, the desktop sidebar, side sheets, tables and the P39/P40/D88 list rules belong to the web kit and do not apply.
+- P56 to P70 were written as rules for the web shell in a phone, with "below 640px" wording. They stay as the behaviour
+  (back stack, lifecycle, connectivity, lock, permissions); the layout parts move into the phone kit's own decisions.
+
 ## 1. What both apps do well (take)
 
 | Pattern | Where | For us |
@@ -73,8 +84,10 @@ because they read `history.state`; money figures cut off ("TZS 2,9…") in a 2-c
 
 ## 5. Open choices (the owner decides)
 
-1. Lists on a phone: their bordered card anatomy, or our `ListRows` (P39/P40/D88: one row shape at every width)?
-   Taking their cards needs a new decision.
-2. Navigation: drawer only (both apps), or drawer plus a bottom tab bar for the till (Jumla drew one and never used it)?
-3. Where the work goes: inside the existing DevBiz prototype's phone mode (the source of truth), or a separate phone prototype?
-4. First slice: the six core screens (Home, Till, Sales, Customers, Profile, Notifications), or all twenty at once.
+Settled by "mobile only": lists are phone cards (their anatomy, our content); the prototype is a separate phone prototype
+with its own kit, not a mode of the web prototype.
+
+1. Navigation: drawer only (both apps), or drawer plus a bottom tab bar for the till (Jumla drew one and never used it)?
+2. Code: a separate phone front end (`phone/` beside `web/`, own router, own components, shared API client and rules), or
+   the same `web/` project with a phone-only entry that never loads the desktop layout?
+3. First slice: the six core screens (Home, Till, Sales, Customers, Profile, Notifications), or all twenty at once.
