@@ -17,7 +17,7 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `docs/SCREENS.core.md` | The core screens, their routes, permissions and screenshots |
 | `docs/architecture/CORE_ERD.md` | Core tables (identity, locations, approvals, notifications), constraints, lifecycles, jobs |
 | `screenshots/` | Baseline screenshots of every core screen: desktop/phone × light/dark, plus key states |
-| `docs/mobile/` | The mobile kit: `PHONE_MODEL.md` (what a phone is, how it moves), `DEVICE_TESTING.md`, `PROPOSAL.md` (the evidence from four apps) |
+| `docs/mobile/` | The mobile kit: `PHONE_MODEL.md` (what a phone is, how it moves), `DEVICE_TESTING.md`, `PLUGINS.md` (the shared Android plugins on v4), `PROPOSAL.md` (the evidence from four apps) |
 | `templates/mobile/` | The product's Android app: catch-all route, build, icon and splash, signed release, tests, the `src/phone/` contract |
 | `templates/` | CLAUDE.md, BUILD_PLAN.md, HANDOFF_PROMPT.md, PRODUCT.md, SCREENS.md for a product's repo, with `{{PRODUCT_NAME}}` placeholders |
 | `tools/prototype-shots/` | Regenerates screenshots; builds a side-by-side compare page against a real app |
