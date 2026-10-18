@@ -18,3 +18,20 @@ Still needed for push (P66), not for the build: the product's Firebase project a
 root (without it the app logs "FirebaseApp initialization unsuccessful" and push does not arrive; nothing else breaks).
 The FCM package should declare `project_files` and `gradle_plugins.apply_to` for it (v4's `LegacyFirebaseConfig` covers
 older plugins only while no plugin claims them).
+
+## What DevBiz found building receipts (2026-10-18, Phase 12e)
+
+- **v4's core has no `Share`.** `Native\Mobile\Share::file()` still calls the bridge function `Share.File`, which v4 no
+  longer registers (the app logs "Function 'Share.File' not found" and nothing opens). A plugin has to answer it: DevBiz's
+  `blutrixx/share-file` registers `Share.File` and `Share.Url` and shares through the app's own `FileProvider` (its
+  `file_paths.xml` serves the cache folder, so the plugin copies the file there first).
+- **The shared `escpos-printer` plugin is not enough for a shop.** It connects to the *first* paired Bluetooth device that
+  accepts, whichever it is, bundles one company's logos in the app and reads receipts as the DantSu text markup (so a
+  product named `[C]` is a printer command). DevBiz's own copy writes plain ESC/POS to the printer this phone chose, takes the
+  server's job and logo, and keeps the choice on the phone. The shared package should be changed the same way before another
+  app prints (the choice by address, no bundled logos, plain text).
+- **A plugin's functions are callable from the web view** with `POST /_native/api/call {method, params}` (the answer is
+  `{status, data}`); the web needs no PHP in the app for them. The functions that need the activity (a permission question,
+  the share list) declare `"android_params": ["activity"]`, the others `["context"]`.
+- **Same version, same bundle.** Reinstalling with the same `NATIVEPHP_APP_VERSION` keeps the old unpacked web bundle and
+  PHP; the Kotlin is new. Bump the version for every build you test.
