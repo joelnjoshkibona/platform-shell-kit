@@ -1,0 +1,776 @@
+<title>DevBiz Phone</title>
+<meta name="description" content="DevBiz drawn for a phone only: its own shell, bottom bar, cards and sheets. Clickable.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+/* Layout concept: one 390 x 844 phone (the only layout there is) beside a prototype picker on a desktop, the app alone on a phone.
+   Tokens are DevBiz's own (blue accent, D13), kept in HSL channels; the sizes are the phone kit's (see the Design system screen). */
+tailwind.config = {
+  theme: { extend: {
+    fontFamily: { sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'], mono: ['"Geist Mono"', 'ui-monospace', 'monospace'] },
+    colors: ['background','foreground','card','muted','muted-foreground','border','input','primary','primary-foreground','destructive','warning','success','canvas','ring']
+      .reduce((o, k) => (o[k] = 'hsl(var(--' + k + ') / <alpha-value>)', o), {}),
+    borderRadius: { xl: '14px', '2xl': '18px' }
+  } }
+};
+</script>
+<style>
+:root { --canvas: 220 14% 96%; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --canvas: 240 10% 5%; color-scheme: dark; } }
+:root[data-theme="dark"] { --canvas: 240 10% 5%; color-scheme: dark; }
+body { margin: 0; background: hsl(var(--canvas)); font-family: Geist, ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+.app { --sa-top: 30px; --sa-bottom: 14px; --kbd: 0px;
+  --background: 0 0% 100%; --foreground: 240 10% 3.9%; --card: 0 0% 100%; --muted: 240 4.8% 95.9%; --muted-foreground: 240 3.8% 42%;
+  --border: 240 5.9% 90%; --input: 240 5.9% 86%; --primary: 221 83% 45%; --primary-foreground: 0 0% 98%; --ring: 221 83% 45%;
+  --destructive: 0 72% 48%; --warning: 32 92% 38%; --success: 152 64% 28%;
+  --c1: #14937f; --c2: #d06d0a; --c3: #2f6fe0; --c4: #d6456a; --c5: #7c5ad8; --c-other: #94a3b8;
+  background: hsl(var(--background)); color: hsl(var(--foreground)); font-size: 15px; line-height: 1.4; }
+.app.dark { --background: 240 10% 3.9%; --foreground: 0 0% 96%; --card: 240 6% 8.5%; --muted: 240 3.7% 14%; --muted-foreground: 240 5% 64.9%;
+  --border: 240 3.7% 17%; --input: 240 3.7% 20%; --primary: 217 91% 64%; --primary-foreground: 222 47% 8%; --ring: 217 91% 64%;
+  --destructive: 0 70% 58%; --warning: 38 92% 56%; --success: 152 52% 52%;
+  --c1: #1f9e89; --c2: #c97514; --c3: #4c82e8; --c4: #dc5577; --c5: #8f73e3; --c-other: #64748b; }
+.app *, .app *::before, .app *::after { border-color: hsl(var(--border)); box-sizing: border-box; }
+.app button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+.app input { font: inherit; color: inherit; }
+.scroll { scrollbar-width: none; overscroll-behavior: contain; } .scroll::-webkit-scrollbar { display: none; }
+.tnum { font-variant-numeric: tabular-nums; }
+.press { transition: transform .12s ease, background-color .12s ease; } .press:active { transform: scale(.98); }
+.sheet-enter-active, .sheet-leave-active { transition: transform .28s cubic-bezier(.2,.8,.2,1); } .sheet-enter-from, .sheet-leave-to { transform: translateY(100%); }
+.fade-enter-active, .fade-leave-active { transition: opacity .2s ease; } .fade-enter-from, .fade-leave-to { opacity: 0; }
+.drawer-enter-active, .drawer-leave-active { transition: transform .26s cubic-bezier(.2,.8,.2,1); } .drawer-enter-from, .drawer-leave-to { transform: translateX(-100%); }
+.pop-enter-active, .pop-leave-active { transition: opacity .18s ease, transform .18s ease; } .pop-enter-from, .pop-leave-to { opacity: 0; transform: translateY(8px) scale(.98); }
+.rise { animation: rise .4s cubic-bezier(.2,.8,.2,1) both; } @keyframes rise { from { opacity: .001; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes pulse2 { 50% { opacity: .5; } } .skel { animation: pulse2 1.6s ease-in-out infinite; background: hsl(var(--muted)); }
+@media (prefers-reduced-motion: reduce) { .rise, .skel { animation: none; } .sheet-enter-active, .sheet-leave-active, .drawer-enter-active, .drawer-leave-active, .pop-enter-active, .pop-leave-active { transition: none; } }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<div id="root"></div>
+<script>
+const { createApp, reactive, ref, computed, h, watch, onMounted, onBeforeUnmount, nextTick } = Vue;
+
+/* ============================================================ atoms and the shop's data */
+const Icon = { name: 'Icon', props: { name: String, size: { type: [Number, String], default: 18 } },
+  setup(p) { return () => { const n = window.lucide && window.lucide.icons && window.lucide.icons[p.name]; const kids = n ? (n[0] === 'svg' ? n[2] : n) : [];
+    return h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: p.size, height: p.size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true', class: 'shrink-0' }, kids.map(([t, a]) => h(t, a))); }; } };
+
+const money = (n) => 'TZS ' + Math.round(n).toLocaleString('en-US');
+const num = (n) => Math.round(n).toLocaleString('en-US');
+const tint = (c, a) => ({ background: 'color-mix(in srgb, ' + c + ' ' + (a || 15) + '%, transparent)' });
+
+/* ---- the shop (Office Shop): two people, two real products and a few more so lists have a shape */
+const PRODUCTS = [
+  { id: 'p1', name: 'Water', ini: 'WA', c: 'var(--c3)', price: 1000, step: 1, unit: 'bottle', units: 'bottles', stock: 91, reorder: 12, pack: 'Pack of 6' },
+  { id: 'p2', name: 'Trident', ini: 'TR', c: 'var(--c5)', price: 250, step: 2, unit: 'piece', units: 'pieces', stock: 4, reorder: 20, pack: 'Box of 14' },
+  { id: 'p3', name: 'Soda 500 ml', ini: 'SO', c: 'var(--c4)', price: 700, step: 1, unit: 'bottle', units: 'bottles', stock: 48, reorder: 12, pack: 'Crate of 24' },
+  { id: 'p4', name: 'Biscuits', ini: 'BI', c: 'var(--c2)', price: 500, step: 1, unit: 'pack', units: 'packs', stock: 30, reorder: 10, pack: 'Carton of 20' },
+  { id: 'p5', name: 'Sugar 1 kg', ini: 'SU', c: 'var(--c1)', price: 3200, step: 1, unit: 'bag', units: 'bags', stock: 0, reorder: 6, pack: 'Sack of 20' },
+  { id: 'p6', name: 'Matches', ini: 'MA', c: 'var(--c-other)', price: 200, step: 1, unit: 'box', units: 'boxes', stock: 120, reorder: 30, pack: 'Dozen' }
+];
+const prod = (id) => PRODUCTS.find(p => p.id === id);
+const perText = (p) => 'TZS ' + num(p.price * p.step) + (p.step > 1 ? ' per ' + p.step : '');
+const level = (p) => p.stock <= 0 ? 'out' : p.stock <= p.reorder ? 'low' : 'ok';
+const stockText = (p) => p.stock <= 0 ? 'Out of stock' : p.stock + ' ' + (p.stock === 1 ? p.unit : p.units) + ' left';
+
+const CUSTOMERS = [
+  { id: 'c0', no: 'C-0000', name: 'Walk-in customer', ini: '', c: 'var(--c-other)', phone: '', owes: 0, days: 0, limit: 0, bought: 0, walkin: true },
+  { id: 'c1', no: 'C-0001', name: 'Neema Kimaro', ini: 'NK', c: 'var(--c1)', phone: '+255 754 112 908', owes: 2000, days: 13, limit: 10000, bought: 6000, paid: 4000, since: '30 Aug 2026', last: '19 Sept 2026' },
+  { id: 'c2', no: 'C-0002', name: 'Baraka Mushi', ini: 'BM', c: 'var(--c2)', phone: '+255 713 440 218', owes: 0, days: 0, limit: 20000, bought: 18500, paid: 18500, since: '2 Sept 2026', last: '8 Oct 2026' },
+  { id: 'c3', no: 'C-0003', name: 'Joseph Kweka', ini: 'JK', c: 'var(--c3)', phone: '', owes: 4500, days: 21, limit: 5000, bought: 9000, paid: 4500, since: '4 Sept 2026', last: '2 Oct 2026' },
+  { id: 'c9', no: 'C-0009', name: 'Peter Ngowi', ini: 'PN', c: 'var(--c4)', phone: '', owes: 8000, days: 42, limit: 8000, bought: 15000, paid: 7000, since: '1 Sept 2026', last: '28 Aug 2026' },
+  { id: 'c5', no: 'C-0005', name: 'Pendo Lyimo', ini: 'PL', c: 'var(--c5)', phone: '+255 689 001 244', owes: -5000, days: 0, limit: 0, bought: 3000, paid: 8000, since: '9 Sept 2026', last: '5 Oct 2026' },
+  { id: 'c23', no: 'C-0023', name: 'Mary Tarimo', ini: 'MT', c: 'var(--c1)', phone: '+255 754 990 041', owes: 8000, days: 17, limit: 10000, bought: 22000, paid: 14000, since: '12 Sept 2026', last: '6 Oct 2026' },
+  { id: 'c21', no: 'C-0021', name: 'Brian Urassa', ini: 'BU', c: 'var(--c2)', phone: '', owes: 5000, days: 11, limit: 6000, bought: 11000, paid: 6000, since: '14 Sept 2026', last: '1 Oct 2026' },
+  { id: 'c4', no: 'C-0004', name: 'Hellen Massawe', ini: 'HM', c: 'var(--c3)', phone: '+255 765 230 117', owes: 0, days: 0, limit: 10000, bought: 7500, paid: 7500, since: '6 Sept 2026', last: '9 Oct 2026' }
+];
+const cust = (id) => CUSTOMERS.find(c => c.id === id);
+
+const SALES = [
+  { id: 'S-1304', c: 'c23', day: 'Today', time: '10:37', lines: [['p1', 1]], pay: 'unpaid', method: 'Credit', by: 'Rehema' },
+  { id: 'S-1303', c: 'c0', day: 'Today', time: '10:25', lines: [['p2', 2]], pay: 'paid', method: 'Cash', by: 'Rehema' },
+  { id: 'S-1302', c: 'c3', day: 'Today', time: '10:11', lines: [['p2', 2]], pay: 'paid', method: 'M-Pesa', by: 'Rehema' },
+  { id: 'S-1301', c: 'c21', day: 'Today', time: '09:58', lines: [['p1', 1]], pay: 'unpaid', method: 'Credit', by: 'Rehema' },
+  { id: 'S-1299', c: 'c1', day: 'Today', time: '09:23', lines: [['p1', 1]], pay: 'unpaid', method: 'Credit', by: 'Rehema' },
+  { id: 'S-1297', c: 'c0', day: 'Today', time: '08:54', lines: [['p1', 1], ['p4', 1]], pay: 'paid', method: 'Cash', by: 'Rehema', undo: true },
+  { id: 'S-1290', c: 'c9', day: 'Yesterday', time: '11:09', lines: [['p1', 1]], pay: 'unpaid', method: 'Credit', by: 'Rehema', undoAsked: true },
+  { id: 'S-1288', c: 'c23', day: 'Yesterday', time: '10:04', lines: [['p1', 1], ['p3', 2]], pay: 'part', method: 'Credit', by: 'Amina', paid: 1000 },
+  { id: 'S-1287', c: 'c2', day: 'Yesterday', time: '08:14', lines: [['p2', 4]], pay: 'paid', method: 'Cash', by: 'Amina' }
+];
+const saleTotal = (s) => s.lines.reduce((t, l) => t + prod(l[0]).price * l[1], 0);
+const saleLine = (l) => (prod(l[0]).name + ' × ' + l[1]);
+
+const NOTIFS = [
+  { id: 1, unread: true, icon: 'Undo2', tone: 'warning', title: 'Rehema asks to undo S-1290', body: 'Wrong customer: was Baraka, not Steve. Stock and balances change only after you approve.', when: '10 min ago', open: 'S-1290', chan: ['In app', 'SMS sent'] },
+  { id: 2, unread: true, icon: 'PackageMinus', tone: 'warning', title: 'Trident is low', body: '4 pieces left, you want 20. Receive a delivery or change the warning level.', when: '1 h ago', open: 'Product', chan: ['In app'] },
+  { id: 3, unread: true, icon: 'ClipboardCheck', tone: 'warning', title: 'Count for 9 Oct has gaps', body: 'Drawer 500 short, one Trident pack missing. Rehema is waiting for you to approve it.', when: 'Yesterday', open: 'Count', chan: ['In app', 'SMS held (quiet hours)'] },
+  { id: 4, unread: false, icon: 'Wallet', tone: 'success', title: 'Payment P-0052 received', body: 'TZS 3,000 from Neema Kimaro, paid into the cash drawer.', when: '19 Sept', open: 'P-0052', chan: ['In app'] },
+  { id: 5, unread: false, icon: 'Truck', tone: 'muted', title: 'Delivery DEL-0008 is 3 days late', body: 'Kariakoo wholesaler: TZS 4,420 was due 7 Oct 2026.', when: '10 Oct', open: 'DEL-0008', chan: ['In app', 'Email sent'] }
+];
+const WAITING = [
+  { id: 'w1', icon: 'Undo2', title: 'Undo S-1290 · Peter Ngowi', sub: 'Rehema: "Wrong customer: was Baraka, not Steve"', kind: 'Undo a sale' },
+  { id: 'w2', icon: 'Undo2', title: 'Undo S-1297 · Nancy Temu', sub: 'Rehema: "Customer changed their mind"', kind: 'Undo a sale' },
+  { id: 'w3', icon: 'FilePen', title: 'Change P-0087 · Eliza Mollel', sub: 'Rehema: "Typed 6,000, customer paid 5,000"', kind: 'Change a payment' },
+  { id: 'w4', icon: 'Receipt', title: 'EXP-0035 · Transport TZS 5,000', sub: 'Water crates from the depot · Cash drawer', kind: 'Expense' },
+  { id: 'w5', icon: 'ClipboardCheck', title: 'Count for 9 Oct has gaps', sub: 'Drawer 500 short, one Trident pack missing', kind: 'Count gap' }
+];
+
+/* ---- the one store */
+const S = reactive({
+  dark: false, themeMode: 'light', role: 'owner', route: 'home', stack: [], drawer: false, sheet: null, dialog: null, toast: '', toastKey: 0,
+  cart: [], customer: 'c0', pay: 'cash', part: false, account: 'Cash drawer', cartOpen: false, receipt: null, tillQ: '',
+  salesTab: 'all', salesQ: '', salesFilter: { status: 'all', range: 'all', who: 'all' }, shown: 6, list: 'data',
+  custQ: '', custTab: 'all', cid: 'c1', custPane: 'overview', saleId: 'S-1304',
+  notifTab: 'unread', expanded: null, lock: true, lockAfter: '5 min', checking: false, upToDate: false, search: false, searchQ: '', recent: ['Water', 'Neema', 'S-1290'],
+  waitingDone: []
+});
+const ME = computed(() => S.role === 'owner' ? { name: 'Amina', full: 'Amina Mushi', ini: 'AM', role: 'Owner', email: 'amina@devbiz.app' } : { name: 'Rehema', full: 'Rehema Kileo', ini: 'RK', role: 'Cashier', email: 'rehema@devbiz.app' });
+const unread = computed(() => NOTIFS.filter(n => n.unread).length);
+const waitingN = computed(() => WAITING.length - S.waitingDone.length);
+
+let toastT;
+function toast(msg) { S.toast = msg; S.toastKey++; clearTimeout(toastT); toastT = setTimeout(() => (S.toast = ''), 2400); }
+const TABS = ['home', 'sales', 'customers', 'alerts'];
+function tab(r) { S.stack = []; S.drawer = false; S.sheet = null; S.search = false; S.route = r; }
+function go(r, arg) { S.drawer = false; S.sheet = null; S.search = false; S.stack.push(S.route); if (r === 'sale' && arg) S.saleId = arg; if (r === 'customer' && arg) { S.cid = arg; S.custPane = 'overview'; } S.route = r; }
+function back() {
+  if (S.dialog) { S.dialog = null; return; } if (S.sheet) { S.sheet = null; return; } if (S.drawer) { S.drawer = false; return; } if (S.search) { S.search = false; return; }
+  if (S.cartOpen) { S.cartOpen = false; return; }
+  S.route = S.stack.pop() || 'home';
+}
+
+/* ============================================================ small pieces */
+const TONE = { success: 'bg-success/15 text-success', warning: 'bg-warning/15 text-warning', destructive: 'bg-destructive/10 text-destructive', muted: 'bg-muted text-muted-foreground', primary: 'bg-primary/10 text-primary' };
+const Pill = { props: { tone: { type: String, default: 'muted' }, dot: Boolean }, setup() { return { TONE }; },
+  template: `<span :class="['inline-flex h-6 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[12px] font-medium', TONE[tone]]"><span v-if="dot" class="h-1.5 w-1.5 rounded-full bg-current"></span><slot/></span>` };
+
+const Av = { props: { c: Object, size: { type: Number, default: 40 } }, components: { Icon },
+  template: `<span class="grid shrink-0 place-items-center rounded-full font-semibold text-white" :style="{ width: size + 'px', height: size + 'px', background: c.c, fontSize: Math.round(size * .36) + 'px' }"><Icon v-if="c.walkin" name="User" :size="Math.round(size * .5)"/><template v-else>{{ c.ini }}</template></span>` };
+
+const Tile = { props: { p: Object, size: { type: Number, default: 40 } },
+  template: `<span class="grid shrink-0 place-items-center rounded-xl text-[13px] font-semibold" :style="{ width: size + 'px', height: size + 'px', background: 'color-mix(in srgb, ' + p.c + ' 16%, transparent)', color: p.c }">{{ p.ini }}</span>` };
+
+const AgeChip = { props: { days: Number }, components: { Pill },
+  template: `<Pill v-if="days > 0" :tone="days > 30 ? 'destructive' : days > 7 ? 'warning' : 'muted'">{{ days > 7 ? days + ' days' : 'This week' }}</Pill>` };
+const SaleStatus = { props: { s: String }, components: { Pill },
+  template: `<Pill :tone="s === 'paid' ? 'success' : s === 'part' ? 'warning' : s === 'undone' ? 'muted' : 'destructive'">{{ { paid: 'Paid', part: 'Part paid', unpaid: 'Unpaid', undone: 'Undone' }[s] }}</Pill>` };
+const LevelBadge = { props: { p: Object }, components: { Pill },
+  setup(pr) { return { lv: computed(() => level(pr.p)) }; },
+  template: `<Pill :tone="lv === 'out' ? 'destructive' : lv === 'low' ? 'warning' : 'success'" dot>{{ lv === 'out' ? 'Out' : lv === 'low' ? 'Low' : 'In stock' }}</Pill>` };
+const Balance = { props: { b: Number, big: Boolean }, setup() { return { money }; },
+  template: `<div class="text-right leading-tight"><p :class="['font-semibold tnum', big ? 'text-[22px]' : 'text-[16px]']">{{ b === 0 ? 'Settled' : money(Math.abs(b)) }}</p>
+    <p :class="['text-[12px]', b > 0 ? 'text-warning' : b < 0 ? 'text-success' : 'text-muted-foreground']">{{ b > 0 ? 'Owes you' : b < 0 ? 'Prepaid' : '' }}</p></div>` };
+
+const Seg = { props: { modelValue: String, tabs: Array },
+  template: `<div class="grid gap-1 rounded-2xl bg-muted p-1" :style="{ gridTemplateColumns: 'repeat(' + tabs.length + ', minmax(0, 1fr))' }" role="tablist">
+    <button v-for="t in tabs" :key="t.id" type="button" role="tab" :aria-selected="modelValue === t.id" @click="$emit('update:modelValue', t.id)" :class="['press flex h-10 items-center justify-center gap-1.5 rounded-xl px-2 text-[14px] font-semibold', modelValue === t.id ? 'bg-background shadow-sm' : 'text-muted-foreground']">
+      <span class="truncate">{{ t.label }}</span><span v-if="t.count" :class="['grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold', modelValue === t.id ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground']">{{ t.count }}</span></button></div>` };
+
+const Empty = { props: { icon: { type: String, default: 'Inbox' }, title: String, text: String }, components: { Icon },
+  template: `<div class="flex flex-col items-center px-8 py-14 text-center"><span class="grid h-16 w-16 place-items-center rounded-full bg-muted"><Icon :name="icon" :size="28" class="text-muted-foreground"/></span>
+    <p class="mt-4 text-[17px] font-semibold">{{ title }}</p><p v-if="text" class="mt-1 text-[14px] text-muted-foreground">{{ text }}</p><slot/></div>` };
+
+const Btn = { props: { v: { type: String, default: 'primary' }, size: { type: String, default: 'lg' }, disabled: Boolean, full: Boolean },
+  setup(p) { const cls = computed(() => [{ primary: 'bg-primary text-primary-foreground', outline: 'border border-input bg-background', ghost: '', destructive: 'bg-destructive text-white', 'destructive-outline': 'border border-destructive/40 text-destructive bg-background', soft: 'bg-primary/10 text-primary' }[p.v], p.size === 'lg' ? 'h-12 px-5 text-[15px]' : 'h-11 px-4 text-[14px]', p.full ? 'w-full' : '', p.disabled ? 'opacity-45 pointer-events-none' : '']); return { cls }; },
+  template: `<button type="button" :disabled="disabled" :class="['press inline-flex items-center justify-center gap-2 rounded-xl font-semibold', cls]"><slot/></button>` };
+
+/* ============================================================ the shell: header, bottom bar, drawer */
+const Header = { props: { title: String, pushed: Boolean, hideSearch: Boolean }, components: { Icon },
+  setup() { return { S, back, ME }; },
+  template: `<header class="relative z-20 flex shrink-0 items-center gap-1 border-b bg-background px-2" :style="{ paddingTop: 'var(--sa-top)', height: 'calc(56px + var(--sa-top))' }">
+    <button v-if="!pushed" type="button" class="press grid h-11 w-11 place-items-center rounded-full" aria-label="Open menu" @click="S.drawer = true"><Icon name="Menu" :size="22"/></button>
+    <button v-else type="button" class="press grid h-11 w-11 place-items-center rounded-full" aria-label="Back" @click="back()"><Icon name="ChevronLeft" :size="24"/></button>
+    <h1 class="min-w-0 flex-1 truncate px-1 text-[18px] font-semibold tracking-tight">{{ title }}</h1>
+    <slot name="right"/>
+    <button v-if="!hideSearch" type="button" class="press grid h-11 w-11 place-items-center rounded-full" aria-label="Search" @click="S.search = true"><Icon name="Search" :size="21"/></button>
+    <button type="button" class="press ml-0.5 mr-1 grid h-9 w-9 place-items-center rounded-full bg-primary text-[12px] font-bold text-primary-foreground" aria-label="Your profile" @click="go('profile')">{{ ME.ini }}</button></header>` };
+
+const TabBar = { components: { Icon },
+  setup() { const items = [['home', 'Home', 'House'], ['sales', 'Sales', 'Receipt'], ['sell', 'Sell', 'ShoppingCart'], ['customers', 'Customers', 'Users'], ['alerts', 'Alerts', 'Bell']];
+    return { S, items, unread, tab, go }; },
+  template: `<nav class="relative z-20 flex shrink-0 items-end border-t bg-background px-1" :style="{ paddingBottom: 'var(--sa-bottom)', height: 'calc(64px + var(--sa-bottom))' }" aria-label="Main">
+    <template v-for="it in items" :key="it[0]">
+      <button v-if="it[0] === 'sell'" type="button" class="press relative flex flex-1 flex-col items-center pb-1.5" aria-label="Sell: open the till" @click="go('till')">
+        <span class="-mt-5 grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 ring-background"><Icon name="ShoppingCart" :size="24"/></span>
+        <span class="mt-1 text-[11px] font-semibold text-primary">Sell</span></button>
+      <button v-else type="button" class="press flex h-16 flex-1 flex-col items-center justify-center gap-0.5" :aria-current="S.route === it[0] || (it[0] === 'alerts' && S.route === 'alerts') ? 'page' : undefined" @click="tab(it[0])">
+        <span :class="['relative grid h-8 w-14 place-items-center rounded-full transition-colors', S.route === it[0] ? 'bg-primary/10 text-primary' : 'text-muted-foreground']"><Icon :name="it[2]" :size="22"/>
+          <span v-if="it[0] === 'alerts' && unread" class="absolute right-3 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">{{ unread }}</span></span>
+        <span :class="['text-[11px]', S.route === it[0] ? 'font-semibold text-primary' : 'font-medium text-muted-foreground']">{{ it[1] }}</span></button></template></nav>` };
+
+const MENU = [
+  { label: 'Sell', items: [['Till', 'ShoppingCart', 'till'], ['Sales', 'Receipt', 'sales'], ['Payments', 'Wallet', 'ph:Payments']] },
+  { label: 'People', items: [['Customers', 'Users', 'customers'], ['Suppliers', 'Truck', 'ph:Suppliers', 'owner']] },
+  { label: 'Stock', items: [['Products', 'Package', 'ph:Products'], ['Stock movements', 'ArrowLeftRight', 'ph:Stock movements'], ['Deliveries', 'PackagePlus', 'ph:Deliveries', 'owner'], ['End-of-day count', 'ClipboardCheck', 'ph:End-of-day count']] },
+  { label: 'Money', owner: true, items: [['Accounts', 'Landmark', 'ph:Accounts'], ['Expenses', 'Coins', 'ph:Expenses']] },
+  { label: 'Shop', owner: true, items: [['Waiting for you', 'Hourglass', 'waiting', 'badge'], ['Users', 'UserCog', 'ph:Users'], ['Settings', 'Settings', 'ph:Settings']] },
+  { label: 'You', items: [['Notifications', 'Bell', 'alerts', 'unread'], ['Alerts and reminders', 'BellRing', 'ph:Alerts and reminders'], ['Profile', 'CircleUser', 'profile']] }
+];
+const Drawer = { components: { Icon },
+  setup() {
+    const groups = computed(() => MENU.filter(g => !g.owner || S.role === 'owner').map(g => ({ label: g.label, items: g.items.filter(i => i[3] !== 'owner' || S.role === 'owner') })));
+    const cur = (t) => (t === S.route) || (t === 'till' && S.route === 'till');
+    const open = (t) => { if (TABS.includes(t)) return tab(t); if (t.startsWith('ph:')) { S.drawer = false; S.stack.push(S.route); S.route = t; return; } go(t); };
+    return { S, ME, groups, cur, open, unread, waitingN };
+  },
+  template: `<div v-if="S.drawer" class="absolute inset-0 z-[60]"><transition name="fade" appear><div class="absolute inset-0 bg-black/50" @click="S.drawer = false"></div></transition>
+    <transition name="drawer" appear><aside class="absolute inset-y-0 left-0 flex w-[304px] max-w-[88%] flex-col bg-background shadow-2xl" aria-label="Menu">
+      <div class="shrink-0 bg-primary px-5 pb-5 text-primary-foreground" :style="{ paddingTop: 'calc(20px + var(--sa-top))' }">
+        <div class="flex items-center gap-3"><span class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white/20 text-[18px] font-bold">{{ ME.ini }}</span>
+          <div class="min-w-0"><p class="truncate text-[17px] font-bold leading-tight">{{ ME.full }}</p><p class="truncate text-[13px] opacity-75">{{ ME.email }}</p></div></div>
+        <div class="mt-3 flex flex-wrap gap-1.5"><span class="rounded-full bg-white/20 px-2.5 py-1 text-[12px] font-medium">{{ ME.role }}</span><span class="rounded-full bg-white/20 px-2.5 py-1 text-[12px] font-medium">Office Shop</span></div></div>
+      <nav class="scroll min-h-0 flex-1 overflow-y-auto px-3 py-2" :style="{ paddingBottom: 'calc(12px + var(--sa-bottom))' }">
+        <div v-for="g in groups" :key="g.label" class="py-1.5"><p class="px-3 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">{{ g.label }}</p>
+          <button v-for="it in g.items" :key="it[0]" type="button" @click="open(it[2])" :class="['press flex h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-[15px]', cur(it[2]) ? 'bg-primary/10 font-semibold text-primary' : '']">
+            <Icon :name="it[1]" :size="20" :class="cur(it[2]) ? '' : 'text-muted-foreground'"/><span class="flex-1 truncate">{{ it[0] }}</span>
+            <span v-if="it[3] === 'badge' && waitingN" class="grid h-6 min-w-6 place-items-center rounded-full bg-warning/20 px-1.5 text-[12px] font-bold text-warning">{{ waitingN }}</span>
+            <span v-else-if="it[3] === 'unread' && unread" class="grid h-6 min-w-6 place-items-center rounded-full bg-destructive px-1.5 text-[12px] font-bold text-white">{{ unread }}</span></button></div></nav></aside></transition></div>` };
+
+/* ============================================================ sheets, dialog, toast */
+const Sheet = { props: { open: Boolean, title: String, sub: String, tall: Boolean }, components: { Icon },
+  template: `<div v-if="open" class="absolute inset-0 z-[70]"><transition name="fade" appear><div class="absolute inset-0 bg-black/45" @click="$emit('close')"></div></transition>
+    <transition name="sheet" appear><section :class="['absolute inset-x-0 bottom-0 flex flex-col rounded-t-[22px] bg-background shadow-2xl', tall ? 'top-10' : 'max-h-[86%]']" role="dialog" :aria-label="title">
+      <div class="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/30"></div>
+      <div class="flex shrink-0 items-center gap-2 px-5 pb-2 pt-3"><div class="min-w-0 flex-1"><h2 class="truncate text-[18px] font-semibold">{{ title }}</h2><p v-if="sub" class="truncate text-[13px] text-muted-foreground">{{ sub }}</p></div>
+        <button type="button" class="press grid h-10 w-10 place-items-center rounded-full bg-muted" aria-label="Close" @click="$emit('close')"><Icon name="X" :size="18"/></button></div>
+      <div class="scroll min-h-0 flex-1 overflow-y-auto"><slot/></div>
+      <div v-if="$slots.footer" class="shrink-0 border-t px-4 pt-3" :style="{ paddingBottom: 'calc(12px + var(--sa-bottom))' }"><slot name="footer"/></div>
+      <div v-else :style="{ height: 'var(--sa-bottom)' }" class="shrink-0"></div></section></transition></div>` };
+
+const Confirm = { components: { Btn },
+  setup() { return { S }; },
+  template: `<div v-if="S.dialog" class="absolute inset-0 z-[80] grid place-items-center bg-black/50 px-6" @click.self="S.dialog = null"><transition name="pop" appear><div class="w-full rounded-2xl bg-background p-5 shadow-2xl" role="alertdialog">
+    <h2 class="text-[18px] font-semibold">{{ S.dialog.title }}</h2><p class="mt-1.5 text-[14px] text-muted-foreground">{{ S.dialog.text }}</p>
+    <div class="mt-5 grid grid-cols-2 gap-2"><Btn v-if="S.dialog.cancel !== false" v="outline" @click="S.dialog = null">{{ S.dialog.cancel || 'Keep it' }}</Btn><Btn :v="S.dialog.tone || 'primary'" @click="S.dialog.ok && S.dialog.ok(); S.dialog = null">{{ S.dialog.action }}</Btn></div></div></transition></div>` };
+
+const Toast = { components: { Icon }, setup() { return { S }; },
+  template: `<transition name="pop"><div v-if="S.toast" :key="S.toastKey" class="pointer-events-none absolute inset-x-4 z-[90] flex justify-center" :style="{ bottom: 'calc(80px + var(--sa-bottom))' }" role="status"><p class="flex items-center gap-2 rounded-full bg-foreground px-4 py-3 text-[14px] font-medium text-background shadow-xl"><Icon name="Check" :size="16"/>{{ S.toast }}</p></div></transition>` };
+
+const FooterBar = { template: `<div class="relative z-10 shrink-0 border-t bg-background px-4 pt-3" :style="{ paddingBottom: 'calc(12px + var(--sa-bottom))' }"><slot/></div>` };
+
+/* the bar every list starts with (from Agrovet and Jumla: Refresh and one pill that says what is filtered) */
+const FilterBar = { props: { summary: String, active: Boolean, loading: Boolean, placeholder: String }, components: { Icon },
+  template: `<div class="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-3 py-2.5">
+    <button type="button" class="press grid h-11 w-11 shrink-0 place-items-center rounded-xl border bg-muted/50" aria-label="Refresh" @click="$emit('refresh')"><Icon name="RefreshCw" :size="18" :class="loading ? 'animate-spin' : ''"/></button>
+    <button type="button" class="press flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-xl border bg-muted/50 px-3 text-left text-[14px]" @click="$emit('open')"><Icon name="SlidersHorizontal" :size="17" class="shrink-0 text-muted-foreground"/>
+      <span :class="['min-w-0 flex-1 truncate', active ? 'font-medium' : 'text-muted-foreground']">{{ summary }}</span><span v-if="active" class="h-2 w-2 shrink-0 rounded-full bg-primary"></span></button></div>` };
+
+const Placeholder = { components: { Empty, Header, Icon }, props: { name: String },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header :title="name" pushed hide-search/><div class="scroll min-h-0 flex-1 overflow-y-auto"><Empty icon="PencilRuler" title="Drawn in the next pass" text="This menu entry is in the app. The first pass covers Home, Till, Sales, Customers, Alerts and Profile."/></div></div>` };
+
+/* full-screen search (every list's magnifier opens this) */
+const SearchView = { components: { Icon, Av, Tile, Pill },
+  setup() {
+    const q = computed(() => S.searchQ.trim().toLowerCase());
+    const cs = computed(() => !q.value ? [] : CUSTOMERS.filter(c => !c.walkin && (c.name + c.phone + c.no).toLowerCase().includes(q.value)).slice(0, 4));
+    const ps = computed(() => !q.value ? [] : PRODUCTS.filter(p => p.name.toLowerCase().includes(q.value)).slice(0, 4));
+    const ss = computed(() => !q.value ? [] : SALES.filter(s => (s.id + cust(s.c).name).toLowerCase().includes(q.value)).slice(0, 4));
+    const pick = (r, a) => { S.search = false; S.searchQ = ''; go(r, a); };
+    return { S, q, cs, ps, ss, pick, go, money, cust, saleTotal };
+  },
+  template: `<div v-if="S.search" class="absolute inset-0 z-[65] flex flex-col bg-background" role="search">
+    <div class="flex shrink-0 items-center gap-2 border-b px-2" :style="{ paddingTop: 'var(--sa-top)', height: 'calc(56px + var(--sa-top))' }">
+      <button type="button" class="press grid h-11 w-11 place-items-center rounded-full" aria-label="Close search" @click="S.search = false"><Icon name="ChevronLeft" :size="24"/></button>
+      <input v-model="S.searchQ" type="search" placeholder="Customers, products, sales" aria-label="Search" class="h-11 min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-muted-foreground"></div>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto px-4 py-3">
+      <template v-if="!q"><p class="mb-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Recent</p><div class="flex flex-wrap gap-2"><button v-for="r in S.recent" :key="r" type="button" class="press h-10 rounded-full border bg-muted/50 px-4 text-[14px]" @click="S.searchQ = r">{{ r }}</button></div></template>
+      <template v-else><p v-if="!cs.length && !ps.length && !ss.length" class="py-10 text-center text-[14px] text-muted-foreground">Nothing matches "{{ S.searchQ }}"</p>
+        <template v-if="cs.length"><p class="mb-1 mt-1 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Customers</p>
+          <button v-for="c in cs" :key="c.id" type="button" class="press flex h-16 w-full items-center gap-3 text-left" @click="pick('customer', c.id)"><Av :c="c"/><span class="min-w-0 flex-1"><span class="block truncate text-[15px] font-medium">{{ c.name }}</span><span class="block truncate text-[13px] text-muted-foreground">{{ c.no }} {{ c.phone }}</span></span></button></template>
+        <template v-if="ps.length"><p class="mb-1 mt-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Products</p>
+          <button v-for="p in ps" :key="p.id" type="button" class="press flex h-16 w-full items-center gap-3 text-left" @click="pick('till')"><Tile :p="p"/><span class="min-w-0 flex-1"><span class="block truncate text-[15px] font-medium">{{ p.name }}</span><span class="block truncate text-[13px] text-muted-foreground">{{ money(p.price) }} · {{ p.stock }} left</span></span></button></template>
+        <template v-if="ss.length"><p class="mb-1 mt-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Sales</p>
+          <button v-for="s in ss" :key="s.id" type="button" class="press flex h-16 w-full items-center gap-3 text-left" @click="pick('sale', s.id)"><span class="grid h-10 w-10 place-items-center rounded-xl bg-muted"><Icon name="Receipt" :size="18" class="text-muted-foreground"/></span><span class="min-w-0 flex-1"><span class="block truncate text-[15px] font-medium">{{ s.id }} · {{ cust(s.c).name }}</span><span class="block truncate text-[13px] text-muted-foreground">{{ s.day }}, {{ s.time }} · {{ money(saleTotal(s)) }}</span></span></button></template></template></div></div>` };
+
+/* ============================================================ Home */
+const Section = { props: { title: String, link: String }, components: { Icon },
+  template: `<div class="mb-2 mt-6 flex items-center justify-between px-1"><h2 class="text-[17px] font-semibold">{{ title }}</h2><button v-if="link" type="button" class="press -mr-2 flex h-10 items-center gap-0.5 rounded-lg px-2 text-[14px] font-medium text-primary" @click="$emit('link')">{{ link }}<Icon name="ChevronRight" :size="16"/></button></div>` };
+
+const Kpi = { props: { label: String, icon: String, tone: { type: String, default: 'primary' }, value: String, hint: String }, components: { Icon },
+  template: `<div class="rise rounded-2xl border bg-card p-4"><div class="flex items-start justify-between"><p class="text-[13px] text-muted-foreground">{{ label }}</p>
+    <span :class="['grid h-8 w-8 place-items-center rounded-lg', { primary: 'bg-primary/10 text-primary', warning: 'bg-warning/15 text-warning', success: 'bg-success/15 text-success' }[tone]]"><Icon :name="icon" :size="16"/></span></div>
+    <p class="mt-2 text-[22px] font-bold leading-tight tracking-tight tnum">{{ value }}</p><p class="mt-0.5 truncate text-[12px] text-muted-foreground">{{ hint }}</p></div>` };
+
+const Home = { components: { Header, Icon, Section, Kpi, Av, Tile, Pill, AgeChip, LevelBadge, Balance },
+  setup() {
+    const owner = computed(() => S.role === 'owner');
+    const hour = 'Good afternoon';
+    const owing = computed(() => CUSTOMERS.filter(c => c.owes > 0).sort((a, b) => b.owes - a.owes).slice(0, 3));
+    const low = computed(() => PRODUCTS.filter(p => level(p) !== 'ok'));
+    const actions = computed(() => owner.value
+      ? [['Sell', 'Open the till', 'ShoppingCart', () => go('till')], ['Receive stock', 'A new batch came in', 'PackagePlus', () => go('ph:Receive stock')], ['Take payment', 'Pays the oldest first', 'Wallet', () => tab('customers')], ['Close the day', 'Count stock and cash', 'ClipboardCheck', () => go('ph:End-of-day count')]]
+      : [['Sell', 'Open the till', 'ShoppingCart', () => go('till')], ['Take payment', 'Pays the oldest first', 'Wallet', () => tab('customers')], ['Add expense', 'Waits for Amina', 'Coins', () => go('ph:Expenses')], ['Count stock', 'End of the day', 'ClipboardCheck', () => go('ph:End-of-day count')]]);
+    return { S, ME, owner, hour, owing, low, actions, waitingN, WAITING, SALES, cust, saleTotal, saleLine, money, go, tab, tint };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="Home"/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto px-4 pb-6 pt-4">
+      <p class="text-[13px] text-muted-foreground">Office Shop · Tue 13 Oct 2026</p>
+      <h2 class="text-[26px] font-bold leading-tight tracking-tight">{{ hour }}, {{ ME.name }}</h2>
+
+      <button v-if="owner && waitingN" type="button" class="press rise mt-4 flex w-full items-center gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4 text-left" @click="go('waiting')">
+        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-warning/20 text-warning"><Icon name="Hourglass" :size="22"/></span>
+        <span class="min-w-0 flex-1"><span class="block text-[16px] font-semibold">{{ waitingN }} things wait for you</span><span class="block truncate text-[13px] text-muted-foreground">{{ WAITING[0].title }}</span></span><Icon name="ChevronRight" :size="20" class="text-muted-foreground"/></button>
+      <div v-else-if="!owner" class="rise mt-4 flex items-center gap-3 rounded-2xl border bg-card p-4"><span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-muted"><Icon name="Hourglass" :size="22" class="text-muted-foreground"/></span>
+        <span class="min-w-0 flex-1"><span class="block text-[16px] font-semibold">2 requests wait for Amina</span><span class="block truncate text-[13px] text-muted-foreground">Undo S-1290 · Expense EXP-0035</span></span></div>
+
+      <div class="mt-4 grid grid-cols-2 gap-3"><button v-for="a in actions" :key="a[0]" type="button" class="press rise flex min-h-[92px] flex-col items-start justify-between rounded-2xl border bg-card p-4 text-left" @click="a[3]()">
+        <span class="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground"><Icon :name="a[2]" :size="20"/></span>
+        <span><span class="block text-[16px] font-semibold leading-tight">{{ a[0] }}</span><span class="block text-[12px] text-muted-foreground">{{ a[1] }}</span></span></button></div>
+
+      <div class="mt-3 grid grid-cols-2 gap-3">
+        <Kpi label="Sales today" icon="ShoppingCart" value="TZS 8,500" hint="9 sales · 13 units"/>
+        <Kpi label="Owed to you" icon="HandCoins" tone="warning" value="TZS 75,000" hint="by 27 customers"/>
+        <Kpi v-if="owner" label="Stock value" icon="Package" value="TZS 80,480" hint="what you paid for it"/>
+        <Kpi label="Low or out" icon="TriangleAlert" tone="warning" value="1" hint="Trident"/></div>
+
+      <Section title="Who owes the most" link="All customers" @link="tab('customers')"/>
+      <div class="overflow-hidden rounded-2xl border bg-card"><button v-for="(c, i) in owing" :key="c.id" type="button" :class="['press flex h-[72px] w-full items-center gap-3 px-4 text-left', i ? 'border-t' : '']" @click="go('customer', c.id)">
+        <Av :c="c" :size="42"/><span class="min-w-0 flex-1"><span class="block truncate text-[15px] font-medium">{{ c.name }}</span><AgeChip :days="c.days"/></span><Balance :b="c.owes"/></button></div>
+
+      <Section title="Needs restocking" link="Products" @link="go('ph:Products')"/>
+      <div v-for="p in low" :key="p.id" class="flex items-center gap-3 rounded-2xl border bg-card p-4"><Tile :p="p" :size="44"/>
+        <span class="min-w-0 flex-1"><span class="flex items-center gap-2"><span class="truncate text-[15px] font-medium">{{ p.name }}</span><LevelBadge :p="p"/></span><span class="block truncate text-[13px] text-muted-foreground">{{ p.stock }} {{ p.units }} left · warn at {{ p.reorder }}</span></span>
+        <button type="button" class="press h-11 shrink-0 rounded-xl border px-3.5 text-[14px] font-semibold" @click="go('ph:Receive stock')">Receive</button></div>
+
+      <Section title="Latest sales" link="All sales" @link="tab('sales')"/>
+      <div class="overflow-hidden rounded-2xl border bg-card"><button v-for="(s, i) in SALES.slice(0, 4)" :key="s.id" type="button" :class="['press flex h-16 w-full items-center gap-3 px-4 text-left', i ? 'border-t' : '']" @click="go('sale', s.id)">
+        <span class="min-w-0 flex-1"><span class="block truncate text-[15px] font-medium">{{ cust(s.c).name }}</span><span class="block truncate text-[13px] text-muted-foreground">{{ s.id }} · {{ s.time }} · {{ saleLine(s.lines[0]) }}</span></span>
+        <span class="text-[15px] font-semibold tnum">{{ money(saleTotal(s)) }}</span></button></div>
+    </div></div>` };
+
+/* what waits for the owner: each card is decided on the spot */
+const Waiting = { components: { Header, Icon, Pill, Btn, Empty },
+  setup() { const items = computed(() => WAITING.filter(w => !S.waitingDone.includes(w.id)));
+    const decide = (w, yes) => { S.waitingDone.push(w.id); toast(yes ? 'Approved: ' + w.title.split(' · ')[0] : 'Declined: ' + w.title.split(' · ')[0]); };
+    return { items, decide, S }; },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="Waiting for you" pushed hide-search/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto px-4 pb-6 pt-4">
+      <Empty v-if="!items.length" icon="CircleCheck" title="Nothing is waiting" text="Rehema's requests show up here the moment she sends them."/>
+      <div v-for="w in items" :key="w.id" class="rise mb-3 rounded-2xl border bg-card p-4">
+        <div class="flex items-start gap-3"><span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-warning/15 text-warning"><Icon :name="w.icon" :size="20"/></span>
+          <div class="min-w-0 flex-1"><Pill tone="warning">{{ w.kind }}</Pill><p class="mt-1.5 text-[16px] font-semibold leading-snug">{{ w.title }}</p><p class="mt-0.5 text-[14px] text-muted-foreground">{{ w.sub }}</p></div></div>
+        <div class="mt-4 grid grid-cols-2 gap-2"><Btn v="outline" size="md" @click="decide(w, false)">Decline</Btn><Btn size="md" @click="decide(w, true)">Approve</Btn></div></div></div></div>` };
+
+/* ============================================================ Till (full screen, no tab bar) */
+const Stepper = { props: { q: Number, step: { type: Number, default: 1 }, max: Number, size: { type: String, default: 'md' }, full: Boolean }, components: { Icon },
+  template: `<div :class="['items-center rounded-xl border bg-background', full ? 'flex w-full justify-between' : 'inline-flex shrink-0', size === 'sm' ? 'h-11' : 'h-12']"><button type="button" class="press grid h-full w-12 place-items-center" aria-label="One less" @click="$emit('sub')"><Icon name="Minus" :size="17"/></button>
+    <span class="min-w-9 text-center text-[16px] font-semibold tnum" aria-live="polite">{{ q }}</span><button type="button" :disabled="q + step > max" :class="['press grid h-full w-12 place-items-center', q + step > max ? 'opacity-35' : '']" aria-label="One more" @click="$emit('add')"><Icon name="Plus" :size="17"/></button></div>` };
+
+const qtyOf = (id) => (S.cart.find(l => l.id === id) || { q: 0 }).q;
+function addP(p) {
+  const l = S.cart.find(x => x.id === p.id);
+  if (l) { if (l.q + p.step > p.stock) return toast('Only ' + p.stock + ' ' + p.units + ' left'); l.q += p.step; }
+  else { if (p.stock < p.step) return toast(p.stock ? 'Sold in steps of ' + p.step : p.name + ' is out of stock'); S.cart.push({ id: p.id, q: p.step }); }
+}
+function subP(p) { const l = S.cart.find(x => x.id === p.id); if (!l) return; l.q -= p.step; if (l.q <= 0) S.cart.splice(S.cart.indexOf(l), 1); }
+const cartTotal = computed(() => S.cart.reduce((t, l) => t + prod(l.id).price * l.q, 0));
+const cartUnits = computed(() => S.cart.reduce((t, l) => t + l.q, 0));
+const payNow = computed(() => S.pay === 'cash' ? cartTotal.value : (S.part ? Math.min(cartTotal.value, S.partAmt || 0) : 0));
+const owesAfter = computed(() => cust(S.customer).owes + cartTotal.value - payNow.value);
+const overLimit = computed(() => S.pay === 'credit' && !cust(S.customer).walkin && cust(S.customer).limit > 0 && owesAfter.value > cust(S.customer).limit);
+const canCharge = computed(() => cartTotal.value > 0 && !(S.pay === 'credit' && cust(S.customer).walkin));
+S.partAmt = 0;
+let nextSale = 1305;
+function charge() {
+  const lines = S.cart.map(l => [l.id, l.q]);
+  const paid = payNow.value, total = cartTotal.value;
+  const sale = { id: 'S-' + (nextSale++), c: S.customer, day: 'Today', time: '11:02', lines, pay: paid >= total ? 'paid' : paid > 0 ? 'part' : 'unpaid', method: S.pay === 'cash' ? 'Cash' : 'Credit', by: ME.value.name, paid, fresh: true };
+  SALES.unshift(sale); if (sale.pay !== 'paid') cust(S.customer).owes += total - paid;
+  S.receipt = sale; S.cart = []; S.cartOpen = false; S.partAmt = 0; S.part = false; S.pay = 'cash';
+  S.route = 'receipt';
+}
+
+const Till = { components: { Icon, Tile, Av, Pill, Btn, Stepper, Sheet, FooterBar },
+  setup() {
+    const shown = computed(() => PRODUCTS.filter(p => p.name.toLowerCase().includes(S.tillQ.trim().toLowerCase())));
+    const c = computed(() => cust(S.customer));
+    const lines = computed(() => S.cart.map(l => ({ p: prod(l.id), q: l.q })));
+    const picks = computed(() => CUSTOMERS.filter(x => (x.name + x.phone).toLowerCase().includes(S.custQ.trim().toLowerCase())));
+    const pickCustomer = (id) => { S.customer = id; if (cust(id).walkin) { S.pay = 'cash'; S.part = false; } S.sheet = null; S.cartOpen = true; };
+    const canPay = computed(() => ME.value.role === 'Owner');
+    return { S, ME, shown, c, lines, picks, pickCustomer, canPay, cartTotal, cartUnits, payNow, owesAfter, overLimit, canCharge, charge, qtyOf, addP, subP, level, perText, stockText, money, num, cust, go, back, toast, tint };
+  },
+  template: `<div class="relative flex min-h-0 flex-1 flex-col">
+    <header class="flex shrink-0 items-center gap-2 border-b bg-background px-2" :style="{ paddingTop: 'var(--sa-top)', height: 'calc(56px + var(--sa-top))' }">
+      <button type="button" class="press grid h-11 w-11 place-items-center rounded-full" aria-label="Leave the till (the cart is kept)" @click="back()"><Icon name="X" :size="22"/></button>
+      <div class="min-w-0 flex-1 px-1"><h1 class="text-[18px] font-semibold leading-tight">Till</h1><p class="truncate text-[12px] leading-tight text-muted-foreground">Office Shop · {{ ME.name }}</p></div>
+      <button type="button" class="press flex h-11 max-w-[170px] items-center gap-2 rounded-full border bg-muted/50 py-1 pl-1.5 pr-3" aria-label="Choose the customer" @click="S.sheet = 'cust'"><Av :c="c" :size="30"/><span class="truncate text-[14px] font-medium">{{ c.walkin ? 'Walk-in' : c.name.split(' ')[0] }}</span><Icon name="ChevronDown" :size="14" class="shrink-0 text-muted-foreground"/></button></header>
+
+    <div class="flex shrink-0 items-center gap-2 border-b bg-background px-3 py-2.5"><label class="flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-xl border bg-muted/50 px-3.5"><Icon name="Search" :size="18" class="text-muted-foreground"/>
+      <input v-model="S.tillQ" type="search" placeholder="Find a product" aria-label="Find a product" class="min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-muted-foreground"></label>
+      <button type="button" class="press grid h-12 w-12 shrink-0 place-items-center rounded-xl border bg-muted/50" aria-label="Scan a barcode" @click="toast('Scan opens the camera, and you can type the code')"><Icon name="ScanBarcode" :size="22"/></button></div>
+
+    <div class="scroll min-h-0 flex-1 overflow-y-auto p-3"><div class="grid grid-cols-2 gap-3">
+      <div v-for="p in shown" :key="p.id" :class="['relative overflow-hidden rounded-2xl border bg-card', p.stock <= 0 ? 'opacity-55' : '', qtyOf(p.id) ? 'ring-2 ring-primary' : '']">
+        <div class="h-1" :style="{ background: p.c }"></div>
+        <button type="button" class="press block w-full p-3.5 text-left" :disabled="p.stock <= 0" :aria-label="'Add ' + p.name" @click="addP(p)">
+          <span class="flex items-start justify-between"><Tile :p="p" :size="42"/><span v-if="qtyOf(p.id)" class="grid h-7 min-w-7 place-items-center rounded-full bg-primary px-1.5 text-[13px] font-bold text-primary-foreground tnum">{{ qtyOf(p.id) }}</span></span>
+          <span class="mt-2.5 block truncate text-[16px] font-semibold">{{ p.name }}</span>
+          <span class="block text-[17px] font-bold tnum">{{ perText(p) }}</span>
+          <span :class="['mt-0.5 block text-[12px]', level(p) === 'ok' ? 'text-muted-foreground' : level(p) === 'low' ? 'font-medium text-warning' : 'font-medium text-destructive']">{{ stockText(p) }}</span></button>
+        <div v-if="qtyOf(p.id)" class="border-t p-2"><Stepper full size="sm" :q="qtyOf(p.id)" :step="p.step" :max="p.stock" @sub="subP(p)" @add="addP(p)"/></div></div></div>
+      <p v-if="!shown.length" class="py-12 text-center text-[14px] text-muted-foreground">No product matches "{{ S.tillQ }}"</p></div>
+
+    <FooterBar><button v-if="cartUnits" type="button" class="press flex h-14 w-full items-center gap-3 rounded-2xl bg-primary px-4 text-primary-foreground" @click="S.cartOpen = true">
+        <span class="relative grid h-9 w-9 place-items-center rounded-full bg-white/20"><Icon name="ShoppingCart" :size="19"/><span class="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-white px-1 text-[11px] font-bold text-primary">{{ S.cart.length }}</span></span>
+        <span class="min-w-0 flex-1 text-left"><span class="block truncate text-[14px] font-medium opacity-90">{{ c.walkin ? 'Walk-in customer' : c.name }}</span></span><span class="text-[18px] font-bold tnum">{{ money(cartTotal) }}</span><Icon name="ChevronUp" :size="20"/></button>
+      <p v-else class="grid h-14 place-items-center rounded-2xl bg-muted text-[14px] text-muted-foreground">Tap a product to start a sale</p></FooterBar>
+
+    <Sheet :open="S.cartOpen && !S.sheet" tall title="Cart" :sub="(c.walkin ? 'Walk-in customer' : c.name) + ' · ' + cartUnits + ' items'" @close="S.cartOpen = false">
+      <div class="px-4 pb-4">
+        <button type="button" class="press mb-3 flex h-14 w-full items-center gap-3 rounded-2xl border bg-muted/40 px-3 text-left" @click="S.sheet = 'cust'"><Av :c="c" :size="36"/>
+          <span class="min-w-0 flex-1"><span class="block truncate text-[15px] font-medium">{{ c.walkin ? 'Walk-in customer' : c.name }}</span><span class="block truncate text-[12px] text-muted-foreground">{{ c.walkin ? 'Pays now, no account' : (c.owes > 0 ? 'Owes ' + money(c.owes) : 'Settled') + ' · limit ' + money(c.limit) }}</span></span><span class="text-[14px] font-semibold text-primary">Change</span></button>
+        <div class="divide-y rounded-2xl border bg-card"><div v-for="l in lines" :key="l.p.id" class="flex items-center gap-3 p-3"><Tile :p="l.p" :size="40"/>
+          <div class="min-w-0 flex-1"><p class="truncate text-[15px] font-medium">{{ l.p.name }}</p><p class="text-[12px] text-muted-foreground tnum">{{ perText(l.p) }} · oldest batch first</p></div>
+          <div class="flex flex-col items-end gap-1.5"><span class="text-[15px] font-semibold tnum">{{ money(l.p.price * l.q) }}</span><Stepper size="sm" :q="l.q" :step="l.p.step" :max="l.p.stock" @sub="subP(l.p)" @add="addP(l.p)"/></div></div></div>
+
+        <p class="mb-2 mt-5 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">How is it paid</p>
+        <div class="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1"><button v-for="m in [['cash','Cash now'],['credit','On credit']]" :key="m[0]" type="button" :class="['press h-11 rounded-xl text-[15px] font-semibold', S.pay === m[0] ? 'bg-background shadow-sm' : 'text-muted-foreground']" @click="S.pay = m[0]; if (m[0] === 'cash') S.part = false">{{ m[1] }}</button></div>
+        <p v-if="S.pay === 'credit' && c.walkin" class="mt-3 flex items-start gap-2 rounded-xl bg-warning/10 p-3 text-[14px] text-warning"><Icon name="Info" :size="18" class="mt-0.5"/><span>Walk-in customers pay now. Choose a customer to sell on credit.</span></p>
+        <template v-if="S.pay === 'credit' && !c.walkin">
+          <p v-if="overLimit" class="mt-3 flex items-start gap-2 rounded-xl bg-warning/10 p-3 text-[14px] text-warning"><Icon name="TriangleAlert" :size="18" class="mt-0.5"/><span>{{ c.name.split(' ')[0] }} would owe {{ money(owesAfter) }}, over the limit of {{ money(c.limit) }}. You can still go on.</span></p>
+          <label class="press mt-3 flex h-14 items-center justify-between rounded-2xl border px-4"><span class="text-[15px] font-medium">Pays part now</span>
+            <button type="button" role="switch" :aria-checked="S.part" aria-label="Pays part now" :class="['relative h-8 w-14 rounded-full transition-colors', S.part ? 'bg-primary' : 'bg-muted-foreground/30']" @click="S.part = !S.part"><span :class="['absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all', S.part ? 'left-7' : 'left-1']"></span></button></label>
+          <label v-if="S.part" class="mt-2 flex h-14 items-center gap-2 rounded-2xl border px-4"><span class="text-[14px] text-muted-foreground">TZS</span><input v-model.number="S.partAmt" type="text" inputmode="numeric" pattern="[0-9]*" aria-label="Amount paid now" placeholder="0" class="min-w-0 flex-1 bg-transparent text-right text-[20px] font-semibold tnum outline-none"></label></template>
+
+        <div class="mt-4 flex h-14 items-center gap-3 rounded-2xl border px-4"><Icon name="Landmark" :size="20" class="text-muted-foreground"/><span class="flex-1"><span class="block text-[12px] text-muted-foreground">Paid into</span><span class="block text-[15px] font-medium">{{ S.account }}</span></span>
+          <Pill v-if="!canPay" tone="muted"><Icon name="Lock" :size="12"/>Drawer</Pill><button v-else type="button" class="press text-[14px] font-semibold text-primary" @click="S.sheet = 'acct'">Change</button></div>
+
+        <div class="mt-4 space-y-1.5 rounded-2xl bg-muted/50 p-4 tnum"><div class="flex justify-between text-[14px] text-muted-foreground"><span>{{ S.cart.length }} lines · {{ cartUnits }} items</span><span>{{ money(cartTotal) }}</span></div>
+          <div v-if="S.pay === 'credit'" class="flex justify-between text-[14px]"><span class="text-muted-foreground">Paid now</span><span class="font-medium">{{ money(payNow) }}</span></div>
+          <div class="flex items-baseline justify-between pt-1"><span class="text-[15px] font-semibold">{{ S.pay === 'credit' ? 'Goes on credit' : 'Total' }}</span><span class="text-[24px] font-bold">{{ money(cartTotal - payNow || cartTotal) }}</span></div></div></div>
+      <template #footer><Btn full :disabled="!canCharge" @click="charge()">{{ S.pay === 'cash' ? 'Charge ' + money(cartTotal) : 'Sell on credit' }}</Btn></template></Sheet>
+
+    <Sheet :open="S.sheet === 'cust'" title="Who is buying?" @close="S.sheet = null">
+      <div class="px-4 pb-4"><label class="flex h-12 items-center gap-2.5 rounded-xl border bg-muted/50 px-3.5"><Icon name="Search" :size="18" class="text-muted-foreground"/><input v-model="S.custQ" type="search" placeholder="Name or phone" aria-label="Find a customer" class="min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-muted-foreground"></label>
+        <button type="button" class="press mt-2 flex h-14 w-full items-center gap-3 text-left text-primary" @click="toast('New customer: name and phone, then back here')"><span class="grid h-10 w-10 place-items-center rounded-full bg-primary/10"><Icon name="UserPlus" :size="19"/></span><span class="text-[15px] font-semibold">Add a new customer</span></button>
+        <button v-for="x in picks" :key="x.id" type="button" :class="['press flex h-16 w-full items-center gap-3 rounded-xl px-1 text-left', S.customer === x.id ? 'bg-primary/10' : '']" @click="pickCustomer(x.id)"><Av :c="x" :size="42"/>
+          <span class="min-w-0 flex-1"><span class="block truncate text-[15px] font-medium">{{ x.name }}</span><span class="block truncate text-[12px] text-muted-foreground">{{ x.walkin ? 'Pays now' : (x.phone || 'No phone') }}</span></span>
+          <span v-if="S.customer === x.id" class="mr-1 text-primary"><Icon name="Check" :size="20"/></span><span v-else-if="x.owes > 0" class="mr-1 text-[13px] font-medium text-warning tnum">Owes {{ num(x.owes) }}</span></button></div></Sheet>
+
+    <Sheet :open="S.sheet === 'acct'" title="Paid into" @close="S.sheet = null"><div class="px-4 pb-4"><button v-for="a in [['Cash drawer','Banknote'],['Lipa Namba','Smartphone'],['M-Pesa wallet','Wallet'],['CRDB bank','Landmark']]" :key="a[0]" type="button" class="press flex h-14 w-full items-center gap-3 text-left" @click="S.account = a[0]; S.sheet = null">
+      <span class="grid h-10 w-10 place-items-center rounded-xl bg-muted"><Icon :name="a[1]" :size="19"/></span><span class="flex-1 text-[15px] font-medium">{{ a[0] }}</span><Icon v-if="S.account === a[0]" name="Check" :size="20" class="text-primary"/></button></div></Sheet>
+  </div>` };
+
+/* the sale is done: print it, share it, or start the next one */
+const Receipt = { components: { Icon, Btn, Pill, FooterBar },
+  setup() { const s = computed(() => S.receipt || SALES[0]); const c = computed(() => cust(s.value.c));
+    const left = computed(() => saleTotal(s.value) - (s.value.paid != null ? s.value.paid : (s.value.pay === 'paid' ? saleTotal(s.value) : 0)));
+    return { S, s, c, left, saleTotal, prod, money, back, go, tab, toast }; },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><div class="scroll min-h-0 flex-1 overflow-y-auto px-5" :style="{ paddingTop: 'calc(40px + var(--sa-top))' }">
+      <div class="flex flex-col items-center text-center"><span class="rise grid h-20 w-20 place-items-center rounded-full bg-success/15 text-success"><Icon name="Check" :size="40"/></span>
+        <h1 class="mt-4 text-[24px] font-bold">Sale done</h1><p class="text-[14px] text-muted-foreground">{{ s.id }} · {{ c.walkin ? 'Walk-in customer' : c.name }}</p>
+        <p class="mt-3 text-[34px] font-bold tracking-tight tnum">{{ money(saleTotal(s)) }}</p><Pill :tone="left > 0 ? 'warning' : 'success'">{{ left > 0 ? money(left) + ' goes on credit' : 'Paid · ' + s.method }}</Pill></div>
+      <div class="mt-6 divide-y rounded-2xl border bg-card"><div v-for="l in s.lines" :key="l[0]" class="flex items-center justify-between px-4 py-3"><span class="text-[15px]">{{ prod(l[0]).name }} <span class="text-muted-foreground">× {{ l[1] }}</span></span><span class="text-[15px] font-medium tnum">{{ money(prod(l[0]).price * l[1]) }}</span></div></div>
+      <button type="button" class="press mt-3 flex h-14 w-full items-center gap-3 rounded-2xl border bg-muted/40 px-4 text-left" @click="toast('Receipt sent to RPP02N')"><Icon name="Printer" :size="20"/><span class="flex-1"><span class="block text-[15px] font-semibold">Print receipt</span><span class="block text-[12px] text-success">RPP02N · connected</span></span><Icon name="ChevronRight" :size="18" class="text-muted-foreground"/></button>
+      <button type="button" class="press mt-2 flex h-14 w-full items-center gap-3 rounded-2xl border bg-muted/40 px-4 text-left" @click="S.sheet = 'share'"><Icon name="Share2" :size="20"/><span class="flex-1 text-[15px] font-semibold">Share the receipt</span><Icon name="ChevronRight" :size="18" class="text-muted-foreground"/></button><div class="h-4"></div></div>
+    <FooterBar><div class="grid grid-cols-2 gap-2"><Btn v="outline" @click="tab('home')">Done</Btn><Btn @click="S.route = 'till'">New sale</Btn></div></FooterBar></div>` };
+
+/* ============================================================ Sales */
+const itemsText = (s) => saleLine(s.lines[0]) + (s.lines.length > 1 ? ' +' + (s.lines.length - 1) + ' more' : '');
+const paidOf = (s) => s.pay === 'paid' ? saleTotal(s) : s.pay === 'part' ? (s.paid || 0) : 0;
+
+const FilterSheet = { props: { open: Boolean }, components: { Sheet, Btn },
+  setup() {
+    const l = reactive({ status: 'all', range: 'all', who: 'all' });
+    watch(() => S.sheet, (v) => { if (v === 'filter') Object.assign(l, S.salesFilter); });
+    const apply = () => { Object.assign(S.salesFilter, l); S.sheet = null; S.shown = 6; };
+    const reset = () => Object.assign(l, { status: 'all', range: 'all', who: 'all' });
+    return { S, l, apply, reset, st: [['all', 'All'], ['unpaid', 'Unpaid'], ['part', 'Part paid'], ['paid', 'Paid'], ['undone', 'Undone']], rg: [['all', 'All time'], ['today', 'Today'], ['week', 'This week'], ['month', 'This month']], who: [['all', 'Everyone'], ['Rehema', 'Rehema'], ['Amina', 'Amina']] };
+  },
+  template: `<Sheet :open="S.sheet === 'filter'" title="Filters" @close="S.sheet = null"><div class="px-5 pb-4">
+      <p class="mb-2 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Status</p><div class="flex flex-wrap gap-2"><button v-for="o in st" :key="o[0]" type="button" @click="l.status = o[0]" :class="['press h-11 rounded-xl px-4 text-[15px] font-medium', l.status === o[0] ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground']">{{ o[1] }}</button></div>
+      <p class="mb-2 mt-6 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Sold by</p><div class="flex flex-wrap gap-2"><button v-for="o in who" :key="o[0]" type="button" @click="l.who = o[0]" :class="['press h-11 rounded-xl px-4 text-[15px] font-medium', l.who === o[0] ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground']">{{ o[1] }}</button></div>
+      <p class="mb-2 mt-6 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Date</p><div class="grid grid-cols-2 gap-2"><button v-for="o in rg" :key="o[0]" type="button" @click="l.range = o[0]" :class="['press h-11 rounded-xl text-[15px] font-medium', l.range === o[0] ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground']">{{ o[1] }}</button></div></div>
+    <template #footer><div class="grid grid-cols-[1fr_2fr] gap-2"><Btn v="outline" @click="reset">Reset</Btn><Btn @click="apply">Show sales</Btn></div></template></Sheet>` };
+
+const SalesList = { components: { Header, Icon, Av, Pill, Seg, Empty, FilterBar, SaleStatus, FilterSheet },
+  setup() {
+    const tabs = computed(() => [{ id: 'all', label: 'All' }, { id: 'unpaid', label: 'Unpaid', count: SALES.filter(s => s.pay === 'unpaid').length }, { id: 'part', label: 'Part paid', count: SALES.filter(s => s.pay === 'part').length }]);
+    const rows = computed(() => SALES.filter(s => {
+      const f = S.salesFilter; const st = f.status !== 'all' ? f.status : S.salesTab;
+      return (st === 'all' || s.pay === st || (st === 'undone' && s.undone)) && (f.who === 'all' || s.by === f.who) && (f.range === 'all' || f.range === 'week' || f.range === 'month' || s.day === 'Today')
+        && (!S.salesQ || (s.id + cust(s.c).name).toLowerCase().includes(S.salesQ.toLowerCase()));
+    }));
+    const groups = computed(() => { const g = []; rows.value.slice(0, S.shown).forEach(s => { let x = g.find(y => y.day === s.day); if (!x) g.push(x = { day: s.day, rows: [] }); x.rows.push(s); }); return g; });
+    const dayTotal = (g) => money(g.rows.reduce((t, s) => t + saleTotal(s), 0));
+    const active = computed(() => S.salesFilter.status !== 'all' || S.salesFilter.who !== 'all' || S.salesFilter.range !== 'all');
+    const summary = computed(() => { const p = []; const f = S.salesFilter; if (f.status !== 'all') p.push({ unpaid: 'Unpaid', part: 'Part paid', paid: 'Paid', undone: 'Undone' }[f.status]); if (f.who !== 'all') p.push(f.who); if (f.range !== 'all') p.push({ today: 'Today', week: 'This week', month: 'This month' }[f.range]); return p.length ? 'Filter · ' + p.join(' · ') : 'All sales · filter'; });
+    const refresh = () => { S.list = 'loading'; setTimeout(() => { if (S.list === 'loading') S.list = 'data'; }, 900); };
+    return { S, tabs, rows, groups, dayTotal, active, summary, refresh, waitingN, ME, cust, saleTotal, itemsText, money, go, tab };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="Sales"/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto">
+      <FilterBar :summary="summary" :active="active" :loading="S.list === 'loading'" @refresh="refresh" @open="S.sheet = 'filter'"/>
+      <div class="space-y-3 px-3 pb-6 pt-3">
+        <button v-if="ME.role === 'Owner' && waitingN" type="button" class="press flex w-full items-center gap-3 rounded-2xl border border-warning/40 bg-warning/10 px-4 py-3 text-left" @click="go('waiting')"><Icon name="Undo2" :size="20" class="text-warning"/><span class="flex-1 text-[14px]"><b>2 undo requests</b> wait for you. Stock and balances change after you approve.</span><Icon name="ChevronRight" :size="18" class="text-muted-foreground"/></button>
+        <Seg v-model="S.salesTab" :tabs="tabs"/>
+        <template v-if="S.list === 'loading'"><div v-for="i in 5" :key="i" class="skel h-[76px] rounded-2xl"></div></template>
+        <div v-else-if="S.list === 'error'" class="flex items-center justify-between rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-[14px] text-destructive"><span>Could not load sales.</span><button class="press h-10 px-2 font-semibold underline" @click="S.list = 'data'">Retry</button></div>
+        <Empty v-else-if="S.list === 'empty' || !rows.length" icon="Receipt" title="No sales found" text="Try another filter, or open the till to make one."/>
+        <template v-else><div v-for="g in groups" :key="g.day"><div class="mb-1.5 flex items-baseline justify-between px-1"><h3 class="text-[14px] font-semibold">{{ g.day }}</h3><span class="text-[13px] text-muted-foreground tnum">{{ g.rows.length }} sales · {{ dayTotal(g) }}</span></div>
+          <div class="overflow-hidden rounded-2xl border bg-card"><button v-for="(s, i) in g.rows" :key="s.id" type="button" :class="['press flex w-full items-center gap-3 px-3.5 py-3 text-left', i ? 'border-t' : '']" @click="go('sale', s.id)">
+            <Av :c="cust(s.c)" :size="44"/><span class="min-w-0 flex-1"><span class="block truncate text-[15px] font-medium">{{ cust(s.c).name }}</span><span class="block truncate text-[13px] text-muted-foreground tnum">{{ s.id }} · {{ s.time }} · {{ itemsText(s) }}</span>
+              <span v-if="s.undoAsked" class="mt-0.5 flex items-center gap-1 text-[12px] font-medium text-warning"><Icon name="Undo2" :size="12"/>Undo asked</span></span>
+            <span class="flex flex-col items-end gap-1"><span class="text-[15px] font-semibold tnum">{{ money(saleTotal(s)) }}</span><SaleStatus :s="s.pay"/></span></button></div></div>
+          <button v-if="rows.length > S.shown" type="button" class="press h-12 w-full rounded-xl border bg-card text-[15px] font-semibold" @click="S.shown += 6">Show more</button></template></div></div>
+    <FilterSheet/></div>` };
+
+const Row = { props: { k: String, v: String, mono: Boolean }, template: `<div class="flex items-center justify-between gap-4 py-2.5 text-[15px]"><span class="text-muted-foreground">{{ k }}</span><span :class="['text-right font-medium', mono ? 'font-mono text-[14px]' : '']"><slot>{{ v }}</slot></span></div>` };
+const Card = { props: { title: String, icon: String }, components: { Icon },
+  template: `<section class="rise rounded-2xl border bg-card"><h3 v-if="title" class="flex items-center gap-2 px-4 pt-3.5 text-[15px] font-semibold"><Icon v-if="icon" :name="icon" :size="17" class="text-muted-foreground"/>{{ title }}</h3><div class="px-4 pb-2"><slot/></div></section>` };
+
+const SalePage = { components: { Header, Icon, Av, Pill, Btn, Card, Row, SaleStatus, Sheet, FooterBar },
+  setup() {
+    const s = computed(() => SALES.find(x => x.id === S.saleId) || SALES[0]);
+    const c = computed(() => cust(s.value.c));
+    const total = computed(() => saleTotal(s.value));
+    const left = computed(() => s.value.pay === 'undone' ? 0 : total.value - paidOf(s.value));
+    const owner = computed(() => ME.value.role === 'Owner');
+    const amt = ref(0); const method = ref('Cash');
+    watch(() => S.sheet, (v) => { if (v === 'takepay') { amt.value = left.value; method.value = 'Cash'; } });
+    const askUndo = () => { S.dialog = { title: owner.value ? 'Undo ' + s.value.id + '?' : 'Ask Amina to undo ' + s.value.id + '?', text: owner.value ? 'The stock goes back on the shelf and ' + c.value.name + "'s balance changes." : 'Nothing changes until she approves. She sees your request in Waiting for you.', action: owner.value ? 'Undo the sale' : 'Send the request', tone: owner.value ? 'destructive' : 'primary', cancel: 'Keep the sale',
+      ok: () => { if (owner.value) { s.value.pay = 'undone'; s.value.undone = true; if (c.value.owes > 0) c.value.owes = Math.max(0, c.value.owes - left.value); toast(s.value.id + ' undone'); } else { s.value.undoAsked = true; toast('Sent to Amina'); } } }; };
+    const record = () => { const a = Math.min(Math.max(+amt.value || 0, 0), left.value); if (!a) return; s.value.paid = paidOf(s.value) + a; s.value.pay = s.value.paid >= total.value ? 'paid' : 'part'; c.value.owes = Math.max(0, c.value.owes - a); S.sheet = null; toast(money(a) + ' recorded, ' + method.value); };
+    return { S, s, c, total, left, owner, amt, method, askUndo, record, prod, money, go, paidOf, tint };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header :title="s.id" pushed hide-search/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-3 p-3 pb-6">
+      <section class="rise rounded-2xl border bg-card p-4"><button type="button" class="press -m-1 flex w-[calc(100%+8px)] items-center gap-3 rounded-xl p-1 text-left" @click="!c.walkin && go('customer', c.id)"><Av :c="c" :size="48"/>
+          <span class="min-w-0 flex-1"><span class="block truncate text-[17px] font-semibold">{{ c.name }}</span><span class="block text-[13px] text-muted-foreground">{{ s.day }}, {{ s.time }} · sold by {{ s.by }}</span></span><Icon v-if="!c.walkin" name="ChevronRight" :size="18" class="text-muted-foreground"/></button>
+        <div class="mt-4 flex items-end justify-between"><div><p class="text-[13px] text-muted-foreground">Sale total</p><p class="text-[30px] font-bold leading-tight tracking-tight tnum">{{ money(total) }}</p></div><SaleStatus :s="s.pay"/></div>
+        <div v-if="s.pay === 'unpaid' || s.pay === 'part'" class="mt-3 flex items-center justify-between rounded-xl bg-warning/10 px-3.5 py-2.5 text-[14px]"><span class="text-warning">Left to pay</span><b class="text-warning tnum">{{ money(left) }}</b></div></section>
+      <Card title="Items" icon="ShoppingCart"><div v-for="l in s.lines" :key="l[0]" class="flex items-center justify-between border-b py-3 last:border-0"><span class="min-w-0 flex-1"><span class="block truncate text-[15px] font-medium">{{ prod(l[0]).name }}</span><span class="block text-[13px] text-muted-foreground tnum">{{ l[1] }} × {{ money(prod(l[0]).price) }} · oldest batch</span></span><span class="text-[15px] font-semibold tnum">{{ money(prod(l[0]).price * l[1]) }}</span></div></Card>
+      <Card title="Payment" icon="Wallet"><Row k="Method" :v="s.method"/><Row k="Paid" :v="money(paidOf(s))"/><Row k="Left to pay" :v="money(left)"/></Card>
+      <Card title="What happened" icon="History"><ol class="py-2"><li v-for="(e, i) in [s.undone ? ['Undone', s.day + ', 11:20', 'Amina approved'] : null, s.undoAsked ? ['Undo asked', s.day + ', 11:05', 'Rehema: wrong customer'] : null, s.pay !== 'unpaid' && !s.undone ? ['Payment', s.day + ', ' + s.time, money(paidOf(s)) + ' · ' + s.method] : null, ['Sold', s.day + ', ' + s.time, 'by ' + s.by]].filter(Boolean)" :key="i" class="relative flex gap-3 pb-4 last:pb-0">
+          <span class="relative mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-primary"><span class="absolute left-1/2 top-3 h-[calc(100%+22px)] w-px -translate-x-1/2 bg-border"></span></span><span class="min-w-0"><span class="block text-[15px] font-medium">{{ e[0] }}</span><span class="block text-[13px] text-muted-foreground">{{ e[1] }} · {{ e[2] }}</span></span></li></ol></Card></div></div>
+    <FooterBar><p v-if="s.undone" class="py-2 text-center text-[14px] text-muted-foreground">This sale was undone.</p>
+      <p v-else-if="s.undoAsked && !owner" class="flex h-12 items-center justify-center gap-2 text-[14px] text-warning"><Icon name="Hourglass" :size="17"/>Waiting for Amina to approve the undo</p>
+      <div v-else class="grid gap-2" :class="left > 0 ? 'grid-cols-2' : 'grid-cols-1'"><Btn :v="owner ? 'destructive-outline' : 'outline'" @click="askUndo">{{ owner ? 'Undo sale' : 'Ask to undo' }}</Btn><Btn v-if="left > 0" @click="S.sheet = 'takepay'">Take payment</Btn></div></FooterBar>
+    <Sheet :open="S.sheet === 'takepay'" title="Take payment" :sub="c.name + ' · ' + s.id" @close="S.sheet = null"><div class="px-5 pb-4">
+      <p class="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Amount</p><label class="mt-2 flex h-16 items-center gap-2 rounded-2xl border-2 border-primary px-4"><span class="text-[15px] text-muted-foreground">TZS</span><input v-model.number="amt" type="text" inputmode="numeric" pattern="[0-9]*" aria-label="Amount" class="min-w-0 flex-1 bg-transparent text-right text-[28px] font-bold tnum outline-none"></label>
+      <div class="mt-2 flex gap-2"><button type="button" class="press h-10 rounded-full border px-4 text-[14px] font-medium" @click="amt = left">All {{ money(left) }}</button><button v-if="left > 1000" type="button" class="press h-10 rounded-full border px-4 text-[14px] font-medium" @click="amt = Math.round(left / 2)">Half</button></div>
+      <p class="mb-2 mt-5 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Paid with</p><div class="flex flex-wrap gap-2"><button v-for="m in ['Cash', 'M-Pesa', 'Tigo Pesa', 'Airtel Money', 'Bank']" :key="m" type="button" @click="method = m" :class="['press h-11 rounded-xl px-4 text-[15px] font-medium', method === m ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground']">{{ m }}</button></div></div>
+      <template #footer><Btn full :disabled="!amt" @click="record">Record {{ money(Math.min(amt || 0, left)) }}</Btn></template></Sheet></div>` };
+
+/* ============================================================ Customers */
+const CustomersList = { components: { Header, Icon, Av, Pill, Seg, Empty, AgeChip, Balance },
+  setup() {
+    const real = CUSTOMERS.filter(c => !c.walkin);
+    const tabs = computed(() => [{ id: 'all', label: 'All', count: real.length }, { id: 'owe', label: 'Owing', count: real.filter(c => c.owes > 0).length }, { id: 'ok', label: 'Settled' }]);
+    const rows = computed(() => real.filter(c => (S.custTab === 'all' || (S.custTab === 'owe' ? c.owes > 0 : c.owes <= 0)) && (c.name + c.phone + c.no).toLowerCase().includes(S.custQ.trim().toLowerCase())).sort((a, b) => b.owes - a.owes || a.name.localeCompare(b.name)));
+    const owedAll = real.reduce((t, c) => t + Math.max(0, c.owes), 0);
+    return { S, tabs, rows, owedAll, money, go, toast };
+  },
+  template: `<div class="relative flex min-h-0 flex-1 flex-col"><Header title="Customers"/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="sticky top-0 z-10 space-y-2.5 border-b bg-background px-3 py-2.5">
+        <label class="flex h-12 items-center gap-2.5 rounded-xl border bg-muted/50 px-3.5"><Icon name="Search" :size="18" class="text-muted-foreground"/><input v-model="S.custQ" type="search" placeholder="Name, phone or customer no." aria-label="Find a customer" class="min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-muted-foreground"></label>
+        <Seg v-model="S.custTab" :tabs="tabs"/></div>
+      <div class="px-3 pb-24 pt-3">
+        <div class="mb-3 flex items-center justify-between rounded-2xl bg-warning/10 px-4 py-3"><span class="text-[14px] text-muted-foreground">Owed to you</span><b class="text-[17px] text-warning tnum">{{ money(owedAll) }}</b></div>
+        <Empty v-if="!rows.length" icon="Users" title="No customers found" text="Try a different name or number."/>
+        <div v-else class="overflow-hidden rounded-2xl border bg-card"><button v-for="(c, i) in rows" :key="c.id" type="button" :class="['press flex w-full items-center gap-3 px-3.5 py-3 text-left', i ? 'border-t' : '']" @click="go('customer', c.id)">
+          <Av :c="c" :size="46"/><span class="min-w-0 flex-1"><span class="block truncate text-[15px] font-medium">{{ c.name }}</span><span class="mt-0.5 flex items-center gap-1.5"><AgeChip v-if="c.owes > 0" :days="c.days"/><span v-else class="truncate text-[13px] text-muted-foreground">{{ c.phone || 'No phone' }}</span></span></span><Balance :b="c.owes"/></button></div></div></div>
+    <button type="button" class="press absolute right-4 z-30 grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg" :style="{ bottom: '16px' }" aria-label="New customer" @click="toast('New customer: name and phone')"><Icon name="UserPlus" :size="23"/></button></div>` };
+
+const Customer = { components: { Header, Icon, Av, Pill, Btn, Seg, Card, Row, AgeChip, SaleStatus, Sheet, FooterBar },
+  setup() {
+    const c = computed(() => cust(S.cid));
+    const sales = computed(() => SALES.filter(s => s.c === S.cid));
+    const unpaid = computed(() => sales.value.filter(s => s.pay === 'unpaid' || s.pay === 'part'));
+    const tabs = [{ id: 'overview', label: 'Overview' }, { id: 'sales', label: 'Sales' }, { id: 'payments', label: 'Payments' }];
+    const amt = ref(0); const method = ref('Cash');
+    watch(() => S.sheet, (v) => { if (v === 'cpay') { amt.value = Math.max(0, c.value.owes); method.value = 'Cash'; } });
+    const record = () => { const a = Math.min(+amt.value || 0, 1e9); if (!a) return; c.value.owes -= a; c.value.paid = (c.value.paid || 0) + a; S.sheet = null; toast(money(a) + ' recorded for ' + c.value.name.split(' ')[0]); };
+    const pays = computed(() => [['P-0052', '19 Sept, 17:22', 3000, 'Cash drawer'], ['P-0030', '11 Sept, 10:59', 1000, 'Cash drawer']]);
+    const limitPct = computed(() => c.value.limit ? Math.min(100, Math.max(0, c.value.owes) / c.value.limit * 100) : 0);
+    return { S, c, sales, unpaid, tabs, amt, method, record, pays, limitPct, saleTotal, itemsText, paidOf, money, go, toast };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header :title="c.name" pushed hide-search/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-3 p-3 pb-6">
+      <section class="rise rounded-2xl border bg-card p-4"><div class="flex items-center gap-3.5"><Av :c="c" :size="60"/><div class="min-w-0"><h2 class="truncate text-[22px] font-bold leading-tight tracking-tight">{{ c.name }}</h2><p class="font-mono text-[13px] text-muted-foreground">{{ c.no }}</p>
+          <button v-if="c.phone" type="button" class="press -ml-1 flex h-9 items-center gap-1.5 rounded-lg px-1 text-[15px] font-medium text-primary" @click="S.sheet = 'call'"><Icon name="Phone" :size="15"/>{{ c.phone }}</button><p v-else class="text-[14px] text-muted-foreground">No phone number</p></div></div>
+        <div class="mt-4 grid grid-cols-2 gap-3"><div class="rounded-xl bg-muted/60 p-3"><p class="text-[12px] text-muted-foreground">{{ c.owes < 0 ? 'Prepaid' : 'Owes you' }}</p><p :class="['text-[20px] font-bold tnum', c.owes > 0 ? 'text-warning' : c.owes < 0 ? 'text-success' : '']">{{ money(Math.abs(c.owes)) }}</p><p class="text-[12px] text-muted-foreground">{{ c.owes > 0 ? 'oldest unpaid ' + c.days + ' days' : 'nothing to collect' }}</p></div>
+          <div class="rounded-xl bg-muted/60 p-3"><p class="text-[12px] text-muted-foreground">Bought</p><p class="text-[20px] font-bold tnum">{{ money(c.bought) }}</p><p class="text-[12px] text-muted-foreground">since {{ c.since }}</p></div></div></section>
+      <Seg v-model="S.custPane" :tabs="tabs"/>
+      <template v-if="S.custPane === 'overview'">
+        <Card v-if="unpaid.length" title="Unpaid sales" icon="HandCoins"><p class="pb-1 text-[13px] text-muted-foreground">Oldest first. The next payment pays the top one first.</p>
+          <div v-for="(s, i) in unpaid" :key="s.id" class="mb-2 flex items-center gap-3 rounded-xl border p-3"><span class="min-w-0 flex-1"><span class="flex flex-wrap items-center gap-1.5"><span class="font-mono text-[13px] font-medium">{{ s.id }}</span><Pill v-if="i === 0" tone="primary">Paid next</Pill><SaleStatus :s="s.pay"/></span><span class="mt-1 block text-[13px] text-muted-foreground">{{ s.day }} · {{ itemsText(s) }}</span></span><span class="text-[15px] font-semibold tnum">{{ money(saleTotal(s) - paidOf(s)) }}</span></div></Card>
+        <Card title="Credit" icon="Gauge"><div class="py-3"><div class="flex items-baseline justify-between"><span class="text-[14px] text-muted-foreground">Limit {{ money(c.limit) }}</span><b class="text-[15px] tnum">{{ money(Math.max(0, c.limit - Math.max(0, c.owes))) }} left</b></div>
+          <div class="mt-2 h-2.5 overflow-hidden rounded-full bg-muted"><div :class="['h-full rounded-full', limitPct > 85 ? 'bg-destructive' : limitPct > 60 ? 'bg-warning' : 'bg-primary']" :style="{ width: limitPct + '%' }"></div></div></div></Card>
+        <Card title="Contact" icon="Contact"><Row k="Phone" :v="c.phone || '—'"/><Row k="Customer no." :v="c.no" mono/><Row k="Customer since" :v="c.since"/><Row k="Last payment" :v="c.last || '—'"/></Card></template>
+      <template v-else-if="S.custPane === 'sales'"><div v-if="sales.length" class="overflow-hidden rounded-2xl border bg-card"><button v-for="(s, i) in sales" :key="s.id" type="button" :class="['press flex w-full items-center gap-3 px-4 py-3 text-left', i ? 'border-t' : '']" @click="go('sale', s.id)"><span class="min-w-0 flex-1"><span class="block font-mono text-[13px] font-medium">{{ s.id }}</span><span class="block truncate text-[13px] text-muted-foreground">{{ s.day }}, {{ s.time }} · {{ itemsText(s) }}</span></span><span class="flex flex-col items-end gap-1"><span class="text-[15px] font-semibold tnum">{{ money(saleTotal(s)) }}</span><SaleStatus :s="s.pay"/></span></button></div>
+        <p v-else class="rounded-2xl border bg-card px-4 py-8 text-center text-[14px] text-muted-foreground">No sales yet.</p></template>
+      <template v-else><div class="overflow-hidden rounded-2xl border bg-card"><div v-for="(p, i) in pays" :key="p[0]" :class="['flex items-center gap-3 px-4 py-3', i ? 'border-t' : '']"><span class="grid h-10 w-10 place-items-center rounded-xl bg-success/15 text-success"><Icon name="Wallet" :size="18"/></span><span class="min-w-0 flex-1"><span class="block font-mono text-[13px] font-medium">{{ p[0] }}</span><span class="block truncate text-[13px] text-muted-foreground">{{ p[1] }} · {{ p[3] }}</span></span><span class="text-[15px] font-semibold text-success tnum">{{ money(p[2]) }}</span></div></div></template>
+    </div></div>
+    <FooterBar><div class="grid grid-cols-[1fr_auto] gap-2"><Btn :disabled="c.owes <= 0" @click="S.sheet = 'cpay'"><Icon name="Wallet" :size="18"/>Take payment</Btn><Btn v="outline" :disabled="!c.phone" @click="S.sheet = 'call'" aria-label="Call or message"><Icon name="Phone" :size="18"/></Btn></div></FooterBar>
+    <Sheet :open="S.sheet === 'cpay'" title="Take payment" :sub="c.name + ' owes ' + money(c.owes)" @close="S.sheet = null"><div class="px-5 pb-4">
+      <p class="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Amount</p><label class="mt-2 flex h-16 items-center gap-2 rounded-2xl border-2 border-primary px-4"><span class="text-[15px] text-muted-foreground">TZS</span><input v-model.number="amt" type="text" inputmode="numeric" pattern="[0-9]*" aria-label="Amount" class="min-w-0 flex-1 bg-transparent text-right text-[28px] font-bold tnum outline-none"></label>
+      <p class="mt-2 flex items-center gap-1.5 text-[13px] text-muted-foreground"><Icon name="Info" :size="14"/>It pays the oldest unpaid sale first.</p>
+      <p class="mb-2 mt-5 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Paid with</p><div class="flex flex-wrap gap-2"><button v-for="m in ['Cash', 'M-Pesa', 'Tigo Pesa', 'Airtel Money', 'Bank']" :key="m" type="button" @click="method = m" :class="['press h-11 rounded-xl px-4 text-[15px] font-medium', method === m ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground']">{{ m }}</button></div></div>
+      <template #footer><Btn full :disabled="!amt" @click="record">Record {{ money(amt || 0) }}</Btn></template></Sheet></div>` };
+
+/* ============================================================ Alerts (notifications), Profile, and the phone's own sheets */
+const Alerts = { components: { Header, Icon, Seg, Empty, Pill, Btn },
+  setup() {
+    const tabs = computed(() => [{ id: 'unread', label: 'Unread', count: unread.value }, { id: 'all', label: 'All' }]);
+    const rows = computed(() => NOTIFS.filter(n => S.notifTab === 'all' || n.unread));
+    const tap = (n) => { S.expanded = S.expanded === n.id ? null : n.id; n.unread = false; };
+    const open = (n) => { n.unread = false; if (n.open.startsWith('S-')) go('sale', n.open); else go('ph:' + n.open); };
+    const readAll = () => { NOTIFS.forEach(n => (n.unread = false)); toast('All marked as read'); };
+    return { S, tabs, rows, tap, open, readAll, unread };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="Alerts"><template #right><button v-if="unread" type="button" class="press mr-1 h-10 rounded-lg px-3 text-[14px] font-semibold text-primary" @click="readAll">Read all</button></template></Header>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="sticky top-0 z-10 border-b bg-background px-3 py-2.5"><Seg v-model="S.notifTab" :tabs="tabs"/></div>
+      <div class="space-y-2 p-3 pb-6"><Empty v-if="!rows.length" icon="BellOff" :title="S.notifTab === 'unread' ? 'You are all caught up' : 'No alerts yet'" text="Low stock, requests and late deliveries show up here."/>
+        <div v-for="n in rows" :key="n.id" class="rise overflow-hidden rounded-2xl border bg-card"><button type="button" class="press flex w-full items-start gap-3 p-4 text-left" :aria-expanded="S.expanded === n.id" @click="tap(n)">
+          <span :class="['grid h-10 w-10 shrink-0 place-items-center rounded-xl', n.tone === 'warning' ? 'bg-warning/15 text-warning' : n.tone === 'success' ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground']"><Icon :name="n.icon" :size="19"/></span>
+          <span class="min-w-0 flex-1"><span class="flex items-start gap-2"><span :class="['flex-1 text-[15px] leading-snug', n.unread ? 'font-bold' : 'font-medium']">{{ n.title }}</span><span v-if="n.unread" class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-primary" aria-label="Unread"></span></span>
+            <span :class="['mt-0.5 block text-[14px] text-muted-foreground', S.expanded === n.id ? '' : 'line-clamp-2']">{{ n.body }}</span><span class="mt-1 block text-[12px] text-muted-foreground/80">{{ n.when }}</span></span></button>
+          <div v-if="S.expanded === n.id" class="border-t px-4 pb-4 pt-3"><div class="mb-3 flex flex-wrap gap-1.5"><Pill v-for="c in n.chan" :key="c" tone="muted">{{ c }}</Pill></div><Btn v="soft" size="md" @click="open(n)">Open {{ n.open }}</Btn></div></div></div></div></div>` };
+
+const SetRow = { props: { icon: String, title: String, sub: String, value: String, danger: Boolean, noChev: Boolean }, components: { Icon },
+  template: `<button type="button" :class="['press flex min-h-[60px] w-full items-center gap-3.5 px-4 py-2.5 text-left', danger ? 'text-destructive' : '']"><span :class="['grid h-9 w-9 shrink-0 place-items-center rounded-lg', danger ? 'bg-destructive/10' : 'bg-muted']"><Icon :name="icon" :size="18" :class="danger ? '' : 'text-muted-foreground'"/></span>
+    <span class="min-w-0 flex-1"><span class="block truncate text-[15px] font-medium">{{ title }}</span><span v-if="sub" class="block truncate text-[13px] text-muted-foreground">{{ sub }}</span></span><slot><span v-if="value" class="text-[14px] text-muted-foreground">{{ value }}</span><Icon v-if="!noChev && !danger" name="ChevronRight" :size="18" class="text-muted-foreground/60"/></slot></button>` };
+const Switch = { props: { modelValue: Boolean, label: String },
+  template: `<span role="switch" :aria-checked="modelValue" :aria-label="label" :class="['relative inline-block h-8 w-14 shrink-0 rounded-full transition-colors', modelValue ? 'bg-primary' : 'bg-muted-foreground/30']"><span :class="['absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all', modelValue ? 'left-7' : 'left-1']"></span></span>` };
+
+const Profile = { components: { Header, Icon, Av, Pill, Seg, SetRow, Switch, Btn },
+  setup() {
+    const themes = [{ id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }, { id: 'system', label: 'System' }];
+    const setTheme = (m) => { S.themeMode = m; S.dark = m === 'dark' || (m === 'system' && matchMedia('(prefers-color-scheme: dark)').matches); };
+    const check = () => { S.checking = true; S.upToDate = false; setTimeout(() => { S.checking = false; S.upToDate = true; }, 1300); };
+    const viewAs = () => { S.dialog = { title: S.role === 'owner' ? 'View as Rehema?' : 'Back to Amina?', text: S.role === 'owner' ? 'You see the shop as she does. Nothing you do is saved as hers.' : 'Leave Rehema’s view.', action: S.role === 'owner' ? 'View as Rehema' : 'Go back', cancel: 'Cancel', ok: () => { S.role = S.role === 'owner' ? 'cashier' : 'owner'; toast(S.role === 'cashier' ? 'Viewing as Rehema' : 'Back to Amina'); } }; };
+    const signOut = () => { S.dialog = { title: 'Sign out?', text: 'This clears the cart and drafts on this phone. Sales you saved stay.', action: 'Sign out', tone: 'destructive', cancel: 'Stay signed in', ok: () => toast('Signed out. The sign-in screen comes in the next pass.') }; };
+    return { S, ME, themes, setTheme, check, viewAs, signOut, unread, go, toast };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="Profile" pushed hide-search/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-4 p-3 pb-8">
+      <section class="rise flex items-center gap-4 rounded-2xl border bg-card p-4"><span class="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-primary text-[22px] font-bold text-primary-foreground">{{ ME.ini }}</span>
+        <div class="min-w-0"><p class="truncate text-[20px] font-bold leading-tight">{{ ME.full }}</p><p class="truncate text-[14px] text-muted-foreground">{{ ME.email }}</p><div class="mt-1.5 flex gap-1.5"><Pill tone="primary">{{ ME.role }}</Pill><Pill>Office Shop</Pill></div></div></section>
+
+      <div><p class="mb-1.5 px-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Alerts</p><div class="divide-y overflow-hidden rounded-2xl border bg-card">
+        <SetRow icon="Bell" title="Notifications" :sub="unread ? unread + ' new' : 'All read'" @click="go('alerts')"/><SetRow icon="BellRing" title="Alerts and reminders" sub="What reaches you, and how" @click="go('ph:Alerts and reminders')"/></div></div>
+
+      <div><p class="mb-1.5 px-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Look</p><div class="rounded-2xl border bg-card p-4"><p class="mb-2.5 flex items-center gap-2 text-[15px] font-medium"><Icon name="SunMoon" :size="18" class="text-muted-foreground"/>Theme</p><Seg :model-value="S.themeMode" :tabs="themes" @update:model-value="setTheme"/></div>
+        <div class="mt-2 overflow-hidden rounded-2xl border bg-card"><SetRow icon="Languages" title="Language" value="English"/></div></div>
+
+      <div><p class="mb-1.5 px-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Security</p><div class="divide-y overflow-hidden rounded-2xl border bg-card">
+        <SetRow icon="Lock" title="Lock the app" :sub="S.lock ? 'After ' + S.lockAfter + ' away' : 'Off'" no-chev @click="S.lock = !S.lock"><Switch :model-value="S.lock" label="Lock the app"/></SetRow>
+        <SetRow icon="ShieldCheck" title="Two-step verification" value="On"/><SetRow icon="Smartphone" title="Trusted devices" value="2"/></div></div>
+
+      <div><p class="mb-1.5 px-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">This phone</p><div class="divide-y overflow-hidden rounded-2xl border bg-card">
+        <SetRow icon="Printer" title="Receipt printer" sub="RPP02N · connected" @click="S.sheet = 'printer'"/>
+        <SetRow icon="Info" title="App version" value="1.0.2 (3)" no-chev/>
+        <SetRow :icon="S.checking ? 'Loader2' : 'CloudDownload'" title="Check for updates" :sub="S.checking ? 'Checking…' : S.upToDate ? 'You are on the latest version' : 'Tap to check'" no-chev @click="check"/></div></div>
+
+      <div class="divide-y overflow-hidden rounded-2xl border bg-card"><SetRow v-if="ME.role === 'Owner' || S.role === 'cashier'" icon="Eye" :title="S.role === 'owner' ? 'View as Rehema' : 'Back to Amina'" sub="See the shop as she does" @click="viewAs"/>
+        <SetRow icon="LogOut" title="Sign out" danger no-chev @click="signOut"/></div></div></div></div>` };
+
+/* the phone's own sheets: call and message, share, receipt printer */
+const PhoneSheets = { components: { Sheet, Icon, Btn },
+  setup() {
+    const c = computed(() => cust(S.cid));
+    const act = (m) => { S.sheet = null; toast(m); };
+    const printers = [['RPP02N', '66:12:8A:0B:7C:41', true], ['MTP-II', '00:11:22:33:AA:BB', false]];
+    const sel = ref('RPP02N');
+    return { S, c, act, printers, sel, toast };
+  },
+  template: `<div>
+    <Sheet :open="S.sheet === 'call'" :title="c.name" :sub="c.phone" @close="S.sheet = null"><div class="px-3 pb-3"><button v-for="a in [['Call','Phone','Calling ' + c.phone],['WhatsApp','MessageCircle','Opening WhatsApp'],['Send SMS','MessageSquare','Opening messages'],['Copy number','Copy','Number copied']]" :key="a[0]" type="button" class="press flex h-[56px] w-full items-center gap-3.5 rounded-xl px-2 text-left" @click="act(a[2])">
+      <span class="grid h-10 w-10 place-items-center rounded-xl bg-muted"><Icon :name="a[1]" :size="19"/></span><span class="text-[16px] font-medium">{{ a[0] }}</span></button></div></Sheet>
+    <Sheet :open="S.sheet === 'share'" title="Share the receipt" @close="S.sheet = null"><div class="px-3 pb-3"><button v-for="a in [['WhatsApp','MessageCircle','Receipt sent to WhatsApp'],['SMS','MessageSquare','Receipt sent by SMS'],['Copy as text','Copy','Receipt copied'],['Other apps','Share2','Opening the share list']]" :key="a[0]" type="button" class="press flex h-[56px] w-full items-center gap-3.5 rounded-xl px-2 text-left" @click="act(a[2])">
+      <span class="grid h-10 w-10 place-items-center rounded-xl bg-muted"><Icon :name="a[1]" :size="19"/></span><span class="text-[16px] font-medium">{{ a[0] }}</span></button></div></Sheet>
+    <Sheet :open="S.sheet === 'printer'" title="Receipt printer" sub="Printers paired in Android's Bluetooth settings" @close="S.sheet = null"><div class="px-4 pb-4"><button v-for="p in printers" :key="p[0]" type="button" :class="['press mb-2 flex h-16 w-full items-center gap-3 rounded-2xl border px-3.5 text-left', sel === p[0] ? 'border-primary bg-primary/10' : '']" @click="sel = p[0]"><span class="grid h-10 w-10 place-items-center rounded-xl bg-muted"><Icon name="Printer" :size="19"/></span>
+      <span class="min-w-0 flex-1"><span class="block text-[15px] font-semibold">{{ p[0] }}</span><span class="block font-mono text-[12px] text-muted-foreground">{{ p[1] }}</span></span><Icon v-if="sel === p[0]" name="CircleCheck" :size="22" class="text-primary"/></button>
+      <div class="mt-3 grid grid-cols-2 gap-2"><Btn v="outline" size="md" @click="toast('Test page sent to ' + sel)"><Icon name="FileText" :size="16"/>Test print</Btn><Btn size="md" @click="S.sheet = null; toast(sel + ' is your printer')">Use this printer</Btn></div></div></Sheet></div>` };
+
+/* ============================================================ the phone kit's own Design system (a screen of the app) */
+const DS_SWATCH = [['Primary', 'bg-primary', 'primary actions, the active tab'], ['Foreground', 'bg-foreground', 'text'], ['Muted', 'bg-muted', 'fields, wells'], ['Success', 'bg-success', 'paid, in stock'], ['Warning', 'bg-warning', 'owed, low, waiting'], ['Destructive', 'bg-destructive', 'unpaid, out, undo']];
+const DS_SIZES = [['Header', '56 + top inset', 'menu or back, title, search, avatar'], ['Bottom bar', '64 + bottom inset', 'four tabs and Sell (the 56 round button)'], ['Primary button', '48', 'one per screen, in the footer'], ['Secondary button', '44', 'beside or inside a card'], ['Icon button', '44', 'header, rows, filter bar'], ['Field', '48', 'search and amounts; 16px text so the phone does not zoom'], ['List row', '60 to 76', 'avatar 44, two lines, a value on the right'], ['Chip', '40 to 44', 'filters, payment methods'], ['Stepper', '44 (40 in a tile)', 'by the product’s sell step'], ['Sheet', 'up to 86% tall', 'handle, title, close, sticky footer'], ['Radius', '14 and 18', 'fields and buttons 14, cards 16, sheets 22']];
+const DS_NAV = [['Header', 'Menu (or Back on a page you pushed), the page title, search, your avatar. Notifications, theme and settings are in Profile, not here.'], ['Bottom bar', 'Home, Sales, Sell, Customers, Alerts. Sell is the till and opens full screen. Shown on the four roots only, so a record page can keep its action footer.'], ['Drawer', 'Everything else, flat: a coloured profile panel, then groups with one row each. No dropdowns. Owner-only groups are hidden from the cashier.'], ['Back', 'Closes the top layer first (dialog, sheet, drawer, search), then goes back a page.']];
+
+const DesignPage = { components: { Header, Icon, Av, Tile, Pill, AgeChip, SaleStatus, LevelBadge, Balance, Seg, Stepper, Btn, Kpi, FooterBar },
+  setup() {
+    const p1 = PRODUCTS[0], p2 = PRODUCTS[1]; const seg = ref('all');
+    return { DS_SWATCH, DS_SIZES, DS_NAV, p1, p2, seg, CUSTOMERS, money, perText, stockText, toast };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="Design system" pushed hide-search/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-6 px-4 pb-10 pt-4">
+      <p class="text-[14px] text-muted-foreground">The phone kit. It is drawn for a phone only: one layout, 360 to 430 wide, no breakpoints. It shares the API, the money and stock rules and the brand tokens with the web kit, and nothing else.</p>
+
+      <section><h2 class="mb-2 text-[17px] font-semibold">Colour</h2><div class="grid grid-cols-2 gap-2"><div v-for="s in DS_SWATCH" :key="s[0]" class="flex items-center gap-3 rounded-xl border bg-card p-2.5"><span :class="['h-10 w-10 shrink-0 rounded-lg', s[1]]"></span><span class="min-w-0"><span class="block text-[14px] font-medium">{{ s[0] }}</span><span class="block truncate text-[11px] text-muted-foreground">{{ s[2] }}</span></span></div></div>
+        <div class="mt-2 flex gap-2"><span v-for="c in ['--c1','--c2','--c3','--c4','--c5']" :key="c" class="h-9 flex-1 rounded-lg" :style="{ background: 'var(' + c + ')' }"></span></div><p class="mt-1 text-[12px] text-muted-foreground">Five tints for avatars and products. Blue is the accent (D13).</p></section>
+
+      <section><h2 class="mb-2 text-[17px] font-semibold">Type (Geist)</h2><div class="space-y-1 rounded-2xl border bg-card p-4"><p class="text-[26px] font-bold tracking-tight">Greeting 26</p><p class="text-[22px] font-bold tnum">TZS 80,480 · figures 22</p><p class="text-[18px] font-semibold">Page title 18</p><p class="text-[15px]">Body and rows 15</p><p class="text-[13px] text-muted-foreground">Meta and labels 13</p><p class="text-[12px] text-muted-foreground">Chips and captions 12</p></div></section>
+
+      <section><h2 class="mb-2 text-[17px] font-semibold">Sizes</h2><div class="divide-y rounded-2xl border bg-card"><div v-for="r in DS_SIZES" :key="r[0]" class="flex items-baseline justify-between gap-3 px-4 py-2.5"><span class="text-[14px] font-medium">{{ r[0] }}</span><span class="text-right"><span class="block text-[14px] font-semibold tnum">{{ r[1] }}</span><span class="block text-[12px] text-muted-foreground">{{ r[2] }}</span></span></div></div></section>
+
+      <section><h2 class="mb-2 text-[17px] font-semibold">Navigation</h2><div class="space-y-2"><div v-for="n in DS_NAV" :key="n[0]" class="rounded-xl border bg-card p-3.5"><p class="text-[15px] font-semibold">{{ n[0] }}</p><p class="text-[13px] text-muted-foreground">{{ n[1] }}</p></div></div></section>
+
+      <section><h2 class="mb-2 text-[17px] font-semibold">Components</h2><div class="space-y-3">
+        <div class="rounded-2xl border bg-card p-4"><p class="text-[15px] font-semibold">Customer row</p><p class="mb-3 text-[13px] text-muted-foreground">Avatar 46, name, age or phone, the balance on the right. Tapping opens the customer.</p>
+          <div class="flex items-center gap-3 rounded-xl border p-3"><Av :c="CUSTOMERS[1]" :size="46"/><span class="min-w-0 flex-1"><span class="block text-[15px] font-medium">Neema Kimaro</span><AgeChip :days="13"/></span><Balance :b="2000"/></div></div>
+        <div class="rounded-2xl border bg-card p-4"><p class="text-[15px] font-semibold">Status chips</p><p class="mb-3 text-[13px] text-muted-foreground">One component per record, our tokens, light and dark. Never a raw colour class.</p><div class="flex flex-wrap gap-2"><SaleStatus s="paid"/><SaleStatus s="part"/><SaleStatus s="unpaid"/><SaleStatus s="undone"/><LevelBadge :p="p1"/><LevelBadge :p="p2"/><AgeChip :days="42"/><Pill tone="primary">Paid next</Pill></div></div>
+        <div class="rounded-2xl border bg-card p-4"><p class="text-[15px] font-semibold">Product tile and stepper</p><p class="mb-3 text-[13px] text-muted-foreground">Tap the tile to add one step (Trident goes in pairs). The stepper moves by that step and stops at what is on the shelf.</p><div class="flex items-center gap-3"><Tile :p="p2" :size="44"/><span class="flex-1"><span class="block text-[15px] font-semibold">Trident</span><span class="block text-[13px] text-muted-foreground">{{ perText(p2) }} · {{ stockText(p2) }}</span></span><Stepper :q="2" :step="2" :max="4"/></div></div>
+        <div class="rounded-2xl border bg-card p-4"><p class="text-[15px] font-semibold">KPI tile</p><p class="mb-3 text-[13px] text-muted-foreground">Money at 22, so it fits two across without cutting.</p><div class="grid grid-cols-2 gap-3"><Kpi label="Sales today" icon="ShoppingCart" value="TZS 8,500" hint="9 sales"/><Kpi label="Owed to you" icon="HandCoins" tone="warning" value="TZS 75,000" hint="27 customers"/></div></div>
+        <div class="rounded-2xl border bg-card p-4"><p class="text-[15px] font-semibold">Segmented tabs</p><p class="mb-3 text-[13px] text-muted-foreground">Panes of one record or filters of one list. Not for moving between modules.</p><Seg v-model="seg" :tabs="[{ id: 'all', label: 'All' }, { id: 'unpaid', label: 'Unpaid', count: 63 }, { id: 'part', label: 'Part paid' }]"/></div>
+        <div class="rounded-2xl border bg-card p-4"><p class="text-[15px] font-semibold">Buttons</p><p class="mb-3 text-[13px] text-muted-foreground">One primary per screen, in the sticky footer.</p><div class="grid grid-cols-2 gap-2"><Btn @click="toast('Primary')">Primary</Btn><Btn v="outline" @click="toast('Outline')">Outline</Btn><Btn v="soft" size="md">Soft</Btn><Btn v="destructive-outline" size="md">Undo sale</Btn></div></div>
+        <div class="rounded-2xl border bg-card p-4"><p class="text-[15px] font-semibold">Sheets and dialogs</p><p class="text-[13px] text-muted-foreground">A sheet for anything with fields or a list (filters, who is buying, take payment, call). A centred dialog only for a yes or no. Both close with Back.</p></div>
+        <div class="rounded-2xl border bg-card p-4"><p class="text-[15px] font-semibold">List states</p><p class="text-[13px] text-muted-foreground">Every list has loading (grey shapes of the rows), empty (icon, one line, what to do), error (red strip with Retry) and "Show more". Picker on the left: Data, Loading, Empty, Error.</p></div></div></section>
+
+      <section><h2 class="mb-2 text-[17px] font-semibold">Taken from Agrovet and Jumla</h2><p class="text-[13px] text-muted-foreground">The drawer with a coloured profile panel, the Refresh and filter-summary bar, the filter sheet, stacked detail cards, a sticky action footer, the big quantity box, selected-customer card, expandable alerts. Left behind: raw colours, pasted pickers, silent wipes, 28px controls.</p></section>
+    </div></div></div>` };
+
+/* ============================================================ the phone, and the picker beside it (prototype only) */
+const SCREENS = {
+  home: Home, sales: SalesList, customers: CustomersList, alerts: Alerts, till: Till, receipt: Receipt, sale: SalePage, customer: Customer, profile: Profile, waiting: Waiting, design: DesignPage
+};
+const Screen = { components: { ...SCREENS, Placeholder },
+  setup() { const ph = computed(() => S.route.startsWith('ph:') ? S.route.slice(3) : ''); return { S, ph, SCREENS }; },
+  template: `<Placeholder v-if="ph" :name="ph"/><component :is="S.route" v-else/>` };
+
+const Picker = { components: { Icon },
+  setup() {
+    const screens = [['home', 'Home', 'House'], ['waiting', 'Waiting for you', 'Hourglass'], ['till', 'Till', 'ShoppingCart'], ['receipt', 'Receipt', 'CircleCheck'], ['sales', 'Sales', 'Receipt'], ['sale', 'Sale page', 'FileText'], ['customers', 'Customers', 'Users'], ['customer', 'Customer page', 'User'], ['alerts', 'Alerts', 'Bell'], ['profile', 'Profile', 'CircleUser'], ['design', 'Design system', 'Palette']];
+    const to = (r) => { S.stack = []; S.drawer = false; S.sheet = null; S.dialog = null; S.search = false; S.cartOpen = false; if (r === 'till' && !S.cart.length) { addP(PRODUCTS[0]); addP(PRODUCTS[1]); } if (r === 'receipt' && !S.receipt) S.receipt = SALES[0]; S.route = r; };
+    const over = {
+      drawer: () => { S.sheet = null; S.drawer = true; }, search: () => { S.drawer = false; S.search = true; },
+      cart: () => { to('till'); S.cartOpen = true; }, credit: () => { to('till'); S.cartOpen = true; S.customer = 'c1'; S.pay = 'credit'; addP(PRODUCTS[0]); addP(PRODUCTS[0]); S.part = true; S.partAmt = 1000; },
+      filter: () => { to('sales'); S.sheet = 'filter'; }, who: () => { to('till'); S.sheet = 'cust'; }, pay: () => { S.route = 'sale'; S.saleId = 'S-1304'; S.sheet = 'takepay'; },
+      call: () => { S.route = 'customer'; S.cid = 'c1'; S.sheet = 'call'; }, printer: () => { S.route = 'profile'; S.sheet = 'printer'; },
+      undo: () => { S.route = 'sale'; S.saleId = 'S-1299'; S.dialog = { title: 'Undo S-1299?', text: 'The stock goes back on the shelf and Neema Kimaro’s balance changes.', action: 'Undo the sale', tone: 'destructive', cancel: 'Keep the sale' }; }
+    };
+    const states = [['data', 'Data'], ['loading', 'Loading'], ['empty', 'Empty'], ['error', 'Error']];
+    return { S, screens, to, over, states, tab, ME };
+  },
+  template: `<div class="space-y-5 text-sm">
+    <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Signed in as</p><div class="grid grid-cols-2 gap-1 rounded-lg bg-[hsl(var(--canvas))] p-1 ring-1 ring-black/10"><button v-for="r in [['owner','Amina (owner)'],['cashier','Rehema (cashier)']]" :key="r[0]" type="button" @click="S.role = r[0]" :class="['h-8 rounded-md text-xs font-medium', S.role === r[0] ? 'bg-white text-black shadow dark:bg-neutral-700 dark:text-white' : 'opacity-60']">{{ r[1] }}</button></div></div>
+    <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Theme</p><div class="grid grid-cols-2 gap-1 rounded-lg bg-[hsl(var(--canvas))] p-1 ring-1 ring-black/10"><button type="button" @click="S.dark = false; S.themeMode = 'light'" :class="['h-8 rounded-md text-xs font-medium', !S.dark ? 'bg-white text-black shadow' : 'opacity-60']">Light</button><button type="button" @click="S.dark = true; S.themeMode = 'dark'" :class="['h-8 rounded-md text-xs font-medium', S.dark ? 'bg-neutral-700 text-white shadow' : 'opacity-60']">Dark</button></div></div>
+    <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Screens</p><div class="grid gap-0.5"><button v-for="s in screens" :key="s[0]" type="button" @click="to(s[0])" :class="['flex h-9 items-center gap-2 rounded-md px-2 text-left', S.route === s[0] ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']"><Icon :name="s[2]" :size="15" class="opacity-60"/>{{ s[1] }}</button></div></div>
+    <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Open on top</p><div class="grid grid-cols-2 gap-1"><button v-for="o in [['drawer','Drawer'],['search','Search'],['cart','Cart'],['credit','Credit, part paid'],['filter','Filters'],['who','Who is buying'],['pay','Take payment'],['call','Call sheet'],['printer','Printer'],['undo','Confirm undo']]" :key="o[0]" type="button" @click="over[o[0]]()" class="h-9 rounded-md px-2 text-left text-xs hover:bg-black/5 dark:hover:bg-white/10">{{ o[1] }}</button></div></div>
+    <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">List state</p><div class="grid grid-cols-4 gap-1 rounded-lg bg-[hsl(var(--canvas))] p-1 ring-1 ring-black/10"><button v-for="s in states" :key="s[0]" type="button" @click="S.list = s[0]; if (S.route !== 'sales') to('sales')" :class="['h-8 rounded-md text-[11px] font-medium', S.list === s[0] ? 'bg-white text-black shadow dark:bg-neutral-700 dark:text-white' : 'opacity-60']">{{ s[1] }}</button></div></div></div>` };
+
+const Root = { components: { Screen, TabBar, Drawer, SearchView, PhoneSheets, Confirm, Toast, Picker, Icon },
+  setup() {
+    const scale = ref(1), narrow = ref(false), menu = ref(false);
+    const fit = () => { narrow.value = innerWidth < 900; scale.value = narrow.value ? 1 : Math.min(1, (innerHeight - 32) / 844); };
+    onMounted(() => { fit(); addEventListener('resize', fit); });
+    onBeforeUnmount(() => removeEventListener('resize', fit));
+    const clock = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    watch(() => S.dark, (d) => document.documentElement.setAttribute('data-theme', d ? 'dark' : 'light'), { immediate: true });
+    const bar = computed(() => TABS.includes(S.route));
+    return { S, scale, narrow, menu, clock, bar };
+  },
+  template: `<div :class="narrow ? '' : 'flex min-h-screen items-center justify-center gap-10 p-4'" :style="narrow ? 'height:100dvh' : ''">
+    <aside v-if="!narrow" class="w-64 shrink-0 rounded-2xl bg-[hsl(var(--canvas))] p-4 text-[hsl(240_10%_20%)] ring-1 ring-black/10 dark:text-neutral-200 dark:ring-white/10"><h1 class="mb-1 text-base font-semibold">DevBiz Phone</h1><p class="mb-5 text-xs opacity-70">The shop drawn for a phone only. Everything is clickable. This panel is not part of the app.</p><Picker/></aside>
+    <div :style="narrow ? '' : { width: (390 * scale) + 'px', height: (844 * scale) + 'px' }" :class="narrow ? 'h-full w-full' : 'shrink-0'"><div :class="narrow ? 'h-full w-full' : 'origin-top-left'" :style="narrow ? '' : { transform: 'scale(' + scale + ')', width: '390px', height: '844px' }">
+      <div :class="['app relative flex flex-col overflow-hidden', S.dark ? 'dark' : '', narrow ? 'h-full w-full' : 'h-[844px] w-[390px] rounded-[44px] border-[10px] border-[#18181b] shadow-2xl ring-1 ring-black/10']">
+        <div v-if="!narrow" class="pointer-events-none absolute inset-x-0 top-0 z-[100] flex h-[30px] items-center justify-between px-7 text-[12px] font-semibold"><span>{{ clock }}</span><span class="absolute left-1/2 top-1.5 h-5 w-20 -translate-x-1/2 rounded-full bg-[#18181b]"></span><span class="flex items-center gap-1"><Icon name="Signal" :size="12"/><Icon name="Wifi" :size="12"/><Icon name="BatteryFull" :size="14"/></span></div>
+        <Screen/><TabBar v-if="bar"/><Drawer/><SearchView/><PhoneSheets/><Confirm/><Toast/></div></div></div>
+    <template v-if="narrow"><button v-if="!S.sheet && !S.drawer && !S.dialog" type="button" class="fixed left-3 z-[200] flex items-center gap-2 rounded-full border bg-white px-3 py-2 text-xs font-medium text-black shadow-lg" style="bottom: calc(86px + env(safe-area-inset-bottom, 0px))" @click="menu = !menu"><Icon name="Map" :size="14"/>States</button>
+      <div v-if="menu" class="fixed inset-x-3 bottom-32 z-[200] max-h-[70dvh] overflow-y-auto rounded-2xl bg-white p-4 text-black shadow-2xl"><Picker/></div></template></div>`
+};
+createApp(Root).mount('#root');
+
+</script>

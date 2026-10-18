@@ -1,0 +1,49 @@
+<title>DevBiz Phone</title>
+<meta name="description" content="DevBiz drawn for a phone only: its own shell, bottom bar, cards and sheets. Clickable.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+/* Layout concept: one 390 x 844 phone (the only layout there is) beside a prototype picker on a desktop, the app alone on a phone.
+   Tokens are DevBiz's own (blue accent, D13), kept in HSL channels; the sizes are the phone kit's (see the Design system screen). */
+tailwind.config = {
+  theme: { extend: {
+    fontFamily: { sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'], mono: ['"Geist Mono"', 'ui-monospace', 'monospace'] },
+    colors: ['background','foreground','card','muted','muted-foreground','border','input','primary','primary-foreground','destructive','warning','success','canvas','ring']
+      .reduce((o, k) => (o[k] = 'hsl(var(--' + k + ') / <alpha-value>)', o), {}),
+    borderRadius: { xl: '14px', '2xl': '18px' }
+  } }
+};
+</script>
+<style>
+:root { --canvas: 220 14% 96%; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --canvas: 240 10% 5%; color-scheme: dark; } }
+:root[data-theme="dark"] { --canvas: 240 10% 5%; color-scheme: dark; }
+body { margin: 0; background: hsl(var(--canvas)); font-family: Geist, ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+.app { --sa-top: 30px; --sa-bottom: 14px; --kbd: 0px;
+  --background: 0 0% 100%; --foreground: 240 10% 3.9%; --card: 0 0% 100%; --muted: 240 4.8% 95.9%; --muted-foreground: 240 3.8% 42%;
+  --border: 240 5.9% 90%; --input: 240 5.9% 86%; --primary: 221 83% 45%; --primary-foreground: 0 0% 98%; --ring: 221 83% 45%;
+  --destructive: 0 72% 48%; --warning: 32 92% 38%; --success: 152 64% 28%;
+  --c1: #14937f; --c2: #d06d0a; --c3: #2f6fe0; --c4: #d6456a; --c5: #7c5ad8; --c-other: #94a3b8;
+  background: hsl(var(--background)); color: hsl(var(--foreground)); font-size: 15px; line-height: 1.4; }
+.app.dark { --background: 240 10% 3.9%; --foreground: 0 0% 96%; --card: 240 6% 8.5%; --muted: 240 3.7% 14%; --muted-foreground: 240 5% 64.9%;
+  --border: 240 3.7% 17%; --input: 240 3.7% 20%; --primary: 217 91% 64%; --primary-foreground: 222 47% 8%; --ring: 217 91% 64%;
+  --destructive: 0 70% 58%; --warning: 38 92% 56%; --success: 152 52% 52%;
+  --c1: #1f9e89; --c2: #c97514; --c3: #4c82e8; --c4: #dc5577; --c5: #8f73e3; --c-other: #64748b; }
+.app *, .app *::before, .app *::after { border-color: hsl(var(--border)); box-sizing: border-box; }
+.app button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+.app input { font: inherit; color: inherit; }
+.scroll { scrollbar-width: none; overscroll-behavior: contain; } .scroll::-webkit-scrollbar { display: none; }
+.tnum { font-variant-numeric: tabular-nums; }
+.press { transition: transform .12s ease, background-color .12s ease; } .press:active { transform: scale(.98); }
+.sheet-enter-active, .sheet-leave-active { transition: transform .28s cubic-bezier(.2,.8,.2,1); } .sheet-enter-from, .sheet-leave-to { transform: translateY(100%); }
+.fade-enter-active, .fade-leave-active { transition: opacity .2s ease; } .fade-enter-from, .fade-leave-to { opacity: 0; }
+.drawer-enter-active, .drawer-leave-active { transition: transform .26s cubic-bezier(.2,.8,.2,1); } .drawer-enter-from, .drawer-leave-to { transform: translateX(-100%); }
+.pop-enter-active, .pop-leave-active { transition: opacity .18s ease, transform .18s ease; } .pop-enter-from, .pop-leave-to { opacity: 0; transform: translateY(8px) scale(.98); }
+.rise { animation: rise .4s cubic-bezier(.2,.8,.2,1) both; } @keyframes rise { from { opacity: .001; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes pulse2 { 50% { opacity: .5; } } .skel { animation: pulse2 1.6s ease-in-out infinite; background: hsl(var(--muted)); }
+@media (prefers-reduced-motion: reduce) { .rise, .skel { animation: none; } .sheet-enter-active, .sheet-leave-active, .drawer-enter-active, .drawer-leave-active, .pop-enter-active, .pop-leave-active { transition: none; } }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<div id="root"></div>
