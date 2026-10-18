@@ -68,7 +68,7 @@ const USERS = [
   { id: 'u2', name: 'Rehema Kileo', email: 'rehema@devbiz.app', role: 'Cashier', ini: 'RK', c: 'var(--c1)', seen: 'Active 10 min ago', st: 'ok' },
   { id: 'u3', name: 'Joyce Mrema', email: 'joyce@example.com', role: 'Cashier', ini: 'JM', c: 'var(--c4)', seen: 'Invited 2 days ago', st: 'invited' }
 ];
-Object.assign(S, { net: 'online', update: null, tabP: 'overview', pid: 'p1', prodQ: '', prodTab: 'overview', moveType: 'all', delId: 'DEL-0009', delTab: 'all', supId: 's1', supTab: 'overview', payId: 'P-0090',
+Object.assign(S, { recSrc: null, print: 'idle', printFail: null, printer: 'RPP02N', net: 'online', update: null, tabP: 'overview', pid: 'p1', prodQ: '', prodTab: 'overview', moveType: 'all', delId: 'DEL-0009', delTab: 'all', supId: 's1', supTab: 'overview', payId: 'P-0090',
   countStep: 0, counted: { p1: 91, p2: 4, p3: 48, p4: 30, p5: 0, p6: 120 }, cashCounted: 41000, countNote: '', countPane: 'count', expCat: 'all', accId: 'a1', accTab: 'history', expOpen: null,
   rec: { sup: 's1', lines: [{ pid: 'p1', packs: 5 }], paidNow: false, due: '26 Oct' }, newExp: { amt: 0, cat: 'Transport', acct: 'Cash drawer', note: '' }, quiet: true, ch: { low: [1, 0], undo: [1, 0], gaps: [1, 1], late: [1, 1], cust: [0, 0] }, tmpl: 'Hello {name}, you owe {amount} at Office Shop. Please pay when you can. Asante!' });
 const money0 = (n) => (n < 0 ? '−' : '') + 'TZS ' + Math.abs(Math.round(n)).toLocaleString('en-US');

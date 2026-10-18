@@ -23,7 +23,7 @@ function charge() {
   const paid = payNow.value, total = cartTotal.value;
   const sale = { id: 'S-' + (nextSale++), c: S.customer, day: 'Today', time: '11:02', lines, pay: paid >= total ? 'paid' : paid > 0 ? 'part' : 'unpaid', method: S.pay === 'cash' ? 'Cash' : 'Credit', by: ME.value.name, paid, fresh: true };
   SALES.unshift(sale); if (sale.pay !== 'paid') cust(S.customer).owes += total - paid;
-  S.receipt = sale; S.cart = []; S.cartOpen = false; S.partAmt = 0; S.part = false; S.pay = 'cash';
+  S.receipt = sale; S.recSrc = null; S.print = 'idle'; S.cart = []; S.cartOpen = false; S.partAmt = 0; S.part = false; S.pay = 'cash';
   S.route = 'receipt';
 }
 
@@ -97,17 +97,3 @@ const Till = { components: { Icon, Tile, Av, Pill, Btn, Stepper, Sheet, FooterBa
     <Sheet :open="S.sheet === 'acct'" title="Paid into" @close="S.sheet = null"><div class="px-4 pb-4"><button v-for="a in [['Cash drawer','Banknote'],['Lipa Namba','Smartphone'],['M-Pesa wallet','Wallet'],['CRDB bank','Landmark']]" :key="a[0]" type="button" class="press flex w-full py-2.5 items-center gap-3 text-left" @click="S.account = a[0]; S.sheet = null">
       <span class="grid h-9 w-9 place-items-center rounded-md bg-muted"><Icon :name="a[1]" :size="19"/></span><span class="flex-1 text-sm font-medium">{{ a[0] }}</span><Icon v-if="S.account === a[0]" name="Check" :size="20" class="text-primary"/></button></div></Sheet>
   </div>` };
-
-/* the sale is done: print it, share it, or start the next one */
-const Receipt = { components: { Icon, Btn, Pill, FooterBar },
-  setup() { const s = computed(() => S.receipt || SALES[0]); const c = computed(() => cust(s.value.c));
-    const left = computed(() => saleTotal(s.value) - (s.value.paid != null ? s.value.paid : (s.value.pay === 'paid' ? saleTotal(s.value) : 0)));
-    return { S, s, c, left, saleTotal, prod, money, back, go, tab, toast }; },
-  template: `<div class="flex min-h-0 flex-1 flex-col"><div class="scroll min-h-0 flex-1 overflow-y-auto px-5" :style="{ paddingTop: 'calc(40px + var(--sa-top))' }">
-      <div class="flex flex-col items-center text-center"><span class="rise grid h-20 w-20 place-items-center rounded-full bg-success/15 text-success"><Icon name="Check" :size="40"/></span>
-        <h1 class="mt-4 text-2xl font-bold">Sale done</h1><p class="text-sm text-muted-foreground">{{ s.id }} · {{ c.walkin ? 'Walk-in customer' : c.name }}</p>
-        <p class="mt-3 text-3xl font-bold tracking-tight tnum">{{ money(saleTotal(s)) }}</p><Pill :tone="left > 0 ? 'warning' : 'success'">{{ left > 0 ? money(left) + ' goes on credit' : 'Paid · ' + s.method }}</Pill></div>
-      <div class="mt-6 divide-y rounded-xl border bg-card"><div v-for="l in s.lines" :key="l[0]" class="flex items-center justify-between px-4 py-3"><span class="text-sm">{{ prod(l[0]).name }} <span class="text-muted-foreground">× {{ l[1] }}</span></span><span class="text-sm font-medium tnum">{{ money(prod(l[0]).price * l[1]) }}</span></div></div>
-      <button type="button" class="press mt-3 flex w-full py-2.5 items-center gap-3 rounded-xl border bg-muted/40 px-4 text-left" @click="toast('Receipt sent to RPP02N')"><Icon name="Printer" :size="20"/><span class="flex-1"><span class="block text-sm font-semibold">Print receipt</span><span class="block text-xs text-success">RPP02N · connected</span></span><Icon name="ChevronRight" :size="18" class="text-muted-foreground"/></button>
-      <button type="button" class="press mt-2 flex w-full py-2.5 items-center gap-3 rounded-xl border bg-muted/40 px-4 text-left" @click="S.sheet = 'share'"><Icon name="Share2" :size="20"/><span class="flex-1 text-sm font-semibold">Share the receipt</span><Icon name="ChevronRight" :size="18" class="text-muted-foreground"/></button><div class="h-4"></div></div>
-    <FooterBar><div class="grid grid-cols-2 gap-2"><Btn v="outline" @click="tab('home')">Done</Btn><Btn @click="S.route = 'till'">New sale</Btn></div></FooterBar></div>` };

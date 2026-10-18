@@ -23,7 +23,7 @@ bottom bar (56 + inset) and the round Sell button (48). The Design system screen
 
 ## Screens
 
-Sell: Home, Waiting for you, Till (tiles, cart, who is buying, credit and part pay), Receipt, Sales and Sale page, Payments and
+Sell: Home, Waiting for you, Till (tiles, cart, who is buying, credit and part pay), the receipt screen after a sale or a payment, Sales and Sale page, Payments and
 Payment page. People: Customers and Customer page, Suppliers and Supplier page. Stock: Products and Product page (overview,
 batches, movements), Stock movements, Deliveries and Delivery page (check, pay), Receive stock, End-of-day count with cash up.
 Money: Expenses, Accounts and Account page (history, check, move money). You and the shop: Alerts, Alerts and reminders,
@@ -32,6 +32,18 @@ update ready, update required.
 
 Use the picker to switch the signed-in person (Amina the owner, Rehema the cashier: her changes wait for the owner), the theme,
 the list state, and to open any sheet. The menu is flat (grouped labels, no dropdowns) and owner-only groups hide for the cashier.
+
+## Receipts (DevBiz D204-D208, Phase 12e)
+
+Drawn here first, so the owner can approve the look before anything is built (`src/73_receipt.js`).
+
+- **After a sale or a payment** the Receipt screen shows the paper exactly as the 58 mm printer gets it (32 letters across), with Print and Share PDF first, then Copy text and Printer. A payment taken ends here too.
+- **Asked for again** (the Receipt row on a sale or a payment page) the paper says COPY and when it was printed again; a sale that was undone says CANCELLED.
+- **Print** simulates the Bluetooth printer. In the picker's Phone state: Printer is off, Bluetooth is off, No printer chosen. A failure never loses the sale: Try again, Choose a printer, or Share instead.
+- **Share PDF** opens a stand-in for Android's own share list with the PDF named by its receipt number.
+- **Printer** (Profile and the receipt screen): paired printers, Test print, kept on this phone.
+- **Receipt settings** (owner only; drawer, Shop, Receipt; or Settings): live preview (Printer 58 mm and PDF), the logo with the black-and-white copy the printer prints, what shows (ten blocks, fixed order, items and total always), the owner's words (address, TIN, header 48, footer 96, fill-ins). A cashier sees "Only Amina can change the receipt".
+- The logo, the shop details and the sale lines in the paper are made up; the decisions are in the DevBiz repo (`docs/architecture/erd_data.py`, D204-D208).
 
 ## Build
 

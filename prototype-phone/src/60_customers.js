@@ -26,7 +26,7 @@ const Customer = { components: { Header, Icon, Av, Pill, Btn, Seg, Card, Row, Ag
     const tabs = [{ id: 'overview', label: 'Overview' }, { id: 'sales', label: 'Sales' }, { id: 'payments', label: 'Payments' }];
     const amt = ref(0); const method = ref('Cash');
     watch(() => S.sheet, (v) => { if (v === 'cpay') { amt.value = Math.max(0, c.value.owes); method.value = 'Cash'; } });
-    const record = () => { const a = Math.min(+amt.value || 0, 1e9); if (!a) return; c.value.owes -= a; c.value.paid = (c.value.paid || 0) + a; S.sheet = null; toast(money(a) + ' recorded for ' + c.value.name.split(' ')[0]); };
+    const record = () => { const a = Math.min(+amt.value || 0, 1e9); if (!a) return; c.value.owes -= a; c.value.paid = (c.value.paid || 0) + a; S.sheet = null; newPayment(c.value.id, a, 'Cash', []); };
     const pays = computed(() => [['P-0052', '19 Sept, 17:22', 3000, 'Cash drawer'], ['P-0030', '11 Sept, 10:59', 1000, 'Cash drawer']]);
     const limitPct = computed(() => c.value.limit ? Math.min(100, Math.max(0, c.value.owes) / c.value.limit * 100) : 0);
     return { S, c, sales, unpaid, tabs, amt, method, record, pays, limitPct, saleTotal, itemsText, paidOf, money, go, toast };

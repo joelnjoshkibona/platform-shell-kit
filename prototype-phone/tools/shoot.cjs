@@ -8,7 +8,7 @@ const only = process.argv[3] ? process.argv[3].split(',') : null;
   await p.goto(FILE); await p.waitForTimeout(1500);
   const set = (fn, arg) => p.evaluate(fn, arg);
   const shot = async (n) => { await p.waitForTimeout(550); await p.locator('.app').screenshot({ path: OUT + '/' + n + '.png' }); };
-  const reset = () => set(() => { S.stack = []; S.drawer = false; S.sheet = null; S.dialog = null; S.search = false; S.cartOpen = false; S.toast = ''; S.list = 'data'; S.net = 'online'; S.update = null; S.dark = false; S.role = 'owner'; });
+  const reset = () => set(() => { S.stack = []; S.drawer = false; S.sheet = null; S.dialog = null; S.search = false; S.cartOpen = false; S.toast = ''; S.list = 'data'; S.net = 'online'; S.update = null; S.recSrc = null; S.print = 'idle'; S.printFail = null; S.printer = 'RPP02N'; RT.logo = true; S.dark = false; S.role = 'owner'; });
   const steps = {
     home: () => set(() => { S.route = 'home'; }),
     'home-drawer': () => set(() => { S.route = 'home'; S.drawer = true; }),
@@ -20,6 +20,26 @@ const only = process.argv[3] ? process.argv[3].split(',') : null;
     'till-credit': () => set(() => { S.cart.splice(0); S.customer = 'c1'; S.pay = 'credit'; S.part = true; S.partAmt = 1000; S.route = 'till'; for (let i = 0; i < 9; i++) addP(PRODUCTS[0]); S.cartOpen = true; }),
     'till-who': () => set(() => { S.route = 'till'; S.sheet = 'cust'; }),
     receipt: () => set(() => { S.receipt = SALES[2]; S.route = 'receipt'; }),
+    'receipt-credit': () => set(() => { S.receipt = SALES[0]; S.route = 'receipt'; }),
+    'receipt-printing': () => set(() => { S.receipt = SALES[2]; S.route = 'receipt'; S.print = 'printing'; }),
+    'receipt-printed': () => set(() => { S.receipt = SALES[2]; S.route = 'receipt'; S.print = 'done'; }),
+    'receipt-failed': () => set(() => { S.receipt = SALES[2]; S.route = 'receipt'; S.printFail = 'off'; S.print = 'failed'; }),
+    'receipt-no-bluetooth': () => set(() => { S.receipt = SALES[2]; S.route = 'receipt'; S.printFail = 'bt'; S.print = 'failed'; }),
+    'receipt-no-printer': () => set(() => { S.receipt = SALES[2]; S.route = 'receipt'; S.printFail = 'none'; S.print = 'failed'; }),
+    'receipt-copy': () => set(() => { S.stack = ['sales', 'sale']; S.recSrc = { kind: 'sale', id: 'S-1299', copy: true }; S.route = 'receipt'; }),
+    'receipt-cancelled': () => set(() => { S.stack = ['sales', 'sale']; S.recSrc = { kind: 'sale', id: 'S-1296', copy: true }; S.route = 'receipt'; }),
+    'receipt-payment': () => set(() => { S.stack = ['payments']; S.recSrc = { kind: 'payment', id: 'P-0089', copy: false }; S.route = 'receipt'; }),
+    'receipt-share': () => set(() => { S.receipt = SALES[2]; S.route = 'receipt'; S.sheet = 'share'; }),
+    'receipt-printer': () => set(() => { S.receipt = SALES[2]; S.route = 'receipt'; S.sheet = 'printer'; }),
+    'printer-bluetooth-off': () => set(() => { S.route = 'profile'; S.printFail = 'bt'; S.sheet = 'printer'; }),
+    'receipt-dark': () => set(() => { S.receipt = SALES[0]; S.route = 'receipt'; S.dark = true; }),
+    receiptsettings: async () => { await set(() => { S.role = 'owner'; S.route = 'receiptsettings'; }); await p.locator('.scroll').last().evaluate(e => { e.scrollTop = 0; }); },
+    'receiptsettings-more': async () => { await set(() => { S.role = 'owner'; S.route = 'receiptsettings'; }); await p.waitForTimeout(200); await p.locator('.scroll').last().evaluate(e => { e.scrollTop = e.scrollHeight; }); },
+    'receiptsettings-no-logo': async () => { await set(() => { S.role = 'owner'; S.route = 'receiptsettings'; RT.logo = false; }); await p.locator('.scroll').last().evaluate(e => { e.scrollTop = 0; }); },
+    'receiptsettings-preview': () => set(() => { S.role = 'owner'; S.route = 'receiptsettings'; S.sheet = 'rpreview'; }),
+    'receiptsettings-pdf': async () => { await set(() => { S.role = 'owner'; S.route = 'receiptsettings'; S.sheet = 'rpreview'; }); await p.waitForTimeout(400); await p.getByRole('tab', { name: 'PDF' }).click(); },
+    'receiptsettings-cashier': () => set(() => { S.role = 'cashier'; S.route = 'receiptsettings'; }),
+    'receiptsettings-dark': () => set(() => { S.role = 'owner'; S.route = 'receiptsettings'; S.dark = true; }),
     sales: () => set(() => { S.route = 'sales'; }),
     'sales-filter': () => set(() => { S.route = 'sales'; S.sheet = 'filter'; }),
     'sales-loading': () => set(() => { S.route = 'sales'; S.list = 'loading'; }),

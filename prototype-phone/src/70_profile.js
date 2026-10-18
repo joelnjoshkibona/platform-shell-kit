@@ -45,7 +45,7 @@ const Profile = { components: { Header, Icon, Av, Pill, Seg, SetRow, Toggle, Btn
         <SetRow icon="ShieldCheck" title="Two-step verification" value="On"/><SetRow icon="Smartphone" title="Trusted devices" value="2"/></div></div>
 
       <div><p class="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">This phone</p><div class="divide-y overflow-hidden rounded-xl border bg-card">
-        <SetRow icon="Printer" title="Receipt printer" sub="RPP02N · connected" @click="S.sheet = 'printer'"/>
+        <SetRow icon="Printer" title="Receipt printer" :sub="S.printFail === 'none' ? 'No printer chosen' : S.printer + ' · paired'" @click="S.sheet = 'printer'"/>
         <SetRow icon="Info" title="App version" value="1.0.2 (3)" no-chev/>
         <SetRow :icon="S.checking ? 'Loader2' : 'CloudDownload'" title="Check for updates" :sub="S.checking ? 'Checking…' : S.upToDate ? 'You are on the latest version' : 'Tap to check'" no-chev @click="check"/></div></div>
 
@@ -58,14 +58,21 @@ const PhoneSheets = { components: { Sheet, Icon, Btn },
     const c = computed(() => S.callTo || cust(S.cid));
     const act = (m) => { S.sheet = null; toast(m); };
     const printers = [['RPP02N', '66:12:8A:0B:7C:41', true], ['MTP-II', '00:11:22:33:AA:BB', false]];
-    const sel = ref('RPP02N');
-    return { S, c, act, printers, sel, toast };
+    const sel = ref(S.printer); const rec = computed(() => recData());
+    return { S, c, act, printers, sel, toast, rec };
   },
   template: `<div>
     <Sheet :open="S.sheet === 'call'" :title="c.name" :sub="c.phone" @close="S.sheet = null"><div class="px-3 pb-3"><button v-for="a in [['Call','Phone','Calling ' + c.phone],['WhatsApp','MessageCircle','Opening WhatsApp'],['Send SMS','MessageSquare','Opening messages'],['Copy number','Copy','Number copied']]" :key="a[0]" type="button" class="press flex py-2 w-full items-center gap-3.5 rounded-md px-2 text-left" @click="act(a[2])">
       <span class="grid h-9 w-9 place-items-center rounded-md bg-muted"><Icon :name="a[1]" :size="19"/></span><span class="text-sm font-medium">{{ a[0] }}</span></button></div></Sheet>
-    <Sheet :open="S.sheet === 'share'" title="Share the receipt" @close="S.sheet = null"><div class="px-3 pb-3"><button v-for="a in [['WhatsApp','MessageCircle','Receipt sent to WhatsApp'],['SMS','MessageSquare','Receipt sent by SMS'],['Copy as text','Copy','Receipt copied'],['Other apps','Share2','Opening the share list']]" :key="a[0]" type="button" class="press flex py-2 w-full items-center gap-3.5 rounded-md px-2 text-left" @click="act(a[2])">
-      <span class="grid h-9 w-9 place-items-center rounded-md bg-muted"><Icon :name="a[1]" :size="19"/></span><span class="text-sm font-medium">{{ a[0] }}</span></button></div></Sheet>
-    <Sheet :open="S.sheet === 'printer'" title="Receipt printer" sub="Printers paired in Android's Bluetooth settings" @close="S.sheet = null"><div class="px-4 pb-4"><button v-for="p in printers" :key="p[0]" type="button" :class="['press mb-2 flex w-full py-2 items-center gap-3 rounded-xl border px-3.5 text-left', sel === p[0] ? 'border-primary bg-primary/10' : '']" @click="sel = p[0]"><span class="grid h-9 w-9 place-items-center rounded-md bg-muted"><Icon name="Printer" :size="19"/></span>
-      <span class="min-w-0 flex-1"><span class="block text-sm font-semibold">{{ p[0] }}</span><span class="block font-mono text-xs text-muted-foreground">{{ p[1] }}</span></span><Icon v-if="sel === p[0]" name="CircleCheck" :size="22" class="text-primary"/></button>
-      <div class="mt-3 grid grid-cols-2 gap-2"><Btn v="outline" size="md" @click="toast('Test page sent to ' + sel)"><Icon name="FileText" :size="16"/>Test print</Btn><Btn size="md" @click="S.sheet = null; toast(sel + ' is your printer')">Use this printer</Btn></div></div></Sheet></div>` };
+    <Sheet :open="S.sheet === 'share'" title="Share receipt" @close="S.sheet = null"><div class="px-4 pb-4">
+      <div class="flex items-center gap-3 rounded-xl border bg-muted/40 px-3.5 py-3"><span class="grid h-10 w-10 place-items-center rounded-md bg-destructive/10 text-destructive"><Icon name="FileText" :size="20"/></span><span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold">{{ rec.file }}</span><span class="block text-xs text-muted-foreground">PDF · 1 page · 38 KB</span></span></div>
+      <p class="mb-1 mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Send with</p>
+      <div class="grid grid-cols-4 gap-1"><button v-for="a in [['WhatsApp','MessageCircle'],['Messages','MessageSquare'],['Gmail','Mail'],['Bluetooth','Bluetooth'],['Drive','Cloud'],['Save','Download'],['Nearby','Radio'],['More','Ellipsis']]" :key="a[0]" type="button" class="press flex flex-col items-center gap-1.5 rounded-md py-2.5" @click="act(rec.file + ' sent with ' + a[0])"><span class="grid h-11 w-11 place-items-center rounded-full bg-muted"><Icon :name="a[1]" :size="20"/></span><span class="text-xs">{{ a[0] }}</span></button></div>
+      <p class="mt-3 text-center text-xs text-muted-foreground">This list is Android's own: it shows the apps on this phone.</p></div></Sheet>
+    <Sheet :open="S.sheet === 'printer'" title="Receipt printer" sub="Kept on this phone only" @close="S.sheet = null"><div class="px-4 pb-4">
+      <div v-if="S.printFail === 'bt'" class="flex flex-col items-center py-6 text-center"><span class="grid h-14 w-14 place-items-center rounded-full bg-muted"><Icon name="BluetoothOff" :size="26" class="text-muted-foreground"/></span><p class="mt-3 text-sm font-semibold">Bluetooth is off</p><p class="mt-1 text-xs text-muted-foreground">Turn it on to see the printers paired with this phone.</p><Btn class="mt-4" size="md" @click="S.printFail = null">Turn on Bluetooth</Btn></div>
+      <template v-else><p class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Paired printers</p>
+      <button v-for="p in printers" :key="p[0]" type="button" :class="['press mb-2 flex w-full py-2 items-center gap-3 rounded-xl border px-3.5 text-left', sel === p[0] ? 'border-primary bg-primary/10' : '']" @click="sel = p[0]"><span class="grid h-9 w-9 place-items-center rounded-md bg-muted"><Icon name="Printer" :size="19"/></span>
+        <span class="min-w-0 flex-1"><span class="block text-sm font-semibold">{{ p[0] }}</span><span class="block font-mono text-xs text-muted-foreground">{{ p[1] }}</span></span><Icon v-if="sel === p[0]" name="CircleCheck" :size="22" class="text-primary"/></button>
+      <p class="mb-3 mt-1 text-xs text-muted-foreground">Not here? Pair it first in Android's Bluetooth settings. Paper: 58 mm, 32 letters across.</p>
+      <div class="grid grid-cols-2 gap-2"><Btn v="outline" size="md" @click="toast('Test page sent to ' + sel)"><Icon name="FileText" :size="16"/>Test print</Btn><Btn size="md" @click="S.printer = sel; S.sheet = null; if (S.printFail === 'none') S.printFail = null; toast(sel + ' is your printer')">Use this printer</Btn></div></template></div></Sheet></div>` };

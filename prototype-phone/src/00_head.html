@@ -41,6 +41,7 @@ body { margin: 0; background: hsl(var(--canvas)); font-family: Geist, ui-sans-se
 .fade-enter-active, .fade-leave-active { transition: opacity .2s ease; } .fade-enter-from, .fade-leave-to { opacity: 0; }
 .drawer-enter-active, .drawer-leave-active { transition: transform .26s cubic-bezier(.2,.8,.2,1); } .drawer-enter-from, .drawer-leave-to { transform: translateX(-100%); }
 .pop-enter-active, .pop-leave-active { transition: opacity .18s ease, transform .18s ease; } .pop-enter-from, .pop-leave-to { opacity: 0; transform: translateY(8px) scale(.98); }
+.paper { background: #fff; color: #171717; box-shadow: 0 1px 2px rgb(0 0 0 / .12), 0 8px 24px rgb(0 0 0 / .10); } .tear { height: 7px; background: linear-gradient(-45deg, transparent 5px, #fff 0) 0 0 / 10px 10px repeat-x, linear-gradient(45deg, transparent 5px, #fff 0) 0 0 / 10px 10px repeat-x; filter: drop-shadow(0 2px 2px rgb(0 0 0 / .08)); transform: rotate(180deg); margin-top: -1px; }
 .rise { animation: rise .4s cubic-bezier(.2,.8,.2,1) both; } @keyframes rise { from { opacity: .001; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes pulse2 { 50% { opacity: .5; } } .skel { animation: pulse2 1.6s ease-in-out infinite; background: hsl(var(--muted)); }
 @media (prefers-reduced-motion: reduce) { .rise, .skel { animation: none; } .sheet-enter-active, .sheet-leave-active, .drawer-enter-active, .drawer-leave-active, .pop-enter-active, .pop-leave-active { transition: none; } }

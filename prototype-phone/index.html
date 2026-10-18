@@ -41,6 +41,7 @@ body { margin: 0; background: hsl(var(--canvas)); font-family: Geist, ui-sans-se
 .fade-enter-active, .fade-leave-active { transition: opacity .2s ease; } .fade-enter-from, .fade-leave-to { opacity: 0; }
 .drawer-enter-active, .drawer-leave-active { transition: transform .26s cubic-bezier(.2,.8,.2,1); } .drawer-enter-from, .drawer-leave-to { transform: translateX(-100%); }
 .pop-enter-active, .pop-leave-active { transition: opacity .18s ease, transform .18s ease; } .pop-enter-from, .pop-leave-to { opacity: 0; transform: translateY(8px) scale(.98); }
+.paper { background: #fff; color: #171717; box-shadow: 0 1px 2px rgb(0 0 0 / .12), 0 8px 24px rgb(0 0 0 / .10); } .tear { height: 7px; background: linear-gradient(-45deg, transparent 5px, #fff 0) 0 0 / 10px 10px repeat-x, linear-gradient(45deg, transparent 5px, #fff 0) 0 0 / 10px 10px repeat-x; filter: drop-shadow(0 2px 2px rgb(0 0 0 / .08)); transform: rotate(180deg); margin-top: -1px; }
 .rise { animation: rise .4s cubic-bezier(.2,.8,.2,1) both; } @keyframes rise { from { opacity: .001; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes pulse2 { 50% { opacity: .5; } } .skel { animation: pulse2 1.6s ease-in-out infinite; background: hsl(var(--muted)); }
 @media (prefers-reduced-motion: reduce) { .rise, .skel { animation: none; } .sheet-enter-active, .sheet-leave-active, .drawer-enter-active, .drawer-leave-active, .pop-enter-active, .pop-leave-active { transition: none; } }
@@ -93,6 +94,7 @@ const SALES = [
   { id: 'S-1302', c: 'c3', day: 'Today', time: '10:11', lines: [['p2', 2]], pay: 'paid', method: 'M-Pesa', by: 'Rehema' },
   { id: 'S-1301', c: 'c21', day: 'Today', time: '09:58', lines: [['p1', 1]], pay: 'unpaid', method: 'Credit', by: 'Rehema' },
   { id: 'S-1299', c: 'c1', day: 'Today', time: '09:23', lines: [['p1', 1]], pay: 'unpaid', method: 'Credit', by: 'Rehema' },
+  { id: 'S-1296', c: 'c0', day: 'Today', time: '08:41', lines: [['p3', 1]], pay: 'undone', method: 'Cash', by: 'Rehema', undone: true },
   { id: 'S-1297', c: 'c0', day: 'Today', time: '08:54', lines: [['p1', 1], ['p4', 1]], pay: 'paid', method: 'Cash', by: 'Rehema', undo: true },
   { id: 'S-1290', c: 'c9', day: 'Yesterday', time: '11:09', lines: [['p1', 1]], pay: 'unpaid', method: 'Credit', by: 'Rehema', undoAsked: true },
   { id: 'S-1288', c: 'c23', day: 'Yesterday', time: '10:04', lines: [['p1', 1], ['p3', 2]], pay: 'part', method: 'Credit', by: 'Amina', paid: 1000 },
@@ -210,7 +212,7 @@ const USERS = [
   { id: 'u2', name: 'Rehema Kileo', email: 'rehema@devbiz.app', role: 'Cashier', ini: 'RK', c: 'var(--c1)', seen: 'Active 10 min ago', st: 'ok' },
   { id: 'u3', name: 'Joyce Mrema', email: 'joyce@example.com', role: 'Cashier', ini: 'JM', c: 'var(--c4)', seen: 'Invited 2 days ago', st: 'invited' }
 ];
-Object.assign(S, { net: 'online', update: null, tabP: 'overview', pid: 'p1', prodQ: '', prodTab: 'overview', moveType: 'all', delId: 'DEL-0009', delTab: 'all', supId: 's1', supTab: 'overview', payId: 'P-0090',
+Object.assign(S, { recSrc: null, print: 'idle', printFail: null, printer: 'RPP02N', net: 'online', update: null, tabP: 'overview', pid: 'p1', prodQ: '', prodTab: 'overview', moveType: 'all', delId: 'DEL-0009', delTab: 'all', supId: 's1', supTab: 'overview', payId: 'P-0090',
   countStep: 0, counted: { p1: 91, p2: 4, p3: 48, p4: 30, p5: 0, p6: 120 }, cashCounted: 41000, countNote: '', countPane: 'count', expCat: 'all', accId: 'a1', accTab: 'history', expOpen: null,
   rec: { sup: 's1', lines: [{ pid: 'p1', packs: 5 }], paidNow: false, due: '26 Oct' }, newExp: { amt: 0, cat: 'Transport', acct: 'Cash drawer', note: '' }, quiet: true, ch: { low: [1, 0], undo: [1, 0], gaps: [1, 1], late: [1, 1], cust: [0, 0] }, tmpl: 'Hello {name}, you owe {amount} at Office Shop. Please pay when you can. Asante!' });
 const money0 = (n) => (n < 0 ? '−' : '') + 'TZS ' + Math.abs(Math.round(n)).toLocaleString('en-US');
@@ -280,13 +282,13 @@ const TabBar = { components: { Icon },
           <span v-if="it[0] === 'alerts' && unread" class="absolute right-3 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">{{ unread }}</span></span>
         <span :class="['text-[11px]', S.route === it[0] ? 'font-semibold text-primary' : 'font-medium text-muted-foreground']">{{ it[1] }}</span></button></template></nav>` };
 
-const ROOTS = ['payments', 'products', 'movements', 'deliveries', 'count', 'accounts', 'expenses', 'suppliers', 'users', 'settings', 'alertsettings'];
+const ROOTS = ['payments', 'products', 'movements', 'deliveries', 'count', 'accounts', 'expenses', 'suppliers', 'users', 'settings', 'alertsettings', 'receiptsettings'];
 const MENU = [
   { label: 'Sell', items: [['Till', 'ShoppingCart', 'till'], ['Sales', 'Receipt', 'sales'], ['Payments', 'Wallet', 'payments']] },
   { label: 'People', items: [['Customers', 'Users', 'customers'], ['Suppliers', 'Truck', 'suppliers', 'owner']] },
   { label: 'Stock', items: [['Products', 'Package', 'products'], ['Stock movements', 'ArrowLeftRight', 'movements'], ['Deliveries', 'PackagePlus', 'deliveries', 'owner'], ['End-of-day count', 'ClipboardCheck', 'count']] },
   { label: 'Money', owner: true, items: [['Accounts', 'Landmark', 'accounts'], ['Expenses', 'Coins', 'expenses']] },
-  { label: 'Shop', owner: true, items: [['Waiting for you', 'Hourglass', 'waiting', 'badge'], ['Users', 'UserCog', 'users'], ['Settings', 'Settings', 'settings']] },
+  { label: 'Shop', owner: true, items: [['Waiting for you', 'Hourglass', 'waiting', 'badge'], ['Users', 'UserCog', 'users'], ['Settings', 'Settings', 'settings'], ['Receipt', 'ReceiptText', 'receiptsettings']] },
   { label: 'You', items: [['Notifications', 'Bell', 'alerts', 'unread'], ['Alerts and reminders', 'BellRing', 'alertsettings'], ['Profile', 'CircleUser', 'profile']] }
 ];
 const Drawer = { components: { Icon },
@@ -459,7 +461,7 @@ function charge() {
   const paid = payNow.value, total = cartTotal.value;
   const sale = { id: 'S-' + (nextSale++), c: S.customer, day: 'Today', time: '11:02', lines, pay: paid >= total ? 'paid' : paid > 0 ? 'part' : 'unpaid', method: S.pay === 'cash' ? 'Cash' : 'Credit', by: ME.value.name, paid, fresh: true };
   SALES.unshift(sale); if (sale.pay !== 'paid') cust(S.customer).owes += total - paid;
-  S.receipt = sale; S.cart = []; S.cartOpen = false; S.partAmt = 0; S.part = false; S.pay = 'cash';
+  S.receipt = sale; S.recSrc = null; S.print = 'idle'; S.cart = []; S.cartOpen = false; S.partAmt = 0; S.part = false; S.pay = 'cash';
   S.route = 'receipt';
 }
 
@@ -534,20 +536,6 @@ const Till = { components: { Icon, Tile, Av, Pill, Btn, Stepper, Sheet, FooterBa
       <span class="grid h-9 w-9 place-items-center rounded-md bg-muted"><Icon :name="a[1]" :size="19"/></span><span class="flex-1 text-sm font-medium">{{ a[0] }}</span><Icon v-if="S.account === a[0]" name="Check" :size="20" class="text-primary"/></button></div></Sheet>
   </div>` };
 
-/* the sale is done: print it, share it, or start the next one */
-const Receipt = { components: { Icon, Btn, Pill, FooterBar },
-  setup() { const s = computed(() => S.receipt || SALES[0]); const c = computed(() => cust(s.value.c));
-    const left = computed(() => saleTotal(s.value) - (s.value.paid != null ? s.value.paid : (s.value.pay === 'paid' ? saleTotal(s.value) : 0)));
-    return { S, s, c, left, saleTotal, prod, money, back, go, tab, toast }; },
-  template: `<div class="flex min-h-0 flex-1 flex-col"><div class="scroll min-h-0 flex-1 overflow-y-auto px-5" :style="{ paddingTop: 'calc(40px + var(--sa-top))' }">
-      <div class="flex flex-col items-center text-center"><span class="rise grid h-20 w-20 place-items-center rounded-full bg-success/15 text-success"><Icon name="Check" :size="40"/></span>
-        <h1 class="mt-4 text-2xl font-bold">Sale done</h1><p class="text-sm text-muted-foreground">{{ s.id }} · {{ c.walkin ? 'Walk-in customer' : c.name }}</p>
-        <p class="mt-3 text-3xl font-bold tracking-tight tnum">{{ money(saleTotal(s)) }}</p><Pill :tone="left > 0 ? 'warning' : 'success'">{{ left > 0 ? money(left) + ' goes on credit' : 'Paid · ' + s.method }}</Pill></div>
-      <div class="mt-6 divide-y rounded-xl border bg-card"><div v-for="l in s.lines" :key="l[0]" class="flex items-center justify-between px-4 py-3"><span class="text-sm">{{ prod(l[0]).name }} <span class="text-muted-foreground">× {{ l[1] }}</span></span><span class="text-sm font-medium tnum">{{ money(prod(l[0]).price * l[1]) }}</span></div></div>
-      <button type="button" class="press mt-3 flex w-full py-2.5 items-center gap-3 rounded-xl border bg-muted/40 px-4 text-left" @click="toast('Receipt sent to RPP02N')"><Icon name="Printer" :size="20"/><span class="flex-1"><span class="block text-sm font-semibold">Print receipt</span><span class="block text-xs text-success">RPP02N · connected</span></span><Icon name="ChevronRight" :size="18" class="text-muted-foreground"/></button>
-      <button type="button" class="press mt-2 flex w-full py-2.5 items-center gap-3 rounded-xl border bg-muted/40 px-4 text-left" @click="S.sheet = 'share'"><Icon name="Share2" :size="20"/><span class="flex-1 text-sm font-semibold">Share the receipt</span><Icon name="ChevronRight" :size="18" class="text-muted-foreground"/></button><div class="h-4"></div></div>
-    <FooterBar><div class="grid grid-cols-2 gap-2"><Btn v="outline" @click="tab('home')">Done</Btn><Btn @click="S.route = 'till'">New sale</Btn></div></FooterBar></div>` };
-
 /* ============================================================ Sales */
 const itemsText = (s) => saleLine(s.lines[0]) + (s.lines.length > 1 ? ' +' + (s.lines.length - 1) + ' more' : '');
 const paidOf = (s) => s.pay === 'paid' ? saleTotal(s) : s.pay === 'part' ? (s.paid || 0) : 0;
@@ -613,8 +601,9 @@ const SalePage = { components: { Header, Icon, Av, Pill, Btn, Card, Row, SaleSta
     watch(() => S.sheet, (v) => { if (v === 'takepay') { amt.value = left.value; method.value = 'Cash'; } });
     const askUndo = () => { S.dialog = { title: owner.value ? 'Undo ' + s.value.id + '?' : 'Ask Amina to undo ' + s.value.id + '?', text: owner.value ? 'The stock goes back on the shelf and ' + c.value.name + "'s balance changes." : 'Nothing changes until she approves. She sees your request in Waiting for you.', action: owner.value ? 'Undo the sale' : 'Send the request', tone: owner.value ? 'destructive' : 'primary', cancel: 'Keep the sale',
       ok: () => { if (owner.value) { s.value.pay = 'undone'; s.value.undone = true; if (c.value.owes > 0) c.value.owes = Math.max(0, c.value.owes - left.value); toast(s.value.id + ' undone'); } else { s.value.undoAsked = true; toast('Sent to Amina'); } } }; };
-    const record = () => { const a = Math.min(Math.max(+amt.value || 0, 0), left.value); if (!a) return; s.value.paid = paidOf(s.value) + a; s.value.pay = s.value.paid >= total.value ? 'paid' : 'part'; c.value.owes = Math.max(0, c.value.owes - a); S.sheet = null; toast(money(a) + ' recorded, ' + method.value); };
-    return { S, s, c, total, left, owner, amt, method, askUndo, record, prod, money, go, paidOf, tint };
+    const record = () => { const a = Math.min(Math.max(+amt.value || 0, 0), left.value); if (!a) return; s.value.paid = paidOf(s.value) + a; s.value.pay = s.value.paid >= total.value ? 'paid' : 'part'; c.value.owes = Math.max(0, c.value.owes - a); S.sheet = null; newPayment(c.value.id, a, method.value, [s.value.id]); };
+    const openReceipt = () => { S.recSrc = { kind: 'sale', id: s.value.id, copy: true }; S.print = 'idle'; go('receipt'); };
+    return { S, s, c, total, left, owner, amt, method, askUndo, record, openReceipt, prod, money, go, paidOf, tint };
   },
   template: `<div class="flex min-h-0 flex-1 flex-col"><Header :title="s.id" pushed hide-search/>
     <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-3 p-3 pb-6">
@@ -624,6 +613,7 @@ const SalePage = { components: { Header, Icon, Av, Pill, Btn, Card, Row, SaleSta
         <div v-if="s.pay === 'unpaid' || s.pay === 'part'" class="mt-3 flex items-center justify-between rounded-md bg-warning/10 px-3.5 py-2.5 text-sm"><span class="text-warning">Left to pay</span><b class="text-warning tnum">{{ money(left) }}</b></div></section>
       <Card title="Items" icon="ShoppingCart"><div v-for="l in s.lines" :key="l[0]" class="flex items-center justify-between border-b py-3 last:border-0"><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ prod(l[0]).name }}</span><span class="block text-xs text-muted-foreground tnum">{{ l[1] }} × {{ money(prod(l[0]).price) }} · oldest batch</span></span><span class="text-sm font-semibold tnum">{{ money(prod(l[0]).price * l[1]) }}</span></div></Card>
       <Card title="Payment" icon="Wallet"><Row k="Method" :v="s.method"/><Row k="Paid" :v="money(paidOf(s))"/><Row k="Left to pay" :v="money(left)"/></Card>
+      <button type="button" class="press flex w-full items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left" @click="openReceipt"><span class="grid h-9 w-9 place-items-center rounded-md bg-muted"><Icon name="ReceiptText" :size="19"/></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold">Receipt</span><span class="block text-xs text-muted-foreground">Print it or share it again</span></span><Icon name="ChevronRight" :size="18" class="text-muted-foreground"/></button>
       <Card title="What happened" icon="History"><ol class="py-2"><li v-for="(e, i) in [s.undone ? ['Undone', s.day + ', 11:20', 'Amina approved'] : null, s.undoAsked ? ['Undo asked', s.day + ', 11:05', 'Rehema: wrong customer'] : null, s.pay !== 'unpaid' && !s.undone ? ['Payment', s.day + ', ' + s.time, money(paidOf(s)) + ' · ' + s.method] : null, ['Sold', s.day + ', ' + s.time, 'by ' + s.by]].filter(Boolean)" :key="i" class="relative flex gap-3 pb-4 last:pb-0">
           <span class="relative mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-primary"><span class="absolute left-1/2 top-3 h-[calc(100%+22px)] w-px -translate-x-1/2 bg-border"></span></span><span class="min-w-0"><span class="block text-sm font-medium">{{ e[0] }}</span><span class="block text-xs text-muted-foreground">{{ e[1] }} · {{ e[2] }}</span></span></li></ol></Card></div></div>
     <FooterBar><p v-if="s.undone" class="py-2 text-center text-sm text-muted-foreground">This sale was undone.</p>
@@ -663,7 +653,7 @@ const Customer = { components: { Header, Icon, Av, Pill, Btn, Seg, Card, Row, Ag
     const tabs = [{ id: 'overview', label: 'Overview' }, { id: 'sales', label: 'Sales' }, { id: 'payments', label: 'Payments' }];
     const amt = ref(0); const method = ref('Cash');
     watch(() => S.sheet, (v) => { if (v === 'cpay') { amt.value = Math.max(0, c.value.owes); method.value = 'Cash'; } });
-    const record = () => { const a = Math.min(+amt.value || 0, 1e9); if (!a) return; c.value.owes -= a; c.value.paid = (c.value.paid || 0) + a; S.sheet = null; toast(money(a) + ' recorded for ' + c.value.name.split(' ')[0]); };
+    const record = () => { const a = Math.min(+amt.value || 0, 1e9); if (!a) return; c.value.owes -= a; c.value.paid = (c.value.paid || 0) + a; S.sheet = null; newPayment(c.value.id, a, 'Cash', []); };
     const pays = computed(() => [['P-0052', '19 Sept, 17:22', 3000, 'Cash drawer'], ['P-0030', '11 Sept, 10:59', 1000, 'Cash drawer']]);
     const limitPct = computed(() => c.value.limit ? Math.min(100, Math.max(0, c.value.owes) / c.value.limit * 100) : 0);
     return { S, c, sales, unpaid, tabs, amt, method, record, pays, limitPct, saleTotal, itemsText, paidOf, money, go, toast };
@@ -739,7 +729,7 @@ const Profile = { components: { Header, Icon, Av, Pill, Seg, SetRow, Toggle, Btn
         <SetRow icon="ShieldCheck" title="Two-step verification" value="On"/><SetRow icon="Smartphone" title="Trusted devices" value="2"/></div></div>
 
       <div><p class="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">This phone</p><div class="divide-y overflow-hidden rounded-xl border bg-card">
-        <SetRow icon="Printer" title="Receipt printer" sub="RPP02N · connected" @click="S.sheet = 'printer'"/>
+        <SetRow icon="Printer" title="Receipt printer" :sub="S.printFail === 'none' ? 'No printer chosen' : S.printer + ' · paired'" @click="S.sheet = 'printer'"/>
         <SetRow icon="Info" title="App version" value="1.0.2 (3)" no-chev/>
         <SetRow :icon="S.checking ? 'Loader2' : 'CloudDownload'" title="Check for updates" :sub="S.checking ? 'Checking…' : S.upToDate ? 'You are on the latest version' : 'Tap to check'" no-chev @click="check"/></div></div>
 
@@ -752,17 +742,24 @@ const PhoneSheets = { components: { Sheet, Icon, Btn },
     const c = computed(() => S.callTo || cust(S.cid));
     const act = (m) => { S.sheet = null; toast(m); };
     const printers = [['RPP02N', '66:12:8A:0B:7C:41', true], ['MTP-II', '00:11:22:33:AA:BB', false]];
-    const sel = ref('RPP02N');
-    return { S, c, act, printers, sel, toast };
+    const sel = ref(S.printer); const rec = computed(() => recData());
+    return { S, c, act, printers, sel, toast, rec };
   },
   template: `<div>
     <Sheet :open="S.sheet === 'call'" :title="c.name" :sub="c.phone" @close="S.sheet = null"><div class="px-3 pb-3"><button v-for="a in [['Call','Phone','Calling ' + c.phone],['WhatsApp','MessageCircle','Opening WhatsApp'],['Send SMS','MessageSquare','Opening messages'],['Copy number','Copy','Number copied']]" :key="a[0]" type="button" class="press flex py-2 w-full items-center gap-3.5 rounded-md px-2 text-left" @click="act(a[2])">
       <span class="grid h-9 w-9 place-items-center rounded-md bg-muted"><Icon :name="a[1]" :size="19"/></span><span class="text-sm font-medium">{{ a[0] }}</span></button></div></Sheet>
-    <Sheet :open="S.sheet === 'share'" title="Share the receipt" @close="S.sheet = null"><div class="px-3 pb-3"><button v-for="a in [['WhatsApp','MessageCircle','Receipt sent to WhatsApp'],['SMS','MessageSquare','Receipt sent by SMS'],['Copy as text','Copy','Receipt copied'],['Other apps','Share2','Opening the share list']]" :key="a[0]" type="button" class="press flex py-2 w-full items-center gap-3.5 rounded-md px-2 text-left" @click="act(a[2])">
-      <span class="grid h-9 w-9 place-items-center rounded-md bg-muted"><Icon :name="a[1]" :size="19"/></span><span class="text-sm font-medium">{{ a[0] }}</span></button></div></Sheet>
-    <Sheet :open="S.sheet === 'printer'" title="Receipt printer" sub="Printers paired in Android's Bluetooth settings" @close="S.sheet = null"><div class="px-4 pb-4"><button v-for="p in printers" :key="p[0]" type="button" :class="['press mb-2 flex w-full py-2 items-center gap-3 rounded-xl border px-3.5 text-left', sel === p[0] ? 'border-primary bg-primary/10' : '']" @click="sel = p[0]"><span class="grid h-9 w-9 place-items-center rounded-md bg-muted"><Icon name="Printer" :size="19"/></span>
-      <span class="min-w-0 flex-1"><span class="block text-sm font-semibold">{{ p[0] }}</span><span class="block font-mono text-xs text-muted-foreground">{{ p[1] }}</span></span><Icon v-if="sel === p[0]" name="CircleCheck" :size="22" class="text-primary"/></button>
-      <div class="mt-3 grid grid-cols-2 gap-2"><Btn v="outline" size="md" @click="toast('Test page sent to ' + sel)"><Icon name="FileText" :size="16"/>Test print</Btn><Btn size="md" @click="S.sheet = null; toast(sel + ' is your printer')">Use this printer</Btn></div></div></Sheet></div>` };
+    <Sheet :open="S.sheet === 'share'" title="Share receipt" @close="S.sheet = null"><div class="px-4 pb-4">
+      <div class="flex items-center gap-3 rounded-xl border bg-muted/40 px-3.5 py-3"><span class="grid h-10 w-10 place-items-center rounded-md bg-destructive/10 text-destructive"><Icon name="FileText" :size="20"/></span><span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold">{{ rec.file }}</span><span class="block text-xs text-muted-foreground">PDF · 1 page · 38 KB</span></span></div>
+      <p class="mb-1 mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Send with</p>
+      <div class="grid grid-cols-4 gap-1"><button v-for="a in [['WhatsApp','MessageCircle'],['Messages','MessageSquare'],['Gmail','Mail'],['Bluetooth','Bluetooth'],['Drive','Cloud'],['Save','Download'],['Nearby','Radio'],['More','Ellipsis']]" :key="a[0]" type="button" class="press flex flex-col items-center gap-1.5 rounded-md py-2.5" @click="act(rec.file + ' sent with ' + a[0])"><span class="grid h-11 w-11 place-items-center rounded-full bg-muted"><Icon :name="a[1]" :size="20"/></span><span class="text-xs">{{ a[0] }}</span></button></div>
+      <p class="mt-3 text-center text-xs text-muted-foreground">This list is Android's own: it shows the apps on this phone.</p></div></Sheet>
+    <Sheet :open="S.sheet === 'printer'" title="Receipt printer" sub="Kept on this phone only" @close="S.sheet = null"><div class="px-4 pb-4">
+      <div v-if="S.printFail === 'bt'" class="flex flex-col items-center py-6 text-center"><span class="grid h-14 w-14 place-items-center rounded-full bg-muted"><Icon name="BluetoothOff" :size="26" class="text-muted-foreground"/></span><p class="mt-3 text-sm font-semibold">Bluetooth is off</p><p class="mt-1 text-xs text-muted-foreground">Turn it on to see the printers paired with this phone.</p><Btn class="mt-4" size="md" @click="S.printFail = null">Turn on Bluetooth</Btn></div>
+      <template v-else><p class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Paired printers</p>
+      <button v-for="p in printers" :key="p[0]" type="button" :class="['press mb-2 flex w-full py-2 items-center gap-3 rounded-xl border px-3.5 text-left', sel === p[0] ? 'border-primary bg-primary/10' : '']" @click="sel = p[0]"><span class="grid h-9 w-9 place-items-center rounded-md bg-muted"><Icon name="Printer" :size="19"/></span>
+        <span class="min-w-0 flex-1"><span class="block text-sm font-semibold">{{ p[0] }}</span><span class="block font-mono text-xs text-muted-foreground">{{ p[1] }}</span></span><Icon v-if="sel === p[0]" name="CircleCheck" :size="22" class="text-primary"/></button>
+      <p class="mb-3 mt-1 text-xs text-muted-foreground">Not here? Pair it first in Android's Bluetooth settings. Paper: 58 mm, 32 letters across.</p>
+      <div class="grid grid-cols-2 gap-2"><Btn v="outline" size="md" @click="toast('Test page sent to ' + sel)"><Icon name="FileText" :size="16"/>Test print</Btn><Btn size="md" @click="S.printer = sel; S.sheet = null; if (S.printFail === 'none') S.printFail = null; toast(sel + ' is your printer')">Use this printer</Btn></div></template></div></Sheet></div>` };
 
 /* ============================================================ shared list pieces, Payments */
 const Chips = { props: { modelValue: String, items: Array }, template: `<div class="scroll -mx-3 flex gap-1.5 overflow-x-auto px-3"><button v-for="i in items" :key="i[0]" type="button" :aria-pressed="modelValue === i[0]" @click="$emit('update:modelValue', i[0])" :class="['press h-8 shrink-0 whitespace-nowrap rounded-md px-3 text-sm font-medium', modelValue === i[0] ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground']">{{ i[1] }}</button></div>` };
@@ -807,7 +804,8 @@ const PaymentPage = { components: { Header, Icon, Av, Pill, Btn, Card, Row, Foot
     const del = () => { S.dialog = { title: owner.value ? 'Delete ' + p.value.id + '?' : 'Ask Amina to delete ' + p.value.id + '?', text: owner.value ? c.value.name + "'s balance goes back up by " + money(p.value.amt) + '.' : 'Nothing changes until she approves.', action: owner.value ? 'Delete the payment' : 'Send the request', tone: owner.value ? 'destructive' : 'primary', cancel: 'Keep it', ok: () => { toast(owner.value ? p.value.id + ' deleted' : 'Sent to Amina'); if (owner.value) back(); } }; };
     const change = (a) => { S.sheet = null; if (owner.value) { p.value.amt = a; p.value.changeAsked = false; toast(p.value.id + ' is now ' + money(a)); } else { p.value.changeAsked = true; p.value.note = 'Rehema asks for ' + money(a); toast('Sent to Amina'); } };
     const decide = (yes) => { p.value.changeAsked = false; toast(yes ? 'Change approved' : 'Change declined'); };
-    return { S, p, c, owner, del, change, decide, money, go, cust, SALES, saleTotal };
+    const openReceipt = () => { S.recSrc = { kind: 'payment', id: p.value.id, copy: true }; S.print = 'idle'; go('receipt'); };
+    return { S, p, c, owner, del, change, decide, openReceipt, money, go, cust, SALES, saleTotal };
   },
   template: `<div class="flex min-h-0 flex-1 flex-col"><Header :title="p.id" pushed hide-search/>
     <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-3 p-3 pb-6">
@@ -815,6 +813,7 @@ const PaymentPage = { components: { Header, Icon, Av, Pill, Btn, Card, Row, Foot
         <p class="mt-4 text-xs text-muted-foreground">Amount received</p><p class="text-2xl font-semibold text-success tnum">{{ money(p.amt) }}</p><p class="mt-0.5 text-xs text-muted-foreground">{{ p.method }} · into {{ p.acct }}</p></section>
       <section v-if="p.changeAsked" class="rounded-xl border border-warning/40 bg-warning/10 p-4"><p class="flex items-center gap-2 text-sm font-semibold text-warning"><Icon name="Hourglass" :size="16"/>{{ owner ? 'Rehema asks to change this' : 'Waiting for Amina' }}</p><p class="mt-1 text-sm text-muted-foreground">{{ p.note }}</p></section>
       <Card title="It paid" icon="Receipt"><div v-for="id in p.sales" :key="id" class="flex items-center justify-between border-b py-2.5 last:border-0"><span><span class="block font-mono text-xs font-medium">{{ id }}</span><span class="block text-xs text-muted-foreground">Oldest unpaid first</span></span><span class="text-sm font-semibold tnum">{{ money(p.amt / p.sales.length) }}</span></div></Card>
+            <button type="button" class="press flex w-full items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left" @click="openReceipt"><span class="grid h-9 w-9 place-items-center rounded-md bg-muted"><Icon name="ReceiptText" :size="19"/></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold">Receipt</span><span class="block text-xs text-muted-foreground">Print it or share it again</span></span><Icon name="ChevronRight" :size="18" class="text-muted-foreground"/></button>
       <Card title="What happened" icon="History"><ol class="py-2"><li class="relative flex gap-3"><span class="relative mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary"></span><span><span class="block text-sm font-medium">Recorded</span><span class="block text-xs text-muted-foreground">{{ p.day }}, {{ p.time }} · by {{ p.by }} · {{ p.acct }}</span></span></li></ol></Card></div></div>
     <FooterBar><div v-if="p.changeAsked && owner" class="grid grid-cols-2 gap-2"><Btn v="outline" @click="decide(false)">Decline</Btn><Btn @click="decide(true)">Approve change</Btn></div>
       <div v-else class="grid grid-cols-2 gap-2"><Btn :v="owner ? 'destructive-outline' : 'outline'" @click="del">{{ owner ? 'Delete' : 'Ask to delete' }}</Btn><Btn @click="S.sheet = 'paychange'">{{ owner ? 'Change amount' : 'Ask to change' }}</Btn></div></FooterBar>
@@ -877,6 +876,189 @@ const Movements = { components: { Header, Icon, Empty, Chips, StickyBar, DayHead
         <div v-for="g in groups" :key="g.day"><DayHead :day="g.day" :note="g.rows.length + (g.rows.length === 1 ? ' movement' : ' movements')"/><RowsCard><div v-for="(m, i) in g.rows" :key="m.id" :class="['flex items-center gap-3 px-3.5 py-2.5', i ? 'border-t' : '']">
           <span :class="['grid h-9 w-9 shrink-0 place-items-center rounded-md', { success: 'bg-success/15 text-success', warning: 'bg-warning/15 text-warning', muted: 'bg-muted text-muted-foreground', primary: 'bg-primary/10 text-primary', destructive: 'bg-destructive/10 text-destructive' }[MTYPE[m.t].tone]]"><Icon :name="MTYPE[m.t].icon" :size="16"/></span>
           <span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ prod(m.pid).name }} · {{ MTYPE[m.t].label }}</span><span class="block truncate text-xs text-muted-foreground tnum">{{ m.ref }} · {{ m.time }}</span></span><span :class="['text-sm font-semibold tnum', m.q > 0 ? 'text-success' : '']">{{ m.q > 0 ? '+' : '−' }}{{ Math.abs(m.q) }}</span></div></RowsCard></div></div></div></div>` };
+
+/* ============================================================ receipts (D204-D208): the sale-done screen, the paper, the owner's Receipt settings */
+const SHOP = { name: 'Office Shop', phone: '+255 754 000 111', lipa: '5551234 (Office Shop)' };
+const RT = reactive({
+  logo: true, address: 'Mwenge, Dar es Salaam', tin: '123-456-789', header: 'Karibu! Open 7:00 to 20:00', footer: 'Asante, karibu tena',
+  blocks: { logo: true, shop: true, contact: true, header: true, meta: true, payment: true, how: true, footer: true }
+});
+const RBLOCKS = [
+  ['logo', 'Logo', 'Image'], ['shop', 'Shop name', 'Store'], ['contact', 'Address, phone and TIN', 'MapPin'], ['header', 'Header line', 'Type'],
+  ['meta', 'Number, date, cashier and customer', 'Hash'], ['items', 'Items', 'ShoppingCart', true], ['totals', 'Total', 'Sigma', true],
+  ['payment', 'Paid, or on credit with the balance', 'Wallet'], ['how', 'How to pay', 'Smartphone'], ['footer', 'Footer line', 'MessageSquareText']
+];
+const FILLINS = ['{shop}', '{phone}', '{lipa}', '{customer}', '{balance}'];
+
+/* the logo twice: as the owner uploaded it, and as the printer gets it (black and white, 384 dots wide, D206) */
+const LOGO = (() => {
+  try {
+    const c = document.createElement('canvas'); c.width = 384; c.height = 120; const x = c.getContext('2d');
+    x.fillStyle = '#fff'; x.fillRect(0, 0, 384, 120);
+    x.fillStyle = '#2f6fe0'; x.beginPath(); x.roundRect(8, 8, 104, 104, 22); x.fill();
+    x.fillStyle = '#fff'; x.font = 'bold 54px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('OS', 60, 62);
+    x.fillStyle = '#1d2a44'; x.textAlign = 'left'; x.font = 'bold 40px sans-serif'; x.fillText('Office', 130, 42); x.fillText('Shop', 130, 84);
+    x.fillStyle = '#e9a23b'; x.fillRect(130, 106, 150, 6);
+    const color = c.toDataURL();
+    const d = x.getImageData(0, 0, 384, 120);
+    for (let i = 0; i < d.data.length; i += 4) { const v = .299 * d.data[i] + .587 * d.data[i + 1] + .114 * d.data[i + 2] < 140 ? 0 : 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; }
+    x.putImageData(d, 0, 0);
+    return { color, bw: c.toDataURL() };
+  } catch (e) { return { color: '', bw: '' }; }
+})();
+
+const WIDTH = 32;
+const rdate = (day) => day === 'Today' ? '18 Oct 2026' : day === 'Yesterday' ? '17 Oct 2026' : day;
+const wrapText = (t, w = WIDTH) => { const out = []; let cur = ''; String(t).split(/\s+/).filter(Boolean).forEach(word => { if ((cur + ' ' + word).trim().length > w) { if (cur) out.push(cur); cur = word; } else cur = (cur + ' ' + word).trim(); }); if (cur) out.push(cur); return out; };
+const centre = (t) => ' '.repeat(Math.max(0, Math.floor((WIDTH - t.length) / 2))) + t;
+const leftRight = (l, r) => l + ' '.repeat(Math.max(1, WIDTH - l.length - r.length)) + r;
+const fillIn = (t, d) => String(t || '').replace(/\{(\w+)\}/g, (m, k) => ({ shop: SHOP.name, phone: SHOP.phone, lipa: SHOP.lipa, address: RT.address, tin: RT.tin, number: d.number, date: rdate(d.day), cashier: d.by, customer: d.cust || 'Walk-in customer', balance: d.balText })[k] ?? m);
+
+/* what a receipt is made of: one structure from a sale or a payment, drawn three ways (print, PDF, text) */
+function recData() {
+  const src = S.recSrc;
+  let d;
+  if (src && src.kind === 'payment') {
+    const p = PAYMENTS.find(x => x.id === src.id) || PAYMENTS[0], c = cust(p.c);
+    d = { kind: 'payment', number: p.id, day: p.day, time: p.time, by: p.by, cust: c.walkin ? '' : c.name, method: p.method, total: p.amt, paid: p.amt, balance: c.owes, copy: !!src.copy, cancelled: false,
+      lines: p.sales.map(id => ({ name: 'Pays ' + id, total: p.amt / p.sales.length })) };
+  } else {
+    const s = (src && src.kind === 'sale' ? SALES.find(x => x.id === src.id) : null) || S.receipt || SALES[0], c = cust(s.c), total = saleTotal(s);
+    const paid = s.pay === 'undone' ? 0 : s.paid != null ? s.paid : (s.pay === 'paid' ? total : 0);
+    d = { kind: 'sale', number: s.id, day: s.day, time: s.time, by: s.by, cust: c.walkin ? '' : c.name, method: s.method, total, paid, balance: c.owes, copy: !!(src && src.copy), cancelled: s.pay === 'undone',
+      lines: s.lines.map(l => ({ name: prod(l[0]).name, qty: l[1], unit: prod(l[0]).price, total: prod(l[0]).price * l[1] })) };
+  }
+  d.balText = d.balance > 0 ? money(d.balance) : d.balance < 0 ? money(-d.balance) + ' in credit' : 'TZS 0';
+  d.file = 'Receipt-' + d.number + '.pdf';
+  return d;
+}
+
+/* the 58 mm paper, 32 letters across: exactly what the printer is sent (D207) */
+function printLines(d) {
+  const B = RT.blocks, o = [], rule = { t: '-'.repeat(WIDTH) }, add = (t, b) => o.push({ t, b });
+  if (d.cancelled) o.push({ banner: 'CANCELLED' });
+  if (B.logo && RT.logo) o.push({ logo: true });
+  if (B.shop) wrapText(SHOP.name.toUpperCase()).forEach(t => add(centre(t), true));
+  if (B.contact) { wrapText(RT.address).forEach(t => add(centre(t))); add(centre(SHOP.phone)); if (RT.tin) add(centre('TIN ' + RT.tin)); }
+  if (B.header && RT.header) wrapText(fillIn(RT.header, d)).forEach(t => add(centre(t)));
+  o.push(rule);
+  if (B.meta) { add((d.kind === 'payment' ? 'Payment ' : 'Receipt ') + d.number, true); add(rdate(d.day) + '  ' + d.time); add('Served by ' + d.by); if (d.cust) wrapText('Customer ' + d.cust).forEach(t => add(t)); o.push(rule); }
+  if (d.copy) { o.push({ banner: 'COPY' }); add(centre('Printed again 18 Oct 2026 11:05')); o.push(rule); }
+  add(leftRight('ITEM', 'TZS'), true);
+  d.lines.forEach(l => { if (l.qty) { wrapText(l.name).forEach(t => add(t)); add(leftRight('  ' + l.qty + ' x ' + num(l.unit), num(l.total))); } else add(leftRight(l.name, num(l.total))); });
+  o.push(rule);
+  add(leftRight(d.kind === 'payment' ? 'RECEIVED' : 'TOTAL', num(d.total)), true);
+  if (B.payment && !d.cancelled) {
+    if (d.kind === 'payment') add(leftRight('Paid by ' + d.method, num(d.paid)));
+    else if (d.paid >= d.total) add(leftRight('Paid (' + d.method + ')', num(d.paid)));
+    else { if (d.paid > 0) add(leftRight('Paid', num(d.paid))); add(leftRight('On credit', num(d.total - d.paid)), true); }
+    if (d.cust && d.balance !== 0) add(leftRight('Balance owed', num(d.balance)));
+  }
+  if (B.how && d.balance > 0 && !d.cancelled) { o.push(rule); add(centre('Pay by Lipa Namba')); add(centre(SHOP.lipa.split(' ')[0])); }
+  if (B.footer && RT.footer) { o.push(rule); wrapText(fillIn(RT.footer, d)).forEach(t => add(centre(t))); }
+  return o;
+}
+
+/* the paper, for the receipt screen and the settings preview: 'print' is the thermal roll, 'pdf' is the A6 page */
+const Paper = { props: { d: Object, mode: { type: String, default: 'print' } },
+  setup(p) { const lines = computed(() => printLines(p.d)); const B = RT.blocks;
+    return { lines, RT, B, LOGO, SHOP, rdate, num, money, fillIn }; },
+  template: `<div class="mx-auto" :class="mode === 'print' ? 'w-[264px]' : 'w-[300px]'">
+    <div v-if="mode === 'print'" class="paper px-[18px] pb-3 pt-5 font-mono text-[12px] leading-[16px]" aria-label="Receipt on the printer's paper">
+      <template v-for="(l, i) in lines" :key="i">
+        <img v-if="l.logo" :src="LOGO.bw" alt="Shop logo as the printer prints it" class="mx-auto mb-1 block w-full" style="image-rendering: pixelated">
+        <div v-else-if="l.banner" class="my-1 bg-neutral-900 py-0.5 text-center font-bold tracking-[.3em] text-white">{{ l.banner }}</div>
+        <div v-else :class="['whitespace-pre', l.b ? 'font-bold' : '']">{{ l.t || ' ' }}</div></template></div>
+    <div v-else class="paper px-6 pb-6 pt-6 font-sans text-[12px] leading-[17px]" aria-label="Receipt as a PDF">
+      <div v-if="d.cancelled" class="mb-3 rounded border-2 border-red-600 py-1 text-center text-sm font-bold tracking-widest text-red-600">CANCELLED</div>
+      <div class="text-center"><img v-if="B.logo && RT.logo" :src="LOGO.color" alt="Shop logo" class="mx-auto mb-2 h-12 w-auto">
+        <p v-if="B.shop" class="text-base font-bold">{{ SHOP.name }}</p>
+        <template v-if="B.contact"><p class="text-neutral-600">{{ RT.address }}</p><p class="text-neutral-600">{{ SHOP.phone }}<template v-if="RT.tin"> · TIN {{ RT.tin }}</template></p></template>
+        <p v-if="B.header && RT.header" class="mt-1 italic text-neutral-600">{{ fillIn(RT.header, d) }}</p></div>
+      <div v-if="B.meta" class="mt-4 grid grid-cols-2 gap-x-3 gap-y-0.5 border-y border-neutral-200 py-2"><span class="text-neutral-500">{{ d.kind === 'payment' ? 'Payment' : 'Receipt' }}</span><span class="text-right font-semibold">{{ d.number }}</span><span class="text-neutral-500">Date</span><span class="text-right">{{ rdate(d.day) }} {{ d.time }}</span><span class="text-neutral-500">Served by</span><span class="text-right">{{ d.by }}</span><template v-if="d.cust"><span class="text-neutral-500">Customer</span><span class="text-right">{{ d.cust }}</span></template></div>
+      <div v-if="d.copy" class="mt-3 rounded border border-neutral-400 py-0.5 text-center text-[11px] font-bold tracking-widest text-neutral-600">COPY · printed again 18 Oct 2026 11:05</div>
+      <table class="mt-3 w-full text-[12px]"><thead><tr class="border-b border-neutral-200 text-left text-[11px] uppercase tracking-wide text-neutral-500"><th class="pb-1 font-medium">Item</th><th class="pb-1 text-right font-medium">TZS</th></tr></thead>
+        <tbody><tr v-for="(l, i) in d.lines" :key="i" class="align-top"><td class="py-1">{{ l.name }}<span v-if="l.qty" class="block text-[11px] text-neutral-500">{{ l.qty }} × {{ num(l.unit) }}</span></td><td class="py-1 text-right tabular-nums">{{ num(l.total) }}</td></tr></tbody></table>
+      <div class="mt-2 flex items-baseline justify-between border-t border-neutral-900 pt-2 text-sm font-bold"><span>{{ d.kind === 'payment' ? 'Received' : 'Total' }}</span><span class="tabular-nums">{{ money(d.total) }}</span></div>
+      <template v-if="B.payment"><div v-if="d.paid >= d.total" class="mt-1 flex justify-between text-neutral-600"><span>Paid ({{ d.method }})</span><span class="tabular-nums">{{ num(d.paid) }}</span></div>
+        <div v-else class="mt-1 flex justify-between font-semibold"><span>On credit</span><span class="tabular-nums">{{ num(d.total - d.paid) }}</span></div>
+        <div v-if="d.cust && d.balance !== 0" class="flex justify-between text-neutral-600"><span>Balance owed</span><span class="tabular-nums">{{ num(d.balance) }}</span></div></template>
+      <p v-if="B.how && d.balance > 0" class="mt-3 text-center text-neutral-600">Pay by Lipa Namba {{ SHOP.lipa }}</p>
+      <p v-if="B.footer && RT.footer" class="mt-4 text-center font-medium">{{ fillIn(RT.footer, d) }}</p></div>
+    <div class="tear"></div></div>` };
+
+/* ---- the sale is done (or a receipt asked for again): print it, share it, or start the next one */
+const Receipt = { components: { Header, Icon, Btn, Pill, FooterBar, Paper },
+  setup() {
+    const d = computed(() => recData());
+    const fresh = computed(() => !d.value.copy);
+    const reason = computed(() => ({ off: S.printer + ' is off. Switch it on, then try again.', bt: 'Bluetooth is off on this phone. Turn it on, then try again.', none: 'No printer is chosen on this phone yet.' })[S.printFail]);
+    const run = () => { S.print = 'printing'; setTimeout(() => { S.print = S.printFail ? 'failed' : 'done'; }, 1100); };
+    const text = computed(() => printLines(d.value).filter(l => l.t !== undefined).map(l => l.t.trim()).filter(Boolean).join('\n'));
+    watch(() => S.route, () => { S.print = 'idle'; });
+    const left = computed(() => d.value.total - d.value.paid);
+    return { S, d, fresh, reason, run, back, tab, toast, money, left, text };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header v-if="!fresh" :title="d.kind === 'payment' ? 'Payment receipt' : 'Receipt'" pushed hide-search/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto px-4 pb-6" :style="fresh ? { paddingTop: 'calc(24px + var(--sa-top))' } : { paddingTop: '16px' }">
+      <div v-if="fresh" class="flex items-center gap-3"><span class="rise grid h-12 w-12 shrink-0 place-items-center rounded-full bg-success/15 text-success"><Icon name="Check" :size="26"/></span>
+        <div class="min-w-0 flex-1"><h1 class="text-xl font-semibold">{{ d.kind === 'payment' ? 'Payment taken' : 'Sale done' }}</h1><p class="truncate text-sm text-muted-foreground">{{ d.number }} · {{ d.cust || 'Walk-in customer' }}</p></div>
+        <div class="text-right"><p class="text-xl font-bold tracking-tight tnum">{{ money(d.total) }}</p><Pill :tone="d.kind === 'sale' && left > 0 ? 'warning' : 'success'">{{ d.kind === 'sale' && left > 0 ? money(left) + ' on credit' : 'Paid · ' + d.method }}</Pill></div></div>
+      <p v-else class="text-sm text-muted-foreground">A copy of {{ d.number }}. It says COPY, so it cannot pass for the first.</p>
+      <div v-if="S.print === 'failed'" class="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3.5" role="alert"><p class="flex items-center gap-2 text-sm font-semibold text-destructive"><Icon name="TriangleAlert" :size="16"/>It did not print</p><p class="mt-1 text-sm text-muted-foreground">{{ reason }} The sale is saved.</p>
+        <div class="mt-3 grid grid-cols-2 gap-2"><Btn v-if="S.printFail === 'none'" size="md" @click="S.sheet = 'printer'">Choose a printer</Btn><Btn v-else size="md" @click="run">Try again</Btn><Btn v="outline" size="md" @click="S.sheet = 'share'">Share instead</Btn></div></div>
+      <p v-if="S.print === 'done'" class="mt-4 flex items-center justify-center gap-2 rounded-xl bg-success/10 py-2.5 text-sm font-medium text-success" role="status"><Icon name="CircleCheck" :size="17"/>Printed on {{ S.printer }}</p>
+      <div class="mt-4"><Paper :d="d" mode="print"/></div>
+</div>
+    <FooterBar><div class="grid grid-cols-2 gap-2"><Btn :disabled="S.print === 'printing'" @click="run"><Icon name="Printer" :size="17"/>{{ S.print === 'printing' ? 'Printing…' : 'Print' }}</Btn><Btn v="outline" @click="S.sheet = 'share'"><Icon name="Share2" :size="17"/>Share PDF</Btn></div>
+      <div class="mt-2 grid gap-2" :class="fresh ? 'grid-cols-3' : 'grid-cols-2'"><Btn v="ghost" size="md" @click="toast('Receipt copied as text')"><Icon name="Copy" :size="15"/>Copy text</Btn><Btn v="ghost" size="md" @click="S.sheet = 'printer'"><Icon name="Printer" :size="15"/>Printer</Btn>
+        <template v-if="fresh"><Btn v="ghost" size="md" @click="d.kind === 'payment' ? back() : S.route = 'till'">{{ d.kind === 'payment' ? 'Done' : 'New sale' }}</Btn></template></div></FooterBar></div>` };
+
+/* a payment taken ends on its receipt as a sale does (D204) */
+function newPayment(cid, amt, method, ids) {
+  const n = 'P-00' + (91 + PAYMENTS.filter(p => p.fresh).length);
+  const sales = ids.length ? ids : SALES.filter(s => s.c === cid && (s.pay === 'unpaid' || s.pay === 'part')).map(s => s.id).slice(0, 1);
+  PAYMENTS.unshift({ id: n, c: cid, amt, acct: method === 'Cash' ? 'Cash drawer' : 'Lipa Namba', method, day: 'Today', time: '11:02', by: ME.value.name, sales: sales.length ? sales : ['S-1304'], fresh: true });
+  S.recSrc = { kind: 'payment', id: n, copy: false }; S.print = 'idle'; S.stack.push(S.route); S.route = 'receipt';
+}
+
+/* ---- the owner's Receipt settings: what shows, the logo, the words, and the paper as it will be */
+const ReceiptSettings = { components: { Header, Icon, Btn, Toggle, Seg, Sheet, FooterBar, Empty, Paper },
+  setup() {
+    const sample = computed(() => { const s = SALES.find(x => x.id === 'S-1288'); const c = cust(s.c), total = saleTotal(s);
+      return { kind: 'sale', number: s.id, day: s.day, time: s.time, by: s.by, cust: c.name, method: s.method, total, paid: s.paid, balance: c.owes, balText: money(c.owes), copy: false, cancelled: false, file: 'Receipt-' + s.id + '.pdf',
+        lines: s.lines.map(l => ({ name: prod(l[0]).name, qty: l[1], unit: prod(l[0]).price, total: prod(l[0]).price * l[1] })) }; });
+    const mode = ref('print'), focus = ref('footer'), owner = computed(() => S.role === 'owner');
+    const insert = (f) => { const k = focus.value === 'header' ? 'header' : 'footer'; RT[k] = ((RT[k] || '') + (RT[k] ? ' ' : '') + f).slice(0, k === 'header' ? 48 : 96); };
+    const setLogo = (on) => { RT.logo = on; toast(on ? 'Logo saved. The printer copy is made.' : 'Logo removed'); };
+    const input = 'flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring';
+    return { S, RT, RBLOCKS, FILLINS, LOGO, d: sample, mode, focus, owner, insert, setLogo, input, toast, back };
+  },
+  template: `<div class="relative flex min-h-0 flex-1 flex-col"><Header title="Receipt" :pushed="S.stack.length > 0" hide-search/>
+    <div v-if="!owner" class="scroll min-h-0 flex-1 overflow-y-auto"><Empty icon="Lock" title="Only Amina can change the receipt" text="You can print and share a receipt from any sale."/></div>
+    <template v-else><div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-4 p-3 pb-8">
+      <section class="rounded-xl border bg-card p-3.5"><div class="flex items-center justify-between"><div class="min-w-0"><h2 class="text-sm font-semibold">Preview</h2><p class="text-xs text-muted-foreground">With sale {{ d.number }}</p></div>
+          <button type="button" class="press inline-flex h-8 items-center gap-1.5 rounded-md border bg-background px-2.5 text-sm font-medium shadow-sm" @click="S.sheet = 'rpreview'"><Icon name="Maximize2" :size="14"/>Full size</button></div>
+        <div class="relative mt-3 max-h-[236px] overflow-hidden rounded-lg bg-muted/60 p-3"><div class="origin-top scale-[.86]"><Paper :d="d" mode="print"/></div><div class="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-muted/90 to-transparent"></div></div></section>
+      <section class="rounded-xl border bg-card p-3.5"><h2 class="text-sm font-semibold">Logo</h2>
+        <div v-if="RT.logo"><div class="mt-3 grid grid-cols-2 gap-2"><div><p class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Your logo</p><div class="grid h-[72px] place-items-center rounded-lg border bg-white p-1"><img :src="LOGO.color" alt="Your logo" class="max-h-full w-auto"></div></div>
+          <div><p class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Printed as</p><div class="grid h-[72px] place-items-center rounded-lg border bg-white p-1"><img :src="LOGO.bw" alt="The logo as the printer prints it" class="max-h-full w-auto" style="image-rendering: pixelated"></div></div></div>
+          <p class="mt-2.5 flex gap-2 text-xs text-muted-foreground"><Icon name="Info" :size="14" class="mt-0.5"/>Printers print black and white only. Light colours disappear, and photos turn into smudges. A bold, simple logo prints best.</p>
+          <div class="mt-3 grid grid-cols-2 gap-2"><Btn v="outline" size="md" @click="setLogo(true)"><Icon name="Upload" :size="15"/>Change logo</Btn><Btn v="destructive-outline" size="md" @click="setLogo(false)">Remove</Btn></div></div>
+        <div v-else class="mt-2 flex items-center gap-3"><span class="grid h-12 w-12 place-items-center rounded-lg border border-dashed text-muted-foreground"><Icon name="Image" :size="22"/></span><p class="min-w-0 flex-1 text-xs text-muted-foreground">No logo. The receipt starts with the shop's name. PNG or JPG, up to 2 MB.</p><Btn size="md" @click="setLogo(true)"><Icon name="Upload" :size="15"/>Add</Btn></div></section>
+      <section class="rounded-xl border bg-card p-3.5"><h2 class="text-sm font-semibold">What shows</h2><p class="text-xs text-muted-foreground">The order is fixed. Items and the total always show.</p>
+        <ul class="mt-1 divide-y"><li v-for="b in RBLOCKS" :key="b[0]" class="flex items-center gap-3 py-2.5"><span class="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-muted"><Icon :name="b[2]" :size="16"/></span><span class="min-w-0 flex-1 text-sm">{{ b[1] }}</span>
+          <span v-if="b[3]" class="text-xs text-muted-foreground">Always</span><Toggle v-else-if="b[0] === 'logo'" :model-value="RT.blocks.logo && RT.logo" :label="b[1]" :locked="!RT.logo" @update:model-value="RT.blocks.logo = $event"/><Toggle v-else v-model="RT.blocks[b[0]]" :label="b[1]"/></li></ul></section>
+      <section class="rounded-xl border bg-card p-3.5"><h2 class="text-sm font-semibold">Your words</h2>
+        <div class="mt-3 space-y-3"><label class="block text-sm font-medium">Address<input v-model="RT.address" :class="input" maxlength="64" @focus="focus = 'address'"></label>
+          <label class="block text-sm font-medium">TIN <span class="font-normal text-muted-foreground">(optional)</span><input v-model="RT.tin" :class="input" maxlength="20" inputmode="numeric" @focus="focus = 'tin'"></label>
+          <label class="block text-sm font-medium"><span class="flex justify-between">Header line<span class="font-normal text-muted-foreground tnum">{{ RT.header.length }}/48</span></span><input v-model="RT.header" :class="input" maxlength="48" @focus="focus = 'header'"></label>
+          <label class="block text-sm font-medium"><span class="flex justify-between">Footer line<span class="font-normal text-muted-foreground tnum">{{ RT.footer.length }}/96</span></span><input v-model="RT.footer" :class="input" maxlength="96" @focus="focus = 'footer'"></label></div>
+        <p class="mb-1.5 mt-3 text-xs text-muted-foreground">Tap to add to the header or the footer. They fill in by themselves.</p>
+        <div class="flex flex-wrap gap-1.5"><button v-for="f in FILLINS" :key="f" type="button" class="press h-8 rounded-md border bg-background px-2.5 font-mono text-xs shadow-sm" @click="insert(f)">{{ f }}</button></div>
+        <p class="mt-3 flex gap-2 text-xs text-muted-foreground"><Icon name="Info" :size="14" class="mt-0.5"/>This is a sales receipt, not a tax (TRA) receipt. The TIN is only printed.</p></section></div></div>
+      <FooterBar><Btn full @click="toast('Receipt saved')">Save receipt</Btn></FooterBar>
+      <Sheet :open="S.sheet === 'rpreview'" title="Preview" :sub="'With sale ' + d.number" tall @close="S.sheet = null"><div class="px-4 pb-6"><Seg v-model="mode" :tabs="[{ id: 'print', label: 'Printer, 58 mm' }, { id: 'pdf', label: 'PDF' }]"/><div class="mt-4"><Paper :d="d" :mode="mode"/></div></div></Sheet></template></div>` };
 
 /* ============================================================ Deliveries, Receive stock, Suppliers, End-of-day count */
 const delSummary = (d) => prod(d.lines[0][0]).name + ' × ' + d.lines[0][1] + (d.lines.length > 1 ? ' +' + (d.lines.length - 1) + ' more' : '');
@@ -1100,15 +1282,15 @@ const Users = { components: { Header, Icon, Av, Pill, Btn, Seg, Fab, Sheet, Rows
       <template #footer><Btn full :disabled="!email" @click="S.sheet = null; toast('Invitation sent to ' + email)">Send invitation</Btn></template></Sheet></div>` };
 
 const SettingsPage = { components: { Header, Icon, Toggle, Btn },
-  setup() { const name = ref('Office Shop'), tz = 'Africa/Dar_es_Salaam', req = ref(true), accent = ref('blue'), foot = ref('Asante! Karibu tena.');
-    return { name, tz, req, accent, foot, toast, sw: [['blue', '#2f6fe0'], ['teal', '#14937f'], ['violet', '#7c5ad8'], ['rose', '#d6456a'], ['amber', '#d06d0a']] }; },
+  setup() { const name = ref('Office Shop'), tz = 'Africa/Dar_es_Salaam', req = ref(true), accent = ref('blue');
+    return { name, tz, req, accent, go, toast, sw: [['blue', '#2f6fe0'], ['teal', '#14937f'], ['violet', '#7c5ad8'], ['rose', '#d6456a'], ['amber', '#d06d0a']] }; },
   template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="Settings"/>
     <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-4 p-3 pb-8">
       <div><p class="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Shop</p><div class="space-y-3 rounded-xl border bg-card p-4"><label class="block text-sm font-medium">Shop name<input v-model="name" class="mt-1.5 flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"></label>
         <div class="flex items-center justify-between text-sm"><span class="text-muted-foreground">Money</span><span class="font-medium">TZS, whole shillings</span></div><div class="flex items-center justify-between text-sm"><span class="text-muted-foreground">Time zone</span><span class="font-medium">{{ tz }}</span></div></div></div>
       <div><p class="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Colour</p><div class="flex gap-3 rounded-xl border bg-card p-4"><button v-for="c in sw" :key="c[0]" type="button" :aria-label="c[0]" :aria-pressed="accent === c[0]" class="press grid h-9 w-9 place-items-center rounded-full ring-offset-2 ring-offset-background" :class="accent === c[0] ? 'ring-2 ring-foreground' : ''" :style="{ background: c[1] }" @click="accent = c[0]; toast('Colour changes for everyone')"><Icon v-if="accent === c[0]" name="Check" :size="16" class="text-white"/></button></div></div>
       <div><p class="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Security</p><div class="flex items-center gap-3 rounded-xl border bg-card px-3.5 py-3"><span class="min-w-0 flex-1"><span class="block text-sm font-medium">Two-step sign-in for everyone</span><span class="block text-xs text-muted-foreground">A code by SMS or email after the password</span></span><Toggle v-model="req" label="Two-step sign-in for everyone"/></div></div>
-      <div><p class="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Receipt</p><div class="rounded-xl border bg-card p-4"><label class="block text-sm font-medium">Last line<input v-model="foot" class="mt-1.5 flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"></label></div></div>
+      <div><p class="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Receipt</p><button type="button" class="press flex w-full items-center gap-3 rounded-xl border bg-card px-3.5 py-3 text-left" @click="go('receiptsettings')"><span class="grid h-9 w-9 place-items-center rounded-md bg-muted"><Icon name="ReceiptText" :size="19"/></span><span class="min-w-0 flex-1"><span class="block text-sm font-medium">Receipt</span><span class="block text-xs text-muted-foreground">Logo, words and what shows on the paper</span></span><Icon name="ChevronRight" :size="18" class="text-muted-foreground"/></button></div>
       <Btn full @click="toast('Settings saved')">Save settings</Btn></div></div></div>` };
 
 /* ---- before you are in: sign in, the code, the lock, a session that ended */
@@ -1187,7 +1369,7 @@ const DesignPage = { components: { Header, Icon, Av, Tile, Pill, AgeChip, SaleSt
 const SCREENS = {
   home: Home, sales: SalesList, customers: CustomersList, alerts: Alerts, till: Till, receipt: Receipt, sale: SalePage, customer: Customer, profile: Profile, waiting: Waiting, design: DesignPage,
   payments: PaymentsList, payment: PaymentPage, products: ProductsList, product: ProductPage, movements: Movements, deliveries: Deliveries, delivery: DeliveryPage, receive: Receive,
-  suppliers: Suppliers, supplier: SupplierPage, count: Count, expenses: Expenses, accounts: Accounts, account: AccountPage, alertsettings: AlertSettings, users: Users, settings: SettingsPage,
+  suppliers: Suppliers, supplier: SupplierPage, count: Count, expenses: Expenses, accounts: Accounts, account: AccountPage, alertsettings: AlertSettings, users: Users, settings: SettingsPage, receiptsettings: ReceiptSettings,
   login: SignIn, twofa: TwoStep, lock: LockView, ended: SessionEnded
 };
 const Screen = { components: { ...SCREENS, Placeholder },
@@ -1197,11 +1379,11 @@ const Screen = { components: { ...SCREENS, Placeholder },
 const Picker = { components: { Icon },
   setup() {
     const groups = [
-      ['Sell', [['home', 'Home', 'House'], ['waiting', 'Waiting for you', 'Hourglass'], ['till', 'Till', 'ShoppingCart'], ['receipt', 'Receipt', 'CircleCheck'], ['sales', 'Sales', 'Receipt'], ['sale', 'Sale page', 'FileText'], ['payments', 'Payments', 'Wallet'], ['payment', 'Payment page', 'FileText']]],
+      ['Sell', [['home', 'Home', 'House'], ['waiting', 'Waiting for you', 'Hourglass'], ['till', 'Till', 'ShoppingCart'], ['receipt', 'Sale done, receipt', 'CircleCheck'], ['sales', 'Sales', 'Receipt'], ['sale', 'Sale page', 'FileText'], ['payments', 'Payments', 'Wallet'], ['payment', 'Payment page', 'FileText']]],
       ['People', [['customers', 'Customers', 'Users'], ['customer', 'Customer page', 'User'], ['suppliers', 'Suppliers', 'Truck'], ['supplier', 'Supplier page', 'User']]],
       ['Stock', [['products', 'Products', 'Package'], ['product', 'Product page', 'FileText'], ['movements', 'Stock movements', 'ArrowLeftRight'], ['deliveries', 'Deliveries', 'PackagePlus'], ['delivery', 'Delivery page', 'FileText'], ['receive', 'Receive stock', 'PackagePlus'], ['count', 'End-of-day count', 'ClipboardCheck']]],
       ['Money', [['expenses', 'Expenses', 'Coins'], ['accounts', 'Accounts', 'Landmark'], ['account', 'Account page', 'FileText']]],
-      ['You and the shop', [['alerts', 'Alerts', 'Bell'], ['alertsettings', 'Alerts and reminders', 'BellRing'], ['profile', 'Profile', 'CircleUser'], ['users', 'Users', 'UserCog'], ['settings', 'Settings', 'Settings'], ['design', 'Design system', 'Palette']]],
+      ['You and the shop', [['alerts', 'Alerts', 'Bell'], ['alertsettings', 'Alerts and reminders', 'BellRing'], ['profile', 'Profile', 'CircleUser'], ['users', 'Users', 'UserCog'], ['settings', 'Settings', 'Settings'], ['receiptsettings', 'Receipt settings', 'ReceiptText'], ['design', 'Design system', 'Palette']]],
       ['Getting in', [['login', 'Sign in', 'LogIn'], ['twofa', 'Two-step code', 'ShieldCheck'], ['lock', 'Locked', 'Lock'], ['ended', 'Session ended', 'LockKeyhole']]]
     ];
     const to = (r) => { S.stack = []; S.drawer = false; S.sheet = null; S.dialog = null; S.search = false; S.cartOpen = false; if (r === 'till' && !S.cart.length) { addP(PRODUCTS[0]); addP(PRODUCTS[1]); } if (r === 'receipt' && !S.receipt) S.receipt = SALES[0]; S.route = r; };
@@ -1210,6 +1392,10 @@ const Picker = { components: { Icon },
       cart: () => { to('till'); S.cartOpen = true; }, credit: () => { to('till'); S.cartOpen = true; S.customer = 'c1'; S.pay = 'credit'; addP(PRODUCTS[0]); addP(PRODUCTS[0]); S.part = true; S.partAmt = 1000; },
       filter: () => { to('sales'); S.sheet = 'filter'; }, who: () => { to('till'); S.sheet = 'cust'; }, pay: () => { S.route = 'sale'; S.saleId = 'S-1304'; S.sheet = 'takepay'; },
       call: () => { S.route = 'customer'; S.cid = 'c1'; S.sheet = 'call'; }, printer: () => { S.route = 'profile'; S.sheet = 'printer'; },
+      reprint: () => { S.stack = ['sales', 'sale']; S.saleId = 'S-1299'; S.recSrc = { kind: 'sale', id: 'S-1299', copy: true }; S.print = 'idle'; S.route = 'receipt'; },
+      paymentreceipt: () => { S.stack = ['payments', 'payment']; S.payId = 'P-0089'; S.recSrc = { kind: 'payment', id: 'P-0089', copy: false }; S.print = 'idle'; S.route = 'receipt'; },
+      cancelled: () => { S.stack = ['sales', 'sale']; const u = SALES.find(x => x.pay === 'undone') || SALES[5]; S.recSrc = { kind: 'sale', id: u.id, copy: true }; S.print = 'idle'; S.route = 'receipt'; },
+      sharesheet: () => { S.route = 'receipt'; S.sheet = 'share'; },
       undo: () => { S.route = 'sale'; S.saleId = 'S-1299'; S.dialog = { title: 'Undo S-1299?', text: 'The stock goes back on the shelf and Neema Kimaro’s balance changes.', action: 'Undo the sale', tone: 'destructive', cancel: 'Keep the sale' }; }
     };
     const states = [['data', 'Data'], ['loading', 'Loading'], ['empty', 'Empty'], ['error', 'Error']];
@@ -1219,8 +1405,8 @@ const Picker = { components: { Icon },
     <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Signed in as</p><div class="grid grid-cols-2 gap-1 rounded-lg bg-[hsl(var(--canvas))] p-1 ring-1 ring-black/10"><button v-for="r in [['owner','Amina (owner)'],['cashier','Rehema (cashier)']]" :key="r[0]" type="button" @click="S.role = r[0]" :class="['h-8 rounded-md text-xs font-medium', S.role === r[0] ? 'bg-white text-black shadow dark:bg-neutral-700 dark:text-white' : 'opacity-60']">{{ r[1] }}</button></div></div>
     <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Theme</p><div class="grid grid-cols-2 gap-1 rounded-lg bg-[hsl(var(--canvas))] p-1 ring-1 ring-black/10"><button type="button" @click="S.dark = false; S.themeMode = 'light'" :class="['h-8 rounded-md text-xs font-medium', !S.dark ? 'bg-white text-black shadow' : 'opacity-60']">Light</button><button type="button" @click="S.dark = true; S.themeMode = 'dark'" :class="['h-8 rounded-md text-xs font-medium', S.dark ? 'bg-neutral-700 text-white shadow' : 'opacity-60']">Dark</button></div></div>
     <div v-for="g in groups" :key="g[0]"><p class="mb-1 text-[11px] font-semibold uppercase tracking-wider opacity-60">{{ g[0] }}</p><div class="grid gap-0.5"><button v-for="s in g[1]" :key="s[0]" type="button" @click="to(s[0])" :class="['flex h-8 items-center gap-2 rounded-md px-2 text-left', S.route === s[0] ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']"><Icon :name="s[2]" :size="14" class="opacity-60"/>{{ s[1] }}</button></div></div>
-    <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Phone state</p><div class="grid grid-cols-2 gap-1"><button type="button" @click="S.net = S.net === 'offline' ? 'online' : 'offline'" :class="['h-8 rounded-md px-2 text-left text-xs', S.net === 'offline' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">No signal</button><button type="button" @click="S.update = S.update === 'available' ? null : 'available'" :class="['h-8 rounded-md px-2 text-left text-xs', S.update === 'available' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Update ready</button><button type="button" @click="S.update = S.update === 'required' ? null : 'required'" :class="['h-8 rounded-md px-2 text-left text-xs', S.update === 'required' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Update required</button></div></div>
-    <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Open on top</p><div class="grid grid-cols-2 gap-1"><button v-for="o in [['drawer','Drawer'],['search','Search'],['cart','Cart'],['credit','Credit, part paid'],['filter','Filters'],['who','Who is buying'],['pay','Take payment'],['call','Call sheet'],['printer','Printer'],['undo','Confirm undo']]" :key="o[0]" type="button" @click="over[o[0]]()" class="h-9 rounded-md px-2 text-left text-xs hover:bg-black/5 dark:hover:bg-white/10">{{ o[1] }}</button></div></div>
+    <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Phone state</p><div class="grid grid-cols-2 gap-1"><button type="button" @click="S.net = S.net === 'offline' ? 'online' : 'offline'" :class="['h-8 rounded-md px-2 text-left text-xs', S.net === 'offline' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">No signal</button><button type="button" @click="S.update = S.update === 'available' ? null : 'available'" :class="['h-8 rounded-md px-2 text-left text-xs', S.update === 'available' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Update ready</button><button type="button" @click="S.update = S.update === 'required' ? null : 'required'" :class="['h-8 rounded-md px-2 text-left text-xs', S.update === 'required' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Update required</button><button type="button" @click="S.printFail = S.printFail === 'off' ? null : 'off'" :class="['h-8 rounded-md px-2 text-left text-xs', S.printFail === 'off' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Printer is off</button><button type="button" @click="S.printFail = S.printFail === 'bt' ? null : 'bt'" :class="['h-8 rounded-md px-2 text-left text-xs', S.printFail === 'bt' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Bluetooth is off</button><button type="button" @click="S.printFail = S.printFail === 'none' ? null : 'none'" :class="['h-8 rounded-md px-2 text-left text-xs', S.printFail === 'none' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">No printer chosen</button></div></div>
+    <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Open on top</p><div class="grid grid-cols-2 gap-1"><button v-for="o in [['drawer','Drawer'],['search','Search'],['cart','Cart'],['credit','Credit, part paid'],['filter','Filters'],['who','Who is buying'],['pay','Take payment'],['call','Call sheet'],['printer','Printer'],['reprint','Reprint a sale'],['paymentreceipt','Payment receipt'],['cancelled','Cancelled sale receipt'],['sharesheet','Share list'],['undo','Confirm undo']]" :key="o[0]" type="button" @click="over[o[0]]()" class="h-9 rounded-md px-2 text-left text-xs hover:bg-black/5 dark:hover:bg-white/10">{{ o[1] }}</button></div></div>
     <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">List state</p><div class="grid grid-cols-4 gap-1 rounded-lg bg-[hsl(var(--canvas))] p-1 ring-1 ring-black/10"><button v-for="s in states" :key="s[0]" type="button" @click="S.list = s[0]; if (S.route !== 'sales') to('sales')" :class="['h-8 rounded-md text-[11px] font-medium', S.list === s[0] ? 'bg-white text-black shadow dark:bg-neutral-700 dark:text-white' : 'opacity-60']">{{ s[1] }}</button></div></div></div>` };
 
 const Root = { components: { Screen, TabBar, Drawer, SearchView, PhoneSheets, Confirm, Toast, Picker, Icon, NetBar, UpdateBar, UpdateRequired },

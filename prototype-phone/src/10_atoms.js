@@ -42,6 +42,7 @@ const SALES = [
   { id: 'S-1302', c: 'c3', day: 'Today', time: '10:11', lines: [['p2', 2]], pay: 'paid', method: 'M-Pesa', by: 'Rehema' },
   { id: 'S-1301', c: 'c21', day: 'Today', time: '09:58', lines: [['p1', 1]], pay: 'unpaid', method: 'Credit', by: 'Rehema' },
   { id: 'S-1299', c: 'c1', day: 'Today', time: '09:23', lines: [['p1', 1]], pay: 'unpaid', method: 'Credit', by: 'Rehema' },
+  { id: 'S-1296', c: 'c0', day: 'Today', time: '08:41', lines: [['p3', 1]], pay: 'undone', method: 'Cash', by: 'Rehema', undone: true },
   { id: 'S-1297', c: 'c0', day: 'Today', time: '08:54', lines: [['p1', 1], ['p4', 1]], pay: 'paid', method: 'Cash', by: 'Rehema', undo: true },
   { id: 'S-1290', c: 'c9', day: 'Yesterday', time: '11:09', lines: [['p1', 1]], pay: 'unpaid', method: 'Credit', by: 'Rehema', undoAsked: true },
   { id: 'S-1288', c: 'c23', day: 'Yesterday', time: '10:04', lines: [['p1', 1], ['p3', 2]], pay: 'part', method: 'Credit', by: 'Amina', paid: 1000 },

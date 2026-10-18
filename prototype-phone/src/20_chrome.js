@@ -61,13 +61,13 @@ const TabBar = { components: { Icon },
           <span v-if="it[0] === 'alerts' && unread" class="absolute right-3 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">{{ unread }}</span></span>
         <span :class="['text-[11px]', S.route === it[0] ? 'font-semibold text-primary' : 'font-medium text-muted-foreground']">{{ it[1] }}</span></button></template></nav>` };
 
-const ROOTS = ['payments', 'products', 'movements', 'deliveries', 'count', 'accounts', 'expenses', 'suppliers', 'users', 'settings', 'alertsettings'];
+const ROOTS = ['payments', 'products', 'movements', 'deliveries', 'count', 'accounts', 'expenses', 'suppliers', 'users', 'settings', 'alertsettings', 'receiptsettings'];
 const MENU = [
   { label: 'Sell', items: [['Till', 'ShoppingCart', 'till'], ['Sales', 'Receipt', 'sales'], ['Payments', 'Wallet', 'payments']] },
   { label: 'People', items: [['Customers', 'Users', 'customers'], ['Suppliers', 'Truck', 'suppliers', 'owner']] },
   { label: 'Stock', items: [['Products', 'Package', 'products'], ['Stock movements', 'ArrowLeftRight', 'movements'], ['Deliveries', 'PackagePlus', 'deliveries', 'owner'], ['End-of-day count', 'ClipboardCheck', 'count']] },
   { label: 'Money', owner: true, items: [['Accounts', 'Landmark', 'accounts'], ['Expenses', 'Coins', 'expenses']] },
-  { label: 'Shop', owner: true, items: [['Waiting for you', 'Hourglass', 'waiting', 'badge'], ['Users', 'UserCog', 'users'], ['Settings', 'Settings', 'settings']] },
+  { label: 'Shop', owner: true, items: [['Waiting for you', 'Hourglass', 'waiting', 'badge'], ['Users', 'UserCog', 'users'], ['Settings', 'Settings', 'settings'], ['Receipt', 'ReceiptText', 'receiptsettings']] },
   { label: 'You', items: [['Notifications', 'Bell', 'alerts', 'unread'], ['Alerts and reminders', 'BellRing', 'alertsettings'], ['Profile', 'CircleUser', 'profile']] }
 ];
 const Drawer = { components: { Icon },
