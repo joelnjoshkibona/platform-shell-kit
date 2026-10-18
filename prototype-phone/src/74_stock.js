@@ -24,7 +24,7 @@ const DeliveryPage = { components: { Header, Icon, Av, Pill, Btn, Card, Row, Foo
     const diff = computed(() => d.value.lines.filter(l => got[l[0]] !== l[1]));
     const confirmCheck = () => { S.sheet = null; d.value.status = d.value.paid >= d.value.total ? 'paid' : 'unpaid'; toast(diff.value.length ? 'Checked, with a difference' : 'Delivery checked'); };
     const pay = (a, m) => { S.sheet = null; d.value.paid += a; d.value.status = d.value.paid >= d.value.total ? 'paid' : 'part'; s.value.owes = Math.max(0, s.value.owes - a); toast(money(a) + ' paid, ' + m); };
-    return { S, d, s, owner, left, got, why, diff, confirmCheck, pay, prod, money, go, DSTAT, tint };
+    return { S, d, s, owner, left, got, why, diff, confirmCheck, pay, prod, money, go, toast, DSTAT, tint };
   },
   template: `<div class="flex min-h-0 flex-1 flex-col"><Header :title="d.id" pushed hide-search/>
     <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-3 p-3 pb-6">

@@ -904,7 +904,7 @@ const DeliveryPage = { components: { Header, Icon, Av, Pill, Btn, Card, Row, Foo
     const diff = computed(() => d.value.lines.filter(l => got[l[0]] !== l[1]));
     const confirmCheck = () => { S.sheet = null; d.value.status = d.value.paid >= d.value.total ? 'paid' : 'unpaid'; toast(diff.value.length ? 'Checked, with a difference' : 'Delivery checked'); };
     const pay = (a, m) => { S.sheet = null; d.value.paid += a; d.value.status = d.value.paid >= d.value.total ? 'paid' : 'part'; s.value.owes = Math.max(0, s.value.owes - a); toast(money(a) + ' paid, ' + m); };
-    return { S, d, s, owner, left, got, why, diff, confirmCheck, pay, prod, money, go, DSTAT, tint };
+    return { S, d, s, owner, left, got, why, diff, confirmCheck, pay, prod, money, go, toast, DSTAT, tint };
   },
   template: `<div class="flex min-h-0 flex-1 flex-col"><Header :title="d.id" pushed hide-search/>
     <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-3 p-3 pb-6">
@@ -1017,7 +1017,7 @@ const Expenses = { components: { Header, Icon, Pill, Btn, Empty, Chips, StickyBa
     const decide = (yes) => { cur.value.st = yes ? 'ok' : 'declined'; S.expOpen = null; toast(yes ? 'Approved' : 'Declined'); };
     const photo = ref(false);
     const save = () => { const n = S.newExp; EXPENSES.unshift({ id: 'EXP-00' + (37 + EXPENSES.length - 4), cat: n.cat, note: n.note || n.cat, amt: n.amt, acct: n.acct, day: 'Today', by: S.role === 'owner' ? 'Amina' : 'Rehema', st: S.role === 'owner' ? 'ok' : 'waiting' }); S.sheet = null; toast(S.role === 'owner' ? 'Expense saved' : 'Sent to Amina'); S.newExp = { amt: 0, cat: 'Transport', acct: 'Cash drawer', note: '' }; photo.value = false; };
-    return { S, rows, groups, owner, cur, decide, save, photo, EXP_CATS, catIcon, money, week: EXPENSES.reduce((t, e) => t + e.amt, 0) };
+    return { S, rows, groups, owner, cur, decide, save, photo, EXP_CATS, catIcon, money, toast, week: EXPENSES.reduce((t, e) => t + e.amt, 0) };
   },
   template: `<div class="relative flex min-h-0 flex-1 flex-col"><Header title="Expenses"/>
     <div class="scroll min-h-0 flex-1 overflow-y-auto"><StickyBar><Chips v-model="S.expCat" :items="[['all', 'All'], ...EXP_CATS.map(c => [c[0], c[0].split(' ')[0]])]"/></StickyBar>

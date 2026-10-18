@@ -8,7 +8,7 @@ const Expenses = { components: { Header, Icon, Pill, Btn, Empty, Chips, StickyBa
     const decide = (yes) => { cur.value.st = yes ? 'ok' : 'declined'; S.expOpen = null; toast(yes ? 'Approved' : 'Declined'); };
     const photo = ref(false);
     const save = () => { const n = S.newExp; EXPENSES.unshift({ id: 'EXP-00' + (37 + EXPENSES.length - 4), cat: n.cat, note: n.note || n.cat, amt: n.amt, acct: n.acct, day: 'Today', by: S.role === 'owner' ? 'Amina' : 'Rehema', st: S.role === 'owner' ? 'ok' : 'waiting' }); S.sheet = null; toast(S.role === 'owner' ? 'Expense saved' : 'Sent to Amina'); S.newExp = { amt: 0, cat: 'Transport', acct: 'Cash drawer', note: '' }; photo.value = false; };
-    return { S, rows, groups, owner, cur, decide, save, photo, EXP_CATS, catIcon, money, week: EXPENSES.reduce((t, e) => t + e.amt, 0) };
+    return { S, rows, groups, owner, cur, decide, save, photo, EXP_CATS, catIcon, money, toast, week: EXPENSES.reduce((t, e) => t + e.amt, 0) };
   },
   template: `<div class="relative flex min-h-0 flex-1 flex-col"><Header title="Expenses"/>
     <div class="scroll min-h-0 flex-1 overflow-y-auto"><StickyBar><Chips v-model="S.expCat" :items="[['all', 'All'], ...EXP_CATS.map(c => [c[0], c[0].split(' ')[0]])]"/></StickyBar>
