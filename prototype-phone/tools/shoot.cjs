@@ -1,5 +1,5 @@
 const { chromium } = require('../../tools/prototype-shots/node_modules/playwright');
-const OUT = process.argv[2] || __dirname + '/../screenshots'; const FILE = 'file://' + 'file://' + require('path').resolve(__dirname, '../index.html') + '';
+const OUT = process.argv[2] || __dirname + '/../screenshots'; const FILE = 'file://' + require('path').resolve(__dirname, '../index.html');
 const only = process.argv[3] ? process.argv[3].split(',') : null;
 (async () => {
   const b = await chromium.launch(); const errs = [];
