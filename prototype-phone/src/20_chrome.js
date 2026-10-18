@@ -39,7 +39,7 @@ const Toggle = { props: { modelValue: Boolean, label: String, locked: Boolean },
 
 /* ============================================================ the shell: header, bottom bar, drawer */
 const Header = { props: { title: String, pushed: Boolean, hideSearch: Boolean }, components: { Icon },
-  setup() { return { S, back, ME }; },
+  setup() { return { S, back, go, ME }; },
   template: `<header class="relative z-20 flex shrink-0 items-center gap-1 border-b bg-background px-2" :style="{ paddingTop: 'var(--sa-top)', height: 'calc(56px + var(--sa-top))' }">
     <button v-if="!pushed" type="button" class="press grid h-9 w-9 place-items-center rounded-full" aria-label="Open menu" @click="S.drawer = true"><Icon name="Menu" :size="22"/></button>
     <button v-else type="button" class="press grid h-9 w-9 place-items-center rounded-full" aria-label="Back" @click="back()"><Icon name="ChevronLeft" :size="24"/></button>
