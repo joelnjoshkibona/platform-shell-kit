@@ -32,7 +32,7 @@ from one app to the next. Each rediscovered the same bugs; none wrote the rules 
    failure; Agrovet and Jumla the same by design or accident.
 3. **Nothing reacts to the phone's movements:** pause/resume are ignored, polling continues in the background,
    nothing refreshes on return, and a killed process loses an unsaved cart (Jumla, Agrovet) .
-4. **Tokens in plain `localStorage`**, `allowBackup=true`, no lock, and logout leaves the cart/drafts of the last person.
+4. **Credentials in plain storage**, `allowBackup=true`, no lock, and logout leaves the cart/drafts of the last person. Cobley and DevBiz keep the sign-in token in `localStorage`. Agrovet and Jumla send a shared API key baked into the web bundle (`VITE_API_AUTH_KEY`, hashed hourly, `axiosClient.ts`) on every request, and keep the user record and `client_id` in `localStorage` (checked 2026-10-18); anyone can read that key out of the APK. `allowBackup="true"` in all of them.
 5. **The Back key** closes nothing but the page: full-screen pickers, the sidebar and even the "mandatory update" dialog
    can be left with Back (Cobley, Jumla; DevBiz P52/D199 fixed layers, not yet the rest).
 6. **A write that may or may not have happened** (a timed-out sale) can be repeated: no idempotency key anywhere but a
