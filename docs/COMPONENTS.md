@@ -13,6 +13,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - **Overlays**: DropdownMenu, Dialog · Sheet
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, View as banner
 - **Data**: List rows, Charts, List toolbar · Filters, List card, Approval steps
+- **Phone**: Phone foundations, Lock screen, Session ended, Permission ask, Action sheet, Scan view, Printer picker, Freshness stamp, Bottom bar, No connection, App updates, Back key hint
 
 ## Actions
 
@@ -862,3 +863,300 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: Rejection needs a reason
 - Do: Acting under a delegation is labelled
 - Don't: Let a requester approve their own request
+
+## Phone
+
+### Phone foundations
+
+`src/styles (--sa-*), src/phone/ (lifecycle, network, backstack)`
+
+| Spec | Value |
+| --- | --- |
+| Width | designed at 390; checked at 360, 390, 768 and 1280. The layout is the web shell’s: the phone shows its own header and sheets below 640px |
+| Header (P56) | below 640px only the menu, the title, search and the avatar; Notifications, View as and the theme live in the avatar menu, with a dot on the avatar when something is unread |
+| Safe areas (P62) | one contract: --sa-top / -bottom / -left / -right = the injected inset in px, env(safe-area-inset-*) behind it. Everything fixed to an edge adds its inset: header, bottom bar, sheets, toasts |
+| Keyboard (P62) | the view shrinks (100dvh); the focused field is scrolled to about 30% from the top after 300 ms; the primary action sits in a BottomBar above the keyboard |
+| Layers (P61) | content 0 · header 30 · dialogs and sheets 50 · toasts 60 · action sheet 96 · back hint 100 · scan 108 · update required 110 · session ended 111 · lock 112 · curtain 120. Back closes the top one first |
+| Touch | phone pieces: 48px buttons, 52px rows, 56px keypad keys. The web shell’s controls keep the sizes they are drawn at |
+| Motion | short fades and rises (120 ms); nothing depends on a gesture; no pull to refresh (an explicit Refresh and the refresh on return, P58); reduced motion removes the movement |
+| Variants | header · safe areas · keyboard · layers |
+| Used in | Every screen on a phone. |
+
+- Do: Add the safe-area inset to everything fixed to an edge
+- Do: Use 100dvh and a BottomBar so the action rides above the keyboard
+- Do: Let Back close the top layer first (layers table above)
+- Do: Keep the phone header to the menu, title, search and avatar
+- Don't: Hide a feature behind a gesture only
+- Don't: Add pull to refresh (use Refresh and refresh on return)
+- Don't: Use position: fixed for something that must clear the keyboard without a BottomBar
+- Don't: Send Cache-Control request headers from the web view (CORS preflight): bust with a query parameter
+
+### Lock screen
+
+`src/components/app/phone-app/LockScreen.vue`
+
+| Spec | Value |
+| --- | --- |
+| When | the owner turned the lock on and the app was away longer than her setting (default 5 minutes), or it was killed |
+| Look | full screen over everything (layer 112): the mark in a 56px tile, "<Product> is locked", one line of help |
+| Fingerprint | primary 48px button; "Use PIN instead" below it |
+| PIN | 4 dots and a 3×4 keypad, 48px keys; wrong PIN shakes once and clears; five wrong PINs sign out |
+| Always | Sign out as a small link at the bottom; unlocking returns to the same screen with its state |
+| Sign out | clears the cart, drafts and caches of this phone (P57) |
+| Variants | fingerprint · PIN |
+| Used in | The whole app, when the lock is on. |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `mode` | `'bio' \| 'pin'` | `'bio'` | Which way it opens; the person can switch |
+| `inline` | `boolean` | `false` | Prototype/demo only: draw inside a phone mock instead of over the page |
+
+**Emits:** `unlock`
+
+- Do: Return to the same screen with its state after unlocking
+- Do: Offer Sign out on the lock screen itself
+- Do: Wipe cart, drafts and caches on sign out
+- Don't: Lock while the system installer, a share sheet or a call is up (the app is only away)
+- Don't: Keep the PIN anywhere but the secure store (hashed)
+- Don't: Show business data behind a translucent lock
+
+### Session ended
+
+`src/components/app/phone-app/SessionExpired.vue`
+
+| Spec | Value |
+| --- | --- |
+| When | the server answered 401: the session ended. Never for a lost signal (that is P59) |
+| Look | full screen (layer 111): lock icon on a warning tint, "You were signed out", why, one 48px button |
+| Promise | what was open (cart, drafts) is kept on the phone for this account and comes back after signing in |
+| After | Sign in again opens the sign-in screen; the person lands where they were |
+| Variants | one state |
+| Used in | Any screen, when the session ends. |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `inline` | `boolean` | `false` | Prototype/demo only |
+
+**Emits:** `signin`
+
+- Do: Show it only for a 401 (the server ended the session)
+- Do: Say that what was open is kept for this account
+- Don't: Show it for no signal (P51, P59) or a failed request
+- Don't: Clear drafts or the cart when it appears
+
+### Permission ask
+
+`src/components/app/phone-app/PermissionAsk.vue (PermissionCard)`
+
+| Spec | Value |
+| --- | --- |
+| When | at the moment of need (Scan asks for the camera), never at start; the reason comes first |
+| Card | 48px icon circle, title, why, a muted line "Without it …" saying what still works, then Allow and Not now (48px) |
+| Asked | Allow opens Android’s own prompt; the app never blocks on it and a denial never throws |
+| Denied for good | warning icon, "<Thing> is off for <Product>", "Android will not ask again", Open Settings; the feature offers its fallback (type the code, share as text) |
+| Kinds | camera · Bluetooth · notifications (and Install unknown apps, with the updater) |
+| Variants | ask · denied for good |
+| Used in | Scan, photo, printing, notifications, the updater. |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `kind` | `'camera' \| 'bluetooth' \| 'notifications'` | `'camera'` | Which permission |
+| `state` | `'ask' \| 'forever'` | `'ask'` | forever = Android will not ask again |
+
+**Emits:** `allow`, `later`, `settings`
+
+- Do: Ask at the moment of need, with the reason first
+- Do: Say what still works without it
+- Do: Offer the fallback (type the code, share as text)
+- Don't: Ask at start
+- Don't: Block the screen on the answer or throw on a denial
+- Don't: Ask again in the same session after Not now
+
+### Action sheet
+
+`src/components/app/phone-app/ActionSheet.vue`
+
+| Spec | Value |
+| --- | --- |
+| Use | the actions a phone has that a desktop does not: call, WhatsApp, SMS, copy, share |
+| Look | bottom sheet, rounded top 16px, handle, title and a sub line (the number), rows 52px with a 36px icon tile, hint on the right, Cancel last (outline, 44px) |
+| Behaviour | tap an action opens the other app (tel:, wa.me, sms:) and the app expects to come back (P58); Back and a tap outside close it |
+| Safe area | bottom padding adds --sa-bottom |
+| Where | a customer’s number anywhere it is shown, and Share on a receipt |
+| Variants | call · WhatsApp · SMS · copy |
+| Used in | Customers, receipts, suppliers. |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `open` | `boolean` | `false` | v-model:open |
+| `title` | `string` | – | The person or thing (the customer’s name) |
+| `sub` | `string` | – | A second line (the number) |
+| `actions` | `{ id, icon, label, hint? }[]` | `[]` | Rows, in order |
+| `inline` | `boolean` | `false` | Prototype/demo only |
+
+**Emits:** `update:open` (boolean), `pick` ({ id })
+
+- Do: Open tel:, wa.me and sms: links through the system, then expect to come back (P58)
+- Do: Put Cancel last
+- Do: Add --sa-bottom to the bottom padding
+- Don't: More than six rows
+- Don't: Put a destructive action here without confirmation
+
+### Scan view
+
+`src/components/app/phone-app/ScanView.vue`
+
+| Spec | Value |
+| --- | --- |
+| Look | black, full screen (layer 108): close 40px round, title, light toggle; a 17rem × 9rem frame with four white corners and a primary line |
+| Reading | reads by itself; a beep and a short vibration on each code; the same code twice in a second counts once |
+| Several | stays open; the button says "Done · 3 scanned" |
+| Always | Type the code instead (no permission, a worn label); denied camera goes to the Permission ask first |
+| Back | closes the view and ends the scan; nothing is added |
+| Variants | one · several |
+| Used in | The till, receiving stock, counting. |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `mode` | `'single' \| 'multi'` | `'single'` | multi stays open and counts |
+| `count` | `number` | `0` | Codes read so far (multi) |
+| `inline` | `boolean` | `false` | Prototype/demo only |
+
+**Emits:** `close`, `type`, `done`
+
+- Do: Ask for the camera first (Permission ask)
+- Do: Always offer Type the code instead
+- Do: Beep and vibrate once per code; count a repeat within a second once
+- Don't: Keep the camera open in the background
+- Don't: Size photos above 1280px before they cross the bridge (large base64 never arrives)
+
+### Printer picker
+
+`src/components/app/phone-app/PrinterPicker.vue (PrinterCard)`
+
+| Spec | Value |
+| --- | --- |
+| Printers | only those paired in Android’s Bluetooth settings (no discovery); name and address; "Last used" badge |
+| Choice | one radio row, 56px; Remember this printer (default on) keeps it for the next receipt |
+| Actions | Test print (outline) and Use this printer (primary), 48px |
+| Nothing paired | dashed empty state: "Pair it in Android’s Bluetooth settings first" and Open Bluetooth settings |
+| Bluetooth off | same state, with Turn Bluetooth on |
+| A failed print | says what to do (reconnect, switch the printer on) and retries once |
+| Variants | list · none paired · Bluetooth off |
+| Used in | Receipts, delivery notes. |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `state` | `'list' \| 'none' \| 'off'` | `'list'` | list of paired printers, none paired, Bluetooth off |
+
+**Emits:** `use` ({ id, remember }), `test`, `settings`
+
+- Do: List only printers paired in Android
+- Do: Remember the choice by default
+- Do: Say what to do when it fails and retry once
+- Don't: Connect to the first bonded device without asking
+- Don't: Print without a connected printer
+
+### Freshness stamp
+
+`src/components/app/phone-app/StaleStamp.vue`
+
+| Spec | Value |
+| --- | --- |
+| Fresh | a green dot and "Updated just now" after a return from the background or when the signal comes back, with Refresh |
+| Offline | an amber dot and "Offline · showing data from 3 min ago": the page keeps its figures (P51 banner above it) |
+| Refresh | 40px tap area; the page also refreshes by itself on return |
+| Where | under the page header of pages that show figures (Home, lists) |
+| Variants | fresh · offline |
+| Used in | Home and list pages. |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `ago` | `string` | `'just now'` | How old the data is |
+| `offline` | `boolean` | `false` | Amber, "Offline · showing data from …" |
+
+**Emits:** `refresh`
+
+- Do: Refresh by itself on return from the background
+- Do: Keep the figures on screen when offline
+- Don't: Show empty lists or zero totals when a request got no answer (P51)
+
+### Bottom bar
+
+`src/components/app/phone-app/BottomBar.vue`
+
+| Spec | Value |
+| --- | --- |
+| Use | the primary action of a form or a cart: it stays on screen above the keyboard and the gesture bar |
+| Look | sticky at the bottom, top border, blurred background, optional one-line note (the total), padding adds --sa-bottom |
+| Buttons | 48px; Cancel left (outline), primary right (one primary) |
+| Keyboard | the view shrinks, so the bar rides above the keyboard; it never hides the focused field |
+| Variants | with a note · without |
+| Used in | The till cart, forms. |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `note` | `string` | – | One line above the buttons (the total) |
+
+**Slots:** `#default` The buttons: Cancel left, primary right
+
+- Do: One primary 48px button
+- Do: Add --sa-bottom to the padding
+- Don't: Use position: fixed (it would not ride above the keyboard)
+- Don't: Two primary buttons
+
+### No connection
+
+`src/components/app/states/ConnectionNotice.vue`
+
+| Spec | Value |
+| --- | --- |
+| Page | a page that never got an answer: wifi-off icon in a 48px circle, "No connection", help, Try again; the page opens by itself when the signal is back |
+| Banner | a page that had loaded: a muted note above its figures, "What you see may be out of date, and nothing can be saved until it is back", Try again |
+| Source | the phone’s network state and any request that got no answer; a 401 or a 500 is not this |
+| With it | the freshness stamp says how old the figures are; reads retry on return, writes are not queued |
+| Variants | page · banner |
+| Used in | Every page, in the app. |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `variant` | `'page' \| 'banner'` | `'page'` | page = never loaded; banner = loaded, figures kept |
+
+- Do: Drive it from the phone’s network state and calls that got no answer
+- Do: Keep a loaded page’s figures on screen
+- Don't: Show it for a 401 or a 500
+- Don't: Queue writes behind it
+
+### App updates
+
+`src/components/app/phone-app/AppUpdateBanner.vue, AppUpdateRequired.vue`
+
+| Spec | Value |
+| --- | --- |
+| Banner | below latest: a primary-tinted note above the page, "A new version of <Product> is ready", Later (hides it until the next version) and Update |
+| Required | below minimum: full screen (layer 110), the mark in a 56px tile, "Update <Product> to keep going", one 48px Update now, both versions; nothing else is reachable and Back does nothing |
+| Compare | the installed integer version code from the package; the server’s latest and minimum; never a cached answer (?_= and no-store) |
+| Update | opens the download page; a resumable, SHA-256 checked download installs over the old app and keeps the session |
+| Variants | banner · required |
+| Used in | Home, any screen when required. |
+
+- Do: Compare the installed integer version code
+- Do: Ask with a fresh query; the server says no-store
+- Don't: Let Back leave the required screen
+- Don't: Trust a cached /app/version answer
+
+### Back key hint
+
+`src/components/app/phone-app/AppBackHint.vue`
+
+| Spec | Value |
+| --- | --- |
+| Where | first screen: no layer open, no history behind, nothing above it in the module |
+| Look | a dark pill, "Press back again to leave", 24px above the bottom, layer 100, for 2 seconds |
+| Second press | inside 2 seconds sends the app to the background (not a kill) |
+| Order | scan view, action sheet, dialog or sheet, menu or sidebar, picker, history, then this; forced screens swallow Back |
+| Variants | one state |
+| Used in | The first screen of the app. |
+
+- Do: Close the top layer before showing it
+- Don't: Show it on a forced screen

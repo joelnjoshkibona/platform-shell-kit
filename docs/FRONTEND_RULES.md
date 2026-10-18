@@ -287,7 +287,7 @@ shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or
 - **Back (P49)**: every record page starts its breadcrumb with `BackButton`: to the screen the person came from (record, tab and list view kept), else the record's list. Never only the browser's back.
 - **Row actions (P50)**: on tight rows (phones) a row's actions sit where the chevron was, level with the title, while the identity keeps 140px; otherwise (a labelled button, buttons beside a hero) they keep a line under the meta line.
 - **No connection (P51)**: a page with no answer shows `ConnectionNotice variant="page"`, never empty lists or zero totals; a loaded page keeps its figures under `variant="banner"`. Recovery is automatic; nothing is queued.
-- **Phone app (P52–P55)**: Back closes the open layer, then follows Back, then "Press back again to leave" on the first screen; updates are a banner unless the server's minimum is above the app's version (then a full screen); notifications are explained before the system asks; icon and splash are the mark and the boot curtain.
+- **Phone app (P51–P70)**: see "Locked: the phone app" below; its pieces are the Phone section of `COMPONENTS.md`.
 - **Type**: Geist. Page title `text-xl font-semibold` (`text-2xl` from `sm`), body `text-sm`, meta `text-xs`, group labels `text-[11px]` uppercase semibold, KPI numbers `text-2xl` with tabular figures, codes and permission names in mono `text-xs`.
 - **Spacing**: `gap-4` between sections and fields, `p-4` card padding (`p-3.5` for KPI tiles), `gap-1.5` inside a label/input/error stack, `gap-2` between inline items.
 - **Radius**: `rounded-md` controls, `rounded-lg` dialogs and popovers, `rounded-xl` cards, `rounded-full` pills and avatars.
@@ -298,6 +298,26 @@ shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or
 - **Dark mode**: every screen is checked in light and dark before merging. Theme choice: Light, Dark, System.
 - **Responsive**: built and checked at 360, 390, 768, 1280px. Grid children get `min-w-0`; no horizontal page scroll; tap targets at least 40px on phones; safe-area insets respected.
 - **i18n**: every user-facing string goes through `t()`, with English and Swahili keys added together.
+
+## Locked: the phone app (P51–P70)
+
+The phone app is the web shell inside a product's Android app (NativePHP web view). A phone is a device that moves; every movement has one rule (`docs/mobile/PHONE_MODEL.md`). Components: the **Phone** section of `COMPONENTS.md`.
+
+- **Header (P56)**: below 640px only the menu, the title, search and the avatar. Notifications, View as and the theme are in the avatar menu; a dot on the avatar means unread.
+- **Boot and session (P57)**: keep the stored session; validate it only with a network; no network opens read-only on the last data. A 401 shows Session ended; a lost signal never does. The token is in secure storage. Sign out wipes the cart, drafts and caches of that phone.
+- **Lifecycle (P58)**: to the background: stop polls, save the cart and the open form; to the foreground: refresh what is on screen, recheck the session, the update and the network, show "Updated just now"; killed: reopen where they were with the cart back. Coming back from the system (installer, Settings, share, call) re-reads state; never a timer.
+- **Connectivity (P51, P59)**: the phone's network state and failed calls drive No connection; a loaded page keeps its figures with how old they are; every request has a timeout; reads retry, writes are never retried by the app.
+- **Uncertain writes (P60)**: never replay a write automatically; disable the action while it runs; money and stock writes carry an Idempotency-Key; after an uncertain failure keep the form and say "Check recent <records> before you try again."
+- **Back (P52, P61)**: close the top layer in order (scan, action sheet, dialog or sheet, menu or sidebar, picker), then history, then press twice on the first screen; on a forced screen Back does nothing; auth redirects replace.
+- **Safe areas and keyboard (P62)**: `--sa-*` from the injected inset with `env()` behind; everything fixed to an edge adds its inset; the view shrinks with the keyboard (`100dvh`); the focused field scrolls to about 30% from the top after 300 ms; the primary action sits in a BottomBar.
+- **Permissions (P54, P63)**: ask at the moment of need, reason first, say what still works without it; never block on the answer; denied for good offers Open Settings and the fallback.
+- **Phone actions (P64)**: phone numbers open the Action sheet (Call, WhatsApp, SMS, Copy); Scan always offers Type the code; printing uses a remembered, chosen Bluetooth printer.
+- **Lock (P65)**: an organisation setting, off by default; locks after time away and after a kill; fingerprint, then PIN; the system in front for our request is not "away".
+- **Notifications and links (P66)**: register after sign-in, re-register on rotation, unregister before sign-out; a tap opens the record.
+- **Updates (P53, P67)**: compare the installed integer version code; never read a cached answer; resumable, verified download; the forced screen cannot be left.
+- **Releases (P68)**: signing key outside the repo and the app; channels with their own id, name and badge; version code read from the APK; plugins shared, never forked.
+- **Debugging and tests (P69, P70)**: web debugging off in release builds; a checklist per movement; a harness that drives a real web view.
+- Sizes: phone pieces use 48px buttons, 52px rows, 56px keys; the web shell's own controls keep the sizes they are drawn at.
 
 ## Constrained-creative and Free
 
@@ -348,6 +368,8 @@ shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or
 - [ ] Buttons and menus respect permissions; a direct URL without permission shows No access
 - [ ] Delete uses the delete check and the YES gate
 - [ ] Status pills come from the workflow lookup (P47); no code compares a label; filters and quick tabs follow the table's order
+- [ ] Phone app: checked at 360, 390 and 411px, light and dark, with the keyboard open and with the system back gesture; every fixed element adds its safe-area inset
+- [ ] Phone app: each movement in `PHONE_MODEL.md` has been tried (cold start, resume, kill, signal lost and back, 401, lock, permission asked and denied, back, keyboard, update) and nothing is lost or doubled
 - [ ] Strings in English and Swahili
 - [ ] Built only from components in `COMPONENTS.md`; new ones added to the library first
 - [ ] Rule changes copied to the doc, `FRONTEND_RULES.md` and the Rules tab

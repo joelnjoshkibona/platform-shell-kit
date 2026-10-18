@@ -1085,6 +1085,27 @@
     "file": "respondent--timer-warning__phone-dark.png"
   },
   {
+    "name": "shell--phone-menu",
+    "route": "dashboard",
+    "title": "Phone: the avatar menu holds Notifications, View as and the theme (P56)",
+    "combo": "phone-dark",
+    "file": "shell--phone-menu__phone-dark.png"
+  },
+  {
+    "name": "design--phone",
+    "route": "design",
+    "title": "Design system › Components › Phone (P51–P70)",
+    "combo": "desktop-light",
+    "file": "design--phone__desktop-light.png"
+  },
+  {
+    "name": "design--phone",
+    "route": "design",
+    "title": "Design system › Components › Phone (P51–P70)",
+    "combo": "phone-dark",
+    "file": "design--phone__phone-dark.png"
+  },
+  {
     "name": "app--no-connection",
     "route": "members",
     "title": "No connection: a page that never loaded (P51)",
@@ -1195,5 +1216,215 @@
     "title": "Splash: the closed boot curtain (P55)",
     "combo": "phone-light",
     "file": "app--splash__phone-light.png"
+  },
+  {
+    "name": "app--signal-lost",
+    "route": "dashboard",
+    "title": "Signal lost: the page keeps its figures and says how old they are (P59)",
+    "combo": "phone-dark",
+    "file": "app--signal-lost__phone-dark.png"
+  },
+  {
+    "name": "app--signal-lost",
+    "route": "dashboard",
+    "title": "Signal lost: the page keeps its figures and says how old they are (P59)",
+    "combo": "phone-light",
+    "file": "app--signal-lost__phone-light.png"
+  },
+  {
+    "name": "app--back-online",
+    "route": "dashboard",
+    "title": "Signal back: refreshed, \"Updated just now\" (P58, P59)",
+    "combo": "phone-dark",
+    "file": "app--back-online__phone-dark.png"
+  },
+  {
+    "name": "app--back-online",
+    "route": "dashboard",
+    "title": "Signal back: refreshed, \"Updated just now\" (P58, P59)",
+    "combo": "phone-light",
+    "file": "app--back-online__phone-light.png"
+  },
+  {
+    "name": "app--resumed",
+    "route": "dashboard",
+    "title": "Back from the background: refreshed, session checked (P58)",
+    "combo": "phone-dark",
+    "file": "app--resumed__phone-dark.png"
+  },
+  {
+    "name": "app--resumed",
+    "route": "dashboard",
+    "title": "Back from the background: refreshed, session checked (P58)",
+    "combo": "phone-light",
+    "file": "app--resumed__phone-light.png"
+  },
+  {
+    "name": "app--reopened",
+    "route": "dashboard",
+    "title": "Killed and reopened: back where you were (P58)",
+    "combo": "phone-dark",
+    "file": "app--reopened__phone-dark.png"
+  },
+  {
+    "name": "app--reopened",
+    "route": "dashboard",
+    "title": "Killed and reopened: back where you were (P58)",
+    "combo": "phone-light",
+    "file": "app--reopened__phone-light.png"
+  },
+  {
+    "name": "app--session-ended",
+    "route": "dashboard",
+    "title": "The server ended the session (P57)",
+    "combo": "phone-dark",
+    "file": "app--session-ended__phone-dark.png"
+  },
+  {
+    "name": "app--session-ended",
+    "route": "dashboard",
+    "title": "The server ended the session (P57)",
+    "combo": "phone-light",
+    "file": "app--session-ended__phone-light.png"
+  },
+  {
+    "name": "app--locked",
+    "route": "dashboard",
+    "title": "Locked after time away: fingerprint (P65)",
+    "combo": "phone-dark",
+    "file": "app--locked__phone-dark.png"
+  },
+  {
+    "name": "app--locked",
+    "route": "dashboard",
+    "title": "Locked after time away: fingerprint (P65)",
+    "combo": "phone-light",
+    "file": "app--locked__phone-light.png"
+  },
+  {
+    "name": "app--permission",
+    "route": "dashboard",
+    "title": "Camera asked at the moment of need, reason first (P63)",
+    "combo": "phone-dark",
+    "file": "app--permission__phone-dark.png"
+  },
+  {
+    "name": "app--permission",
+    "route": "dashboard",
+    "title": "Camera asked at the moment of need, reason first (P63)",
+    "combo": "phone-light",
+    "file": "app--permission__phone-light.png"
+  },
+  {
+    "name": "app--permission-denied",
+    "route": "dashboard",
+    "title": "Camera denied for good: Open Settings (P63)",
+    "combo": "phone-dark",
+    "file": "app--permission-denied__phone-dark.png"
+  },
+  {
+    "name": "app--permission-denied",
+    "route": "dashboard",
+    "title": "Camera denied for good: Open Settings (P63)",
+    "combo": "phone-light",
+    "file": "app--permission-denied__phone-light.png"
+  },
+  {
+    "name": "app--scan",
+    "route": "dashboard",
+    "title": "Scan a barcode (P64)",
+    "combo": "phone-dark",
+    "file": "app--scan__phone-dark.png"
+  },
+  {
+    "name": "app--scan",
+    "route": "dashboard",
+    "title": "Scan a barcode (P64)",
+    "combo": "phone-light",
+    "file": "app--scan__phone-light.png"
+  },
+  {
+    "name": "app--scan-several",
+    "route": "dashboard",
+    "title": "Scan several: Done · 3 scanned (P64)",
+    "combo": "phone-dark",
+    "file": "app--scan-several__phone-dark.png"
+  },
+  {
+    "name": "app--scan-several",
+    "route": "dashboard",
+    "title": "Scan several: Done · 3 scanned (P64)",
+    "combo": "phone-light",
+    "file": "app--scan-several__phone-light.png"
+  },
+  {
+    "name": "app--printer",
+    "route": "dashboard",
+    "title": "Choose the receipt printer (P64)",
+    "combo": "phone-dark",
+    "file": "app--printer__phone-dark.png"
+  },
+  {
+    "name": "app--printer",
+    "route": "dashboard",
+    "title": "Choose the receipt printer (P64)",
+    "combo": "phone-light",
+    "file": "app--printer__phone-light.png"
+  },
+  {
+    "name": "app--printer-none",
+    "route": "dashboard",
+    "title": "No printer paired (P64)",
+    "combo": "phone-dark",
+    "file": "app--printer-none__phone-dark.png"
+  },
+  {
+    "name": "app--printer-none",
+    "route": "dashboard",
+    "title": "No printer paired (P64)",
+    "combo": "phone-light",
+    "file": "app--printer-none__phone-light.png"
+  },
+  {
+    "name": "app--printer-off",
+    "route": "dashboard",
+    "title": "Bluetooth is off (P64)",
+    "combo": "phone-dark",
+    "file": "app--printer-off__phone-dark.png"
+  },
+  {
+    "name": "app--printer-off",
+    "route": "dashboard",
+    "title": "Bluetooth is off (P64)",
+    "combo": "phone-light",
+    "file": "app--printer-off__phone-light.png"
+  },
+  {
+    "name": "app--call-sheet",
+    "route": "members",
+    "title": "Call · WhatsApp · SMS · Copy (P64)",
+    "combo": "phone-dark",
+    "file": "app--call-sheet__phone-dark.png"
+  },
+  {
+    "name": "app--call-sheet",
+    "route": "members",
+    "title": "Call · WhatsApp · SMS · Copy (P64)",
+    "combo": "phone-light",
+    "file": "app--call-sheet__phone-light.png"
+  },
+  {
+    "name": "app--keyboard",
+    "route": "dashboard",
+    "title": "Keyboard open: the field and the action stay in view (P62)",
+    "combo": "phone-dark",
+    "file": "app--keyboard__phone-dark.png"
+  },
+  {
+    "name": "app--keyboard",
+    "route": "dashboard",
+    "title": "Keyboard open: the field and the action stay in view (P62)",
+    "combo": "phone-light",
+    "file": "app--keyboard__phone-light.png"
   }
 ]

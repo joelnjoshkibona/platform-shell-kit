@@ -79,7 +79,7 @@ for t,cs in _tags.items():
         if a.get('do'): _md += [''] + ['- Do: '+d for d in a['do']]
         if a.get('dont'): _md += ['- Don\'t: '+d for d in a['dont']]
 open(os.path.join(KIT, 'docs', 'COMPONENTS.md'),'w').write('\n'.join(_md)+'\n')
-shell = shell.replace('  return { AuthView, ShellView, comps: {', loc + '\n  return { AuthView, ShellView, comps: { ListCard, ListRows, ListShare, LockedField, BackButton, ConnectionNotice, AppUpdateBanner, AppUpdateRequired, AppNotifsAsk, AppNotifsRow, AppBackHint, AppSplash, AppIcon, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog,', 1)
+shell = shell.replace('  return { AuthView, ShellView, comps: {', loc + '\n  return { AuthView, ShellView, comps: { ListCard, ListRows, ListShare, LockedField, BackButton, ConnectionNotice, AppUpdateBanner, AppUpdateRequired, AppNotifsAsk, AppNotifsRow, AppBackHint, AppSplash, AppIcon, PhoneMock, LockScreen, SessionExpired, PermissionCard, ActionSheet, ScanView, PrinterCard, StaleStamp, BottomBar, KeyboardSim, PhoneOverlays, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog,', 1)
 
 def rep(s, a, b, count=1):
     assert s.count(a) >= 1, ('missing', a[:80])
@@ -251,9 +251,10 @@ const ScreensPill = {
     onBeforeUnmount(() => document.removeEventListener('pointerdown', onDoc));
     function go(r) { open.value = false; nav(r); }
     const appItems = [['conn-page', 'No connection: a page', 'WifiOff'], ['conn-banner', 'No connection: a loaded page', 'WifiOff'], ['update', 'Update available', 'Download'], ['update-required', 'Update required', 'CircleArrowUp'], ['notifs', 'Turn on notifications?', 'BellRing'], ['notifs-settings', 'Notifications on this phone', 'Smartphone'], ['back', 'Back on the first screen', 'Undo2'], ['splash', 'Splash screen', 'Sparkles']];
+    const moveItems = [['sig-lost', 'Signal lost', 'WifiOff'], ['sig-back', 'Signal back', 'Wifi'], ['resume', 'Back from the background', 'RotateCw'], ['kill', 'Killed, reopened', 'History'], ['expired', 'Session ended by the server', 'LockKeyhole'], ['lock', 'Locked after time away', 'Lock'], ['perm-camera', 'Camera asked', 'Camera'], ['perm-denied', 'Camera denied for good', 'ShieldOff'], ['scan', 'Scan a barcode', 'ScanBarcode'], ['scan-multi', 'Scan several', 'ScanBarcode'], ['printers', 'Choose a printer', 'Printer'], ['printers-none', 'No printer paired', 'Printer'], ['printers-off', 'Bluetooth off', 'BluetoothOff'], ['actions', 'Call · WhatsApp · SMS', 'Phone'], ['keyboard', 'Keyboard open', 'Keyboard']];
     function app(k) { open.value = false; G.appState && G.appState(k); }
     function phone(v) { open.value = false; G.phone = v; }
-    return { open, root, groups, go, G, phone, IN_PHONE, appItems, app };
+    return { open, root, groups, go, G, phone, IN_PHONE, appItems, moveItems, app };
   },
   template: `<div ref="root" :class="['fixed z-[45]', G.route==='builder' ? 'bottom-20 lg:bottom-4' : 'bottom-4', G.isShell(G.route) ? (G.navCollapsed ? 'left-3 lg:left-[76px]' : 'left-3 lg:left-[252px]') : 'left-3']" style="margin-bottom:env(safe-area-inset-bottom,0px)">
     <div v-if="open" class="pop absolute bottom-full left-0 mb-2 w-72 rounded-lg border bg-popover p-1.5 text-popover-foreground shadow-xl" role="menu">
@@ -266,6 +267,8 @@ const ScreensPill = {
         <button v-for="it in g.items" :key="it[0]" type="button" role="menuitem" @click="go(it[0])" :class="['flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent', G.route===it[0] ? 'bg-accent font-medium' : '']"><Icon :name="it[2]" :size="15" class="text-muted-foreground"/>{{ it[1] }}</button></template>
       <p class="px-2 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Phone app</p>
       <button v-for="it in appItems" :key="it[0]" type="button" role="menuitem" @click="app(it[0])" class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent"><Icon :name="it[2]" :size="15" class="text-muted-foreground"/>{{ it[1] }}</button>
+      <p class="px-2 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Phone movements</p>
+      <button v-for="it in moveItems" :key="it[0]" type="button" role="menuitem" @click="app(it[0])" class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent"><Icon :name="it[2]" :size="15" class="text-muted-foreground"/>{{ it[1] }}</button>
     </div>
     <button type="button" @click="open=!open" :aria-expanded="open" class="inline-flex items-center gap-2 rounded-full border bg-popover px-3 py-2 text-xs font-medium text-popover-foreground shadow-lg hover:bg-accent"><Icon name="Map" :size="14"/>Screens</button>
   </div>`

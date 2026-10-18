@@ -152,9 +152,9 @@ function useOverlayEsc(p, emit) {
 const Dialog = {
   props: { open: Boolean }, emits: ['update:open'],
   setup(p, { emit }) { useOverlayEsc(p, emit); },
-  template: `<Teleport to="body"><Transition name="fade"><div v-if="open" class="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
+  template: `<Teleport to="body"><Transition name="fade"><div v-if="open" class="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4" style="padding-bottom:var(--kbd,0px)">
     <div class="absolute inset-0 bg-black/70" @click="$emit('update:open', false)"></div>
-    <div role="dialog" aria-modal="true" class="pop relative grid max-h-[calc(100dvh-1rem)] w-full max-w-lg gap-4 overflow-y-auto overscroll-contain border bg-background p-6 shadow-lg rounded-t-xl sm:max-h-[calc(100dvh-2rem)] sm:rounded-xl" style="padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px))">
+    <div role="dialog" aria-modal="true" class="pop relative grid max-h-[calc(100dvh-1rem-var(--kbd,0px))] w-full max-w-lg gap-4 overflow-y-auto overscroll-contain border bg-background p-6 shadow-lg rounded-t-xl sm:max-h-[calc(100dvh-2rem)] sm:rounded-xl" style="padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px))">
       <button type="button" class="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" @click="$emit('update:open', false)" aria-label="Close"><Icon name="X" :size="16"/></button>
       <slot/></div></div></Transition></Teleport>`
 };
