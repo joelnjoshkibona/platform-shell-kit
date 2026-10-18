@@ -1,0 +1,128 @@
+/* ============================================================ Deliveries, Receive stock, Suppliers, End-of-day count */
+const delSummary = (d) => prod(d.lines[0][0]).name + ' × ' + d.lines[0][1] + (d.lines.length > 1 ? ' +' + (d.lines.length - 1) + ' more' : '');
+const Deliveries = { components: { Header, Icon, Av, Pill, Empty, Chips, StickyBar, RowsCard, Fab },
+  setup() {
+    const rows = computed(() => DELIVERIES.filter(d => S.delTab === 'all' || (S.delTab === 'check' ? d.status === 'waiting' : S.delTab === 'overdue' ? d.status === 'overdue' : ['part', 'unpaid', 'overdue'].includes(d.status))));
+    const n = (f) => DELIVERIES.filter(f).length;
+    return { S, rows, n, sup, delSummary, DSTAT, money, go, owe: DELIVERIES.reduce((t, d) => t + (d.status === 'waiting' ? 0 : d.total - d.paid), 0) };
+  },
+  template: `<div class="relative flex min-h-0 flex-1 flex-col"><Header title="Deliveries"/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><StickyBar><Chips v-model="S.delTab" :items="[['all', 'All'], ['check', 'To check ' + n(d => d.status === 'waiting')], ['unpaid', 'Unpaid'], ['overdue', 'Overdue ' + n(d => d.status === 'overdue')]]"/></StickyBar>
+      <div class="p-3 pb-20"><div class="mb-3 flex items-center justify-between rounded-xl bg-warning/10 px-4 py-3"><span class="text-sm text-muted-foreground">You owe suppliers</span><b class="text-base text-warning tnum">{{ money(owe) }}</b></div>
+        <Empty v-if="!rows.length" icon="PackagePlus" title="No deliveries here"/>
+        <RowsCard v-else><button v-for="(d, i) in rows" :key="d.id" type="button" :class="['press flex w-full items-center gap-3 px-3.5 py-2.5 text-left', i ? 'border-t' : '']" @click="S.delId = d.id; go('delivery')">
+          <Av :c="sup(d.s)" :size="36"/><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ sup(d.s).name }}</span><span class="block truncate text-xs text-muted-foreground tnum">{{ d.id }} · {{ d.date }} · {{ delSummary(d) }}</span></span>
+          <span class="flex flex-col items-end gap-1"><span class="text-sm font-semibold tnum">{{ money(d.total) }}</span><Pill :tone="DSTAT[d.status][1]">{{ DSTAT[d.status][0] }}</Pill></span></button></RowsCard></div></div>
+    <Fab icon="PackagePlus" label="Receive stock" @click="go('receive')"/></div>` };
+
+const DeliveryPage = { components: { Header, Icon, Av, Pill, Btn, Card, Row, FooterBar, Sheet, Stepper, AmountSheet },
+  setup() {
+    const d = computed(() => DELIVERIES.find(x => x.id === S.delId) || DELIVERIES[0]); const s = computed(() => sup(d.value.s)); const owner = computed(() => S.role === 'owner');
+    const left = computed(() => d.value.status === 'waiting' ? 0 : d.value.total - d.value.paid);
+    const got = reactive({}); const why = ref('Short delivery');
+    watch(() => S.sheet, (v) => { if (v === 'check') d.value.lines.forEach(l => (got[l[0]] = l[1])); });
+    const diff = computed(() => d.value.lines.filter(l => got[l[0]] !== l[1]));
+    const confirmCheck = () => { S.sheet = null; d.value.status = d.value.paid >= d.value.total ? 'paid' : 'unpaid'; toast(diff.value.length ? 'Checked, with a difference' : 'Delivery checked'); };
+    const pay = (a, m) => { S.sheet = null; d.value.paid += a; d.value.status = d.value.paid >= d.value.total ? 'paid' : 'part'; s.value.owes = Math.max(0, s.value.owes - a); toast(money(a) + ' paid, ' + m); };
+    return { S, d, s, owner, left, got, why, diff, confirmCheck, pay, prod, money, go, DSTAT, tint };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header :title="d.id" pushed hide-search/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-3 p-3 pb-6">
+      <section class="rise rounded-xl border bg-card p-4"><button type="button" class="press -m-1 flex w-[calc(100%+8px)] items-center gap-3 rounded-md p-1 text-left" @click="S.supId = s.id; go('supplier')"><Av :c="s" :size="36"/><span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold">{{ s.name }}</span><span class="block text-xs text-muted-foreground">Received {{ d.date }} · due {{ d.due }}</span></span><Icon name="ChevronRight" :size="16" class="text-muted-foreground"/></button>
+        <div class="mt-4 flex items-end justify-between"><div><p class="text-xs text-muted-foreground">Delivery total</p><p class="text-2xl font-semibold tnum">{{ money(d.total) }}</p></div><Pill :tone="DSTAT[d.status][1]">{{ DSTAT[d.status][0] }}</Pill></div>
+        <div v-if="left > 0" :class="['mt-3 flex items-center justify-between rounded-md px-3 py-2 text-sm', d.status === 'overdue' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning']"><span>{{ d.status === 'overdue' ? 'Overdue, was due ' + d.due : 'Left to pay' }}</span><b class="tnum">{{ money(left) }}</b></div>
+        <div v-if="d.status === 'waiting'" class="mt-3 flex items-start gap-2 rounded-md bg-primary/10 px-3 py-2 text-sm text-primary"><Icon name="PackageSearch" :size="16" class="mt-0.5"/><span>Count what came in before it goes on the shelf.</span></div></section>
+      <Card title="What came in" icon="Package"><div v-for="l in d.lines" :key="l[0]" class="flex items-center justify-between border-b py-2.5 last:border-0"><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ prod(l[0]).name }}</span><span class="block text-xs text-muted-foreground tnum">{{ l[1] }} {{ prod(l[0]).units }} · {{ prod(l[0]).pack }}</span></span></div></Card>
+      <Card title="Payment" icon="Wallet"><Row k="Total" :v="money(d.total)"/><Row k="Paid" :v="money(d.paid)"/><Row k="Left to pay" :v="money(left)"/><Row k="Due" :v="d.due"/></Card></div></div>
+    <FooterBar><div v-if="d.status === 'waiting'" class="grid grid-cols-2 gap-2"><Btn v="destructive-outline" @click="S.dialog = { title: 'Reject ' + d.id + '?', text: 'It goes back to ' + s.name + '. Nothing is added to the shelf.', action: 'Reject it', tone: 'destructive', cancel: 'Keep it', ok: () => { d.status = 'rejected'; toast('Rejected'); } }">Reject</Btn><Btn @click="S.sheet = 'check'">Check delivery</Btn></div>
+      <div v-else-if="left > 0" class="grid grid-cols-1"><Btn @click="S.sheet = 'paysup'">{{ owner ? 'Pay supplier' : 'Ask Amina to pay' }}</Btn></div>
+      <p v-else class="py-1 text-center text-sm text-muted-foreground">Nothing left to do for this delivery.</p></FooterBar>
+    <Sheet :open="S.sheet === 'check'" title="Check delivery" :sub="d.id + ' · ' + s.name" @close="S.sheet = null"><div class="px-4 pb-4"><div v-for="l in d.lines" :key="l[0]" class="flex items-center gap-3 border-b py-3 last:border-0"><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ prod(l[0]).name }}</span><span class="block text-xs text-muted-foreground tnum">Ordered {{ l[1] }}</span></span><Stepper :q="got[l[0]] || 0" :step="1" :max="9999" @sub="got[l[0]] = Math.max(0, (got[l[0]] || 0) - 1)" @add="got[l[0]] = (got[l[0]] || 0) + 1"/></div>
+      <div v-if="diff.length" class="mt-3 rounded-md bg-warning/10 p-3 text-sm text-warning"><p class="font-medium">{{ diff.map(l => prod(l[0]).name + ': ' + Math.abs(got[l[0]] - l[1]) + (got[l[0]] < l[1] ? ' short' : ' more')).join(', ') }}</p><p class="mt-2 text-xs">Why</p><div class="mt-1 flex flex-wrap gap-1.5"><button v-for="w in ['Short delivery', 'Damaged', 'Wrong item']" :key="w" type="button" @click="why = w" :class="['press h-8 rounded-md px-3 text-sm', why === w ? 'bg-warning text-white' : 'bg-background text-foreground']">{{ w }}</button></div></div></div>
+      <template #footer><Btn full @click="confirmCheck">{{ diff.length ? 'Confirm with the difference' : 'Everything is here' }}</Btn></template></Sheet>
+    <AmountSheet :open="S.sheet === 'paysup'" title="Pay supplier" :sub="s.name + ' · ' + d.id" :max="left" action="Pay" :methods="Object.assign(['Cash drawer', 'Lipa Namba', 'M-Pesa wallet', 'CRDB bank'], { label: 'Paid from' })" :note="owner ? 'Prepaid credit pays the oldest delivery first.' : 'Paid from the drawer? Amina has to approve it first.'" @close="S.sheet = null" @confirm="pay"/></div>` };
+
+/* a new delivery: supplier, packs per product, paid now or on credit */
+const Receive = { components: { Header, Icon, Av, Tile, Btn, FooterBar, Sheet, Stepper, Pill },
+  setup() {
+    const r = S.rec; const total = computed(() => r.lines.reduce((t, l) => t + (BATCHES.find(b => b.pid === l.pid) || { cost: 500 }).cost * packSize(l.pid) * l.packs, 0));
+    const packSize = (pid) => parseInt((prod(pid).pack.match(/\d+/) || [1])[0]);
+    const setPacks = (l, d) => { l.packs = Math.max(0, l.packs + d); if (!l.packs) r.lines.splice(r.lines.indexOf(l), 1); };
+    const addP = (pid) => { const l = r.lines.find(x => x.pid === pid); if (l) l.packs++; else r.lines.push({ pid, packs: 1 }); S.sheet = null; };
+    const save = () => { toast(S.role === 'owner' || !r.paidNow ? 'Delivery saved' : 'Sent to Amina to check'); back(); };
+    return { S, r, total, packSize, setPacks, addP, save, sup, SUPPLIERS, PRODUCTS, prod, money };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="Receive stock" pushed hide-search/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-4 p-3 pb-6">
+      <div><p class="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">From</p><button type="button" class="press flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left" @click="S.sheet = 'recsup'"><Av :c="sup(r.sup)" :size="36"/><span class="min-w-0 flex-1 truncate text-sm font-medium">{{ sup(r.sup).name }}</span><span class="text-sm font-medium text-primary">Change</span></button></div>
+      <div><p class="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">What came in</p><div class="overflow-hidden rounded-xl border bg-card"><div v-for="(l, i) in r.lines" :key="l.pid" :class="['flex items-center gap-3 p-3', i ? 'border-t' : '']"><Tile :p="prod(l.pid)" :size="36"/><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ prod(l.pid).name }}</span><span class="block text-xs text-muted-foreground tnum">{{ l.packs }} × {{ prod(l.pid).pack.toLowerCase() }} = {{ l.packs * packSize(l.pid) }} {{ prod(l.pid).units }}</span></span><Stepper size="sm" :q="l.packs" :step="1" :max="999" @sub="setPacks(l, -1)" @add="setPacks(l, 1)"/></div>
+        <button type="button" class="press flex h-10 w-full items-center justify-center gap-2 border-t text-sm font-medium text-primary" @click="S.sheet = 'recprod'"><Icon name="Plus" :size="16"/>Add a product</button></div></div>
+      <div class="rounded-xl border bg-card p-4"><div class="flex items-center justify-between"><span class="text-sm text-muted-foreground">Delivery total</span><b class="text-xl tnum">{{ money(total) }}</b></div></div>
+      <div class="overflow-hidden rounded-xl border bg-card"><button type="button" class="press flex w-full items-center justify-between px-4 py-3 text-left" @click="r.paidNow = !r.paidNow"><span class="text-sm font-medium">Paid now</span><span role="switch" :aria-checked="r.paidNow" aria-label="Paid now" :class="['relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border-2 border-transparent transition-colors', r.paidNow ? 'bg-primary' : 'bg-input']"><span :class="['block h-4 w-4 rounded-full bg-background shadow transition-transform', r.paidNow ? 'translate-x-4' : '']"></span></span></button>
+        <div class="border-t px-4 py-3 text-sm"><p v-if="r.paidNow" class="text-muted-foreground">Paid from the <b class="text-foreground">Cash drawer</b>. {{ S.role === 'owner' ? '' : 'Amina checks deliveries paid from the drawer.' }}</p><p v-else class="text-muted-foreground">On credit. You owe {{ sup(r.sup).name }} {{ money(total) }}, due <b class="text-foreground">{{ r.due }}</b>.</p></div></div></div></div>
+    <FooterBar><Btn full :disabled="!r.lines.length" @click="save">{{ S.role !== 'owner' && r.paidNow ? 'Send to Amina' : 'Save delivery' }}</Btn></FooterBar>
+    <Sheet :open="S.sheet === 'recsup'" title="Which supplier?" @close="S.sheet = null"><div class="px-3 pb-3"><button v-for="x in SUPPLIERS" :key="x.id" type="button" class="press flex w-full items-center gap-3 rounded-md px-1 py-2 text-left" @click="r.sup = x.id; S.sheet = null"><Av :c="x" :size="36"/><span class="flex-1 text-sm font-medium">{{ x.name }}</span><Icon v-if="r.sup === x.id" name="Check" :size="18" class="text-primary"/></button></div></Sheet>
+    <Sheet :open="S.sheet === 'recprod'" title="Add a product" @close="S.sheet = null"><div class="px-3 pb-3"><button v-for="x in PRODUCTS" :key="x.id" type="button" class="press flex w-full items-center gap-3 rounded-md px-1 py-2 text-left" @click="addP(x.id)"><Tile :p="x" :size="36"/><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ x.name }}</span><span class="block text-xs text-muted-foreground">{{ x.pack }}</span></span></button></div></Sheet></div>` };
+
+const Suppliers = { components: { Header, Icon, Av, Pill, Empty, StickyBar, SearchBar, RowsCard, Fab },
+  setup() { const q = ref(''); const rows = computed(() => SUPPLIERS.filter(s => (s.name + s.phone).toLowerCase().includes(q.value.toLowerCase())));
+    return { q, rows, S, go, money, toast, owe: SUPPLIERS.reduce((t, s) => t + s.owes, 0) }; },
+  template: `<div class="relative flex min-h-0 flex-1 flex-col"><Header title="Suppliers"/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><StickyBar><SearchBar v-model="q" placeholder="Name or phone"/></StickyBar>
+      <div class="p-3 pb-20"><div class="mb-3 flex items-center justify-between rounded-xl bg-warning/10 px-4 py-3"><span class="text-sm text-muted-foreground">You owe suppliers</span><b class="text-base text-warning tnum">{{ money(owe) }}</b></div>
+        <Empty v-if="!rows.length" icon="Truck" title="No suppliers found"/>
+        <RowsCard v-else><button v-for="(s, i) in rows" :key="s.id" type="button" :class="['press flex w-full items-center gap-3 px-3.5 py-2.5 text-left', i ? 'border-t' : '']" @click="S.supId = s.id; S.supTab = 'overview'; go('supplier')"><Av :c="s" :size="36"/>
+          <span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ s.name }}</span><span class="block truncate text-xs text-muted-foreground">{{ s.phone }}</span></span>
+          <span class="flex flex-col items-end gap-1"><span :class="['text-sm font-semibold tnum', s.owes ? 'text-warning' : s.credit ? 'text-success' : 'text-muted-foreground']">{{ s.owes ? money(s.owes) : s.credit ? 'Credit ' + money(s.credit) : 'Settled' }}</span><Pill v-if="s.late" tone="destructive" round>{{ s.late }} days late</Pill></span></button></RowsCard></div></div>
+    <Fab icon="Plus" label="New supplier" @click="toast('New supplier: name and phone')"/></div>` };
+
+const SupplierPage = { components: { Header, Icon, Av, Pill, Btn, Seg, Card, Row, FooterBar, AmountSheet },
+  setup() {
+    const s = computed(() => sup(S.supId) || SUPPLIERS[0]); const dels = computed(() => DELIVERIES.filter(d => d.s === s.value.id)); const owner = computed(() => S.role === 'owner');
+    const tabs = computed(() => [{ id: 'overview', label: 'Overview' }, { id: 'dels', label: 'Deliveries', count: dels.value.length }, { id: 'pays', label: 'Payments' }]);
+    const unpaid = computed(() => dels.value.filter(d => d.status !== 'paid' && d.status !== 'waiting' && d.status !== 'rejected'));
+    const pay = (a, m) => { S.sheet = null; s.value.owes = Math.max(0, s.value.owes - a); toast(money(a) + ' paid, ' + m); };
+    return { S, s, dels, tabs, unpaid, owner, pay, delSummary, DSTAT, money, go };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header :title="s.name" pushed hide-search/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-3 p-3 pb-6">
+      <section class="rise rounded-xl border bg-card p-4"><div class="flex items-center gap-3"><Av :c="s" :size="44"/><div class="min-w-0"><h2 class="truncate text-xl font-semibold leading-tight">{{ s.name }}</h2><button type="button" class="press -ml-1 flex h-8 items-center gap-1.5 rounded-md px-1 text-sm font-medium text-primary" @click="S.callTo = s; S.sheet = 'call'"><Icon name="Phone" :size="14"/>{{ s.phone }}</button></div></div>
+        <div class="mt-4 grid grid-cols-2 gap-3"><div class="rounded-md bg-muted/60 p-3"><p class="text-xs text-muted-foreground">You owe</p><p :class="['text-xl font-semibold tnum', s.owes ? 'text-warning' : '']">{{ money(s.owes) }}</p><p class="text-xs text-muted-foreground">{{ s.late ? s.late + ' days late' : 'nothing overdue' }}</p></div><div class="rounded-md bg-muted/60 p-3"><p class="text-xs text-muted-foreground">Bought</p><p class="text-xl font-semibold tnum">{{ money(s.bought) }}</p><p class="text-xs text-muted-foreground">in all</p></div></div></section>
+      <Seg v-model="S.supTab" :tabs="tabs"/>
+      <template v-if="S.supTab === 'overview'"><div v-if="s.credit" class="flex items-start gap-2 rounded-xl border border-success/40 bg-success/10 p-3.5 text-sm text-success"><Icon name="BadgeCheck" :size="16" class="mt-0.5"/><span><b>{{ money(s.credit) }} paid in advance.</b> It pays the next delivery first.</span></div>
+        <Card v-if="unpaid.length" title="Unpaid deliveries" icon="HandCoins"><p class="pb-1 text-xs text-muted-foreground">Oldest first. A payment pays the top one first.</p><button v-for="d in unpaid" :key="d.id" type="button" class="press mb-2 flex w-full items-center gap-3 rounded-md border p-3 text-left" @click="S.delId = d.id; go('delivery')"><span class="min-w-0 flex-1"><span class="flex items-center gap-1.5"><span class="font-mono text-xs font-medium">{{ d.id }}</span><Pill :tone="DSTAT[d.status][1]">{{ DSTAT[d.status][0] }}</Pill></span><span class="mt-1 block text-xs text-muted-foreground">due {{ d.due }}</span></span><span class="text-sm font-semibold tnum">{{ money(d.total - d.paid) }}</span></button></Card>
+        <Card title="Contact" icon="Contact"><Row k="Phone" :v="s.phone"/><Row k="Usually pays" v="Within 14 days"/></Card></template>
+      <div v-else-if="S.supTab === 'dels'" class="overflow-hidden rounded-xl border bg-card"><button v-for="(d, i) in dels" :key="d.id" type="button" :class="['press flex w-full items-center gap-3 px-3.5 py-2.5 text-left', i ? 'border-t' : '']" @click="S.delId = d.id; go('delivery')"><span class="min-w-0 flex-1"><span class="block font-mono text-xs font-medium">{{ d.id }}</span><span class="block truncate text-xs text-muted-foreground">{{ d.date }} · {{ delSummary(d) }}</span></span><span class="flex flex-col items-end gap-1"><span class="text-sm font-semibold tnum">{{ money(d.total) }}</span><Pill :tone="DSTAT[d.status][1]">{{ DSTAT[d.status][0] }}</Pill></span></button></div>
+      <div v-else class="rounded-xl border bg-card px-4 py-8 text-center text-sm text-muted-foreground">Payments to {{ s.name }} show here.</div></div></div>
+    <FooterBar><div class="grid grid-cols-2 gap-2"><Btn v="outline" @click="go('receive')">Receive stock</Btn><Btn :disabled="!s.owes" @click="S.sheet = 'paysup2'">{{ owner ? 'Pay supplier' : 'Ask Amina to pay' }}</Btn></div></FooterBar>
+    <AmountSheet :open="S.sheet === 'paysup2'" title="Pay supplier" :sub="s.name + ' owes ' + money(s.owes)" :max="s.owes" action="Pay" :methods="Object.assign(['Cash drawer', 'Lipa Namba', 'M-Pesa wallet', 'CRDB bank'], { label: 'Paid from' })" note="It pays the oldest delivery first." @close="S.sheet = null" @confirm="pay"/></div>` };
+
+/* the end of the day: stock, then cash, then send */
+const Count = { components: { Header, Icon, Tile, Pill, Btn, Seg, Empty, FooterBar, Stepper },
+  setup() {
+    const steps = ['Stock', 'Cash', 'Send']; const expectedCash = 41500;
+    const gaps = computed(() => PRODUCTS.filter(p => S.counted[p.id] !== p.stock));
+    const cashGap = computed(() => (+S.cashCounted || 0) - expectedCash);
+    const owner = computed(() => S.role === 'owner'); const hasGap = computed(() => gaps.value.length > 0 || cashGap.value !== 0);
+    const next = () => { if (S.countStep < 2) S.countStep++; else { toast(owner.value || !hasGap.value ? 'The day is closed' : 'Sent to Amina'); S.countStep = 0; S.countPane = 'history'; } };
+    const set = (p, d) => { S.counted[p.id] = Math.max(0, (S.counted[p.id] ?? p.stock) + d); };
+    const decide = (c, yes) => { c.st = yes ? 'ok' : 'rejected'; toast(yes ? 'Gaps approved' : 'Sent back to Rehema'); };
+    return { S, steps, gaps, cashGap, owner, hasGap, next, set, decide, PRODUCTS, COUNTS, expectedCash, money, money0, tint };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="End of day"/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="sticky top-0 z-10 border-b bg-background px-3 py-2.5"><Seg v-model="S.countPane" :tabs="[{ id: 'count', label: 'Count today' }, { id: 'history', label: 'History' }]"/></div>
+      <div v-if="S.countPane === 'count'" class="p-3 pb-6">
+        <div class="mb-3"><div class="mb-1.5 flex items-center justify-between text-xs"><span class="font-medium">Step {{ S.countStep + 1 }} of 3 · {{ steps[S.countStep] }}</span><span class="text-muted-foreground">Tue 13 Oct</span></div><div class="flex gap-1"><span v-for="(s, i) in steps" :key="s" :class="['h-1 flex-1 rounded-full', i <= S.countStep ? 'bg-primary' : 'bg-muted']"></span></div></div>
+        <template v-if="S.countStep === 0"><p class="mb-2 px-1 text-xs text-muted-foreground">Count what is on the shelf. The books say how many there should be.</p><div class="overflow-hidden rounded-xl border bg-card"><div v-for="(p, i) in PRODUCTS" :key="p.id" :class="['flex items-center gap-3 p-3', i ? 'border-t' : '']"><Tile :p="p" :size="36"/><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ p.name }}</span>
+          <span :class="['block text-xs tnum', S.counted[p.id] === p.stock ? 'text-muted-foreground' : 'font-medium text-warning']">{{ S.counted[p.id] === p.stock ? 'Books: ' + p.stock : (S.counted[p.id] < p.stock ? (p.stock - S.counted[p.id]) + ' short' : (S.counted[p.id] - p.stock) + ' more') + ' · books say ' + p.stock }}</span></span>
+          <Stepper size="sm" :q="S.counted[p.id]" :step="1" :max="9999" @sub="set(p, -1)" @add="set(p, 1)"/></div></div></template>
+        <template v-else-if="S.countStep === 1"><div class="rounded-xl border bg-card p-4"><p class="text-xs text-muted-foreground">The drawer should have</p><p class="text-2xl font-semibold tnum">{{ money(expectedCash) }}</p><p class="mt-0.5 text-xs text-muted-foreground">from the drawer's money ledger</p>
+          <p class="mb-1.5 mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Count the cash</p><label class="flex h-12 items-center gap-2 rounded-md border-2 border-primary px-3"><span class="text-sm text-muted-foreground">TZS</span><input v-model.number="S.cashCounted" type="text" inputmode="numeric" pattern="[0-9]*" aria-label="Cash counted" class="min-w-0 flex-1 bg-transparent text-right text-xl font-semibold tnum outline-none"></label>
+          <p :class="['mt-3 rounded-md px-3 py-2 text-sm', cashGap === 0 ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning']">{{ cashGap === 0 ? 'The drawer matches.' : 'The drawer is ' + money(Math.abs(cashGap)) + (cashGap < 0 ? ' short.' : ' over.') }}</p></div></template>
+        <template v-else><div class="rounded-xl border bg-card p-4"><p class="text-sm font-semibold">{{ hasGap ? 'There are gaps' : 'Everything matches' }}</p>
+          <div class="mt-2 space-y-1.5 text-sm"><p v-for="p in gaps" :key="p.id" class="flex justify-between"><span>{{ p.name }}</span><span class="font-medium text-warning tnum">{{ S.counted[p.id] - p.stock > 0 ? '+' : '−' }}{{ Math.abs(S.counted[p.id] - p.stock) }}</span></p><p class="flex justify-between"><span>Cash drawer</span><span :class="['font-medium tnum', cashGap ? 'text-warning' : 'text-success']">{{ cashGap ? money0(cashGap) : 'matches' }}</span></p></div></div>
+          <label class="mt-3 block text-sm font-medium">Note<input v-model="S.countNote" placeholder="Anything Amina should know" class="mt-1.5 flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"></label>
+          <p v-if="!owner && hasGap" class="mt-3 flex items-start gap-2 rounded-md bg-primary/10 p-3 text-sm text-primary"><Icon name="Hourglass" :size="16" class="mt-0.5"/>Gaps wait for Amina. The day closes after she approves.</p></template></div>
+      <div v-else class="space-y-2 p-3 pb-6"><div v-for="c in COUNTS" :key="c.id" class="rise rounded-xl border bg-card p-3.5"><div class="flex items-center justify-between"><span class="text-sm font-semibold">{{ c.day }}</span><Pill :tone="c.st === 'waiting' ? 'warning' : c.st === 'ok' ? 'success' : 'muted'">{{ c.st === 'waiting' ? 'Waiting for Amina' : c.st === 'ok' ? 'Closed' : 'Sent back' }}</Pill></div><p class="mt-1 text-xs text-muted-foreground">{{ c.id }} · by {{ c.by }}</p><p class="mt-1 text-sm">{{ c.gaps }}</p>
+        <div v-if="c.st === 'waiting' && owner" class="mt-3 grid grid-cols-2 gap-2"><Btn v="outline" size="md" @click="decide(c, false)">Send back</Btn><Btn size="md" @click="decide(c, true)">Approve gaps</Btn></div></div></div></div>
+    <FooterBar v-if="S.countPane === 'count'"><div class="grid gap-2" :class="S.countStep ? 'grid-cols-[1fr_2fr]' : 'grid-cols-1'"><Btn v-if="S.countStep" v="outline" @click="S.countStep--">Back</Btn><Btn @click="next">{{ S.countStep < 2 ? 'Next: ' + steps[S.countStep + 1] : (owner || !hasGap ? 'Close the day' : 'Send to Amina') }}</Btn></div></FooterBar></div>` };
