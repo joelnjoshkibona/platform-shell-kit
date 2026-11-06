@@ -10,7 +10,7 @@ Evidence: the DevBiz app and the Cobley spare parts, Agrovet and Jumla apps (`PR
 | Android version, CPU | 8+ (API 26), arm64 | updates (P67), permissions (P63) |
 | Network | none · data · Wi-Fi, and when it changed | P51, P59 |
 | Insets | status bar, gesture bar, notch, sides (px) | P62 |
-| Keyboard | open / closed, height | P62 |
+| Keyboard | open / closed, height (the view may not resize: Android 10 asks the plugin) | P62, P71 |
 | Permissions | each of camera, Bluetooth, notifications, install unknown apps: unasked · allowed · denied · denied for good | P63 |
 | Hardware | camera, Bluetooth, biometric, vibrate (declared optional) | P64, P65 |
 | Installed version | name and integer code | P67 |
@@ -27,11 +27,14 @@ Evidence: the DevBiz app and the Cobley spare parts, Agrovet and Jumla apps (`PR
 | Process killed | reopen where they were, cart and draft back (P58) |
 | Signal lost / back | banner or page with how old the data is; reads retry on return; writes never replayed (P51, P59, P60) |
 | A write times out | keep the form; "Check recent … before you try again"; Idempotency-Key makes a deliberate retry safe (P60) |
-| Keyboard opens | the field stays visible; the primary action rides above the keyboard (P62) |
+| Keyboard opens | the field stays visible; sheets and the page keep above the keyboard by its height; the primary action rides above it (P62, P71) |
 | A permission is needed | reason first, what still works, Allow / Not now; denied for good: Open Settings (P63) |
 | Leave for the system (installer, Settings, share, call) | expect to come back; re-read state on return (P58, P64, P67) |
 | Notification or link opened | open the record; sign in first if needed (P66) |
 | Update appears | banner; below the minimum nothing else (P53, P67) |
 | Phone handed on | lock after time away; sign out wipes the phone (P57, P65) |
+| The app fails or the process dies | the log records it; the next start offers to export it (P72) |
+| Recording in the background (location, reminders) | each run leaves a line in the log; the screen shows when it last worked (P72, P73, P74) |
+| A picture is taken outside the page | the plugin keeps it until the page has it; at the next start it goes back into the form that was waiting (P75) |
 
 The prototype's Screens pill has a **Phone movements** group that triggers each one.

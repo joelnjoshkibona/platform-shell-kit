@@ -91,15 +91,20 @@ const Drawer = { components: { Icon },
             <span v-else-if="it[3] === 'unread' && unread" class="grid h-6 min-w-6 place-items-center rounded-full bg-destructive px-1.5 text-xs font-bold text-white">{{ unread }}</span></button></div></nav></aside></transition></div>` };
 
 /* ============================================================ sheets, dialog, toast */
-const Sheet = { props: { open: Boolean, title: String, sub: String, tall: Boolean }, components: { Icon },
+/* P71: the on-screen keyboard. On Android 10 the web view is NOT resized and visualViewport does not shrink when the keyboard opens: it simply lies on
+   top of the lower part of the page. KB.h is the height of the screen it covers (0 while it is down). In the app it comes from the device-utils
+   plugin (GetKeyboard, useKeyboard) after the shell adds `keyboard-visible` to <body>; here the picker's "Keyboard open" sets it. A sheet lifts itself
+   by KB.h and the page behind keeps above it. */
+const KB = reactive({ h: 0 });
+const Sheet = { props: { open: Boolean, title: String, sub: String, tall: Boolean }, components: { Icon }, setup() { return { KB }; },
   template: `<div v-if="open" class="absolute inset-0 z-[70]"><transition name="fade" appear><div class="absolute inset-0 bg-black/45" @click="$emit('close')"></div></transition>
-    <transition name="sheet" appear><section :class="['absolute inset-x-0 bottom-0 flex flex-col rounded-t-xl bg-background shadow-2xl', tall ? 'top-10' : 'max-h-[86%]']" role="dialog" :aria-label="title">
+    <transition name="sheet" appear><section :class="['absolute inset-x-0 bottom-0 flex flex-col rounded-t-xl bg-background shadow-2xl', tall ? 'top-10' : 'max-h-[86%]']" :style="KB.h ? { bottom: KB.h + 'px', maxHeight: 'calc(100% - ' + KB.h + 'px - 12px)' } : null" role="dialog" :aria-label="title">
       <div class="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/30"></div>
       <div class="flex shrink-0 items-center gap-2 px-5 pb-2 pt-3"><div class="min-w-0 flex-1"><h2 class="truncate text-base font-semibold">{{ title }}</h2><p v-if="sub" class="truncate text-xs text-muted-foreground">{{ sub }}</p></div>
         <button type="button" class="press grid h-8 w-8 place-items-center rounded-full bg-muted" aria-label="Close" @click="$emit('close')"><Icon name="X" :size="18"/></button></div>
       <div class="scroll min-h-0 flex-1 overflow-y-auto"><slot/></div>
-      <div v-if="$slots.footer" class="shrink-0 border-t px-4 pt-3" :style="{ paddingBottom: 'calc(12px + var(--sa-bottom))' }"><slot name="footer"/></div>
-      <div v-else :style="{ height: 'var(--sa-bottom)' }" class="shrink-0"></div></section></transition></div>` };
+      <div v-if="$slots.footer" class="shrink-0 border-t px-4 pt-3" :style="{ paddingBottom: KB.h ? '12px' : 'calc(12px + var(--sa-bottom))' }"><slot name="footer"/></div>
+      <div v-else :style="{ height: KB.h ? '0px' : 'var(--sa-bottom)' }" class="shrink-0"></div></section></transition></div>` };
 
 const Confirm = { components: { Btn },
   setup() { return { S }; },

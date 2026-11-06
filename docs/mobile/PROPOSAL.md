@@ -17,7 +17,7 @@ from one app to the next. Each rediscovered the same bugs; none wrote the rules 
 | Hash routing, so the web view's history is the Back key | Cobley, Agrovet, Jumla (DevBiz: history guard, D199) |
 | Safe areas from the injected `--inset-*` with `env()` behind them, and the injected body padding overridden or the header doubles | all four (D192) |
 | A web view caches GETs: bust with a query parameter, never with `Cache-Control` request headers (CORS preflight) | Cobley, Agrovet, Jumla; DevBiz found it on 1.0.1 (the update banner never came) |
-| The keyboard resizes the view: `100dvh`, scroll the focused field into view after a delay | Cobley, Agrovet, Jumla |
+| The keyboard resizes the view on most phones (`100dvh`, scroll the focused field into view after a delay) but **not on Android 10**: ask the plugin for its height (P71) | Cobley, Agrovet, Jumla (resize); Hodie (Android 10, no resize) |
 | A native answer can arrive before the HTTP response that asked: register the listener first | Cobley, Agrovet |
 | The system installer freezes JS timers: re-read state on `visibilitychange`, not on a timer | all three updater copies |
 | `native:package` bakes the version code before it bumps `.env`: read the code from the built APK | Cobley, Agrovet, Jumla (DevBiz: `release.sh`) |

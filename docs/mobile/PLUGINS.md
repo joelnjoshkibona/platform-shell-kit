@@ -35,3 +35,18 @@ older plugins only while no plugin claims them).
   the share list) declare `"android_params": ["activity"]`, the others `["context"]`.
 - **Same version, same bundle.** Reinstalling with the same `NATIVEPHP_APP_VERSION` keeps the old unpacked web bundle and
   PHP; the Kotlin is new. Bump the version for every build you test.
+
+## What Hodie found (2026-11-05, three own plugins in one app)
+
+| Package | What it does now | Notes for a product |
+| --- | --- | --- |
+| `blutrixx/nativephp-device-utils` v1.8.0 | insets, file picker and files kept across a kill, camera with the reason it failed, voice notes, Save/Open file into Downloads, **keyboard height** (P71), **app log, crash capture and export** (P72) | `useKeyboard()`, `useAppLog()` and the `/device/*` routes need no PHP or JS of the app's own |
+| `blutrixx/nativephp-geo-location` v1.1.0 | foreground-service location recording into a buffer file; GPS plus network before Android 12 (P73) | writes its start, stop and errors to the app log by reflection |
+| `blutrixx/nativephp-alarms` | exact reminders that ring with the app closed, restored after a restart or update (P74) | logs each firing to the app log by reflection |
+
+- **A nested list arrives in a bridge function as a `JSONArray` of `JSONObject`, not as a `List` of `Map`.** Parse both, or the first call that sends a list writes empty rows (the app log did, once).
+- **A plugin can start work with the process.** Declare a content provider in `nativephp.json` (`android.providers`, fully qualified `name`, `authorities` with `${applicationId}`, `exported: false`); its `onCreate` runs before anything else of the app, which is where the app log and its crash handler start.
+- **Plugins can use each other without depending on each other:** `Class.forName("com.blutrixx.device.utils.AppLog").getMethod("write", ...)` and do nothing when it is not there.
+- **Share without a `FileProvider`:** copy the file into Downloads/<app> through `MediaStore` (no permission) and hand its `content://` URI to `ACTION_SEND` with `FLAG_GRANT_READ_URI_PERMISSION` (this is how the log export shares). DevBiz's `share-file` plugin does it through the app's own `FileProvider` instead; either works.
+- **The plugin's PHP keeps working off the phone** when its class falls back (the app log writes a file under `storage/app/applog` when there is no bridge), so a development server and the tests run the same screens.
+- **Test a plugin by its dex:** after `native:package`, `cat classes*.dex | grep -ac "<function name>"` shows the Kotlin really went into the build (a cached build does not prove it).

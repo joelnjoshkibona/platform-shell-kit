@@ -30,6 +30,8 @@ Money: Expenses, Accounts and Account page (history, check, move money). You and
 Profile, Users, Settings, Design system. Getting in: Sign in, Two-step code, Locked, Session ended. Phone states: no signal,
 update ready, update required.
 
+**Keyboard open** (the picker's Phone state, P71) draws a stand-in keyboard and shows what the app does on Android 10, where the web view is not resized: every sheet lifts above the keyboard and the page behind keeps above it.
+
 Use the picker to switch the signed-in person (Amina the owner, Rehema the cashier: her changes wait for the owner), the theme,
 the list state, and to open any sheet. The menu is flat (grouped labels, no dropdowns) and owner-only groups hide for the cashier.
 
