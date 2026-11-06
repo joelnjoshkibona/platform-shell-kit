@@ -1,6 +1,6 @@
 # The phone model
 
-What a phone is, and how it moves. The mobile kit (P56–P70) is these two tables; every rule and every phone component answers one row.
+What a phone is, and how it moves. The mobile kit (P56–P78) is these two tables; every rule and every phone component answers one row.
 Evidence: the DevBiz app and the Cobley spare parts, Agrovet and Jumla apps (`PROPOSAL.md`).
 
 ## What a phone is (device facts: asked once, never assumed)
@@ -9,6 +9,7 @@ Evidence: the DevBiz app and the Cobley spare parts, Agrovet and Jumla apps (`PR
 | --- | --- | --- |
 | Android version, CPU | 8+ (API 26), arm64 | updates (P67), permissions (P63) |
 | Network | none · data · Wi-Fi, and when it changed | P51, P59 |
+| Phone status | battery and charging, network and signal 0 to 4, generation (to Android 10), power saving, free storage; a history on the phone | P76 |
 | Insets | status bar, gesture bar, notch, sides (px) | P62 |
 | Keyboard | open / closed, height (the view may not resize: Android 10 asks the plugin) | P62, P71 |
 | Permissions | each of camera, Bluetooth, notifications, install unknown apps: unasked · allowed · denied · denied for good | P63 |
@@ -35,6 +36,8 @@ Evidence: the DevBiz app and the Cobley spare parts, Agrovet and Jumla apps (`PR
 | Phone handed on | lock after time away; sign out wipes the phone (P57, P65) |
 | The app fails or the process dies | the log records it; the next start offers to export it (P72) |
 | Recording in the background (location, reminders) | each run leaves a line in the log; the screen shows when it last worked (P72, P73, P74) |
+| Where the person was | the fixes are kept as a trail until deleted, shown on a map one day at a time; positions never leave the phone, only tile pictures come in (P77) |
+| Two writes at once | one at a time through a lock; a drifted transaction is reset and logged (P78) |
 | A picture is taken outside the page | the plugin keeps it until the page has it; at the next start it goes back into the form that was waiting (P75) |
 
 The prototype's Screens pill has a **Phone movements** group that triggers each one.

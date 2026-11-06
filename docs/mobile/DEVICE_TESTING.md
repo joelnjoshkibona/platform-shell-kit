@@ -31,6 +31,7 @@ Run the phone movements checklist (`PHONE_MODEL.md`) on the emulator and on one 
 - [ ] camera asked, allowed, denied, denied for good; scan; type the code; print; call, WhatsApp, SMS from a number
 - [ ] keyboard open on the longest form and on every sheet (the field and the action in view; on an Android 10 phone too, P71); Back at every layer and on forced screens
 - [ ] the log: Settings, Logs shows the run; Export and share saves a file and opens the share list; a forced crash is offered for export at the next start (P72)
+- [ ] the map: a real outdoor walk shows a path and the stops, tiles load with a network and say so without one, Delete the trail asks first (P77); Phone status shows the live reading and a history that grows, with the app closed too (P76); the log shows no `db` reset warnings (P78)
 - [ ] location recording: a real outdoor walk, indoors gives no fix (P73); a reminder rings with the app closed (P74); a photo taken, the app killed, the photo back in the form (P75)
 - [ ] update banner and required screen; install over the old version keeps the session
 - [ ] light and dark, 360 / 390 / 411 wide, gesture and 3-button navigation
@@ -53,3 +54,11 @@ Run the phone movements checklist (`PHONE_MODEL.md`) on the emulator and on one 
 - **Doze:** `dumpsys deviceidle force-idle` and `unforce` (the exact-alarm result differs with and without the permission, P74). Put the clock in the page tests: a test that depends on the time of day breaks on the next day.
 - **Same version, same bundle (P68):** every test install gets a new version code. `native:package` writes the manifest first and then bumps `NATIVEPHP_APP_VERSION_CODE` in the bundled `.env`, so the code the app reads is one more than the one Android knows.
 - **A phone in use:** taps sent with `adb input` land on whatever is on screen. Take a screenshot before and after every step, and never tap blind after an install (the app needs about 15 seconds to be ready).
+
+## Learned on a real phone (Hodie, 2026-11-06)
+
+- **A POS terminal (Telpo M1K, Android 12) is a good test of the safe areas and a poor test of location.** It has a real 96 px navigation bar whose first inset answer was 0 (P62), and no position source indoors: the network provider is off and the fused provider gives nothing, so it cannot make a trail. Use it for layout, use a phone that is carried for the walk (P77).
+- **It sleeps although `stay_on_while_plugged_in` is set**: wake it and swipe up before every screenshot. **A shared test phone** can have another session start a different app: read `dumpsys window | grep mCurrentFocus` before every tap, and take a screenshot after.
+- **A blind tap lands on whatever moved.** After the Settings list grew, a coordinate tap hit a destructive row; only its confirmation (Delete the trail asks first) saved the data. Destructive rows need a confirmation, and tests find rows by their text.
+- **Page tests of a map:** serve the app with `php artisan serve`, seed the trail with `tinker --execute`, block the tile host in the browser and answer with a stand-in PNG so the test does not depend on the network; check that the tile error notice appears when the stand-in is removed.
+- **`pkill -f` or `pgrep -f` with a string that also appears in your own command kills your own shell** (exit 144). Find the server with `ss -ltnp | grep :<port>` and `kill` the pid.

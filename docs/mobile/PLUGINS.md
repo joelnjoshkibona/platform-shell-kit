@@ -40,8 +40,8 @@ older plugins only while no plugin claims them).
 
 | Package | What it does now | Notes for a product |
 | --- | --- | --- |
-| `blutrixx/nativephp-device-utils` v1.8.0 | insets, file picker and files kept across a kill, camera with the reason it failed, voice notes, Save/Open file into Downloads, **keyboard height** (P71), **app log, crash capture and export** (P72) | `useKeyboard()`, `useAppLog()` and the `/device/*` routes need no PHP or JS of the app's own |
-| `blutrixx/nativephp-geo-location` v1.1.0 | foreground-service location recording into a buffer file; GPS plus network before Android 12 (P73) | writes its start, stop and errors to the app log by reflection |
+| `blutrixx/nativephp-device-utils` v1.9.0 | insets, file picker and files kept across a kill, camera with the reason it failed, voice notes, Save/Open file into Downloads, **keyboard height** (P71), **app log, crash capture and export** (P72), **phone status** `GetStatus` (P76) | `useKeyboard()`, `useAppLog()` and the `/device/*` routes need no PHP or JS of the app's own |
+| `blutrixx/nativephp-geo-location` v1.2.0 | foreground-service location recording into a buffer file; GPS plus network before Android 12 (P73); each fix carries a short reading of the phone's state `st` (P76) | writes its start, stop and errors to the app log by reflection; reads `DeviceStatus.snapshot` by reflection |
 | `blutrixx/nativephp-alarms` | exact reminders that ring with the app closed, restored after a restart or update (P74) | logs each firing to the app log by reflection |
 
 - **A nested list arrives in a bridge function as a `JSONArray` of `JSONObject`, not as a `List` of `Map`.** Parse both, or the first call that sends a list writes empty rows (the app log did, once).
@@ -50,3 +50,6 @@ older plugins only while no plugin claims them).
 - **Share without a `FileProvider`:** copy the file into Downloads/<app> through `MediaStore` (no permission) and hand its `content://` URI to `ACTION_SEND` with `FLAG_GRANT_READ_URI_PERMISSION` (this is how the log export shares). DevBiz's `share-file` plugin does it through the app's own `FileProvider` instead; either works.
 - **The plugin's PHP keeps working off the phone** when its class falls back (the app log writes a file under `storage/app/applog` when there is no bridge), so a development server and the tests run the same screens.
 - **Test a plugin by its dex:** after `native:package`, `cat classes*.dex | grep -ac "<function name>"` shows the Kotlin really went into the build (a cached build does not prove it).
+- **Reading the phone's state needs two normal permissions** (`ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`; no prompt). Wi-Fi signal: `WifiManager.calculateSignalLevel(rssi, 5)`; mobile signal: `TelephonyManager.signalStrength.level` (API 28+); the sticky battery broadcast gives level and charging without a receiver. The mobile generation needs a phone-state permission from Android 11, so it is left out there rather than asked for. Wi-Fi names, numbers and SIM identifiers are not read (P76).
+- **A plugin that wants to attach something to every record can publish a small static function** (`DeviceStatus.snapshot(context)` returns a short JSON) and the other plugin calls it by reflection and does nothing when it is absent (geo-location does this for `st`).
+- **A map in the page is a web dependency, not a plugin:** Leaflet 1.9 and OpenStreetMap tiles need only the INTERNET permission the app already has (P77).
