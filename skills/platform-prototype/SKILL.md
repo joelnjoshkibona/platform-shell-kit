@@ -14,7 +14,7 @@ Every admin product on the platform (Laravel API + Vue 3 + shadcn-vue + strict T
 Fetch these raw files first (base: `https://raw.githubusercontent.com/joelnjoshkibona/platform-shell-kit/main/`):
 
 1. `README.md` (what the kit is, where a module plugs in)
-2. `docs/PLATFORM_DECISIONS.md` (P1–P93, the locked decisions; specs in `docs/platform/`)
+2. `docs/PLATFORM_DECISIONS.md` (P1–P97, the locked decisions; specs in `docs/platform/`)
 3. `docs/FRONTEND_RULES.md` (behaviour rules + review checklist)
 4. `docs/COMPONENTS.md` and `docs/components_api.json` (the component library)
 5. `docs/SCREENS.core.md` (core screens, routes, permissions)
@@ -34,7 +34,7 @@ Do **not** ask about, propose alternatives for, or redesign any of these. They a
 - tokens, light/dark/system themes, Geist, radius, spacing, icons (Lucide), motion, responsiveness, the component library
 - list pages (KPIs, quick tabs, toolbar, filters, URL state, priority columns), details pages (Back, breadcrumb, header, tabs in ?tab=, Overview first, History last, delete check + YES gate)
 - forms (drafts, pickers, rich text, date picker, save bar + leave guard)
-- core modules: Dashboard, Users, Roles, Permissions, Locations, Settings, Menu Management, Media, Approvals, notifications
+- core modules: Dashboard, Users, Roles, Permissions, Locations, Settings, Menu Management, Media, Approvals, notifications, and the system screens (P97: Logs, Queue, Scheduled tasks, Trash, Notifications, Permissions)
 - permissions named `Module.action`, menus gated by `Module.list`, server-side access matching the menu
 - the phone app's behaviour (P51–P79, P93): its own app crafted for a phone (Hodie's shape) and its own prototype, quiet header, session, lifecycle, connectivity, uncertain writes, Back, safe areas and keyboard, permissions, lock, push, updates, app log
 - **code structure (P80–P90)**: a module owns its folder on every side; one manifest per module found by glob (`module.json`, `defineModule`); modules load themselves; one service per operation, container instances, validated data only; actions declared once; related records are `RecordLink`s from the module registry; child tabs are the child's scoped list; the generator's list contract; the API shape (`version`, 409, `errors`); strict TypeScript; a test per convention

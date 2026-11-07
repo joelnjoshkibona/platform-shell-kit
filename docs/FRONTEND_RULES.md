@@ -335,6 +335,13 @@ Guide: `docs/architecture/MODULES.md`.
 - **List contract (P87)** and **API shape (P88)**: see the backend contract below.
 - **Strict TypeScript (P89)**; **every convention has a test (P90)**.
 
+## Locked: system screens (P97)
+
+- Logs, Queue, Scheduled tasks, Trash, Notifications and Permissions are core screens built as in the prototype (`parts_system.js`): list pages with details sheets, tabs in `?tab=`.
+- Nothing personal is written to a log (no passwords, tokens or form answers); activity entries link to their records.
+- Destructive actions (delete a job, delete for good, empty trash) use the delete check and the YES gate.
+- Announcements live in Notifications (no separate Broadcasts module).
+
 ## Constrained-creative and Free
 
 **Constrained-creative** (pick an existing shape):
