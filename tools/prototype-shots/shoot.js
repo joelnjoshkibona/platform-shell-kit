@@ -18,15 +18,7 @@ const opt = (k, d) => { const i = args.indexOf('--' + k); return i > -1 ? args[i
 const L = require('./layout');
 const OUT = opt('out') ? path.resolve(opt('out')) : L.SHOTS;
 const ONLY = (opt('only', '') || '').split(',').filter(Boolean);
-const HTML = fs.readFileSync(L.HTML, 'utf8');
-// The prototype loads Geist from Google Fonts; serve the same files from @fontsource (the apps bundle these),
-// so the screenshots render the same font on any machine, offline.
-const FONT_DIRS = ['geist', 'geist-mono'].map(n => path.dirname(require.resolve(`@fontsource/${n}/package.json`)));
-const FONTS_CSS = FONT_DIRS.flatMap(dir => ['400', '500', '600', '700'].map(w => path.join(dir, w + '.css')))
-  .filter(f => fs.existsSync(f))
-  .map(f => fs.readFileSync(f, 'utf8').replace(/url\(\.\/files\/([^)]+)\)/g, (m, file) => `url(http://fonts.local/${path.basename(path.dirname(f))}/${file})`))
-  .join('\n');
-const CSS = fs.readFileSync(path.resolve(__dirname, '.tw.css'), 'utf8');
+const { routeProto } = require('./serve');   // Vue, lucide, Highcharts, Geist and Tailwind from node_modules (offline)
 
 const COMBOS = {
   'desktop-light': { viewport: { width: 1280, height: 900 }, colorScheme: 'light' },
@@ -51,6 +43,7 @@ const SCREENS = [
   ['delegations', 'Delegations', { full: true }], ['media', 'Media library', { full: true }], ['workspace', 'Settings', { full: true }],
   ['logs', 'Logs (activity, sign-ins, errors, requests)', { full: true }], ['queue', 'Queue', { full: true }], ['scheduled-tasks', 'Scheduled tasks', { full: true }],
   ['trash', 'Trash', { full: true }], ['notifications', 'Notifications (inbox, settings, rules, announcements)', { full: true }], ['permissions', 'Permissions', { full: true }],
+  ['help', 'Help and guides', { full: true }], ['help-article', 'Help: an article with marked pictures', { full: true }],
   ['reports', 'Reports', { full: true }], ['report', 'Report: Sales lines (table and chart)', { full: true }],
   ['my-jobs', 'My exports and reports', { full: true }], ['job', 'Job page (a ready export)', { full: true }],
   ['menus', 'Menu management', { full: true }], ['design', 'Design system (tokens, components, rules)', { full: true }],
@@ -113,21 +106,7 @@ const STATES = [
     const ctx = await b.newContext({ ...COMBOS[c], reducedMotion: 'reduce' });
     const p = await ctx.newPage(); const errs = [];
     p.on('pageerror', e => errs.push(e.message));
-    await ctx.route('**/*', r => {
-      const u = r.request().url();
-      if (u.includes('cdn.tailwindcss.com')) return r.fulfill({ body: 'window.tailwind={};', contentType: 'text/javascript' });
-      if (u.includes('vue.global')) return r.fulfill({ path: require.resolve('vue/dist/vue.global.prod.js') });
-      if (u.includes('lucide')) return r.fulfill({ path: require.resolve('lucide/dist/umd/lucide.min.js') });
-      if (u.includes('/npm/highcharts@')) return r.fulfill({ path: path.join(path.dirname(require.resolve('highcharts/package.json')), u.split(/highcharts@[^/]+\//)[1]), contentType: 'text/javascript' });   // P96: charts load on report pages only
-      if (u.includes('fonts.googleapis.com')) return r.fulfill({ body: FONTS_CSS, contentType: 'text/css' });
-      if (u.startsWith('http://fonts.local/')) {
-        const [pkg, file] = u.slice('http://fonts.local/'.length).split('/');
-        const dir = FONT_DIRS.find(d => path.basename(d) === pkg);
-        return dir ? r.fulfill({ path: path.join(dir, 'files', file) }) : r.abort();
-      }
-      if (u.startsWith('http://proto/')) return r.fulfill({ contentType: 'text/html', body: '<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>' + CSS + '</style></head><body><script>window.__INIT_ROUTE=' + JSON.stringify(s.route) + '</script>' + HTML + '</body></html>' });
-      return r.abort();
-    });
+    await routeProto(ctx, s.route);
     await p.goto('http://proto/'); await p.waitForTimeout(1000);
     try { if (s.run) { await s.run(p, c); await p.waitForTimeout(700); } }
     catch (e) { errs.push('state step failed: ' + e.message.split('\n')[0]); }

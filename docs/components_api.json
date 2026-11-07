@@ -2107,5 +2107,38 @@
    "Build table exports in the browser",
    "Add a second chart library"
   ]
+ },
+ "Help · How do I…": {
+  "file": "src/components/app/HelpArticle.vue, HowDoI.vue; src/modules/help/pages/HelpPage.vue, HelpArticlePage.vue",
+  "props": [
+   [
+    "article",
+    "HelpArticle",
+    "",
+    "From help.json: id, title, module, who, screens, related, html"
+   ],
+   [
+    "route",
+    "string",
+    "the current route",
+    "How do I… lists the articles whose screens include it"
+   ]
+  ],
+  "emits": [
+   [
+    "open",
+    "an article id"
+   ]
+  ],
+  "slots": [],
+  "do": [
+   "Show the phone picture on a phone and the desktop picture on wider screens",
+   "Put a legend under each picture with the same numbers as the text",
+   "Offer How do I… in the top bar on every screen"
+  ],
+  "dont": [
+   "Draw markers by hand or edit help.json: write the article and run tools/help/build.js",
+   "Point a marker at a position instead of a named element"
+  ]
  }
 }

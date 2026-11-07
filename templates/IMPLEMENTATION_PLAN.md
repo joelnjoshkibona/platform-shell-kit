@@ -11,6 +11,7 @@ How to write a step:
 - **Commands**: what to run, in order.
 - **Check**: how to prove it (tests, the screen against its screenshot, a manual check with the expected result).
 - **Guide**: the chapter in `docs/guide/chapters/` that explains it.
+- **Help**: for a step that adds or changes a screen, the articles in `docs/help/articles/` for the tasks done on it (P98).
 
 ---
 

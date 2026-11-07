@@ -42,9 +42,11 @@ mobile/  the phone app, its own app (P93, from the kit's templates/mobile), if t
   app/ routes/ database/ (its small Laravel for the phone's work) · resources/spa/src/{app,components,modules}/
 packages/shared/   what web and mobile share: API client and types, permissions, statuses, formatters (from templates/shared)
 docs/    product, design (prototype, screenshots, screens), frontend rules, components, architecture,
-         guide/ (chapters + index.html), BUILD_PLAN.md, IMPLEMENTATION_PLAN.md, PROGRESS.md
+         guide/ (chapters + index.html), help/ (the user guide: articles, marked pictures, index.html, P98),
+         BUILD_PLAN.md, IMPLEMENTATION_PLAN.md, PROGRESS.md
 tools/prototype-shots/   screenshots of the prototype + side-by-side compare with the app
-tools/guide/             build.py (chapters → index.html), check.sh (P92), build.args
+tools/guide/             build.py (chapters → index.html), check.sh (P92, P98), build.args
+tools/help/              build.js (articles → marked pictures, help.json, index.html; --check in CI), test/
 ```
 
 ## Working rules
@@ -76,6 +78,7 @@ tools/guide/             build.py (chapters → index.html), check.sh (P92), bui
   - names its step in `docs/IMPLEMENTATION_PLAN.md` and corrects the step if the work differed;
   - updates its row in `docs/PROGRESS.md` (status, PR, date, how it was verified);
   - adds or updates the chapter in `docs/guide/chapters/` that explains it for a beginner (why, files, commands, checks), and rebuilds `docs/guide/index.html` with `python3 tools/guide/build.py`;
+  - for a screen it adds or changes, updates its help articles in `docs/help/articles/` and runs `node tools/help/build.js` (P98), or says `Help: no change` and why in the commit;
   - runs `tools/guide/check.sh` (CI runs it too).
 - **Backend:**
   - its list/select/drafts/media/approvals contracts, and the endpoint shapes in `FRONTEND_RULES.md` → "Backend contract";

@@ -160,6 +160,14 @@ Designed from SYSTEM_SHELL's backend (`app/Project/Logs`, `Queue`, `ScheduledTas
 | My exports and reports | `/my-jobs` (avatar menu) | The person's runs by status (Running, Ready, Failed), with the progress, the rows and the days kept; Download on a ready row | `my-jobs__*` |
 | Job page | `/jobs/JOB-0041` | What was asked; progress; the result with Download and the first rows; errors in plain words; expired; Run again, Cancel | `job__*` |
 
+## Help and guides (P98)
+
+| Screen | Route | What it shows | Screenshots |
+| --- | --- | --- | --- |
+| Help and guides | `/help` | Search; the articles by module, each with its first sentence | `help__*` |
+| An article | `/help/{id}` | Breadcrumb; module; title; who can do this; the steps with marked pictures (①②③ and a legend; the phone picture on a phone); See also | `help-article__*` |
+| How do I… | a sheet from the top bar, on every screen | The articles for this screen, and All help and guides | — |
+
 ## Reports (P96)
 
 | Screen | Route | What it shows | Screenshots |

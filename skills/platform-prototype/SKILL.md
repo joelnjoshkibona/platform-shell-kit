@@ -38,7 +38,7 @@ Do **not** ask about, propose alternatives for, or redesign any of these. They a
 - permissions named `Module.action`, menus gated by `Module.list`, server-side access matching the menu
 - the phone app's behaviour (P51–P79, P93): its own app crafted for a phone (Hodie's shape) and its own prototype, quiet header, session, lifecycle, connectivity, uncertain writes, Back, safe areas and keyboard, permissions, lock, push, updates, app log
 - **code structure (P80–P90)**: a module owns its folder on every side; one manifest per module found by glob (`module.json`, `defineModule`); modules load themselves; one service per operation, container instances, validated data only; actions declared once; related records are `RecordLink`s from the module registry; child tabs are the child's scoped list; the generator's list contract; the API shape (`version`, 409, `errors`); strict TypeScript; a test per convention
-- **deliverables (P91, P92)**: prototype, implementation plan, progress tracker and build guide, updated with every change
+- **deliverables (P91, P92, P98)**: prototype, implementation plan, progress tracker, build guide and user guide (`docs/help/`, marked pictures from `tools/help`), updated with every change
 - monorepo `api/` + `web/` + `packages/shared/` (+ `mobile/`, the phone app as its own app in Hodie's shape, P93), each app's `src/` split into `app/`, `components/`, `modules/`, phased build with one PR per phase, visual parity proven with screenshots
 
 If the user asks for a change to one of these, say it is a platform decision, show the P number, and ask (with the Ask tool) whether they want to change the platform for every product. If yes, the change is a new P in the kit repo (decision + prototype + rules + components + the kit's guide updated together, `kit.json` bumped), not a product-only change.
@@ -73,7 +73,8 @@ docs/design/prototype/            the product prototype + src/ (and prototype-ph
 docs/design/screenshots/          generated with tools/prototype-shots
 docs/frontend/                    FRONTEND_RULES.md, COMPONENTS.md, components_api.json (from the kit, plus product additions)
 docs/architecture/                the ERD with the D-log, MODULES.md (from the kit)
-tools/prototype-shots/, tools/guide/   from the kit (tools/guide/build.args holds the product's guide title and pages)
+docs/help/                        the user guide (P98): the kit's core articles + the product's, pictures and index.html from tools/help/build.js
+tools/prototype-shots/, tools/guide/, tools/help/   from the kit (tools/guide/build.args holds the product's guide title and pages)
 api/                              the Cobley backend, trimmed in Phase 0, modules under app/Modules/{Kernel|Core|Custom}/
 web/, packages/shared/            created in Phase 0, modules under web/src/modules/
 mobile/                           the phone app (P93): its own NativePHP app from templates/mobile, modules under mobile/resources/spa/src/modules/
