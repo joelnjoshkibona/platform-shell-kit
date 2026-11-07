@@ -10,7 +10,7 @@ You are building **{{PRODUCT_NAME}}**, a multi-tenant, Google Forms-like form bu
 
 **Before writing any code, read these files in full:**
 1. `CLAUDE.md`
-2. `docs/BUILD_PLAN.md`
+2. `docs/BUILD_PLAN.md`, `docs/IMPLEMENTATION_PLAN.md` and `docs/PROGRESS.md` (the steps and where they stand)
 3. `docs/product/PRODUCT.md`
 4. `docs/design/SCREENS.md`
 5. `docs/frontend/FRONTEND_RULES.md`
@@ -44,6 +44,7 @@ Rules you must follow:
   - zero console errors and warnings;
   - no horizontal scroll at 360px;
   - checking every screen in light and dark.
+  - the implementation plan steps, the progress rows and the build guide chapters updated for everything you built, `docs/guide/index.html` rebuilt and `tools/guide/check.sh` passing (P91, P92): write the guide so a beginner can redo this phase by following it.
 - **Do not build** the prototype-only pieces: the Screens pill, the Prototype states panel, and the phone-frame toggle.
 - **Never commit secrets** or `.env` files.
 

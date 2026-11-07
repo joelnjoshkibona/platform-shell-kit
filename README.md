@@ -11,7 +11,9 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `prototype/index.html` | The runnable prototype (open in a browser). The visual source of truth for the shell |
 | `prototype/src/product.js` | **The one file a product edits for branding:** name, tagline, icon, domain, city, storage key |
 | `prototype/src/parts_*.js`, `builder.html`, `assemble.py` | The shell's source, by area. `python3 prototype/src/assemble.py` rebuilds `index.html` and `docs/COMPONENTS.md` |
-| `docs/PLATFORM_DECISIONS.md` | P1–P79: the locked decisions, each with the decision it came from (P38 withdrawn); P51–P79 are the phone app |
+| `docs/PLATFORM_DECISIONS.md` | P1–P92: the locked decisions, each with the decision it came from (P38 withdrawn); P51–P79 are the phone app; P80–P90 the code structure; P91–P92 the build guide, plan and tracker |
+| `docs/architecture/MODULES.md` | How a product's code is laid out, found and wired (P80–P90): module folders, manifests, loading, services, actions, links, child tabs |
+| `docs/guide/index.html` | **The build guide**: how a product is built on this kit, from an empty folder, explained for a beginner (P91). Source: `docs/guide/chapters/*.md`, built by `python3 tools/guide/build.py` |
 | `docs/FRONTEND_RULES.md` | Behaviour rules: Locked / Constrained-creative / Free, plus the review checklist |
 | `docs/COMPONENTS.md`, `docs/components_api.json` | The component library: specs, props, emits, slots, do/don't |
 | `docs/SCREENS.core.md` | The core screens, their routes, permissions and screenshots |
@@ -19,7 +21,8 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `screenshots/` | Baseline screenshots of every core screen: desktop/phone × light/dark, plus key states |
 | `docs/mobile/` | The mobile kit: `PHONE_MODEL.md` (what a phone is, how it moves), `DEVICE_TESTING.md`, `PLUGINS.md` (the shared Android plugins on v4), `PROPOSAL.md` (the evidence from four apps) |
 | `templates/mobile/` | The product's Android app: catch-all route, build, icon and splash, signed release, tests, the `src/phone/` contract |
-| `templates/` | CLAUDE.md, BUILD_PLAN.md, HANDOFF_PROMPT.md, PRODUCT.md, SCREENS.md for a product's repo, with `{{PRODUCT_NAME}}` placeholders |
+| `templates/` | CLAUDE.md, BUILD_PLAN.md, IMPLEMENTATION_PLAN.md, PROGRESS.md, HANDOFF_PROMPT.md, PRODUCT.md, SCREENS.md and `guide/` (the product's build guide chapters) for a product's repo, with `{{PRODUCT_NAME}}` placeholders |
+| `skills/platform-prototype/SKILL.md` | The Claude skill that starts, extends and hands off products on the kit. Upload it to the claude.ai skills when it changes |
 | `tools/prototype-shots/` | Regenerates screenshots; builds a side-by-side compare page against a real app |
 
 The prototype still carries **Fomu's modules (Forms, Templates, Builder, Results, Respondent) as a worked example** of a product module. They show how a module plugs into the shell; a product replaces them with its own.
@@ -28,7 +31,8 @@ The prototype still carries **Fomu's modules (Forms, Templates, Builder, Results
 
 1. **Prototype:** copy `prototype/` into the product's design folder. Edit `product.js`. Add the product's modules as new `parts_<module>.js` files, register them in `assemble.py` where the example modules are, and remove the example modules. Rebuild. The shell, the core screens and the components stay as they are.
 2. **Decisions:** the product keeps its own log `D1, D2, …` for product decisions. It references P-numbers for anything the shell already decided. If the shell itself must change, that is a new P in this kit, not a D in the product.
-3. **Handoff:** fill the templates in `templates/` and put them with the prototype, screenshots, rules, components and the product's ERD into the product repo, the way `joelnjoshkibona/fomu` is laid out.
+3. **Build guide, plan and tracker (P91, P92):** every product keeps `docs/guide/` (its build guide, an HTML page built from chapters), `docs/IMPLEMENTATION_PLAN.md` and `docs/PROGRESS.md`, and every change to the code updates them, so anyone can follow the guide and build the product again.
+4. **Handoff:** fill the templates in `templates/` and put them with the prototype, screenshots, rules, components and the product's ERD into the product repo, the way `joelnjoshkibona/fomu` is laid out.
 
 ## Where a module plugs in
 
@@ -45,17 +49,17 @@ The prototype still carries **Fomu's modules (Forms, Templates, Builder, Results
 | Records owned by a location | `parts_loc.js` → `formsAt`, `formVisible` | forms per location |
 | Actions behind approvals | `parts_appr.js` → `ACTIONS` + `approvalGate` | publish, export, reset |
 | Sign-in panel and mark (P48) | `product.js` → `signin`, `logo`; art component registered in `comps` | Fomu's headline, points and `FomuSignInArt` |
-| Back on record pages (P49) | `parts_links.js` → `BACK_PARENT` (record route → its list) | role, location, request |
 | Phone app states and movements (P51–P79) | `parts_appshell.js` → `appState`, `APP`, the phone components; Screens pill › Phone app and Phone movements | the states and movements with Fomu's name and mark |
 | Settings tabs (P42) | `parts_shell.js` → `SETTINGS_TABS` | Fomu's Results tab (chart defaults) |
 | Recent activity (P45) | `parts_loc.js` → `ACTIVITY` per organisation + `logActivity` | form, people and location events per demo organisation |
 | Screens pill (prototype-only) | `assemble.py` → `ScreensPill` | lists the product's screens |
-| Linkable details routes (P39) | `parts_links.js` → `LINK_DETAIL` | roles, locations, requests; add one entry per details route |
+| Modules: links, previews, deep links, Back (P39, P49, P81, P85) | `parts_links.js` → `defineModule({ key, route, path, label, plural, perm, get, set, linkId, find, preview, backParent })`; the preview component next to the module | Roles, Locations, Requests (`RolePreview`, `LocationPreview`, `RequestPreview`); `RecordLink module id` anywhere a related record shows. `LINK_DETAIL` and `BACK_PARENT` still accept direct entries from older products |
 | Lists that show rows (P39, P40) | `parts_listcard.js` → `ListCard` + `ListRows` (priority columns) + `useList({ scope, query })` + `registerUrlList` | Roles, Users, Approvals, Locations, Location › Users tab |
 
 ## Rules of the kit
 
 - The shell is **locked**. Change it only with a new P-decision here, then update the prototype, rules and components in the same commit, and bump `kit_version` in `prototype/src/kit.json` (see Versioning).
+- A kit change also updates the kit's build guide (`docs/guide/chapters/`, rebuilt with `python3 tools/guide/build.py`) wherever it changes how a product is built (P91).
 - Products **pull** kit changes; nothing flows the other way without a P. A product may test a proposed P first (spec in its `docs/platform/P<nn>-*.md`), then port it here as one pull request.
 - No secrets, no product data beyond demo seeds. The repo is public.
 

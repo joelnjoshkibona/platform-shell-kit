@@ -32,8 +32,8 @@ body { margin: 0; background: hsl(var(--canvas)); font-family: Geist, ui-sans-se
   --destructive: 0 70% 58%; --warning: 38 92% 56%; --success: 152 52% 52%;
   --c1: #1f9e89; --c2: #c97514; --c3: #4c82e8; --c4: #dc5577; --c5: #8f73e3; --c-other: #64748b; }
 .app *, .app *::before, .app *::after { border-color: hsl(var(--border)); box-sizing: border-box; }
-.app button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
-.app input { font: inherit; color: inherit; }
+:where(.app) button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }   /* :where keeps it below Tailwind text colours (a red Delete stayed the body colour) */
+:where(.app) input { font: inherit; color: inherit; }
 .scroll { scrollbar-width: none; overscroll-behavior: contain; } .scroll::-webkit-scrollbar { display: none; }
 .tnum { font-variant-numeric: tabular-nums; }
 .press { transition: transform .12s ease, background-color .12s ease; } .press:active { transform: scale(.98); }

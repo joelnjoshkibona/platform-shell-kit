@@ -3,14 +3,34 @@
      #/locations/DSM-01?tab=users&q=amina&sort=-since&f[from][op]=in&f[from][value]=here
      The route, the record, the tab and the active list's search, filters and sort are kept in the address.
      Back/forward and pasted links restore the same view; Copy link copies it. */
-  /* EXTENSION POINT: a details route a link can open. path = the URL segment, get = the record's id in the link, set = open it.
-     A product adds its own, e.g. LINK_DETAIL.customer = { path: 'customers', get: () => …, set: (v) => … }. */
-  const LINK_DETAIL = {
-    role: { path: 'roles', get: () => G.roleId, set: (v) => { const r = roleById(v); if (r) G.roleId = r.id; return !!r; } },
-    location: { path: 'locations', get: () => { const l = locById(G.locId); return l && (l.code || l.id); }, set: (v) => { const l = locsOf().find(x => x.code === v || x.id === v); if (l) G.locId = l.id; return !!l; } },
-    request: { path: 'requests', get: () => { const r = reqById(G.reqId); return r && (r.no || r.id); }, set: (v) => { const r = reqsOf().find(x => x.no === v || x.id === v); if (r) G.reqId = r.id; return !!r; } },
-  };
-  const LINK_PATHS = Object.fromEntries(Object.entries(LINK_DETAIL).map(([r, d]) => [d.path, r]));
+  /* EXTENSION POINT: defineModule (below). Writing LINK_DETAIL.customer = { path, get, set } directly still works but gives no RecordLink preview. */
+  /* P81, P85: ONE REGISTRY. A module registers itself once with defineModule; links, deep links, Back and RecordLink all read it.
+     defineModule({ key, route, path, label, plural, perm, get, set, linkId, find, preview, backParent })
+       key        'Locations' (what RecordLink's module prop names)     route  'location' (the details route)
+       path       'locations' (the URL segment)                          perm   the permission that opens it
+       get / set  the open record's id in the link, and open one by it (set returns false when it does not exist)
+       linkId     record id -> the id shown in the link (a code or a number)
+       find       record id -> { label, sub, deleted } or null (in the app the API sends this with the row)
+       preview    the component RecordLink shows in its sheet        backParent  the list Back falls back to (P49)
+     LINK_DETAIL, LINK_PATHS and BACK_PARENT stay as views of it, so products that write to them directly keep working. */
+  const MODULES = {}; const LINK_DETAIL = {}; const LINK_PATHS = {}; const BACK_PARENT = {};
+  function defineModule(m) {
+    MODULES[m.key] = m; LINK_DETAIL[m.route] = { path: m.path, get: m.get, set: m.set }; LINK_PATHS[m.path] = m.route;
+    if (m.backParent) BACK_PARENT[m.route] = m.backParent;
+    m.open = (id, tab) => { if (m.set(m.linkId ? m.linkId(id) : id)) nav(m.route, tab); else toast('That link points to a record that no longer exists', String(id), 'TriangleAlert'); };
+    return m;
+  }
+  defineModule({ key: 'Roles', route: 'role', path: 'roles', label: 'Role', plural: 'roles', perm: 'Roles.list', backParent: 'roles', preview: RolePreview,
+    get: () => G.roleId, set: (v) => { const r = roleById(v); if (r) G.roleId = r.id; return !!r; },
+    find: (id) => { const r = roleById(id); return r ? { label: r.name, sub: r.system ? 'Built-in role' : 'Custom role' } : null; } });
+  defineModule({ key: 'Locations', route: 'location', path: 'locations', label: 'Location', plural: 'locations', perm: 'Locations.list', backParent: 'locations', preview: LocationPreview,
+    get: () => { const l = locById(G.locId); return l && (l.code || l.id); }, set: (v) => { const l = locsOf().find(x => x.code === v || x.id === v); if (l) G.locId = l.id; return !!l; },
+    linkId: (id) => { const l = locById(id); return l ? (l.code || l.id) : id; },
+    find: (id) => { const l = locById(id); return l ? { label: l.name, sub: l.code, deleted: l.status === 'deleted' } : null; } });
+  defineModule({ key: 'Requests', route: 'request', path: 'requests', label: 'Approval request', plural: 'approval requests', perm: 'Requests.list', backParent: 'approvals', preview: RequestPreview,
+    get: () => { const r = reqById(G.reqId); return r && (r.no || r.id); }, set: (v) => { const r = reqsOf().find(x => x.no === v || x.id === v); if (r) G.reqId = r.id; return !!r; },
+    linkId: (id) => { const r = reqById(id); return r ? (r.no || r.id) : id; },
+    find: (id) => { const r = reqById(id); return r ? { label: r.no, sub: r.subject.label } : null; } });
   const LIST_STACK = reactive([]); const ACT = computed(() => { for (let i = LIST_STACK.length - 1; i >= 0; i--) if (isOn(LIST_STACK[i])) return LIST_STACK[i]; return null; }); let PENDING_LIST = null, applying = false;   // the list registered last owns the address; closing it hands back to the one below
   G.tab = null;
 
@@ -87,8 +107,8 @@
   /* ================================================================ BACK (P49): every record page starts its breadcrumb with Back.
      A trail of the screens visited (route + its record + tab); Back returns to the one you came from (a list with its
      filters, another record, Home…) and, with no trail (a pasted link, a reload), goes to the record's list.
-     EXTENSION POINT: BACK_PARENT maps a record route to its list; a product adds its own, e.g. BACK_PARENT.customer = 'customers'. */
-  const BACK_PARENT = { role: 'roles', location: 'locations', request: 'approvals' };
+     EXTENSION POINT: defineModule({ ..., backParent }) (P81); BACK_PARENT stays writable for products written before it. */
+  /* BACK_PARENT is filled by defineModule (above); a product may still add BACK_PARENT.customer = 'customers' directly. */
   const TRAIL = []; let here = null, backing = false;
   const snapNow = () => ({ route: G.route, rec: LINK_DETAIL[G.route] ? LINK_DETAIL[G.route].get() : null, tab: G.tab });
   watch(() => { const s = snapNow(); return s.route + '|' + s.rec; }, () => {

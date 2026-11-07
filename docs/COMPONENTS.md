@@ -9,7 +9,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - **Actions**: Button
 - **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Locked field, File picker · Media library, API select, Rich text, Date picker, Accent picker
 - **Display**: Badge · Status pill, Card · KPI tile, App icon and splash
-- **Navigation**: Tabs, Sidebar item, Core module page, Top-bar search, Organisation switcher
+- **Navigation**: Tabs, Sidebar item, Record link, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, View as banner
 - **Data**: List rows, Charts, List toolbar · Filters, List card, Approval steps
@@ -460,6 +460,35 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 - Do: One permission per child; parent shows if any child does (D8)
 - Don't: Hard-coded menu items
+
+### Record link
+
+`src/components/app/RecordLink.vue`
+
+| Spec | Value |
+| --- | --- |
+| Look | primary text, PanelRightOpen 13px, underline on hover |
+| Click | plain: the module preview in the side sheet with View full page · modifier or middle: new tab |
+| Address | a real href #/{path}/{id}; View full page keeps ?tab= and stamps ?back= |
+| No permission | plain text + lock, the reason in the tooltip |
+| Empty / deleted / missing | – · label struck through + Deleted · No longer exists |
+| Variants | link · no permission · deleted · missing · empty |
+| Used in | Location parent, approval request location; every foreign key on every page |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `module` | `ModuleKey` | – | A registered module key (defineModule); a typo fails the type check |
+| `id` | `string` | – | The related record's uuid |
+| `label` | `string` | `the registry's find()` | The label the API sent with the row ({ uuid, label, sub, deleted }) |
+| `deleted` | `boolean` | `false` | Soft-deleted: label struck through, Deleted badge, read-only preview |
+| `tab` | `string` | – | The tab View full page opens |
+
+- Do: Use it for every value that points at another record: list cells, overview fields, child rows, activity lines (P85)
+- Do: Let a modifier or middle click open the full page in a new tab
+- Do: Show the reason when the person cannot open it
+- Don't: Show a related record as plain text or a raw id
+- Don't: Keep a hand-made map of routes for links; register the module with defineModule
+- Don't: Open a summary that is not the module's own preview
 
 ### Core module page
 
