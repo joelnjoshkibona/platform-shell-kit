@@ -29,6 +29,10 @@ A new product **starts from this kit and adds only its own modules.** It never r
 
 The prototype still carries **Fomu's modules (Forms, Templates, Builder, Results, Respondent) as a worked example** of a product module. They show how a module plugs into the shell; a product replaces them with its own.
 
+## The starter: Bootbox
+
+The kit is the design and the decisions; **[Bootbox](https://github.com/joelnjoshkibona/bootbox)** is them built (P94): the API (Laravel 13, every Kernel and Core module), the web app (Vue 3.5, strict TypeScript) and the phone app (NativePHP 4, its own app, P93), with `packages/shared` between the two apps. Every module registers itself from its own folder (`module.json` on the API, `module.ts` on the web and the phone; P80–P82). A product starts from it with `python3 tools/new-product/new_product.py` and adds modules with `php artisan bootbox:module` and `npm run make:module`; its guide is `docs/guide/` in Bootbox. Bootbox's `kit.json` names the kit version it follows.
+
 ## How a product uses the kit
 
 1. **Prototype:** copy `prototype/` into the product's design folder. Edit `product.js`. Add the product's modules as new `parts_<module>.js` files, register them in `assemble.py` where the example modules are, and remove the example modules. Rebuild. The shell, the core screens and the components stay as they are.

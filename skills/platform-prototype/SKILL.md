@@ -75,9 +75,9 @@ docs/frontend/                    FRONTEND_RULES.md, COMPONENTS.md, components_a
 docs/architecture/                the ERD with the D-log, MODULES.md (from the kit)
 docs/help/                        the user guide (P98): the kit's core articles + the product's, pictures and index.html from tools/help/build.js
 tools/prototype-shots/, tools/guide/, tools/help/   from the kit (tools/guide/build.args holds the product's guide title and pages)
-api/                              the Cobley backend, trimmed in Phase 0, modules under app/Modules/{Kernel|Core|Custom}/
-web/, packages/shared/            created in Phase 0, modules under web/src/modules/
-mobile/                           the phone app (P93): its own NativePHP app from templates/mobile, modules under mobile/resources/spa/src/modules/
+api/ web/ mobile/ packages/shared/   from Bootbox (joelnjoshkibona/bootbox, P94): `python3 tools/new-product/new_product.py` makes the
+                                  product from it; modules under app/Modules/{Kernel|Core|Custom}/, web/src/modules/ and
+                                  mobile/resources/spa/src/modules/, made with `php artisan bootbox:module` and `npm run make:module`
 ```
 
 Fill every `{{PRODUCT_NAME}}` / `{{product_slug}}`. Never commit secrets. Push only to a repo the user has created and attached.
