@@ -11,7 +11,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - **Display**: Badge · Status pill, Card · KPI tile, App icon and splash
 - **Navigation**: Tabs, Sidebar item, Record link, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet
-- **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, View as banner
+- **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, Job progress · Job page, View as banner
 - **Data**: List rows, Charts, List toolbar · Filters, List card, Approval steps
 - **Phone**: Phone foundations, Lock screen, Session ended, Permission ask, Action sheet, Scan view, Printer picker, Freshness stamp, Bottom bar, No connection, App updates, Back key hint
 
@@ -701,6 +701,32 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: DraftBanner at the top of the form, DraftStatus next to Cancel
 - Don't: Drafts in wizards or one-shot dialogs
 - Don't: Store passwords, tokens or OTPs
+
+### Job progress · Job page
+
+`src/components/app/JobProgress.vue, src/app/jobs/JobPage.vue`
+
+| Spec | Value |
+| --- | --- |
+| Start | the button starts a job; toast "Export started · We'll let you know" |
+| Progress | 8px bar with the percent; "You can leave this page" |
+| Done | file card (name, rows, size, days kept) + Download + the first rows |
+| Failed | plain-words summary, then one line per problem (Row 7 · …) |
+| Actions | Run again on done, failed, expired; Cancel while running |
+| Variants | waiting · running · done · failed · expired · cancelled |
+| Used in | My exports and reports, every export, report run and import |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `value` | `number` | `0` | Progress in percent while a job runs |
+| `run` | `JobRun` | – | The run shown on the job page (params, status, result, errors) |
+
+- Do: Start any export, report, import or big bulk action as a job and tell the person they can keep working (P95)
+- Do: Show what was asked, the result with Download and the first rows, and errors in plain words
+- Do: Offer Run again on done, failed and expired runs
+- Don't: Block the page with a spinner while a file is built
+- Don't: Download a large export in the request itself
+- Don't: Show a stack trace to the person who started the job
 
 ### View as banner
 

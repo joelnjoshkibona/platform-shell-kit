@@ -2028,5 +2028,34 @@
    "Keep a hand-made map of routes for links; register the module with defineModule",
    "Open a summary that is not the module's own preview"
   ]
+ },
+ "Job progress · Job page": {
+  "file": "src/components/app/JobProgress.vue, src/app/jobs/JobPage.vue",
+  "props": [
+   [
+    "value",
+    "number",
+    "0",
+    "Progress in percent while a job runs"
+   ],
+   [
+    "run",
+    "JobRun",
+    "",
+    "The run shown on the job page (params, status, result, errors)"
+   ]
+  ],
+  "emits": [],
+  "slots": [],
+  "do": [
+   "Start any export, report, import or big bulk action as a job and tell the person they can keep working (P95)",
+   "Show what was asked, the result with Download and the first rows, and errors in plain words",
+   "Offer Run again on done, failed and expired runs"
+  ],
+  "dont": [
+   "Block the page with a spinner while a file is built",
+   "Download a large export in the request itself",
+   "Show a stack trace to the person who started the job"
+  ]
  }
 }

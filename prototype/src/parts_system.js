@@ -48,7 +48,7 @@
     ],
     inbox: [
       { id: 'n1', unread: true, icon: 'Stamp', title: 'RQ-2026-0013 needs your approval', body: 'Export: Staff Satisfaction Survey 2026, requested by Rehema Mrema.', when: '26 min ago' },
-      { id: 'n2', unread: true, icon: 'FileDown', title: 'Your export is ready', body: 'Customer Feedback: Mwanza, 2,340 rows. Download it within 7 days.', when: '1 h ago' },
+      { id: 'n2', unread: true, icon: 'FileDown', title: 'Your export is ready', body: 'Customer Feedback: Mwanza responses · 2,340 rows. Open it to download it.', when: '1 h ago', job: 'jr41' },
       { id: 'n3', unread: false, icon: 'Megaphone', title: 'System update on Saturday', body: 'The system is read-only on Saturday from 22:00 to 23:00.', when: 'Yesterday' },
       { id: 'n4', unread: false, icon: 'TriangleAlert', title: 'The daily digest failed', body: 'Mail could not be sent. Queue › failed jobs has the details.', when: 'Today 07:01' },
     ],
@@ -113,7 +113,7 @@
         errors: [{ key: 'message', label: 'Error', identity: true, priority: 1, min: 280, text: e => e.message }, { key: 'kind', label: 'Kind', priority: 5, min: 120, fold: 'badge', mono: true, text: e => e.kind }, { key: 'level', label: 'Level', status: true, priority: 2, min: 90, text: e => e.level, variant: e => e.level === 'error' ? 'destructive' : e.level === 'warning' ? 'warning' : 'secondary' }, { key: 'count', label: 'Times', hero: true, priority: 1, min: 70, text: e => e.count + '×' }, { key: 'last', label: 'Last seen', priority: 3, min: 120, fold: 'meta', text: e => 'Last ' + e.last }],
         requests: [{ key: 'path', label: 'Request', identity: true, mono: true, priority: 1, min: 300, text: e => e.method + ' ' + e.path }, { key: 'status', label: 'Status', status: true, priority: 2, min: 80, text: e => String(e.status), variant: e => e.status >= 500 ? 'destructive' : e.status >= 400 ? 'warning' : 'success' }, { key: 'ms', label: 'Time', hero: true, priority: 1, min: 80, text: e => (e.ms / 1000).toFixed(1) + ' s' }, { key: 'who', label: 'Who', priority: 3, min: 140, fold: 'meta', text: e => e.who + ' · ' + e.when }],
       };
-      const exportTab = () => toast('Export started', 'We\'ll let you know when the file is ready (P95).', 'FileDown');
+      const exportTab = () => startJobRun({ kind: 'export', title: 'Logs: ' + { activity: 'activity', signins: 'sign-ins', errors: 'errors', requests: 'requests' }[tab.value], format: 'Excel', rows: L[tab.value].rows.value.length, params: [['Module', 'Logs'], ['Tab', tab.value], ['Search', q[tab.value] || 'None'], ['Format', 'Excel (.xlsx)']] });
       return { G, tab, tabs, L, q, cols, err, exportTab, locById, nouns: { activity: 'activity', signins: 'sign-ins', errors: 'errors', requests: 'requests' } };
     },
     template: `<div class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">
@@ -153,7 +153,7 @@
       const onMenu = (j, it) => { if (it.id === 'open') open.value = j; if (it.id === 'retry') retry(j); if (it.id === 'cancel') cancel(j); };
       const retryAll = () => SYS.jobs.filter(j => j.status === 'failed').forEach(retry);
       const cols = [{ key: 'name', label: 'Job', identity: true, priority: 1, min: 240, text: j => j.name }, { key: 'status', label: 'Status', status: true, priority: 2, min: 100, text: j => SYS_JOB[j.status][0], variant: j => SYS_JOB[j.status][1] }, { key: 'queue', label: 'Queue', priority: 5, min: 110, fold: 'badge', mono: true, text: j => j.queue }, { key: 'by', label: 'Started by', priority: 4, min: 140, fold: 'meta', text: j => j.by }, { key: 'when', label: 'When', priority: 3, min: 130, fold: 'meta', text: j => j.when }, { key: 'tries', label: 'Tries', priority: 6, min: 70, fold: 'meta', text: j => j.tries + (j.tries === 1 ? ' try' : ' tries') }];
-      return { G, LS, quick, tabs, kpi, open, can, retry, cancel, menu, onMenu, retryAll, cols, SYS_JOB };
+      return { G, LS, quick, tabs, kpi, open, can, retry, cancel, menu, onMenu, retryAll, cols, SYS_JOB, openJob };
     },
     template: `<div class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">
       <SysHead title="Queue" sub="Work that runs in the background: exports, reports, imports, notifications, webhooks."/>
@@ -168,7 +168,7 @@
       </ListCard>
       <Sheet :open="!!open" @update:open="v => { if (!v) open = null }"><div v-if="open" class="flex h-full min-h-0 flex-col">
         <div class="border-b p-4 pr-12"><p class="font-mono text-xs text-muted-foreground">{{ open.queue }}</p><h2 class="mt-0.5 font-semibold">{{ open.name }}</h2><p class="text-sm text-muted-foreground">{{ open.detail }}</p>
-          <div class="mt-3 flex flex-wrap gap-2"><Badge :variant="SYS_JOB[open.status][1]">{{ SYS_JOB[open.status][0] }}</Badge><Button v-if="can() && open.status==='failed'" size="sm" @click="retry(open)"><Icon name="RotateCw" :size="14"/>Retry</Button><Button v-if="can() && ['waiting','running'].includes(open.status)" size="sm" variant="outline" @click="cancel(open)"><Icon name="CircleX" :size="14"/>Cancel</Button></div></div>
+          <div class="mt-3 flex flex-wrap gap-2"><Badge :variant="SYS_JOB[open.status][1]">{{ SYS_JOB[open.status][0] }}</Badge><Button v-if="can() && open.status==='failed'" size="sm" @click="retry(open)"><Icon name="RotateCw" :size="14"/>Retry</Button><Button v-if="can() && ['waiting','running'].includes(open.status)" size="sm" variant="outline" @click="cancel(open)"><Icon name="CircleX" :size="14"/>Cancel</Button><Button v-if="open.run" size="sm" variant="outline" @click="openJob(open.run)"><Icon name="ArrowUpRight" :size="14"/>Open its page</Button></div></div>
         <div class="grid gap-3 overflow-y-auto p-4 text-sm">
           <div v-if="open.status==='running'"><div class="flex justify-between text-xs"><span class="text-muted-foreground">Progress</span><span class="tnum">{{ open.progress }}%</span></div><div class="mt-1 h-2 overflow-hidden rounded-full bg-muted"><div class="h-full rounded-full bg-primary" :style="{ width: open.progress + '%' }"></div></div></div>
           <p v-if="open.error" class="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-destructive">{{ open.error }}</p>
@@ -253,13 +253,13 @@
         A.open = false; toast(A.when === 'now' ? 'Announcement sent' : 'Announcement scheduled', audience.value + ' people · ' + ch.join(', '), 'Megaphone'); Object.assign(A, { title: '', body: '', roles: [], when: 'now' }); };
       const roleOpts = computed(() => ROLES.map(r => ({ id: r.id, name: r.name })));
       const toggleRole = (id) => { const i = A.roles.indexOf(id); if (i >= 0) A.roles.splice(i, 1); else A.roles.push(id); };
-      return { G, SYS, tab, tabs, readAll, A, audience, send, roleOpts, toggleRole };
+      return { G, SYS, tab, tabs, readAll, A, audience, send, roleOpts, toggleRole, openJob };
     },
     template: `<div class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">
       <SysHead title="Notifications" sub="What reaches you and how; for admins, who is told about what, and announcements to many people."/>
       <div class="-mx-1 overflow-x-auto px-1"><Tabs v-model="tab" :items="tabs"/></div>
       <Card v-if="tab==='inbox'"><div class="flex items-center justify-between border-b px-4 py-2.5"><p class="text-sm font-medium">Inbox</p><Button variant="ghost" size="sm" @click="readAll"><Icon name="CheckCheck" :size="15"/>Mark all read</Button></div>
-        <ul class="divide-y"><li v-for="n in SYS.inbox" :key="n.id"><button type="button" :class="['flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-accent/60', n.unread ? 'bg-primary/[.04]' : '']" @click="n.unread = false">
+        <ul class="divide-y"><li v-for="n in SYS.inbox" :key="n.id"><button type="button" :class="['flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-accent/60', n.unread ? 'bg-primary/[.04]' : '']" @click="n.unread = false; if (n.job) openJob(n.job)">
           <span :class="['grid h-9 w-9 shrink-0 place-items-center rounded-lg', n.icon==='TriangleAlert' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary']"><Icon :name="n.icon" :size="16"/></span>
           <span class="min-w-0 flex-1"><span class="block text-sm font-medium">{{ n.title }}</span><span class="block text-sm text-muted-foreground">{{ n.body }}</span><span class="mt-0.5 block text-xs text-muted-foreground">{{ n.when }}</span></span><span v-if="n.unread" class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread"></span></button></li></ul></Card>
       <Card v-else-if="tab==='settings'"><div class="overflow-x-auto"><table class="w-full min-w-[520px] text-sm"><thead><tr class="border-b text-xs text-muted-foreground"><th class="px-4 py-2.5 text-left font-medium">Tell me about</th><th class="px-2 font-medium">In app</th><th class="px-2 font-medium">Email</th><th class="px-2 font-medium">SMS</th><th class="px-2 font-medium">Push</th></tr></thead>

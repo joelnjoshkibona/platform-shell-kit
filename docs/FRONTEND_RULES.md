@@ -335,6 +335,12 @@ Guide: `docs/architecture/MODULES.md`.
 - **List contract (P87)** and **API shape (P88)**: see the backend contract below.
 - **Strict TypeScript (P89)**; **every convention has a test (P90)**.
 
+## Locked: background work (P95)
+
+- Anything that may take more than a few seconds (export, report, import, big bulk action) starts a job: the button says "We'll let you know when it is ready" and never blocks the page.
+- When it ends, a notification opens its job page: what was asked, progress, the result (Download, the first rows, rows, days kept), errors in plain words, Run again, Cancel.
+- My exports and reports (avatar menu) lists the person's runs; Queue lists everyone's.
+
 ## Locked: system screens (P97)
 
 - Logs, Queue, Scheduled tasks, Trash, Notifications and Permissions are core screens built as in the prototype (`parts_system.js`): list pages with details sheets, tabs in `?tab=`.
@@ -375,6 +381,7 @@ Guide: `docs/architecture/MODULES.md`.
 | Actions (P84) | `POST /{module}/{uuid}/{action}`; `POST /{module}/bulk-action { action, ids[] \| filter, payload }` | Gated by `{Module}.{action}` (and `{Module}.bulkAction`) |
 | Child lists (P86) | `GET /{parent}/{uuid}/{child}/list` and the child's create, edit, delete under the same prefix | Scoped by the server, gated by the child's permissions |
 | Related records (P85) | `{ uuid, label, sub, deleted }` | One eager load per list, soft-deleted included |
+| Background work (P95) | `POST /{module}/export` → 202 + the run; `GET /job-runs/list`, `/job-runs/{uuid}/view`, `/download`; `POST /job-runs/{uuid}/rerun`, `/cancel` | The run carries params, status, progress, result, rows, errors, expires_at |
 | Responses (P88) | Body `code` equals the HTTP status; 422 `errors: { field: [messages] }`; writes send `version`, a stale one gets 409 with the current record | API types generated for web and phone |
 
 - Services validate before touching a model; only validated keys (plus server fields the service sets) reach `create`/`update` (P83).

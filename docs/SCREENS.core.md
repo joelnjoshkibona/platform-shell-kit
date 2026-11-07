@@ -153,6 +153,13 @@ Designed from SYSTEM_SHELL's backend (`app/Project/Logs`, `Queue`, `ScheduledTas
 | Notifications | `/notifications?tab=inbox\|settings\|rules\|announcements` | Inbox; my channels per kind and quiet hours; admin rules (who is told about what by which channel); announcements (Broadcasts folded in) with Send an announcement (who by role, channels, now or scheduled) | `Notifications.list`, `Notifications.manage`, `Notifications.announce` | `notifications__*` |
 | Permissions | `/permissions` | Every permission in words with its name and module, how many roles and people have it; a sheet with the roles (RecordLinks) and people | `Permissions.list` | `permissions__*` |
 
+## Background work (P95)
+
+| Screen | Route | What it shows | Screenshots |
+| --- | --- | --- | --- |
+| My exports and reports | `/my-jobs` (avatar menu) | The person's runs by status (Running, Ready, Failed), with the progress, the rows and the days kept; Download on a ready row | `my-jobs__*` |
+| Job page | `/jobs/JOB-0041` | What was asked; progress; the result with Download and the first rows; errors in plain words; expired; Run again, Cancel | `job__*` |
+
 ## In the menu but not designed
 
 These menu items exist (with permissions) but the prototype shows a placeholder. Reports is redesigned by P96 (proposal); background work and its results by P95.

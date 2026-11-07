@@ -152,9 +152,16 @@
 
   /* Export + Copy link, placed in the list toolbar */
   const ListShare = {
-    props: { exportFn: Function },
-    setup() { return { copyLink }; },
-    template: `<span class="inline-flex gap-1.5"><Button v-if="exportFn" size="sm" variant="outline" @click="exportFn()" aria-label="Export CSV"><Icon name="Download" :size="15"/><span class="hidden xl:inline">Export</span></Button><Button size="sm" variant="outline" @click="copyLink()" aria-label="Copy link to this view"><Icon name="Link" :size="15"/><span class="hidden xl:inline">Copy link</span></Button></span>`
+    props: { exportFn: Function, exportTitle: String },
+    /* P95: an export runs in the background; the job's Download produces the file (here the prototype's CSV) */
+    setup(p) {
+      const startExport = () => { const label = p.exportTitle || (findLeaf(G.view) || {}).label || 'This list';
+        const run = startJobRun({ kind: 'export', title: label, format: 'CSV', file: label.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.csv', download: p.exportFn,
+          params: [['Module', label], ['Filters', 'As the list was filtered when you started it'], ['Columns', 'The list\'s columns'], ['Format', 'CSV']] });
+        return run; };
+      return { copyLink, startExport };
+    },
+    template: `<span class="inline-flex gap-1.5"><Button v-if="exportFn" size="sm" variant="outline" @click="startExport" aria-label="Export: runs in the background"><Icon name="Download" :size="15"/><span class="hidden xl:inline">Export</span></Button><Button size="sm" variant="outline" @click="copyLink()" aria-label="Copy link to this view"><Icon name="Link" :size="15"/><span class="hidden xl:inline">Copy link</span></Button></span>`
   };
 
   /* a parent value set by the page you came from: shown, locked, not editable */
