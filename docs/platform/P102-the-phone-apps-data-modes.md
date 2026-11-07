@@ -1,6 +1,6 @@
 # P102 · The phone app's data modes: connected, on the phone, sync
 
-Status: **decided** (kit 1.21.0). Amends P93 (the phone's own Laravel may hold the product's data in two of the modes) and P60 (for sync mode only). The owner, 2026-11-07: "I am not sure how we will have a starter for mobile since we have an offline version and an API version. We can also have a sync version"; "I think we need to make the platform kit as generic as possible so that it fits all our needs whenever they come across"; then all three modes, in `docs/proposals/P99-P102.md` (approved).
+Status: **decided** (kit 1.21.0); the phone's store amended by **P104** (kit 1.23.0). Amends P93 (the phone's own Laravel may hold the product's data in two of the modes) and P60 (for sync mode only). The owner, 2026-11-07: "I am not sure how we will have a starter for mobile since we have an offline version and an API version. We can also have a sync version"; "I think we need to make the platform kit as generic as possible so that it fits all our needs whenever they come across"; then all three modes, in `docs/proposals/P99-P102.md` (approved).
 
 ## Decision
 
@@ -40,7 +40,7 @@ All three speak the list contract (P87). Screens and modules never know which mo
 
 ### On the phone
 
-- Hodie's way: the phone's Laravel holds the modules' own tables and services (P83), with the same list contract (P87).
+- ~~Hodie's way: the phone's Laravel holds the modules' own tables and services (P83), with the same list contract (P87).~~ **Amended by P104**: one generic store for every module, with a way out per module (its own rules, or its own table, as Hodie does).
 - There is no server and no sign-in. **Data and backups** has Back up now (to a file), Restore from a file, and the date of the last backup. There is no signal bar, because nothing depends on one.
 - Updates follow P67 and P79.
 
