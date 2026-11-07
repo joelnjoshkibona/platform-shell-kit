@@ -6,7 +6,7 @@ Every choice that shapes a product is written down as a numbered decision, with 
 
 | Log | Numbers | Who it binds | Where |
 | --- | --- | --- | --- |
-| Platform decisions | P1, P2, … P92 | Every product | `docs/PLATFORM_DECISIONS.md` in the kit, one spec per decision in `docs/platform/` |
+| Platform decisions | P1, P2, … P93 | Every product | `docs/PLATFORM_DECISIONS.md` in the kit, one spec per decision in `docs/platform/` |
 | Product decisions | D1, D2, … | One product | The product's `docs/product/DECISIONS.md` (or its ERD) |
 
 Examples:

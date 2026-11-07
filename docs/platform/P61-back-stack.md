@@ -19,4 +19,4 @@ In Jumla and Cobley full-screen pickers, the sidebar and even the mandatory upda
 
 ## Where
 
-Prototype: app--back-twice. Product: src/phone/backstack (replaces phoneBack).
+Prototype: app--back-twice. Product (P93): `mobile/resources/spa/src/app/` → backstack (replaces phoneBack).

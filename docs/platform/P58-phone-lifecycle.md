@@ -19,4 +19,4 @@ All three apps ignore pause and resume (the log shows "No listeners for event" d
 
 ## Where
 
-Prototype: app--resumed, app--reopened, Freshness stamp. Product: src/phone/lifecycle.
+Prototype: app--resumed, app--reopened, Freshness stamp. Product (P93): `mobile/resources/spa/src/app/` → lifecycle.

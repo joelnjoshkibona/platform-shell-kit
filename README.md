@@ -11,7 +11,7 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `prototype/index.html` | The runnable prototype (open in a browser). The visual source of truth for the shell |
 | `prototype/src/product.js` | **The one file a product edits for branding:** name, tagline, icon, domain, city, storage key |
 | `prototype/src/parts_*.js`, `builder.html`, `assemble.py` | The shell's source, by area. `python3 prototype/src/assemble.py` rebuilds `index.html` and `docs/COMPONENTS.md` |
-| `docs/PLATFORM_DECISIONS.md` | P1–P92: the locked decisions, each with the decision it came from (P38 withdrawn); P51–P79 are the phone app; P80–P90 the code structure; P91–P92 the build guide, plan and tracker |
+| `docs/PLATFORM_DECISIONS.md` | P1–P93: the locked decisions, each with the decision it came from (P38 withdrawn); P51–P79 are the phone app; P80–P90 the code structure; P91–P92 the build guide, plan and tracker |
 | `docs/architecture/MODULES.md` | How a product's code is laid out, found and wired (P80–P90): module folders, manifests, loading, services, actions, links, child tabs |
 | `docs/guide/index.html` | **The build guide**: how a product is built on this kit, from an empty folder, explained for a beginner (P91). Source: `docs/guide/chapters/*.md`, built by `python3 tools/guide/build.py` |
 | `docs/FRONTEND_RULES.md` | Behaviour rules: Locked / Constrained-creative / Free, plus the review checklist |
@@ -20,7 +20,8 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `docs/architecture/CORE_ERD.md` | Core tables (identity, locations, approvals, notifications), constraints, lifecycles, jobs |
 | `screenshots/` | Baseline screenshots of every core screen: desktop/phone × light/dark, plus key states |
 | `docs/mobile/` | The mobile kit: `PHONE_MODEL.md` (what a phone is, how it moves), `DEVICE_TESTING.md`, `PLUGINS.md` (the shared Android plugins on v4), `PROPOSAL.md` (the evidence from four apps) |
-| `templates/mobile/` | The product's Android app: catch-all route, build, icon and splash, signed release, tests, the `src/phone/` contract |
+| `templates/mobile/` | The product's phone app, its own app in Hodie's shape (P93): its small Laravel for the phone's work, the interface project in `resources/spa/`, build, icon and splash, signed release, tests |
+| `templates/shared/` | `packages/shared` (what the web and phone apps share) and the root npm workspace |
 | `templates/` | CLAUDE.md, BUILD_PLAN.md, IMPLEMENTATION_PLAN.md, PROGRESS.md, HANDOFF_PROMPT.md, PRODUCT.md, SCREENS.md and `guide/` (the product's build guide chapters) for a product's repo, with `{{PRODUCT_NAME}}` placeholders |
 | `skills/platform-prototype/SKILL.md` | The Claude skill that starts, extends and hands off products on the kit. Upload it to the claude.ai skills when it changes |
 | `tools/prototype-shots/` | Regenerates screenshots; builds a side-by-side compare page against a real app |

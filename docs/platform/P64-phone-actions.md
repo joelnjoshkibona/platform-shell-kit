@@ -19,4 +19,4 @@ None of the three apps has call, SMS, WhatsApp or share; Agrovet's printer takes
 
 ## Where
 
-Prototype: app--call-sheet, app--scan, app--scan-several, app--printer*. Product: src/phone/actions.
+Prototype: app--call-sheet, app--scan, app--scan-several, app--printer*. Product (P93): `mobile/resources/spa/src/app/` → actions.

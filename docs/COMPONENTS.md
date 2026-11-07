@@ -897,7 +897,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 ### Phone foundations
 
-`src/styles (--sa-*), src/phone/ (lifecycle, network, backstack)`
+`mobile/resources/spa/src/app/ (--sa-*, lifecycle, network, backstack)`
 
 | Spec | Value |
 | --- | --- |

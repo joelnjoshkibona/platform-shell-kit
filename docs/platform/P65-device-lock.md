@@ -19,4 +19,4 @@ None of the apps locks and all keep the session in plain storage; a shared shop 
 
 ## Where
 
-Prototype: Lock screen, app--locked. Product: src/phone/lock.
+Prototype: Lock screen, app--locked. Product (P93): `mobile/resources/spa/src/app/` → lock.

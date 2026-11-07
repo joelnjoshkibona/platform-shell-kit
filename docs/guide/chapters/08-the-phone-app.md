@@ -1,10 +1,22 @@
 # The phone app
 
-A product's phone app is its own app, drawn for a phone only (360 to 430 pixels wide). It is not the web app squeezed. It talks to the same API and follows the same rules for data, permissions and modules; it has its own shell and screens.
+A product's phone app is its own app, crafted for a phone only (360 to 430 pixels wide), the way Hodie is (P93). It is not the web app squeezed or rebuilt. It talks to the same API and follows the same rules for data, permissions and modules; it has its own shell, components and screens, and its own small Laravel inside the app for the phone's own work.
+
+```
+mobile/
+  app/Http/Controllers/Native/   insets, keyboard, Back, files, camera, voice, alarms, updates, drafts, app log
+  routes/web.php  routes/api.php the interface for every path · /api/native/*, /api/drafts, /api/cache
+  resources/spa/src/
+    app/                         start-up, session, the phone's behaviour, the frame (bars, drawer, sheets)
+    components/                  the phone kit's pieces
+    modules/{module}/            module.ts, screens/, sheets/, locales/, tests/
+  scripts/build-web.sh           builds resources/spa into public/spa
+```
 
 ## What is the same as the web
 
-- The modules: each web module's `phone/` subfolder holds its phone screens and sheets, and its `module.ts` says which screens and actions the phone offers. A phone-only entry (`web/src/main.phone.ts`, `VITE_APP=1`) builds them without the desktop layout; `mobile/` (NativePHP, from `templates/mobile`) packages that build into the Android app. A phone usually shows fewer modules (Shelui Tasks: my work, tasks, tickets, alerts).
+- The modules: `mobile/resources/spa/src/modules/{module}/`, under the same names as the API and web modules, only for the modules the phone shows.
+- Shared code: only `packages/shared` (talking to the API and its types, permission names, statuses, formatting). Never the web app's screens or components. A phone usually shows fewer modules (Shelui Tasks: my work, tasks, tickets, alerts).
 - Links: a `RecordLink` on the phone opens a bottom sheet.
 - Strict TypeScript, the convention tests, the plan, tracker and guide.
 

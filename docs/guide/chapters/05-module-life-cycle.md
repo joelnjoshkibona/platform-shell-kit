@@ -44,7 +44,7 @@ In `web/src/modules/{module}/`:
 
 ## 7. The phone side (if the phone shows it)
 
-In the same web module folder: list the phone's screens and actions under `phone` in `module.ts`, and draw them in `web/src/modules/{module}/phone/` (screens, sheets), reusing the module's composables, locales and API calls. `mobile/` packages the phone build; it holds no module code.
+In `mobile/resources/spa/src/modules/{module}/`: its own `module.ts` (the same key and permissions as the API), its screens and sheets drawn from the phone prototype, its composables, locales and tests. It reuses only `packages/shared` (the API client and types, statuses, formatters), never the web module's pages or components (P93).
 
 ## 8. Explain it
 

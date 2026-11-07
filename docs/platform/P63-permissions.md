@@ -19,4 +19,4 @@ Cobley and Agrovet request at start and race the bridge; Jumla's printer permiss
 
 ## Where
 
-Prototype: app--permission, app--permission-denied. Product: src/phone/permissions.
+Prototype: app--permission, app--permission-denied. Product (P93): `mobile/resources/spa/src/app/` → permissions.

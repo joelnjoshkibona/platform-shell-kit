@@ -1,36 +1,25 @@
 #!/usr/bin/env bash
-# Builds the {{PRODUCT_NAME}} web (../web) for the app and copies it in ((the product's phone app decision), (the product's phone app decision)):
-#   - VITE_API_URL = {{PRODUCT_SLUG_UPPER}}_API_URL (from the environment, else mobile/.env, else production): the app talks to it;
-#   - VITE_APP=1: the app build (always keeps you signed in); VITE_APP_VERSION = NATIVEPHP_APP_VERSION (mobile/.env);
-#   - index.html → resources/spa/index.html (routes/web.php returns it for every path), assets → public/assets.
-# Run it before `php artisan native:run` or a release build.
+# P93: builds the phone app's interface (resources/spa, its own Vite project) into public/spa, where routes/web.php serves it.
+# The interface is the phone app's own; nothing of ../web is built or copied. Run before `php artisan native:run` and a release.
+#   - VITE_API_URL = {{PRODUCT_SLUG_UPPER}}_API_URL (from the environment, else .env, else production): the remote API the interface calls;
+#   - VITE_APP_VERSION = NATIVEPHP_APP_VERSION (.env): compared with the update feed (P67, P79).
 set -euo pipefail
 
-MOBILE="$(cd "$(dirname "$0")/.." && pwd)"
-WEB="$MOBILE/../web"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SPA="$ROOT/resources/spa"
 
-if [ -z "${{{PRODUCT_SLUG_UPPER}}_API_URL:-}" ] && [ -f "$MOBILE/.env" ]; then
-  {{PRODUCT_SLUG_UPPER}}_API_URL="$(sed -n 's/^{{PRODUCT_SLUG_UPPER}}_API_URL=//p' "$MOBILE/.env" | tail -n 1 | tr -d "\"'")"
+if [ -z "${{{PRODUCT_SLUG_UPPER}}_API_URL:-}" ] && [ -f "$ROOT/.env" ]; then
+  {{PRODUCT_SLUG_UPPER}}_API_URL="$(sed -n 's/^{{PRODUCT_SLUG_UPPER}}_API_URL=//p' "$ROOT/.env" | tail -n 1 | tr -d "\"'")"
 fi
 {{PRODUCT_SLUG_UPPER}}_API_URL="${{{PRODUCT_SLUG_UPPER}}_API_URL:-https://{{DOMAIN}}/api}"
-# (the product's phone app decision): the web compares this with GET /app/version; it must be the version native:run builds (NATIVEPHP_APP_VERSION).
-APP_VERSION="$(sed -n 's/^NATIVEPHP_APP_VERSION=//p' "$MOBILE/.env" 2>/dev/null | tail -n 1 | tr -d "\"'")"
-[ -n "$APP_VERSION" ] || { echo "Set NATIVEPHP_APP_VERSION in mobile/.env first." >&2; exit 1; }
+APP_VERSION="$(sed -n 's/^NATIVEPHP_APP_VERSION=//p' "$ROOT/.env" 2>/dev/null | tail -n 1 | tr -d "\"'")"
+[ -n "$APP_VERSION" ] || { echo "Set NATIVEPHP_APP_VERSION in .env first." >&2; exit 1; }
 case "${{PRODUCT_SLUG_UPPER}}_API_URL" in
   http://127.0.0.1*) echo "{{PRODUCT_SLUG_UPPER}}_API_URL can't be 127.0.0.1: inside the app that is the app's own server. Use localhost with adb reverse." >&2; exit 1 ;;
 esac
 
-OUT="$(mktemp -d)"
-trap 'rm -rf "$OUT"' EXIT
-
-echo "Building the web for app $APP_VERSION against ${{PRODUCT_SLUG_UPPER}}_API_URL"
-(cd "$WEB" && VITE_API_URL="${{PRODUCT_SLUG_UPPER}}_API_URL" VITE_APP=1 VITE_APP_VERSION="$APP_VERSION" npm run build -- --outDir "$OUT" --emptyOutDir)
-
-grep -q "${{PRODUCT_SLUG_UPPER}}_API_URL" "$OUT/assets/app.js" || { echo "The build doesn't carry ${{PRODUCT_SLUG_UPPER}}_API_URL: stopping." >&2; exit 1; }
-
-rm -rf "$MOBILE/public/assets" "$MOBILE/resources/spa"
-mkdir -p "$MOBILE/resources/spa"
-cp "$OUT/index.html" "$MOBILE/resources/spa/index.html"
-cp -R "$OUT/assets" "$MOBILE/public/assets"
-
-echo "Copied: resources/spa/index.html and public/assets ($(du -sh "$MOBILE/public/assets" | cut -f1))"
+[ -d "$SPA/node_modules" ] || (cd "$SPA" && npm ci --no-audit --no-fund)
+(cd "$SPA" && VITE_API_URL="${{PRODUCT_SLUG_UPPER}}_API_URL" VITE_APP_VERSION="$APP_VERSION" npx vue-tsc --noEmit && VITE_API_URL="${{PRODUCT_SLUG_UPPER}}_API_URL" VITE_APP_VERSION="$APP_VERSION" npx vite build)
+[ -f "$ROOT/public/spa/index.html" ] || { echo "The build has no index.html: stopping." >&2; exit 1; }
+grep -rq "${{PRODUCT_SLUG_UPPER}}_API_URL" "$ROOT/public/spa/assets" || { echo "The build doesn't carry the API URL: stopping." >&2; exit 1; }
+echo "Built: public/spa ($(du -sh "$ROOT/public/spa" | cut -f1)) against ${{PRODUCT_SLUG_UPPER}}_API_URL"

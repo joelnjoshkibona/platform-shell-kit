@@ -1,36 +1,46 @@
-# Mobile app template
+# Mobile app template (P93)
 
-The Android app of a product on this kit (P56–P79): a NativePHP Mobile v4 shell whose every path returns the product's web
-build. Copy this folder to `<product>/mobile/`, replace the placeholders, and follow `README` below.
+The phone app of a product on this kit: **its own app, crafted for a phone**, in the shape of Hodie (`NATIVE-PHP/hodie`), never a
+build of the web app. Copy this folder to `<product>/mobile/`, replace the placeholders, and follow the steps below.
+Read `docs/platform/P93-the-phone-app-is-its-own-app.md`, `docs/mobile/PHONE_MODEL.md` and the product's phone prototype first.
 
 | Placeholder | Example |
 | --- | --- |
-| `{{PRODUCT_NAME}}` | DevBiz |
-| `{{PRODUCT_SLUG}}` / `{{PRODUCT_SLUG_UPPER}}` | devbiz / DEVBIZ |
-| `{{APP_ID}}` | com.blutrixx.devbiz |
-| `{{DOMAIN}}` | devbusiness.blutrixx.com |
+| `{{PRODUCT_NAME}}` | Shelui Tasks |
+| `{{PRODUCT_SLUG}}` / `{{product_slug}}` / `{{PRODUCT_SLUG_UPPER}}` | shelui-tasks / shelui-tasks / SHELUI_TASKS |
+| `{{APP_ID}}` | com.blutrixx.shelui |
+| `{{DOMAIN}}` | tasks.shelui.co.tz |
 
 ## What is here
 
-| Path | What |
-| --- | --- |
-| `routes/web.php` | every path returns `resources/spa/index.html` (the web build); a missing build says so |
-| `scripts/build-web.sh` | builds `../web` for the app (`VITE_APP=1`, the API URL and the app version baked in) and copies it in |
-| `scripts/make-images.mjs` | draws the icon and splash from the product mark (P55) |
-| `scripts/release.sh` | builds, signs with a key kept outside the repo and the app, and publishes (P68) |
-| `.env.example` | app id, version, min SDK 26, the API URL; never 127.0.0.1 (inside the app that is the app's own server) |
-| `tests/Feature/WebBuildTest.php` | the catch-all route (add the host-contract test: every plugin in the provider exists) |
-| `web/src/phone/` | the web side of P57–P67 (below) |
+```
+mobile/
+  routes/web.php                 every path that is not /api returns public/spa/index.html (the interface)
+  routes/api.php                 the phone's own work: /api/native/*, /api/drafts, /api/cache, /api/log (the list is in the file)
+  app/Http/Controllers/Native/   (you add) the controllers for routes/api.php; Hodie's are the working example
+  resources/spa/                 the interface: its own Vite project, Vue 3, strict TypeScript, Tailwind, everything bundled
+    src/main.ts                  start-up
+    src/app/                     not a module: start-up, loader, session, the phone's behaviour (P57–P79), the frame
+    src/components/              the phone kit's pieces
+    src/modules/{module}/        the modules the phone shows: module.ts, screens/, sheets/, composables/, locales/, tests/
+  scripts/build-web.sh           type-checks and builds resources/spa into public/spa (the API URL and app version baked in)
+  scripts/make-images.mjs        draws the icon and splash from the product mark (P55)
+  scripts/release.sh             builds, signs with a key kept outside the repo and the app, and publishes (P68)
+  tests/Feature/InterfaceBuildTest.php   every path returns the interface; /api paths do not
+  .env.example                   app id, version, min SDK 26, the API URL; never 127.0.0.1
+```
 
-## `web/src/phone/` (the contract; built in the first product, then lifted here)
-
-`bridge` (native calls: the listener is registered before the call, with a timeout; never throws) · `network` (the
-phone's state plus failed calls, P59) · `lifecycle` (pause, resume, kill, P58) · `backstack` (P61) · `secureStore`
-(token, P57) · `lock` (P65) · `permissions` (P63) · `actions` (call, SMS, WhatsApp, share, copy, P64) · `writes`
-(idempotency keys, P60) · `links` (P66) · `updates` (P67). Each is plain TypeScript with unit tests.
+The interface calls the product's API directly with the token from secure storage (P57). It shares only `packages/shared`
+with the web app (from `templates/shared/`): the API client and types, permission names, statuses, formatters, module keys.
+Never import a web screen or component.
 
 ## Steps
 
-1. `composer install`, `cp .env.example .env`, `php artisan key:generate`, `php artisan native:install android`.
-2. `./scripts/build-web.sh` then `php artisan native:run android <serial>`.
-3. First release: create the key outside the repo (see `scripts/release.sh`), `./scripts/release.sh "First release"`.
+1. Create the app: `composer create-project laravel/laravel mobile`, `composer require nativephp/mobile:^4` and the plugins the product
+   uses (`blutrixx/nativephp-device-utils`, `nativephp-alarms`, `nativephp-mobile-updater`; see `docs/mobile/PLUGINS.md`). Copy this
+   template over it.
+2. `cp .env.example .env`, `php artisan key:generate`, `php artisan native:install android`.
+3. In the repo root, add `mobile/resources/spa` to the npm workspace (`templates/shared/package.json`) and `npm install`.
+4. `./scripts/build-web.sh`, then `php artisan native:run android <serial>`.
+5. Build `src/app/` from its README (Hodie's parts are the working example), then the modules, screen by screen against the phone prototype.
+6. First release: create the key outside the repo (see `scripts/release.sh`), `./scripts/release.sh "First release"`.

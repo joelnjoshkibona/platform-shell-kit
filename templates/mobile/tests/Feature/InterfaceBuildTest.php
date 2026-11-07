@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
-/** (the product's phone app decision): every path inside the app returns the web build's index.html; Vue's router takes it from there. */
-class WebBuildTest extends TestCase
+/** P93: every path that is not /api returns the phone interface's index.html (public/spa); the interface takes it from there. */
+class InterfaceBuildTest extends TestCase
 {
     private string $index;
 
@@ -15,7 +15,7 @@ class WebBuildTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->index = resource_path('spa/index.html');
+        $this->index = public_path('spa/index.html');
         $this->kept = is_file($this->index) ? file_get_contents($this->index) : null;
     }
 
@@ -25,10 +25,10 @@ class WebBuildTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_every_path_returns_the_web_build(): void
+    public function test_every_path_returns_the_interface(): void
     {
         File::ensureDirectoryExists(dirname($this->index));
-        file_put_contents($this->index, '<!doctype html><div id="app"></div><script src="/assets/app.js?v=1"></script>');
+        file_put_contents($this->index, '<!doctype html><div id="app"></div><script src="/spa/assets/app.js"></script>');
 
         foreach (['/', '/k/till', '/k/sales/S-0001?tab=history'] as $path) {
             $this->get($path)->assertOk()->assertHeader('Content-Type', 'text/html; charset=UTF-8')->assertSee('<div id="app">', false);
@@ -40,5 +40,13 @@ class WebBuildTest extends TestCase
         File::delete($this->index);
 
         $this->get('/k/till')->assertStatus(503)->assertSee('run scripts/build-web.sh');
+    }
+
+    public function test_api_paths_are_not_the_interface(): void
+    {
+        File::ensureDirectoryExists(dirname($this->index));
+        file_put_contents($this->index, '<!doctype html><div id="app"></div>');
+
+        $this->get('/api/nothing-here')->assertNotFound();
     }
 }
