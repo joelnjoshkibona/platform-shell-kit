@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds, signs and publishes a {{PRODUCT_NAME}} app release ((the product's phone app decision)).
+# Builds, signs and publishes a {{PRODUCT_NAME}} app release (P68, P93).
 #
 #   scripts/release.sh "What changed" ["FIXED: what was fixed" ...] [--mandatory] [--build-only]
 #

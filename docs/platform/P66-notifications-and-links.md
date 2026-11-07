@@ -19,4 +19,4 @@ Cobley registers tokens but a tap only launches the app; Agrovet and Jumla have 
 
 ## Where
 
-Product: src/phone/links; needs the Firebase project.
+Product (P93): `mobile/resources/spa/src/app/` → links; needs the Firebase project.

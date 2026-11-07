@@ -14,7 +14,7 @@ Every admin product on the platform (Laravel API + Vue 3 + shadcn-vue + strict T
 Fetch these raw files first (base: `https://raw.githubusercontent.com/joelnjoshkibona/platform-shell-kit/main/`):
 
 1. `README.md` (what the kit is, where a module plugs in)
-2. `docs/PLATFORM_DECISIONS.md` (P1–P92, the locked decisions; specs in `docs/platform/`)
+2. `docs/PLATFORM_DECISIONS.md` (P1–P93, the locked decisions; specs in `docs/platform/`)
 3. `docs/FRONTEND_RULES.md` (behaviour rules + review checklist)
 4. `docs/COMPONENTS.md` and `docs/components_api.json` (the component library)
 5. `docs/SCREENS.core.md` (core screens, routes, permissions)
@@ -36,10 +36,10 @@ Do **not** ask about, propose alternatives for, or redesign any of these. They a
 - forms (drafts, pickers, rich text, date picker, save bar + leave guard)
 - core modules: Dashboard, Users, Roles, Permissions, Locations, Settings, Menu Management, Media, Approvals, notifications
 - permissions named `Module.action`, menus gated by `Module.list`, server-side access matching the menu
-- the phone app's behaviour (P51–P79): its own phone-only app and prototype, quiet header, session, lifecycle, connectivity, uncertain writes, Back, safe areas and keyboard, permissions, lock, push, updates, app log
+- the phone app's behaviour (P51–P79, P93): its own app crafted for a phone (Hodie's shape) and its own prototype, quiet header, session, lifecycle, connectivity, uncertain writes, Back, safe areas and keyboard, permissions, lock, push, updates, app log
 - **code structure (P80–P90)**: a module owns its folder on every side; one manifest per module found by glob (`module.json`, `defineModule`); modules load themselves; one service per operation, container instances, validated data only; actions declared once; related records are `RecordLink`s from the module registry; child tabs are the child's scoped list; the generator's list contract; the API shape (`version`, 409, `errors`); strict TypeScript; a test per convention
 - **deliverables (P91, P92)**: prototype, implementation plan, progress tracker and build guide, updated with every change
-- monorepo `api/` + `web/` (+ `mobile/`, the NativePHP shell; phone screens live in each web module's `phone/` folder), phased build with one PR per phase, visual parity proven with screenshots
+- monorepo `api/` + `web/` + `packages/shared/` (+ `mobile/`, the phone app as its own app in Hodie's shape, P93), each app's `src/` split into `app/`, `components/`, `modules/`, phased build with one PR per phase, visual parity proven with screenshots
 
 If the user asks for a change to one of these, say it is a platform decision, show the P number, and ask (with the Ask tool) whether they want to change the platform for every product. If yes, the change is a new P in the kit repo (decision + prototype + rules + components + the kit's guide updated together, `kit.json` bumped), not a product-only change.
 
@@ -75,7 +75,8 @@ docs/frontend/                    FRONTEND_RULES.md, COMPONENTS.md, components_a
 docs/architecture/                the ERD with the D-log, MODULES.md (from the kit)
 tools/prototype-shots/, tools/guide/   from the kit (tools/guide/build.args holds the product's guide title and pages)
 api/                              the Cobley backend, trimmed in Phase 0, modules under app/Modules/{Kernel|Core|Custom}/
-web/ (and mobile/)                created in Phase 0, modules under web/src/modules/ (phone screens in each module's phone/)
+web/, packages/shared/            created in Phase 0, modules under web/src/modules/
+mobile/                           the phone app (P93): its own NativePHP app from templates/mobile, modules under mobile/resources/spa/src/modules/
 ```
 
 Fill every `{{PRODUCT_NAME}}` / `{{product_slug}}`. Never commit secrets. Push only to a repo the user has created and attached.

@@ -19,4 +19,4 @@ Cobley wrote the right rule; Agrovet and Jumla have only a submitting flag and n
 
 ## Where
 
-Product: src/phone/writes, API middleware for the key. Test: stop the server mid-save, retry, one record.
+Product (P93): `mobile/resources/spa/src/app/` → writes, API middleware for the key. Test: stop the server mid-save, retry, one record.

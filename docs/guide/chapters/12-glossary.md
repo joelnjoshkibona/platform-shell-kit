@@ -12,7 +12,7 @@
 | Kit | This repository: the shell, its decisions, rules, components, prototype and guide. |
 | Manifest | A module's `module.json` (API) and `module.ts` (web, phone): what the module is and what it offers (P81). |
 | Module | One kind of thing a product manages, in one folder on every side (P80). |
-| P decision | A platform decision, numbered P1 to P92, binding on every product. |
+| P decision | A platform decision, numbered P1 to P93, binding on every product. |
 | Permission | A name like `Tasks.create` that a role grants. The menu, the route, the endpoint and the button all check the same one. |
 | Prototype | The clickable copy of the product with fake data; the look every screen must match. |
 | RecordLink | The component that shows a related record as a link with a preview (P85). |

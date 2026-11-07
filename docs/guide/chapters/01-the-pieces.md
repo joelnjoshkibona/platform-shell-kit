@@ -6,7 +6,8 @@ A product on the platform (Fomu, DevBiz, Shelui Tasks, …) is one repository wi
 | --- | --- | --- | --- |
 | API | `api/` | The server: data, rules, permissions. Everything the apps show comes from here. | Laravel (PHP), MySQL or PostgreSQL |
 | Web app | `web/` | The admin app in a browser, on a desktop or a phone. | Vue 3, TypeScript, Tailwind, shadcn-vue |
-| Phone app | `mobile/` (the Android shell) + each module's `web/src/modules/{module}/phone/` screens (if the product has one) | An Android app drawn for a phone only. Its screens are a phone-only build of the web project; it talks to the same API. | NativePHP (Laravel inside the app) + Vue 3, TypeScript |
+| Phone app | `mobile/` (if the product has one) | An Android app crafted for a phone only, its own app (P93): its own screens and pieces, a small Laravel inside for the phone's own work. It talks to the same API. | NativePHP (Laravel inside the app) + Vue 3, TypeScript |
+| Shared code | `packages/shared/` | What the web and phone apps must agree on: talking to the API and its types, permission names, statuses, formatting. | TypeScript |
 | Prototype | `docs/design/prototype/` | A clickable copy of the product with fake data. The look and behaviour every screen must match. | Plain JavaScript, opens from a file |
 | Documents | `docs/` | Decisions, data model (ERD), screens, rules, components, the plan, the tracker and this guide. | Markdown, generated HTML |
 

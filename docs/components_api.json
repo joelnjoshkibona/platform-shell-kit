@@ -1608,7 +1608,7 @@
   ]
  },
  "Phone foundations": {
-  "file": "src/styles (--sa-*), src/phone/ (lifecycle, network, backstack)",
+  "file": "mobile/resources/spa/src/app/ (--sa-*, lifecycle, network, backstack)",
   "props": [],
   "emits": [],
   "slots": [],

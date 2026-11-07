@@ -21,4 +21,4 @@ Cobley's initializeAuth clears the session on any /profile failure, so opening w
 
 ## Where
 
-Prototype: Session ended (app--session-ended). Product: src/phone/session, secureStore.
+Prototype: Session ended (app--session-ended). Product (P93): `mobile/resources/spa/src/app/` → session, secureStore.

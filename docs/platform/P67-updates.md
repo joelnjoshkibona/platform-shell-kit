@@ -20,4 +20,4 @@ Every copy of the updater was rebuilt by hand; DevBiz 1.0.1 never saw 1.0.2 beca
 
 ## Where
 
-Prototype: P53 states. Product: src/phone/updates.
+Prototype: P53 states. Product (P93): `mobile/resources/spa/src/app/` → updates.

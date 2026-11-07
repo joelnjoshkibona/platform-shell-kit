@@ -5,7 +5,7 @@ Status: **decided** (kit 1.12.0). From PROJECT_GENERATOR (`PHP/PROJECT_GENERATOR
 ## Decision
 
 - API: one module provider finds every `app/Modules/**/module.json`. For each enabled module it loads `Migrations/`, `Routes/api.php` under the `api` prefix with `auth:sanctum` and `permission:{Module}.{op}` on each route, the module's own provider and policies. The system seeder runs each module's seeder, which upserts its permissions and its menu row (existing databases get new rows; nothing is skipped by id).
-- Web: `import.meta.glob('./modules/*/module.ts', { eager: true })` registers each module's routes, menu entry, locales, actions and its link entry (P85). The phone-only entry reads the same manifests and registers each module's `phone` screens instead.
+- Web: `import.meta.glob('./modules/*/module.ts', { eager: true })` registers each module's routes, menu entry, locales, actions and its link entry (P85). The phone app (P93) has its own loader over its own `src/modules/*/module.ts`.
 - Adding a module is adding a folder. Disabling is `enabled: false`; its routes, menu and pickers go, its tables stay.
 
 ## Why

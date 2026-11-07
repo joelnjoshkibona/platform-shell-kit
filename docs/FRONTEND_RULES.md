@@ -326,7 +326,8 @@ The phone app is the web shell inside a product's Android app (NativePHP web vie
 
 Guide: `docs/architecture/MODULES.md`.
 
-- **A module owns its files (P80)**: `api/app/Modules/{Tier}/{Group}/{Module}/` and `web/src/modules/{module}/`, whose `phone/` subfolder holds the phone app's screens (built by the phone-only entry; `mobile/` is the NativePHP shell). Nothing about a module lives outside its folder; file names say what they do.
+- **A module owns its files (P80)**: `api/app/Modules/{Tier}/{Group}/{Module}/`, `web/src/modules/{module}/` and, for the modules the phone shows, `mobile/resources/spa/src/modules/{module}/`. Each app's `src/` has `app/`, `components/`, `modules/`.
+- **The phone app is its own app (P93)**: crafted for a phone in Hodie's shape (`mobile/` with its own Laravel for the phone's work and its own interface in `resources/spa/`); it shares only `packages/shared` with the web app, never screens, components or layouts. Nothing about a module lives outside its folder; file names say what they do.
 - **One manifest, found by glob (P81, P82)**: `module.json` on the API, `defineModule()` in `module.ts` on web and phone. No central registry, menu file or picker trait. Adding a module is adding a folder.
 - **One service per operation, container instances (P83)**: `{Module}{Op}Service`, `execute → validateData → process`; models take only validated data plus server fields.
 - **Actions declared once (P84)**: service + route + `{Module}.{action}` + button placement + form type in one manifest entry.

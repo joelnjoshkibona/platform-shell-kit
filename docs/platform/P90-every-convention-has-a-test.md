@@ -7,6 +7,7 @@ Status: **decided** (kit 1.12.0). From PROJECT_GENERATOR (`PHP/PROJECT_GENERATOR
 - Manifests are valid and agree across API and web; every module has a menu entry and a label field; every reference points at a module that exists.
 - Every create and edit form has drafts (P26).
 - No module imports another module's pages or services: on the API only models, on the web only `RecordLink` and the API.
+- `web/` and `mobile/` import from each other only through `packages/shared` (P93).
 - Services write only validated data (P83).
 - List endpoints run a fixed number of queries whatever the page size (no N+1).
 

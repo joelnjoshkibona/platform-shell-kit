@@ -38,6 +38,7 @@ Screens and their screenshot names are in `docs/design/SCREENS.md`. Behaviour ru
 - `BaseService` (execute → validateData → process in a transaction; only validated keys reach the model; services resolved from the container), the list contract (`ListService`: operators, allowlists, default filters, bulk, export, grouped counts), the P88 response shape (`code` equals the status, `errors`, `version` and 409).
 - `RecordLink` and its registry; the child-tab routes (`/{parent}/{uuid}/{child}/...`).
 - The convention tests (P90) on both sides.
+- The npm workspace at the root (`web`, `mobile/resources/spa`, `packages/*`) and `packages/shared` (from `templates/shared/`): the API client and generated types, permission names, status workflows, formatters, module keys, used by `web/` and, later, `mobile/` (P93).
 - `docs/IMPLEMENTATION_PLAN.md` (from `templates/IMPLEMENTATION_PLAN.md`) with every phase broken into steps, `docs/PROGRESS.md`, `docs/guide/` (from `templates/guide/`, plus the kit's `tools/guide/build.py` and `check.sh`; `templates/guide/build.args` goes to `tools/guide/build.args`), and `tools/guide/check.sh` in CI.
 
 **Frontend (`web/`)**

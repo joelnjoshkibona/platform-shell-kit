@@ -2,7 +2,7 @@
 
 # {{PRODUCT_NAME}}: implementation plan
 
-The build plan's phases (`docs/BUILD_PLAN.md`) broken into **numbered steps**. A step is small enough to finish and check in a day or two. Every pull request that changes `api/`, `web/` or `mobile/` names its step, corrects the step here if the work differed, updates its row in `docs/PROGRESS.md` and the guide chapter that explains it (`tools/guide/check.sh` enforces it).
+The build plan's phases (`docs/BUILD_PLAN.md`) broken into **numbered steps**. A step is small enough to finish and check in a day or two. Every pull request that changes `api/`, `web/`, `mobile/` or `packages/` names its step, corrects the step here if the work differed, updates its row in `docs/PROGRESS.md` and the guide chapter that explains it (`tools/guide/check.sh` enforces it).
 
 How to write a step:
 
@@ -17,7 +17,7 @@ How to write a step:
 ## Phase 0: Foundation
 
 ### 0.1 Repository and tooling
-- **Goal**: `api/`, `web/` (and `mobile/`) exist, install and start; CI runs on every pull request.
+- **Goal**: `api/`, `web/`, `packages/shared/` (and `mobile/`) exist, install and start; CI runs on every pull request.
 - **Files**: `api/`, `web/package.json`, `web/tsconfig.json` (strict, P89), `.github/workflows/ci.yml`, `tools/guide/`.
 - **Commands**: `cd api && composer install && php artisan key:generate`; `cd web && npm i && npm run dev`.
 - **Check**: CI is green: Pest, `vue-tsc --noEmit`, lint, unit tests, `tools/guide/check.sh`.
@@ -25,14 +25,14 @@ How to write a step:
 
 ### 0.2 Modules load themselves (P80–P82)
 - **Goal**: a module is a folder with a manifest; the API's module provider and the web's glob loader find it; `php artisan modules:check` validates manifests.
-- **Files**: `api/app/Kernel/Modules/ModuleServiceProvider.php`, `ModulesCheckCommand.php`; `web/src/core/modules.ts` (`defineModule`, `ModuleKey`), `web/src/main.ts`.
+- **Files**: `api/app/Kernel/Modules/ModuleServiceProvider.php`, `ModulesCheckCommand.php`; `web/src/app/modules.ts` (`defineModule`, `ModuleKey`), `web/src/main.ts`.
 - **Commands**: `php artisan modules:check`; `npm run typecheck`.
 - **Check**: an empty example module appears in routes, menu and locales without editing any central file; the convention tests (P90) pass.
 - **Guide**: `chapters/03-how-modules-load.md`.
 
 ### 0.3 Services, lists and links (P83–P88)
 - **Goal**: `BaseService`, the list contract, bulk actions, the response shape with `version` and 409, `RecordLink` and its registry.
-- **Files**: `api/app/Kernel/Services/BaseService.php`, `ListService.php`; `web/src/core/lists.ts`, `web/src/components/app/RecordLink.vue`.
+- **Files**: `api/app/Kernel/Services/BaseService.php`, `ListService.php`; `web/src/app/lists.ts`, `web/src/components/app/RecordLink.vue`.
 - **Check**: the reference module (0.4) uses them; tests for validation, 409 and N+1.
 - **Guide**: `chapters/04-services-lists-links.md`.
 

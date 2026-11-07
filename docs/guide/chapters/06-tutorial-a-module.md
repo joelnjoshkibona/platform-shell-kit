@@ -131,7 +131,7 @@ The controller only hands each request to its service: `return $this->respond(ap
 `web/src/modules/tasks/module.ts`:
 
 ```ts
-import { defineModule } from '@/core/modules'
+import { defineModule } from '@/app/modules'
 import routes from './routes'
 
 export default defineModule({
@@ -146,7 +146,7 @@ The app finds it by itself (P82). Then the list page, built only from the librar
 
 ```vue
 <script setup lang="ts">
-import { useList } from '@/core/lists'
+import { useList } from '@/app/lists'
 const list = useList<Task>({ endpoint: '/tasks/list', search: true, sorts: ['due_date', 'title'] })
 const columns = [
   { key: 'title', label: 'Task', identity: true },

@@ -8,12 +8,16 @@ api/                      Laravel: the platform core trimmed to what the product
     Kernel/               the platform's plumbing (auth, logs, queue, settings)
     Core/                 every product's modules (Users, Roles, Locations, Media, Menus, Approvals…)
     Custom/               this product's modules (Tasks, Tickets, Projects…)
-web/                      Vue 3 + TypeScript
+web/                      the web app: Vue 3 + TypeScript
+  src/app/                everything that is not a module: start-up, languages, session, the frame
+  src/components/         the component library
   src/modules/{module}/   one folder per module (see chapter 5)
-    phone/                its phone app screens, if the phone shows the module
-  src/main.phone.ts       the phone app's entry: a phone-only build (VITE_APP=1)
-  src/phone/              the phone contract: bridge, network, lifecycle, back stack, lock, …
-mobile/                   the phone app's Android shell (NativePHP), if the product has one
+mobile/                   the phone app, its own app (P93), if the product has one
+  app/  routes/  database/        its small Laravel: the phone's own work (device, drafts, log, updates)
+  resources/spa/src/
+    app/  components/             its start-up and phone behaviour, its own pieces
+    modules/{module}/             only the modules the phone shows
+packages/shared/          what web and mobile share: API client and types, permissions, statuses, formatting
 docs/
   product/                PRODUCT.md, DECISIONS.md (the D-log)
   design/                 prototype/, prototype-phone/, screenshots/, SCREENS.md
@@ -29,6 +33,6 @@ CLAUDE.md                 how an agent works in this repository
 
 ## One module, one folder (P80)
 
-The most important rule of the code: **everything about one thing lives in one folder, under the same name on every side.** To change how tasks work you open `api/app/Modules/Custom/Work/Tasks/` and `web/src/modules/tasks/`; nothing about tasks is anywhere else. The file names say what they do: `TasksCreateService.php` creates a task, `TasksDetailsPanel.vue` is a task's details panel.
+The most important rule of the code: **everything about one thing lives in one folder, under the same name on every side.** To change how tasks work you open `api/app/Modules/Custom/Work/Tasks/`, `web/src/modules/tasks/` and, on the phone, `mobile/resources/spa/src/modules/tasks/`; nothing about tasks is anywhere else. The file names say what they do: `TasksCreateService.php` creates a task, `TasksDetailsPanel.vue` is a task's details panel.
 
 > **Why**: In a large app most time goes into *finding* code. When the folder and the names are predictable, a new developer finds anything in seconds. PROJECT_GENERATOR proved this on many products; the kit made it the rule (P80).

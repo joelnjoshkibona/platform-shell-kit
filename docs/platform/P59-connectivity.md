@@ -19,4 +19,4 @@ No app uses the Network API; axios has no timeout in Agrovet and Jumla; retry is
 
 ## Where
 
-Prototype: app--signal-lost, app--back-online. Product: src/phone/network, lib/connection.
+Prototype: app--signal-lost, app--back-online. Product (P93): `mobile/resources/spa/src/app/` → network, lib/connection.

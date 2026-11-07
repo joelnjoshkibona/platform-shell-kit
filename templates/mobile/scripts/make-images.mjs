@@ -1,18 +1,18 @@
 // Draws the app icon and the splash (P55, kit 1.7.0) into public/, where NativePHP picks them up on native:run:
 //   icon.png         1024 × 1024, opaque: the Store mark (the shell's brand mark) at 46% on {{PRODUCT_NAME}} blue (D13), corner 22%
 //                    (Android masks it into its own shape; NativePHP makes every launcher size from it);
-//   splash.png       1280 × 1920: the closed boot curtain (web/index.html #boot-curtain, light / dark) as a still frame,
+//   splash.png       1280 × 1920: the closed boot curtain (the phone interface's resources/spa/index.html, light / dark) as a still frame,
 //   splash-dark.png  so the splash, the app's first frame and the web view's first paint are one picture (P55).
-// Run from mobile/: node scripts/make-images.mjs (uses Playwright from ../web/node_modules).
+// Run from mobile/: node scripts/make-images.mjs (uses Playwright and Geist from the repo's npm workspace, P93).
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 const MOBILE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const require = createRequire(path.join(MOBILE, '../web/package.json'))
+const require = createRequire(path.join(MOBILE, '../package.json'))   // the root workspace (web, mobile/resources/spa, packages/*)
 const { chromium } = require('@playwright/test')
-// The web's own Geist (500), so "Loading {{PRODUCT_NAME}}…" is drawn in the app's font.
+// Geist (500), the font the interface bundles, so "Loading {{PRODUCT_NAME}}…" is drawn in the app's font.
 const GEIST = readFileSync(require.resolve('@fontsource/geist/files/geist-latin-500-normal.woff2')).toString('base64')
 const FONT = `<style>@font-face{font-family:Geist;font-weight:500;src:url(data:font/woff2;base64,${GEIST}) format('woff2')}</style>`
 
