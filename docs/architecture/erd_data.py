@@ -63,28 +63,6 @@ ent("01", "USER_TRUSTED_DEVICES", [
     ("timestamp", "expires_at", "", "30 days"),
 ], "Fomu addition. Skips the 2FA step on a remembered device.")
 
-ent("01", "ORGANIZATIONS", [
-    ("bigint", "id", "PK", ""),
-    ("ulid", "public_id", "UK", "exposed in API"),
-    ("string", "name", "", ""),
-    ("string", "slug", "UK", "path segment /{org}"),
-    ("bigint", "root_location_id", "FK", "locations.id of type organization"),
-    ("json", "branding", "", "logo, accent (preset key or #rrggbb), accent_tokens (derived, P46), default theme"),
-    ("string", "timezone", "", "default Africa/Dar_es_Salaam"),
-    ("json", "summary_view_defaults", "", "per question type chart view"),
-    ("boolean", "require_2fa", "", ""),
-    ("bigint", "status_id", "FK", "statuses.id"),
-] + STD, "Fomu tenant. Every tenant-owned table carries organization_id behind a global scope. The org is also the root node of its location tree.")
-
-ent("01", "ORGANIZATION_USERS", [
-    ("bigint", "id", "PK", ""),
-    ("bigint", "organization_id", "FK", ""),
-    ("bigint", "user_id", "FK", ""),
-    ("bigint", "role_id", "FK", "MAIN role (role_type = system): owner | admin | editor | viewer"),
-    ("boolean", "is_owner", "", "exactly one per org; owner role locked"),
-    ("timestamp", "joined_at", "", ""),
-] + STD, "Membership + the user's one main role in this organisation. Location-specific custom roles live on user_locations. UNIQUE(organization_id, user_id).")
-
 ent("01", "ROLES", [
     ("bigint", "id", "PK", ""),
     ("bigint", "organization_id", "FK", "NULL = system role shared by all orgs"),
@@ -93,7 +71,7 @@ ent("01", "ROLES", [
     ("string", "role_type", "", "system (main roles) | custom (location roles); Cobley column"),
     ("bigint", "status_id", "FK", "statuses.id"),
     ("json", "permissions", "", "array of permission names; Cobley core"),
-] + STD, "Cobley roles + organization_id. System roles are assigned on organization_users; custom roles only on user_locations (never as a main role). Multi-valued index on permissions.")
+] + STD, "Cobley roles + organization_id. System (main) roles are assigned on the member's primary user_locations row; custom roles only on user_locations (never as a main role). Multi-valued index on permissions.")
 
 ent("01", "PERMISSIONS", [
     ("bigint", "id", "PK", ""),
@@ -148,7 +126,8 @@ ent("01B", "LOCATIONS", [
     ("string", "name", "", "UNIQUE(organization_id, name)"),
     ("string", "code", "", "UNIQUE(organization_id, code), e.g. ARU-01"),
     ("bigint", "location_type_id", "FK", ""),
-    ("bigint", "parent_id", "FK", "self, NULL only for the org root"),
+    ("bigint", "parent_id", "FK", "self; NULL = a root location, which is an organisation (P103)"),
+    ("string", "slug", "UK", "only on a root location: the path segment /{org} (P103)"),
     ("boolean", "allow_sales", "", "Cobley core (unused by Fomu)"),
     ("bigint", "status_id", "FK", "statuses.id"),
     ("string", "address", "", "Fomu addition"),
@@ -172,10 +151,11 @@ ent("01B", "USER_LOCATIONS", [
     ("bigint", "user_id", "FK", ""),
     ("bigint", "location_id", "FK", ""),
     ("boolean", "is_primary", "", "one primary per user per organisation"),
+    ("bigint", "role_id", "FK", "MAIN role (role_type = system), on the primary row only (P103)"),
     ("json", "roles", "", "several CUSTOM role ids (role_type = custom)"),
     ("json", "granted_permissions", "", "extra permission names at this location"),
     ("json", "denied_permissions", "", "removed here; deny always wins"),
-] + STD, "Cobley core minus role_id (main roles stay on organization_users). Applies to the location and its descendants. UNIQUE(user_id, location_id). Multi-valued indexes on the three JSON arrays; changes written to the activity log.")
+] + STD, "Cobley core. Membership (P103): a row anywhere in the organisation's tree; the main role is role_id on the primary row. Applies to the location and its descendants. UNIQUE(user_id, location_id). Multi-valued indexes on the three JSON arrays; changes written to the activity log.")
 
 ent("01B", "COUNTRIES", [
     ("bigint", "id", "PK", ""),
@@ -537,25 +517,19 @@ ent("06", "FORM_EXPORTS", [
 
 # relationships: (left, card, right, label, owning_section)
 R = [
-    ("ORGANIZATIONS", "||--o{", "ORGANIZATION_USERS", "has members", "01"),
-    ("USERS", "||--o{", "ORGANIZATION_USERS", "joins", "01"),
-    ("USERS", "||--o{", "ORGANIZATIONS", "owns", "01"),
     ("USERS", "||--o{", "USER_TRUSTED_DEVICES", "remembers", "01"),
-    ("ORGANIZATIONS", "|o--o{", "ROLES", "defines custom", "01"),
-    ("ROLES", "||--o{", "ORGANIZATION_USERS", "main role of", "01"),
+    ("LOCATIONS", "|o--o{", "ROLES", "organisation defines custom", "01"),
     ("STATUSES", "||--o{", "USERS", "status of", "01"),
-    ("STATUSES", "||--o{", "ORGANIZATIONS", "status of", "01"),
     ("STATUSES", "||--o{", "ROLES", "status of", "01"),
     ("MENUS", "|o--o{", "MENUS", "parent of", "01"),
-    ("ORGANIZATIONS", "||--o{", "IMPERSONATION_SESSIONS", "audits", "01"),
+    ("LOCATIONS", "||--o{", "IMPERSONATION_SESSIONS", "organisation audits", "01"),
     ("USERS", "||--o{", "IMPERSONATION_SESSIONS", "views as", "01"),
     ("ROLES", "|o--o{", "IMPERSONATION_SESSIONS", "previewed in", "01"),
     ("LOCATIONS", "|o--o{", "IMPERSONATION_SESSIONS", "context of", "01"),
 
-    ("ORGANIZATIONS", "||--o{", "LOCATIONS", "has", "01B"),
-    ("LOCATIONS", "|o--o|", "ORGANIZATIONS", "is root of", "01B"),
+    ("LOCATIONS", "||--o{", "LOCATIONS", "organisation has", "01B"),
     ("LOCATION_TYPES", "||--o{", "LOCATIONS", "classifies", "01B"),
-    ("ORGANIZATIONS", "|o--o{", "LOCATION_TYPES", "defines", "01B"),
+    ("LOCATIONS", "|o--o{", "LOCATION_TYPES", "organisation defines", "01B"),
     ("LOCATIONS", "|o--o{", "LOCATIONS", "parent of", "01B"),
     ("LOCATIONS", "||--o{", "LOCATION_CLOSURES", "ancestor in", "01B"),
     ("STATUSES", "||--o{", "LOCATIONS", "status of", "01B"),
@@ -564,7 +538,7 @@ R = [
     ("USERS", "||--o{", "USER_LOCATIONS", "assigned at", "01B"),
     ("LOCATIONS", "||--o{", "USER_LOCATIONS", "staffed by", "01B"),
 
-    ("ORGANIZATIONS", "||--o{", "REQUEST_TYPES", "defines", "01C"),
+    ("LOCATIONS", "||--o{", "REQUEST_TYPES", "organisation defines", "01C"),
     ("REQUEST_TYPES", "||--|{", "REQUEST_TYPE_STEPS", "has steps", "01C"),
     ("REQUEST_TYPES", "||--o{", "REQUESTS", "typed as", "01C"),
     ("USERS", "||--o{", "REQUESTS", "raises", "01C"),
@@ -579,7 +553,7 @@ R = [
     ("USERS", "||--o{", "NOTIFICATION_DELIVERIES", "receives", "01C"),
     ("USERS", "||--o{", "USER_NOTIFICATION_PREFERENCES", "sets", "01C"),
 
-    ("ORGANIZATIONS", "||--o{", "FORMS", "owns", "02"),
+    ("LOCATIONS", "||--o{", "FORMS", "organisation owns", "02"),
     ("USERS", "||--o{", "FORMS", "creates", "02"),
     ("LOCATIONS", "|o--o{", "FORMS", "owns", "02"),
     ("FORMS", "||--o{", "FORM_VERSIONS", "versioned as", "02"),
@@ -587,14 +561,14 @@ R = [
     ("USERS", "||--o{", "FORM_VERSIONS", "publishes", "02"),
     ("FORMS", "||--o{", "FORM_COLLABORATORS", "shared with", "02"),
     ("USERS", "||--o{", "FORM_COLLABORATORS", "collaborates", "02"),
-    ("ORGANIZATIONS", "|o--o{", "FORM_TEMPLATES", "keeps", "02"),
+    ("LOCATIONS", "|o--o{", "FORM_TEMPLATES", "organisation keeps", "02"),
     ("USERS", "|o--o{", "FORM_TEMPLATES", "authors", "02"),
 
     ("FORMS", "||--o{", "FORM_INVITATIONS", "invites", "03"),
     ("USERS", "||--o{", "FORM_INVITATIONS", "sends", "03"),
     ("FORMS", "||--o{", "RESPONDENT_OTPS", "issues", "03"),
 
-    ("ORGANIZATIONS", "||--o{", "FORM_ATTEMPTS", "scopes", "04"),
+    ("LOCATIONS", "||--o{", "FORM_ATTEMPTS", "organisation scopes", "04"),
     ("FORMS", "||--o{", "FORM_ATTEMPTS", "receives", "04"),
     ("FORM_VERSIONS", "||--o{", "FORM_ATTEMPTS", "rendered as", "04"),
     ("RESPONDENTS", "||--o{", "FORM_ATTEMPTS", "starts", "04"),
@@ -603,7 +577,7 @@ R = [
     ("FORM_ATTEMPTS", "||--o{", "FORM_ATTEMPT_SECTIONS", "times", "04"),
     ("FORM_ATTEMPTS", "||--o{", "FORM_ATTEMPT_EVENTS", "logs", "04"),
 
-    ("ORGANIZATIONS", "||--o{", "FORM_RESPONSES", "scopes", "05"),
+    ("LOCATIONS", "||--o{", "FORM_RESPONSES", "organisation scopes", "05"),
     ("FORMS", "||--o{", "FORM_RESPONSES", "collects", "05"),
     ("RESPONDENTS", "||--o{", "FORM_RESPONSES", "submits", "05"),
     ("LOCATIONS", "|o--o{", "FORM_RESPONSES", "snapshotted at", "05"),
@@ -721,7 +695,7 @@ OPEN_DECISIONS = [
     ("D3", "Retention of IP, user agent, integrity events", "Life of the response; purged with the response or form."),
     ("D4", "ID strategy", "ULID for forms, attempts, responses; bigint for internal tables."),
     ("D5", "Respondent identity scope", "Global respondents table."),
-    ("D6", "Summary chart views", "Three levels: built-in default per type, organisation default per type (organizations.summary_view_defaults), per-question override (forms.summary_views)."),
+    ("D6", "Summary chart views", "Three levels: built-in default per type, organisation default per type (the organisation's summary_view_defaults setting), per-question override (forms.summary_views)."),
     ("D8", "Roles and menu access", "Cobley-style JSON roles (spatie removed). roles.permissions is a JSON array of permission names in Module.action form (Forms.list, Forms.create, Responses.export; see D28). One permission per child menu; parent visible if any child is (OR); empty parents hidden. Missing permissions go to a role first, to a single user (granted_permissions on user_locations) only as an exception."),
     ("D9", "Menus, selects and popovers never clip", "Always use shadcn-vue *Content components (DropdownMenuContent, SelectContent, PopoverContent, TooltipContent) with their portal on and collisionPadding 8. Never position a menu with absolute inside a scrolling or overflow-hidden container (tables, card lists, dialog bodies)."),
     ("D10", "Clickable cards with actions", "A card that opens on click uses a stretched link; its action buttons (menus, toggles) sit above it with relative z-10 so they stay tappable."),
@@ -733,7 +707,7 @@ OPEN_DECISIONS = [
     ("D16", "Menu Management layout", "The page is information only: parent/child rows (drag to reorder, drag a child onto another parent to move it) showing type, permission, who sees it and status. All editing happens in a gear popup: name, icon, parent, position, group heading, display mode, animation, permission and visibility. Parents stay top level."),
     ("D17", "Design system reference", "The prototype's Design system page is the source of truth for tokens (colour, type, spacing, radius, shadow, motion, z-index, breakpoints), the component inventory with sizes and variants, and layout rules. The build copies its values into tailwind.config and the shadcn-vue theme CSS; any change is made there first."),
     ("D18", "Shared platform core", "Identity, organisations, roles, permissions, menus, statuses, locations, wards and approvals reuse the Cobley Platform core. Every tenant-owned core table gets organization_id; system rows (roles, location types, statuses) keep it NULL and are shared."),
-    ("D19", "Main role vs location roles", "One MAIN role per organisation member (organization_users.role_id, role_type = system: owner, admin, editor, viewer). Several CUSTOM roles per location in user_locations.roles (JSON array of role ids, role_type = custom). A main role can never be stored as a location role; validated on save."),
+    ("D19", "Main role vs location roles", "One MAIN role per organisation member (user_locations.role_id on the member's primary row in the organisation, role_type = system: owner, admin, editor, viewer; P103). Several CUSTOM roles per location in user_locations.roles (JSON array of role ids, role_type = custom). A main role can never be stored as a location role; validated on save."),
     ("D20", "Overrides stay JSON", "granted_permissions / denied_permissions / roles stay JSON on user_locations. Mitigations: MySQL 8 multi-valued indexes (CAST(... AS CHAR(80) ARRAY)) for 'who has X' queries, a FormRequest rule that every value exists in permissions.name, every change written to the activity log with before/after, and a migration that renames values when a permission is renamed."),
     ("D21", "Effective permission rule", "At a location: main role permissions UNION custom-role permissions at that location and every ancestor (via location_closures) UNION granted_permissions, MINUS denied_permissions. Deny always wins. Result cached per user + location, busted when any input changes."),
     ("D22", "Statuses", "Master-data status (users, organisations, locations, roles, request types) uses the statuses table (status_id). Workflow states that drive code (forms, attempts, responses, requests) stay ENUM columns."),
