@@ -1,6 +1,6 @@
 # The phone model
 
-What a phone is, and how it moves. The mobile kit (P56–P78) is these two tables; every rule and every phone component answers one row.
+What a phone is, and how it moves. The mobile kit (P56–P79) is these two tables; every rule and every phone component answers one row.
 Evidence: the DevBiz app and the Cobley spare parts, Agrovet and Jumla apps (`PROPOSAL.md`).
 
 ## What a phone is (device facts: asked once, never assumed)
@@ -32,7 +32,7 @@ Evidence: the DevBiz app and the Cobley spare parts, Agrovet and Jumla apps (`PR
 | A permission is needed | reason first, what still works, Allow / Not now; denied for good: Open Settings (P63) |
 | Leave for the system (installer, Settings, share, call) | expect to come back; re-read state on return (P58, P64, P67) |
 | Notification or link opened | open the record; sign in first if needed (P66) |
-| Update appears | banner; below the minimum nothing else (P53, P67) |
+| Update appears | banner or a once-per-version dialog; below the minimum nothing else; download, check the file, open Android's installer, and say what Android will ask (P53, P67, P79) |
 | Phone handed on | lock after time away; sign out wipes the phone (P57, P65) |
 | The app fails or the process dies | the log records it; the next start offers to export it (P72) |
 | Recording in the background (location, reminders) | each run leaves a line in the log; the screen shows when it last worked (P72, P73, P74) |

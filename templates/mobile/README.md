@@ -1,6 +1,6 @@
 # Mobile app template
 
-The Android app of a product on this kit (P56–P78): a NativePHP Mobile v4 shell whose every path returns the product's web
+The Android app of a product on this kit (P56–P79): a NativePHP Mobile v4 shell whose every path returns the product's web
 build. Copy this folder to `<product>/mobile/`, replace the placeholders, and follow `README` below.
 
 | Placeholder | Example |
