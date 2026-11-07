@@ -29,6 +29,8 @@
     find: (id) => { const l = locById(id); return l ? { label: l.name, sub: l.code, deleted: l.status === 'deleted' } : null; } });
   defineModule({ key: 'Reports', route: 'report', path: 'reports', label: 'Report', plural: 'reports', perm: 'Reports.list', backParent: 'reports', preview: null,
     get: () => G.reportId, set: (v) => { const r = REPORTS.find(x => x.id === v); if (r) G.reportId = r.id; return !!r; }, find: (id) => { const r = REPORTS.find(x => x.id === id); return r ? { label: r.name } : null; } });
+  defineModule({ key: 'Help', route: 'help-article', path: 'help', label: 'Guide', plural: 'guides', backParent: 'help', preview: null,   /* P98: #/help/<article id> */
+    get: () => G.helpId, set: (v) => { const a = helpById(v); if (a) G.helpId = a.id; return !!a; }, find: (id) => { const a = helpById(id); return a ? { label: a.title, sub: a.module } : null; } });
   defineModule({ key: 'Jobs', route: 'job', path: 'jobs', label: 'Background job', plural: 'background jobs', backParent: 'my-jobs', preview: JobPreview,
     get: () => { const j = jobById(G.jobId); return j && (j.no || j.id); }, set: (v) => { const j = JOBRUNS.find(x => x.no === v || x.id === v); if (j) G.jobId = j.id; return !!j; },
     linkId: (id) => { const j = jobById(id); return j ? j.no : id; }, find: (id) => { const j = jobById(id); return j ? { label: j.no + ' ' + j.title } : null; } });

@@ -335,6 +335,13 @@ Guide: `docs/architecture/MODULES.md`.
 - **List contract (P87)** and **API shape (P88)**: see the backend contract below.
 - **Strict TypeScript (P89)**; **every convention has a test (P90)**.
 
+## Locked: the user guide (P98)
+
+- Every task a person does on a screen has an article in `docs/help/articles/`, and the screen is in its `screens:` so How do I… offers it.
+- Pictures are never drawn by hand: write the shot spec and run `tools/help/build.js`. A marker points at a selector a person would recognise (a label, an aria-label), not at a position.
+- Changing a screen changes its articles in the same pull request (or the commit says `Help: no change` and why).
+- Give every control a name (text or aria-label): the guide, tests and screen readers all find it by that name.
+
 ## Locked: reports (P96)
 
 - A report is a list page: the toolbar is Refresh, Filters, Sort, Group, Columns, then Export; Group and Columns open dialogs like Filters; quick tabs, search and chips as on every list.

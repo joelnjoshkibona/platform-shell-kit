@@ -13,6 +13,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - **Overlays**: DropdownMenu, Dialog · Sheet
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, Job progress · Job page, View as banner
 - **Data**: List rows, Charts, List toolbar · Filters, List card, Report table · Chart builder, Approval steps
+- **Help**: Help · How do I…
 - **Phone**: Phone foundations, Lock screen, Session ended, Permission ask, Action sheet, Scan view, Printer picker, Freshness stamp, Bottom bar, No connection, App updates, Back key hint
 
 ## Actions
@@ -949,6 +950,34 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: Rejection needs a reason
 - Do: Acting under a delegation is labelled
 - Don't: Let a requester approve their own request
+
+## Help
+
+### Help · How do I…
+
+`src/components/app/HelpArticle.vue, HowDoI.vue; src/modules/help/pages/HelpPage.vue, HelpArticlePage.vue`
+
+| Spec | Value |
+| --- | --- |
+| Articles | Markdown in docs/help/articles/<lang>/, one per task, grouped by module |
+| Pictures | tools/help/build.js draws ①②③ on the named elements; desktop light + phone dark; legend under each |
+| In the app | Help and guides (sidebar foot) · How do I… (top bar, every screen) · #/help/<id> |
+| Checks | a missing marker fails the build; a screen change carries its articles (check.sh) |
+| Variants | list · search · article · sheet |
+| Used in | Help |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `article` | `HelpArticle` | – | From help.json: id, title, module, who, screens, related, html |
+| `route` | `string` | `the current route` | How do I… lists the articles whose screens include it |
+
+**Emits:** `open` (an article id)
+
+- Do: Show the phone picture on a phone and the desktop picture on wider screens
+- Do: Put a legend under each picture with the same numbers as the text
+- Do: Offer How do I… in the top bar on every screen
+- Don't: Draw markers by hand or edit help.json: write the article and run tools/help/build.js
+- Don't: Point a marker at a position instead of a named element
 
 ## Phone
 
