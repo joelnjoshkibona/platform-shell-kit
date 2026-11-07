@@ -8,7 +8,7 @@ const only = process.argv[3] ? process.argv[3].split(',') : null;
   await p.goto(FILE); await p.waitForTimeout(1500);
   const set = (fn, arg) => p.evaluate(fn, arg);
   const shot = async (n) => { await p.waitForTimeout(550); await p.locator('.app').screenshot({ path: OUT + '/' + n + '.png' }); };
-  const reset = () => set(() => { S.stack = []; S.drawer = false; S.sheet = null; S.dialog = null; S.search = false; S.cartOpen = false; S.toast = ''; S.list = 'data'; S.net = 'online'; S.update = null; S.recSrc = null; S.print = 'idle'; S.printFail = null; S.printer = 'RPP02N'; RT.logo = true; S.dark = false; S.role = 'owner'; });
+  const reset = () => set(() => { S.stack = []; S.drawer = false; S.sheet = null; S.dialog = null; S.search = false; S.cartOpen = false; S.toast = ''; S.list = 'data'; S.net = 'online'; S.update = null; S.recSrc = null; S.print = 'idle'; S.printFail = null; S.printer = 'RPP02N'; S.map = 'path'; S.phoneNet = 'wifi'; RT.logo = true; S.dark = false; S.role = 'owner'; });
   const steps = {
     home: () => set(() => { S.route = 'home'; }),
     'home-drawer': () => set(() => { S.route = 'home'; S.drawer = true; }),
@@ -51,6 +51,14 @@ const only = process.argv[3] ? process.argv[3].split(',') : null;
     alerts: () => set(() => { S.route = 'alerts'; S.expanded = 1; }),
     profile: () => set(() => { S.route = 'profile'; }),
     design: () => set(() => { S.route = 'design'; }),
+    phonestatus: () => set(() => { S.stack = ['settings']; S.route = 'phonestatus'; S.phoneNet = 'wifi'; }),
+    'phonestatus-dark': () => set(() => { S.stack = ['settings']; S.route = 'phonestatus'; S.phoneNet = 'wifi'; S.dark = true; }),
+    'phonestatus-nosignal': () => set(() => { S.stack = ['settings']; S.route = 'phonestatus'; S.phoneNet = 'none'; }),
+    trailmap: () => set(() => { S.stack = ['settings']; S.route = 'trailmap'; S.map = 'path'; }),
+    'trailmap-dark': () => set(() => { S.stack = ['settings']; S.route = 'trailmap'; S.map = 'path'; S.dark = true; }),
+    'trailmap-empty': () => set(() => { S.stack = ['settings']; S.route = 'trailmap'; S.map = 'none'; }),
+    'trailmap-notiles': () => set(() => { S.stack = ['settings']; S.route = 'trailmap'; S.map = 'tiles'; }),
+    'trailmap-delete': () => set(() => { S.stack = ['settings']; S.route = 'trailmap'; S.map = 'path'; S.dialog = { title: 'Delete the trail?', text: 'This removes every place point and every status reading kept on this phone. It cannot be undone.', action: 'Delete', tone: 'destructive', cancel: 'Keep it' }; }),
     payments: () => set(() => { S.route = 'payments'; }), payment: () => set(() => { S.route = 'payment'; S.payId = 'P-0090'; }), 'payment-asked': () => set(() => { S.route = 'payment'; S.payId = 'P-0087'; }),
     products: () => set(() => { S.route = 'products'; }), product: () => set(() => { S.route = 'product'; S.pid = 'p1'; S.prodTab = 'overview'; }), 'product-batches': () => set(() => { S.route = 'product'; S.pid = 'p1'; S.prodTab = 'batches'; }),
     movements: () => set(() => { S.route = 'movements'; }), deliveries: () => set(() => { S.route = 'deliveries'; }), delivery: () => set(() => { S.route = 'delivery'; S.delId = 'DEL-0009'; }), 'delivery-check': () => set(() => { S.route = 'delivery'; S.delId = 'DEL-0010'; S.sheet = 'check'; }),

@@ -30,6 +30,8 @@ Money: Expenses, Accounts and Account page (history, check, move money). You and
 Profile, Users, Settings, Design system. Getting in: Sign in, Two-step code, Locked, Session ended. Phone states: no signal,
 update ready, update required.
 
+**This phone** (Settings, P76) and **Where this phone was** (P77) are drawn in `src/79_device.js` with no real sensors and no real map: the live reading, 24 hours of battery and network, what is kept and Delete the trail; the map with path, stops, day arrows, centre button and attribution, and its states (no trail yet, no network for the map pictures). The picker's Phone state has buttons for each.
+
 **Keyboard open** (the picker's Phone state, P71) draws a stand-in keyboard and shows what the app does on Android 10, where the web view is not resized: every sheet lifts above the keyboard and the page behind keeps above it.
 
 Use the picker to switch the signed-in person (Amina the owner, Rehema the cashier: her changes wait for the owner), the theme,
