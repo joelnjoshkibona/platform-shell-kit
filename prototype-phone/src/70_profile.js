@@ -26,7 +26,7 @@ const Profile = { components: { Header, Icon, Av, Pill, Seg, SetRow, Toggle, Btn
     const setTheme = (m) => { S.themeMode = m; S.dark = m === 'dark' || (m === 'system' && matchMedia('(prefers-color-scheme: dark)').matches); };
     const check = () => { S.checking = true; S.upToDate = false; setTimeout(() => { S.checking = false; S.upToDate = true; }, 1300); };
     const viewAs = () => { S.dialog = { title: S.role === 'owner' ? 'View as Rehema?' : 'Back to Amina?', text: S.role === 'owner' ? 'You see the shop as she does. Nothing you do is saved as hers.' : 'Leave Rehema’s view.', action: S.role === 'owner' ? 'View as Rehema' : 'Go back', cancel: 'Cancel', ok: () => { S.role = S.role === 'owner' ? 'cashier' : 'owner'; toast(S.role === 'cashier' ? 'Viewing as Rehema' : 'Back to Amina'); } }; };
-    const signOut = () => { S.dialog = { title: 'Sign out?', text: 'This clears the cart and drafts on this phone. Sales you saved stay.', action: 'Sign out', tone: 'destructive', cancel: 'Stay signed in', ok: () => toast('Signed out. The sign-in screen comes in the next pass.') }; };
+    const signOut = () => signOutAsk();
     return { S, ME, themes, setTheme, check, viewAs, signOut, unread, go, toast };
   },
   template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="Profile" pushed hide-search/>

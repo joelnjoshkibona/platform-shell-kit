@@ -11,7 +11,7 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `prototype/index.html` | The runnable prototype (open in a browser). The visual source of truth for the shell |
 | `prototype/src/product.js` | **The one file a product edits for branding:** name, tagline, icon, domain, city, storage key |
 | `prototype/src/parts_*.js`, `builder.html`, `assemble.py` | The shell's source, by area. `python3 prototype/src/assemble.py` rebuilds `index.html` and `docs/COMPONENTS.md` |
-| `docs/PLATFORM_DECISIONS.md` | P1–P101: the locked decisions (P102 proposed), each with the decision it came from (P38 withdrawn); P51–P79 are the phone app; P80–P90 the code structure; P91–P92 the build guide, plan and tracker |
+| `docs/PLATFORM_DECISIONS.md` | P1–P102: the locked decisions, each with the decision it came from (P38 withdrawn); P51–P79 are the phone app; P80–P90 the code structure; P91–P92 the build guide, plan and tracker |
 | `docs/architecture/MODULES.md` | How a product's code is laid out, found and wired (P80–P90): module folders, manifests, loading, services, actions, links, child tabs |
 | `docs/guide/index.html` | **The build guide**: how a product is built on this kit, from an empty folder, explained for a beginner (P91). Source: `docs/guide/chapters/*.md`, built by `python3 tools/guide/build.py` |
 | `docs/help/index.html` | **The user guide** for the people using a product: how to do each task, with marked pictures (P98). Source: `docs/help/articles/`, built by `node tools/help/build.js`. The kit's core articles; products add theirs. |

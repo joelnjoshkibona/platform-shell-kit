@@ -20,6 +20,16 @@ mobile/
 - Links: a `RecordLink` on the phone opens a bottom sheet.
 - Strict TypeScript, the convention tests, the plan, tracker and guide.
 
+## Where the data lives (P102)
+
+The phone app works in one of three ways, chosen when the product is made:
+
+- **connected**: the server's API is the truth. Without signal, the app shows the last data and saves nothing.
+- **on the phone**: there is no server; the phone's own Laravel and database are the backend, like Hodie, with backups to a file.
+- **sync**: the phone keeps a working copy and a queue of changes. People keep working without signal; the changes go to the server when it is back, each with a key so nothing is applied twice. If someone else changed the same record, the app shows both versions side by side and the person chooses.
+
+The screens never know which one is on: they read and write through one data layer (`src/app/data.ts`), so a module is written once.
+
 ## What is the phone's own (P51 to P79)
 
 - **A phone moves.** The app keeps the person signed in without a signal, saves the open form when it goes to the background, comes back where it was after Android closes it, never repeats a save it is unsure about, and shows "No connection" honestly.

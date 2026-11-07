@@ -8,8 +8,16 @@ const only = process.argv[3] ? process.argv[3].split(',') : null;
   await p.goto(FILE); await p.waitForTimeout(1500);
   const set = (fn, arg) => p.evaluate(fn, arg);
   const shot = async (n) => { await p.waitForTimeout(550); await p.locator('.app').screenshot({ path: OUT + '/' + n + '.png' }); };
-  const reset = () => set(() => { S.stack = []; S.drawer = false; S.sheet = null; S.dialog = null; S.search = false; S.cartOpen = false; S.toast = ''; S.list = 'data'; S.net = 'online'; S.update = null; S.recSrc = null; S.print = 'idle'; S.printFail = null; S.printer = 'RPP02N'; S.map = 'path'; S.phoneNet = 'wifi'; RT.logo = true; S.dark = false; S.role = 'owner'; });
+  const reset = () => set(() => { if (typeof SYNCS !== 'undefined') { SYNCS.mode = 'connected'; SYNCS.first = 0; } S.stack = []; S.drawer = false; S.sheet = null; S.dialog = null; S.search = false; S.cartOpen = false; S.toast = ''; S.list = 'data'; S.net = 'online'; S.update = null; S.recSrc = null; S.print = 'idle'; S.printFail = null; S.printer = 'RPP02N'; S.map = 'path'; S.phoneNet = 'wifi'; RT.logo = true; S.dark = false; S.role = 'owner'; });
   const steps = {
+    /* P102: the data modes */
+    'sync-home': () => set(() => { SYNCS.mode = 'sync'; S.route = 'home'; }),
+    'sync-page': () => set(() => { SYNCS.mode = 'sync'; S.stack = ['home']; S.route = 'sync'; }),
+    'sync-offline': () => set(() => { SYNCS.mode = 'sync'; S.net = 'offline'; S.route = 'home'; }),
+    'sync-conflict': () => set(() => { SYNCS.mode = 'sync'; S.stack = ['home', 'sync']; S.route = 'conflict'; }),
+    'sync-first': () => set(() => { SYNCS.mode = 'sync'; S.route = 'home'; SYNCS.first = 46; }),
+    'sync-signout': () => set(() => { SYNCS.mode = 'sync'; S.route = 'profile'; signOutAsk(); }),
+    'phone-backups': () => set(() => { SYNCS.mode = 'phone'; S.stack = ['home']; S.route = 'sync'; }),
     home: () => set(() => { S.route = 'home'; }),
     'home-drawer': () => set(() => { S.route = 'home'; S.drawer = true; }),
     'home-cashier': () => set(() => { S.role = 'cashier'; S.route = 'home'; }),

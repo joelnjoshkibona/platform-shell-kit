@@ -16,4 +16,10 @@ use Illuminate\Support\Facades\Route;
  *   /api/log                                            the app log (P72)
  *
  * Every write that opens a transaction goes through one lock (P78).
+ *
+ * P102, by APP_DATA_MODE (.env):
+ *   connected   the routes above only.
+ *   phone       /api/local/{module}/list|view|create|edit|delete|{action}: the modules' own services on the phone's SQLite (Hodie).
+ *   sync        /api/local/* as above, on the working copy, plus /api/sync/push-now and /api/sync/state; a queue (sync_queue)
+ *               sends changes in order to the server's POST /sync/push, each with a key; GET /sync/changes?since= brings changes back.
  */

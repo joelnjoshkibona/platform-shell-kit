@@ -372,6 +372,104 @@ const SearchView = { components: { Icon, Av, Tile, Pill },
         <template v-if="ss.length"><p class="mb-1 mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Sales</p>
           <button v-for="s in ss" :key="s.id" type="button" class="press flex w-full py-2 items-center gap-3 text-left" @click="pick('sale', s.id)"><span class="grid h-8 w-8 place-items-center rounded-md bg-muted"><Icon name="Receipt" :size="18" class="text-muted-foreground"/></span><span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ s.id }} · {{ cust(s.c).name }}</span><span class="block truncate text-xs text-muted-foreground">{{ s.day }}, {{ s.time }} · {{ money(saleTotal(s)) }}</span></span></button></template></template></div></div>` };
 
+/* ============================================================ P102: the phone app's data modes (connected · on the phone · sync)
+   One app, the same screens; only the data layer changes (list / view / save / delete / action), so no screen knows the mode.
+   connected  the API is the truth; no signal = read-only on the last data (P57, P59); a write is never repeated (P60).
+   phone      the phone's own Laravel and SQLite are the backend (Hodie): no server, no sign-in; backups to a file.
+   sync       a working copy on the phone + a queue of changes waiting; each change carries a key the server remembers, so a
+              repeat does nothing (P60 amended for this mode only); GET /sync/changes?since= brings the server's changes back;
+              a changed-on-both-sides record answers 409 with the server's copy: mine and theirs side by side. */
+const SYNCS = reactive({
+  mode: 'connected', last: '5 min ago', running: false, first: 0,
+  waiting: [
+    { id: 'q1', icon: 'Receipt', what: 'Sale S-1305 · TZS 4,000', when: '10:42' },
+    { id: 'q2', icon: 'Wallet', what: 'Payment from Neema Kimaro · TZS 2,000', when: '10:44' },
+    { id: 'q3', icon: 'UserPlus', what: 'New customer: Juma Ally', when: '10:51' },
+  ],
+  failed: [{ id: 'f1', icon: 'Coins', what: 'Expense EXP-0036 · TZS 15,000', why: 'You can no longer add expenses at Office Shop.' }],
+  keep: [['Sales and payments', 'your shop, last 90 days'], ['Customers', 'all of Office Shop'], ['Products and stock', 'all of Office Shop'], ['Expenses', 'yours, last 30 days']],
+  backup: 'Yesterday 18:00',
+});
+const MODE_LABEL = { connected: 'Connected to the server', phone: 'All data on this phone', sync: 'Works without signal, syncs when it can' };
+function syncNow() {
+  if (SYNCS.running) return; if (S.net === 'offline') { toast('No signal. Your changes wait and go when it is back.'); return; }
+  SYNCS.running = true; setTimeout(() => { SYNCS.running = false; SYNCS.waiting.splice(0); SYNCS.last = 'just now'; toast('Synced. 3 changes sent, 5 came in.'); }, 1300);
+}
+function firstSync() {
+  SYNCS.first = 1; const t = setInterval(() => { SYNCS.first = Math.min(100, SYNCS.first + 9); if (SYNCS.first >= 100) { clearInterval(t); setTimeout(() => { SYNCS.first = 0; SYNCS.last = 'just now'; toast('Your shop is on this phone'); }, 400); } }, 220);
+}
+
+/* a short line under the greeting on Home: where the data is, and how fresh it is */
+const SyncLine = { components: { Icon }, setup() { return { S, SYNCS, go, syncNow }; },
+  template: `<button v-if="SYNCS.mode !== 'connected'" type="button" class="press rise mt-3 flex w-full items-center gap-3 rounded-xl border bg-card px-3.5 py-2.5 text-left" @click="go('sync')" data-testid="sync-line">
+    <span :class="['grid h-8 w-8 shrink-0 place-items-center rounded-md', SYNCS.waiting.length || SYNCS.failed.length ? 'bg-warning/15 text-warning' : 'bg-primary/10 text-primary']"><Icon :name="SYNCS.mode === 'phone' ? 'Smartphone' : SYNCS.running ? 'RefreshCw' : 'Cloud'" :size="17" :class="SYNCS.running && 'animate-spin'"/></span>
+    <span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ SYNCS.mode === 'phone' ? 'All data is on this phone' : SYNCS.running ? 'Syncing…' : 'Last synced ' + SYNCS.last }}</span>
+      <span class="block truncate text-xs text-muted-foreground">{{ SYNCS.mode === 'phone' ? 'Last backup ' + SYNCS.backup : (SYNCS.waiting.length ? SYNCS.waiting.length + ' changes waiting' : 'Nothing waiting') + (SYNCS.failed.length ? ' · ' + SYNCS.failed.length + " couldn't be sent" : '') }}</span></span>
+    <Icon name="ChevronRight" :size="18" class="text-muted-foreground"/></button>` };
+
+/* Sync (or Backups, on the phone): status, Sync now, what waits, what failed and why, what is kept */
+const SyncPage = { components: { Header, Icon, Btn },
+  setup() {
+    const retry = (f) => { const i = SYNCS.failed.indexOf(f); SYNCS.failed.splice(i, 1); toast('Sent again. The server still says no: it is in the list again.'); setTimeout(() => SYNCS.failed.splice(i, 0, f), 900); };
+    const drop = (f) => { S.dialog = { title: 'Throw this change away?', text: f.what + ' was never saved on the server. It will be gone.', action: 'Throw it away', tone: 'destructive', cancel: 'Keep it', ok: () => { SYNCS.failed.splice(SYNCS.failed.indexOf(f), 1); toast('Thrown away'); } }; };
+    const backup = () => { SYNCS.backup = 'just now'; toast('Backup saved to Downloads/devbiz-backup.zip'); };
+    return { S, SYNCS, MODE_LABEL, syncNow, retry, drop, backup, toast };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header :title="SYNCS.mode === 'phone' ? 'Data and backups' : 'Sync'" pushed hide-search/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-4" data-testid="sync-page">
+      <div class="rounded-xl border bg-card p-4"><p class="text-xs text-muted-foreground">How this app keeps its data</p><p class="mt-0.5 text-sm font-semibold">{{ MODE_LABEL[SYNCS.mode] }}</p>
+        <template v-if="SYNCS.mode === 'sync'"><p class="mt-3 text-2xl font-bold tracking-tight tnum">{{ SYNCS.running ? 'Syncing…' : 'Synced ' + SYNCS.last }}</p><p class="text-xs text-muted-foreground">{{ S.net === 'offline' ? 'No signal now. Keep working; changes wait here.' : 'It syncs by itself when there is signal.' }}</p>
+          <div class="mt-3"><Btn full :disabled="SYNCS.running" @click="syncNow">{{ SYNCS.running ? 'Syncing…' : 'Sync now' }}</Btn></div></template>
+        <template v-else-if="SYNCS.mode === 'phone'"><p class="mt-2 text-sm text-muted-foreground">There is no server: this phone is the shop's only copy. Back it up to a file and keep the file somewhere safe.</p>
+          <p class="mt-3 text-sm">Last backup: <b>{{ SYNCS.backup }}</b></p><div class="mt-3 grid gap-2"><Btn full @click="backup">Back up now</Btn><Btn full v="outline" @click="toast('Choose a backup file to restore from')">Restore from a file</Btn></div></template>
+      </div>
+      <template v-if="SYNCS.mode === 'sync'">
+        <h2 class="mb-2 mt-6 px-1 text-base font-semibold">Waiting to be sent ({{ SYNCS.waiting.length }})</h2>
+        <p v-if="!SYNCS.waiting.length" class="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">Nothing is waiting. Everything you did is on the server.</p>
+        <ul v-else class="divide-y rounded-xl border bg-card" data-testid="sync-waiting"><li v-for="q in SYNCS.waiting" :key="q.id" class="flex items-center gap-3 px-4 py-3"><Icon :name="q.icon" :size="17" class="shrink-0 text-muted-foreground"/><span class="min-w-0 flex-1 truncate text-sm">{{ q.what }}</span><span class="text-xs text-muted-foreground tnum">{{ q.when }}</span></li></ul>
+        <template v-if="SYNCS.failed.length"><h2 class="mb-2 mt-6 px-1 text-base font-semibold text-destructive">Couldn't be sent ({{ SYNCS.failed.length }})</h2>
+          <ul class="divide-y rounded-xl border border-destructive/30 bg-card" data-testid="sync-failed"><li v-for="f in SYNCS.failed" :key="f.id" class="px-4 py-3"><div class="flex items-center gap-3"><Icon :name="f.icon" :size="17" class="shrink-0 text-destructive"/><span class="min-w-0 flex-1 truncate text-sm font-medium">{{ f.what }}</span></div>
+            <p class="mt-1 pl-8 text-xs text-muted-foreground">{{ f.why }}</p><div class="mt-2 flex gap-2 pl-8"><Btn size="sm" v="outline" @click="retry(f)">Send again</Btn><Btn size="sm" v="ghost" @click="drop(f)">Throw it away</Btn></div></li></ul></template>
+        <h2 class="mb-2 mt-6 px-1 text-base font-semibold">Kept on this phone</h2>
+        <ul class="divide-y rounded-xl border bg-card"><li v-for="k in SYNCS.keep" :key="k[0]" class="flex items-center justify-between gap-3 px-4 py-3 text-sm"><span>{{ k[0] }}</span><span class="text-right text-xs text-muted-foreground">{{ k[1] }}</span></li></ul>
+        <p class="mt-3 px-1 text-xs text-muted-foreground">The server checks every change again when it arrives. A change you are no longer allowed to make is listed above, with why.</p>
+      </template>
+    </div></div>` };
+
+/* the same record changed here and on the server: mine and theirs, side by side; my version waits as a draft until I choose */
+const CONFLICT = { what: 'Customer: Neema Kimaro', who: 'Amina Mushi', when: 'today 10:40', fields: [['Phone', '+255 713 111 222', '+255 713 999 000'], ['Credit limit', 'TZS 50,000', 'TZS 80,000'], ['Area', 'Mbezi', 'Mbezi']] };
+const ConflictPage = { components: { Header, Icon, Btn },
+  setup() {
+    const changed = CONFLICT.fields.filter(f => f[1] !== f[2]);
+    const keepMine = () => { toast('Your version was sent again, on top of Amina’s'); back(); };
+    const useTheirs = () => { toast('Using Amina’s version. Yours is thrown away.'); back(); };
+    return { CONFLICT, changed, keepMine, useTheirs };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="Changed in two places" pushed hide-search/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto px-4 pb-6 pt-4" data-testid="conflict">
+      <div class="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/10 p-4"><Icon name="GitCompare" :size="20" class="mt-0.5 shrink-0 text-warning"/><div class="min-w-0"><p class="text-sm font-semibold">{{ CONFLICT.what }}</p><p class="mt-0.5 text-xs text-muted-foreground">{{ CONFLICT.who }} changed it on the server {{ CONFLICT.when }}, while you changed it here. Nothing was overwritten. Your version waits as a draft until you choose.</p></div></div>
+      <div class="mt-4 overflow-hidden rounded-xl border bg-card"><div class="grid grid-cols-[6.5rem_1fr_1fr] gap-2 border-b bg-muted/40 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"><span></span><span>Yours</span><span>{{ CONFLICT.who.split(' ')[0] }}’s</span></div>
+        <div v-for="f in CONFLICT.fields" :key="f[0]" class="grid grid-cols-[6.5rem_1fr_1fr] gap-2 border-b px-3 py-3 text-sm last:border-0"><span class="text-xs text-muted-foreground">{{ f[0] }}</span>
+          <span :class="['min-w-0 break-words', f[1] !== f[2] && 'font-semibold text-primary']">{{ f[1] }}</span><span :class="['min-w-0 break-words', f[1] !== f[2] && 'font-semibold']">{{ f[2] }}</span></div></div>
+      <p class="mt-2 px-1 text-xs text-muted-foreground">{{ changed.length }} of {{ CONFLICT.fields.length }} fields differ; they are in bold.</p>
+    </div>
+    <div class="shrink-0 border-t bg-background px-4 pt-3" style="padding-bottom:calc(12px + var(--sa-bottom, 0px))"><div class="grid grid-cols-2 gap-2"><Btn v="outline" @click="useTheirs">Use theirs</Btn><Btn @click="keepMine">Keep mine</Btn></div></div></div>` };
+
+/* the first sync after signing in, in sync mode: the shop comes down to the phone, with progress */
+const FirstSync = { components: { Icon }, setup() { return { SYNCS }; },
+  template: `<div v-if="SYNCS.first" class="absolute inset-0 z-[105] flex flex-col items-center justify-center bg-background px-8 text-center" data-testid="first-sync"><span class="grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary"><Icon name="CloudDownload" :size="24"/></span>
+    <h2 class="mt-4 text-xl font-semibold">Getting your shop ready</h2><p class="mt-1 text-sm text-muted-foreground">Copying what you work with to this phone, so it works without signal.</p>
+    <div class="mt-6 h-2 w-full overflow-hidden rounded-full bg-muted"><div class="h-full rounded-full bg-primary transition-all" :style="{ width: SYNCS.first + '%' }"></div></div>
+    <p class="mt-2 text-xs text-muted-foreground tnum">{{ SYNCS.first < 35 ? 'Products and stock' : SYNCS.first < 70 ? 'Customers' : 'Sales and payments' }} · {{ SYNCS.first }}%</p>
+    <p class="mt-6 text-xs text-muted-foreground">Keep the app open. If the signal drops, it carries on where it stopped.</p></div>` };
+
+/* signing out: in sync mode with changes still waiting, ask first, because they would be lost */
+function signOutAsk() {
+  const n = SYNCS.mode === 'sync' ? SYNCS.waiting.length : 0;
+  if (n) S.dialog = { title: n + (n === 1 ? ' change has' : ' changes have') + ' not been sent', text: 'Signing out removes them from this phone, and they were never saved on the server. Send them first with Sync now, or sign out and lose them.', action: 'Sign out anyway', tone: 'destructive', cancel: 'Stay signed in', ok: () => { SYNCS.waiting.splice(0); toast('Signed out. The changes were thrown away.'); } };
+  else S.dialog = { title: 'Sign out?', text: 'This clears the cart and drafts on this phone. Sales you saved stay.', action: 'Sign out', tone: 'destructive', cancel: 'Stay signed in', ok: () => toast('Signed out. The sign-in screen comes in the next pass.') };
+}
+
 /* ============================================================ Home */
 const Section = { props: { title: String, link: String }, components: { Icon },
   template: `<div class="mb-2 mt-6 flex items-center justify-between px-1"><h2 class="text-base font-semibold">{{ title }}</h2><button v-if="link" type="button" class="press -mr-2 flex h-8 items-center gap-0.5 rounded-lg px-2 text-sm font-medium text-primary" @click="$emit('link')">{{ link }}<Icon name="ChevronRight" :size="16"/></button></div>` };
@@ -381,7 +479,7 @@ const Kpi = { props: { label: String, icon: String, tone: { type: String, defaul
     <span :class="['grid h-8 w-8 place-items-center rounded-lg', { primary: 'bg-primary/10 text-primary', warning: 'bg-warning/15 text-warning', success: 'bg-success/15 text-success' }[tone]]"><Icon :name="icon" :size="16"/></span></div>
     <p class="mt-2 text-2xl font-bold leading-tight tracking-tight tnum">{{ value }}</p><p class="mt-0.5 truncate text-xs text-muted-foreground">{{ hint }}</p></div>` };
 
-const Home = { components: { Header, Icon, Section, Kpi, Av, Tile, Pill, AgeChip, LevelBadge, Balance },
+const Home = { components: { Header, Icon, Section, Kpi, Av, Tile, Pill, AgeChip, LevelBadge, Balance, SyncLine },
   setup() {
     const owner = computed(() => S.role === 'owner');
     const hour = 'Good afternoon';
@@ -396,6 +494,7 @@ const Home = { components: { Header, Icon, Section, Kpi, Av, Tile, Pill, AgeChip
     <div class="scroll min-h-0 flex-1 overflow-y-auto px-4 pb-6 pt-4">
       <p class="text-xs text-muted-foreground">Office Shop · Tue 13 Oct 2026</p>
       <h2 class="text-xl font-bold leading-tight tracking-tight">{{ hour }}, {{ ME.name }}</h2>
+      <SyncLine/>
 
       <button v-if="owner && waitingN" type="button" class="press rise mt-4 flex w-full items-center gap-3 rounded-xl border border-warning/40 bg-warning/10 p-4 text-left" @click="go('waiting')">
         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-warning/20 text-warning"><Icon name="Hourglass" :size="22"/></span>
@@ -715,7 +814,7 @@ const Profile = { components: { Header, Icon, Av, Pill, Seg, SetRow, Toggle, Btn
     const setTheme = (m) => { S.themeMode = m; S.dark = m === 'dark' || (m === 'system' && matchMedia('(prefers-color-scheme: dark)').matches); };
     const check = () => { S.checking = true; S.upToDate = false; setTimeout(() => { S.checking = false; S.upToDate = true; }, 1300); };
     const viewAs = () => { S.dialog = { title: S.role === 'owner' ? 'View as Rehema?' : 'Back to Amina?', text: S.role === 'owner' ? 'You see the shop as she does. Nothing you do is saved as hers.' : 'Leave Rehema’s view.', action: S.role === 'owner' ? 'View as Rehema' : 'Go back', cancel: 'Cancel', ok: () => { S.role = S.role === 'owner' ? 'cashier' : 'owner'; toast(S.role === 'cashier' ? 'Viewing as Rehema' : 'Back to Amina'); } }; };
-    const signOut = () => { S.dialog = { title: 'Sign out?', text: 'This clears the cart and drafts on this phone. Sales you saved stay.', action: 'Sign out', tone: 'destructive', cancel: 'Stay signed in', ok: () => toast('Signed out. The sign-in screen comes in the next pass.') }; };
+    const signOut = () => signOutAsk();
     return { S, ME, themes, setTheme, check, viewAs, signOut, unread, go, toast };
   },
   template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="Profile" pushed hide-search/>
@@ -1327,8 +1426,8 @@ const SessionEnded = { components: { AuthShell, Icon, Btn },
   template: `<AuthShell title="You were signed out" sub="For safety, DevBiz asks you to sign in again. What you had open is kept on this phone for this account."><Btn full @click="S.route = 'login'"><Icon name="LogIn" :size="16"/>Sign in again</Btn></AuthShell>` };
 
 /* the phone's states: no signal, an update */
-const NetBar = { components: { Icon }, setup() { return { S, toast }; },
-  template: `<div v-if="S.net === 'offline'" class="relative z-[55] flex shrink-0 items-center gap-2 bg-warning/15 px-3 py-1.5 text-xs text-warning" :style="{ paddingTop: 'calc(6px + var(--sa-real))' }" role="status"><Icon name="WifiOff" :size="14"/><span class="flex-1">Offline · showing figures from 3 min ago. Nothing can be saved.</span><button type="button" class="font-semibold underline" @click="S.net = 'online'; toast('Updated just now')">Try again</button></div>` };
+const NetBar = { components: { Icon }, setup() { return { S, toast, SYNCS }; },
+  template: `<div v-if="S.net === 'offline' && SYNCS.mode !== 'phone'" class="relative z-[55] flex shrink-0 items-center gap-2 bg-warning/15 px-3 py-1.5 text-xs text-warning" :style="{ paddingTop: 'calc(6px + var(--sa-real))' }" role="status"><Icon name="WifiOff" :size="14"/><span class="flex-1">{{ SYNCS.mode === 'sync' ? 'No signal · keep working. Your changes wait and are sent when it is back.' : 'Offline · showing figures from 3 min ago. Nothing can be saved.' }}</span><button type="button" class="font-semibold underline" @click="S.net = 'online'; toast('Updated just now')">Try again</button></div>` };
 const UpdateBar = { components: { Icon }, setup() { return { S, toast }; },
   template: `<div v-if="S.update === 'available'" class="relative z-[54] flex shrink-0 items-center gap-2 border-b bg-primary/10 px-3 pb-2 text-sm" :style="{ paddingTop: S.net === 'offline' ? '8px' : 'calc(8px + var(--sa-real))' }" role="status"><Icon name="Download" :size="16" class="text-primary"/><span class="flex-1">A new version of DevBiz is ready</span><button type="button" class="h-8 rounded-md px-2 text-xs font-medium text-muted-foreground" @click="S.update = null">Later</button><button type="button" class="h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground" @click="toast('Opening the download')">Update</button></div>` };
 const UpdateRequired = { components: { Icon, Btn }, setup() { return { S, toast }; },
@@ -1458,7 +1557,7 @@ const SCREENS = {
   home: Home, sales: SalesList, customers: CustomersList, alerts: Alerts, till: Till, receipt: Receipt, sale: SalePage, customer: Customer, profile: Profile, waiting: Waiting, design: DesignPage,
   payments: PaymentsList, payment: PaymentPage, products: ProductsList, product: ProductPage, movements: Movements, deliveries: Deliveries, delivery: DeliveryPage, receive: Receive,
   suppliers: Suppliers, supplier: SupplierPage, count: Count, expenses: Expenses, accounts: Accounts, account: AccountPage, alertsettings: AlertSettings, users: Users, settings: SettingsPage, receiptsettings: ReceiptSettings,
-  phonestatus: PhoneStatus, trailmap: TrailMap, login: SignIn, twofa: TwoStep, lock: LockView, ended: SessionEnded
+  phonestatus: PhoneStatus, trailmap: TrailMap, sync: SyncPage, conflict: ConflictPage, login: SignIn, twofa: TwoStep, lock: LockView, ended: SessionEnded
 };
 const Screen = { components: { ...SCREENS, Placeholder },
   setup() { const ph = computed(() => S.route.startsWith('ph:') ? S.route.slice(3) : ''); return { S, ph, SCREENS }; },
@@ -1487,18 +1586,29 @@ const Picker = { components: { Icon },
       undo: () => { S.route = 'sale'; S.saleId = 'S-1299'; S.dialog = { title: 'Undo S-1299?', text: 'The stock goes back on the shelf and Neema Kimaro’s balance changes.', action: 'Undo the sale', tone: 'destructive', cancel: 'Keep the sale' }; }
     };
     const states = [['data', 'Data'], ['loading', 'Loading'], ['empty', 'Empty'], ['error', 'Error']];
+    /* P102: the data mode, and its states */
+    const modes = [['connected', 'Connected'], ['phone', 'On the phone'], ['sync', 'Sync']];
+    const setMode = (m) => { SYNCS.mode = m; if (m !== 'sync') SYNCS.running = false; to('home'); };
+    const syncState = {
+      waiting: () => { SYNCS.mode = 'sync'; to('sync'); },
+      conflict: () => { SYNCS.mode = 'sync'; to('home'); S.stack = ['home', 'sync']; S.route = 'conflict'; },
+      first: () => { SYNCS.mode = 'sync'; to('home'); firstSync(); },
+      signout: () => { SYNCS.mode = 'sync'; if (!SYNCS.waiting.length) SYNCS.waiting.push({ id: 'q9', icon: 'Receipt', what: 'Sale S-1306 · TZS 1,500', when: '11:02' }); to('profile'); signOutAsk(); },
+    };
     const kbToggle = () => { KB.h = KB.h ? 0 : (innerWidth < 900 ? Math.round(innerHeight * 0.42) : 354); document.body.classList.toggle('keyboard-visible', !!KB.h); };   // P71: stands in for the real keyboard
-    return { S, groups, to, over, states, tab, ME, KB, kbToggle };
+    return { S, groups, to, over, states, tab, ME, KB, kbToggle, SYNCS, modes, setMode, syncState };
   },
   template: `<div class="space-y-5 text-sm">
     <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Signed in as</p><div class="grid grid-cols-2 gap-1 rounded-lg bg-[hsl(var(--canvas))] p-1 ring-1 ring-black/10"><button v-for="r in [['owner','Amina (owner)'],['cashier','Rehema (cashier)']]" :key="r[0]" type="button" @click="S.role = r[0]" :class="['h-8 rounded-md text-xs font-medium', S.role === r[0] ? 'bg-white text-black shadow dark:bg-neutral-700 dark:text-white' : 'opacity-60']">{{ r[1] }}</button></div></div>
     <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Theme</p><div class="grid grid-cols-2 gap-1 rounded-lg bg-[hsl(var(--canvas))] p-1 ring-1 ring-black/10"><button type="button" @click="S.dark = false; S.themeMode = 'light'" :class="['h-8 rounded-md text-xs font-medium', !S.dark ? 'bg-white text-black shadow' : 'opacity-60']">Light</button><button type="button" @click="S.dark = true; S.themeMode = 'dark'" :class="['h-8 rounded-md text-xs font-medium', S.dark ? 'bg-neutral-700 text-white shadow' : 'opacity-60']">Dark</button></div></div>
     <div v-for="g in groups" :key="g[0]"><p class="mb-1 text-[11px] font-semibold uppercase tracking-wider opacity-60">{{ g[0] }}</p><div class="grid gap-0.5"><button v-for="s in g[1]" :key="s[0]" type="button" @click="to(s[0])" :class="['flex h-8 items-center gap-2 rounded-md px-2 text-left', S.route === s[0] ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']"><Icon :name="s[2]" :size="14" class="opacity-60"/>{{ s[1] }}</button></div></div>
+    <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Data mode (P102)</p><div class="grid grid-cols-3 gap-1 rounded-lg bg-[hsl(var(--canvas))] p-1 ring-1 ring-black/10"><button v-for="m in modes" :key="m[0]" type="button" @click="setMode(m[0])" :data-mode="m[0]" :class="['h-8 rounded-md text-[11px] font-medium', SYNCS.mode === m[0] ? 'bg-white shadow-sm dark:bg-neutral-700' : 'opacity-70']">{{ m[1] }}</button></div>
+      <div class="mt-1 grid grid-cols-2 gap-1"><button v-for="o in [['waiting', 'Changes waiting'], ['conflict', 'A conflict'], ['first', 'First sync'], ['signout', 'Sign out, changes waiting']]" :key="o[0]" type="button" @click="syncState[o[0]]()" :data-sync-state="o[0]" class="h-8 rounded-md px-2 text-left text-xs hover:bg-black/5 dark:hover:bg-white/10">{{ o[1] }}</button></div></div>
     <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Phone state</p><div class="grid grid-cols-2 gap-1"><button type="button" @click="S.net = S.net === 'offline' ? 'online' : 'offline'" :class="['h-8 rounded-md px-2 text-left text-xs', S.net === 'offline' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">No signal</button><button type="button" @click="S.update = S.update === 'available' ? null : 'available'" :class="['h-8 rounded-md px-2 text-left text-xs', S.update === 'available' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Update ready</button><button type="button" @click="S.update = S.update === 'required' ? null : 'required'" :class="['h-8 rounded-md px-2 text-left text-xs', S.update === 'required' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Update required</button><button type="button" @click="S.printFail = S.printFail === 'off' ? null : 'off'" :class="['h-8 rounded-md px-2 text-left text-xs', S.printFail === 'off' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Printer is off</button><button type="button" @click="S.printFail = S.printFail === 'bt' ? null : 'bt'" :class="['h-8 rounded-md px-2 text-left text-xs', S.printFail === 'bt' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Bluetooth is off</button><button type="button" @click="S.printFail = S.printFail === 'none' ? null : 'none'" :class="['h-8 rounded-md px-2 text-left text-xs', S.printFail === 'none' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">No printer chosen</button><button type="button" @click="S.map = S.map === 'none' ? 'path' : 'none'; S.route = 'trailmap'" :class="['h-8 rounded-md px-2 text-left text-xs', S.map === 'none' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Map: no trail</button><button type="button" @click="S.map = S.map === 'tiles' ? 'path' : 'tiles'; S.route = 'trailmap'" :class="['h-8 rounded-md px-2 text-left text-xs', S.map === 'tiles' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Map: no network</button><button type="button" @click="S.phoneNet = S.phoneNet === 'mobile' ? 'wifi' : 'mobile'; S.route = 'phonestatus'" :class="['h-8 rounded-md px-2 text-left text-xs', S.phoneNet === 'mobile' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Phone: mobile data</button><button type="button" @click="S.phoneNet = S.phoneNet === 'none' ? 'wifi' : 'none'; S.route = 'phonestatus'" :class="['h-8 rounded-md px-2 text-left text-xs', S.phoneNet === 'none' ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Phone: no signal</button><button type="button" @click="kbToggle" :class="['h-8 rounded-md px-2 text-left text-xs', KB.h ? 'bg-black/10 font-medium dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10']">Keyboard open</button></div></div>
     <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">Open on top</p><div class="grid grid-cols-2 gap-1"><button v-for="o in [['drawer','Drawer'],['search','Search'],['cart','Cart'],['credit','Credit, part paid'],['filter','Filters'],['who','Who is buying'],['pay','Take payment'],['call','Call sheet'],['printer','Printer'],['reprint','Reprint a sale'],['paymentreceipt','Payment receipt'],['cancelled','Cancelled sale receipt'],['sharesheet','Share list'],['undo','Confirm undo']]" :key="o[0]" type="button" @click="over[o[0]]()" class="h-9 rounded-md px-2 text-left text-xs hover:bg-black/5 dark:hover:bg-white/10">{{ o[1] }}</button></div></div>
     <div><p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-60">List state</p><div class="grid grid-cols-4 gap-1 rounded-lg bg-[hsl(var(--canvas))] p-1 ring-1 ring-black/10"><button v-for="s in states" :key="s[0]" type="button" @click="S.list = s[0]; if (S.route !== 'sales') to('sales')" :class="['h-8 rounded-md text-[11px] font-medium', S.list === s[0] ? 'bg-white text-black shadow dark:bg-neutral-700 dark:text-white' : 'opacity-60']">{{ s[1] }}</button></div></div></div>` };
 
-const Root = { components: { Screen, TabBar, Drawer, SearchView, PhoneSheets, Confirm, Toast, Picker, Icon, NetBar, UpdateBar, UpdateRequired },
+const Root = { components: { Screen, TabBar, Drawer, SearchView, PhoneSheets, Confirm, Toast, Picker, Icon, NetBar, UpdateBar, UpdateRequired, FirstSync },
   setup() {
     const scale = ref(1), narrow = ref(false), menu = ref(false);
     const fit = () => { narrow.value = innerWidth < 900; scale.value = narrow.value ? 1 : Math.min(1, (innerHeight - 32) / 844); };
@@ -1514,7 +1624,7 @@ const Root = { components: { Screen, TabBar, Drawer, SearchView, PhoneSheets, Co
     <div :style="narrow ? '' : { width: (390 * scale) + 'px', height: (844 * scale) + 'px' }" :class="narrow ? 'h-full w-full' : 'shrink-0'"><div :class="narrow ? 'h-full w-full' : 'origin-top-left'" :style="narrow ? '' : { transform: 'scale(' + scale + ')', width: '390px', height: '844px' }">
       <div :class="['app relative flex flex-col overflow-hidden', S.dark ? 'dark' : '', (S.net === 'offline' || S.update === 'available') ? 'topbar' : '', narrow ? 'h-full w-full' : 'h-[844px] w-[390px] rounded-[44px] border-[10px] border-[#18181b] shadow-2xl ring-1 ring-black/10']" :style="KB.h ? { paddingBottom: KB.h + 'px' } : null">
         <div v-if="!narrow" class="pointer-events-none absolute inset-x-0 top-0 z-[100] flex h-[30px] items-center justify-between px-7 text-xs font-semibold"><span>{{ clock }}</span><span class="absolute left-1/2 top-1.5 h-5 w-20 -translate-x-1/2 rounded-full bg-[#18181b]"></span><span class="flex items-center gap-1"><Icon name="Signal" :size="12"/><Icon name="Wifi" :size="12"/><Icon name="BatteryFull" :size="14"/></span></div>
-        <NetBar/><UpdateBar/><Screen/><TabBar v-if="bar"/><Drawer/><SearchView/><PhoneSheets/><Confirm/><Toast/><UpdateRequired/>
+        <NetBar/><UpdateBar/><Screen/><TabBar v-if="bar"/><Drawer/><SearchView/><PhoneSheets/><Confirm/><Toast/><UpdateRequired/><FirstSync/>
         <div v-if="KB.h" class="absolute inset-x-0 bottom-0 z-[110] grid place-items-center bg-neutral-300 text-center text-xs text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300" :style="{ height: KB.h + 'px' }" aria-label="On-screen keyboard (stand-in)"><span class="px-6">On-screen keyboard (stand-in). On Android 10 the page is not resized: it lies on top of the screen.</span></div></div></div></div>
     <template v-if="narrow"><button v-if="!S.sheet && !S.drawer && !S.dialog" type="button" class="fixed left-3 z-[200] flex items-center gap-2 rounded-full border bg-white px-3 py-2 text-xs font-medium text-black shadow-lg" style="bottom: calc(86px + env(safe-area-inset-bottom, 0px))" @click="menu = !menu"><Icon name="Map" :size="14"/>States</button>
       <div v-if="menu" class="fixed inset-x-3 bottom-32 z-[200] max-h-[70dvh] overflow-y-auto rounded-xl bg-white p-4 text-black shadow-2xl"><Picker/></div></template></div>`
