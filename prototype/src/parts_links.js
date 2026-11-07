@@ -12,6 +12,8 @@
        linkId     record id -> the id shown in the link (a code or a number)
        find       record id -> { label, sub, deleted } or null (in the app the API sends this with the row)
        preview    the component RecordLink shows in its sheet        backParent  the list Back falls back to (P49)
+       tabs       [{ key, label, perm? }] the record's tabs (P101): a link may open one, in a dialog, from any module
+       page       the details page, which can draw one tab inside a record dialog (embedId, embedTab)   resolve  link id -> record id
      LINK_DETAIL, LINK_PATHS and BACK_PARENT stay as views of it, so products that write to them directly keep working. */
   const MODULES = {}; const LINK_DETAIL = {}; const LINK_PATHS = {}; const BACK_PARENT = {};
   function defineModule(m) {
@@ -20,10 +22,13 @@
     m.open = (id, tab) => { if (m.set(m.linkId ? m.linkId(id) : id)) nav(m.route, tab); else toast('That link points to a record that no longer exists', String(id), 'TriangleAlert'); };
     return m;
   }
-  defineModule({ key: 'Roles', route: 'role', path: 'roles', label: 'Role', plural: 'roles', perm: 'Roles.list', backParent: 'roles', preview: RolePreview,
+  defineModule({ key: 'Roles', route: 'role', path: 'roles', label: 'Role', plural: 'roles', perm: 'Roles.list', backParent: 'roles', preview: RolePreview, page: RolePage,
+    tabs: [{ key: 'overview', label: 'Overview' }, { key: 'perms', label: 'Permissions' }, { key: 'menus', label: 'Menus' }, { key: 'people', label: 'People' }, { key: 'history', label: 'History' }],
     get: () => G.roleId, set: (v) => { const r = roleById(v); if (r) G.roleId = r.id; return !!r; },
     find: (id) => { const r = roleById(id); return r ? { label: r.name, sub: r.system ? 'Built-in role' : 'Custom role' } : null; } });
-  defineModule({ key: 'Locations', route: 'location', path: 'locations', label: 'Location', plural: 'locations', perm: 'Locations.list', backParent: 'locations', preview: LocationPreview,
+  defineModule({ key: 'Locations', route: 'location', path: 'locations', label: 'Location', plural: 'locations', perm: 'Locations.list', backParent: 'locations', preview: LocationPreview, page: LocationPage,
+    tabs: [{ key: 'overview', label: 'Overview' }, { key: 'details', label: 'Details' }, { key: 'users', label: 'Users' }, { key: 'forms', label: 'Forms' }, { key: 'history', label: 'History' }],
+    resolve: (v) => { const l = locsOf().find(x => x.code === v || x.id === v); return l ? l.id : null; },
     get: () => { const l = locById(G.locId); return l && (l.code || l.id); }, set: (v) => { const l = locsOf().find(x => x.code === v || x.id === v); if (l) G.locId = l.id; return !!l; },
     linkId: (id) => { const l = locById(id); return l ? (l.code || l.id) : id; },
     find: (id) => { const l = locById(id); return l ? { label: l.name, sub: l.code, deleted: l.status === 'deleted' } : null; } });
@@ -62,6 +67,8 @@
     let path = r === 'dashboard' ? '/' : d ? '/' + d.path + '/' + enc(d.get() || '') : '/' + r;
     const qs = [];
     if (G.tab && G.tab !== 'overview') qs.push('tab=' + enc(G.tab));   // details tabs, and page-level tabs (e.g. the count's History)
+    const ds = DIALOGS.filter(d => d.link && MODULES[d.link.module]);   // P101: open record dialogs, bottom first
+    if (ds.length) qs.push('open=' + enc(ds.map(d => { const m = MODULES[d.link.module]; return m.path + '/' + (m.linkId ? m.linkId(d.link.id) : d.link.id) + '/' + (d.tab || 'overview'); }).join(',')));
     const L = ACT.value;
     if (L) {
       const q = L.q ? L.q.get() : ''; if (q) qs.push('q=' + enc(q));
@@ -76,10 +83,18 @@
     const out = { route: 'dashboard', id: null, tab: null, list: { filters: {}, q: '', sort: null, dir: 'asc' } };
     if (seg.length) { if (LINK_PATHS[seg[0]] && seg[1]) { out.route = LINK_PATHS[seg[0]]; out.id = seg[1]; } else out.route = seg[0]; }
     (query || '').split('&').filter(Boolean).forEach(kv => { const i = kv.indexOf('='); const k = decodeURIComponent(kv.slice(0, i)), v = decodeURIComponent(kv.slice(i + 1));
-      if (k === 'tab') out.tab = v; else if (k === 'q') out.list.q = v; else if (k === 'sort') { out.list.dir = v[0] === '-' ? 'desc' : 'asc'; out.list.sort = v.replace(/^-/, ''); }
+      if (k === 'open') out.open = v.split(',').filter(Boolean).map(x => x.split('/')); else if (k === 'tab') out.tab = v; else if (k === 'q') out.list.q = v; else if (k === 'sort') { out.list.dir = v[0] === '-' ? 'desc' : 'asc'; out.list.sort = v.replace(/^-/, ''); }
       else { const m = k.match(/^f\[(.+)\]\[(op|value)\]$/); if (m) { const f = out.list.filters[m[1]] || (out.list.filters[m[1]] = { op: 'eq', value: '' }); if (m[2] === 'op') f.op = v; else f.value = v; } } });
     Object.values(out.list.filters).forEach(f => { if (['in', 'nin'].includes(f.op)) f.value = f.value ? f.value.split(',') : []; else if (f.op === 'between') f.value = f.value.split(','); });
     return out;
+  }
+  /* P101: make the open record dialogs match a link (a pasted link, Back, Forward): keep the ones that match, close the rest top first, open the missing */
+  async function syncDialogs(list) {
+    const want = (list || []).map(([path, id, tab]) => { const key = Object.keys(MODULES).find(k => MODULES[k].path === path); const m = MODULES[key]; return key ? { key, id: m.resolve ? m.resolve(id) : id, tab } : null; }).filter(Boolean);
+    const have = DIALOGS.filter(d => d.link); let n = 0;
+    while (n < have.length && n < want.length && have[n].link.module === want[n].key && String(have[n].link.id) === String(want[n].id)) { if (want[n].tab) have[n].tab = want[n].tab; n++; }
+    for (let i = have.length - 1; i >= n; i--) { if (!(await closeDialog(have[i]))) return; }
+    for (let i = n; i < want.length; i++) if (want[i].id) openRecordTab(want[i].key, want[i].id, want[i].tab);
   }
   let lastHash = '';
   function write(push) {
@@ -93,6 +108,7 @@
     applying = true; PENDING_LIST = st.list; G.tab = st.tab;
     if (G.route === st.route) { if (st.tab) G.pendingTab = st.tab; if (ACT.value && !st.tab) { const p = PENDING_LIST; PENDING_LIST = null; applyListState(ACT.value, p); } }
     else nav(st.route, st.tab || undefined);
+    setTimeout(() => syncDialogs(st.open), moving ? 700 : 0);
     setTimeout(() => { applying = false; write(false); }, 1200);
     return true;
   }
@@ -105,7 +121,8 @@
   /* write on every change of route, record, tab or the active list's state */
   // sync: reset the tab the moment the route/record changes, before the new page mounts and sets its own tab
   watch(() => [G.route, ...Object.values(LINK_DETAIL).map(d => d.get())], () => { G.tab = G.pendingTab || null; nextTick(() => write(true)); }, { flush: 'sync' });
-  watch(() => G.tab, () => write(true), { flush: 'sync' });   // a tab change is a new history entry: push before the list watcher replaces
+  watch(() => G.tab, () => write(true), { flush: 'sync' });
+  watch(() => DIALOGS.map(d => d.link ? d.id + ':' + d.tab : '').join(), () => write(true));   // P101: opening, closing or switching a record dialog's tab is a history entry   // a tab change is a new history entry: push before the list watcher replaces
   watch(() => ACT.value && [ACT.value.LS, JSON.stringify(ACT.value.LS.S.filters), ACT.value.LS.S.sort, ACT.value.LS.S.dir, ACT.value.q ? ACT.value.q.get() : ''], () => write(false));
   window.addEventListener('popstate', () => { const h = location.hash; if (h && h !== '#' + lastHash) { lastHash = h.slice(1); openLink(h); } });
   window.addEventListener('hashchange', () => { if (applying) return; const h = location.hash; if (h && h !== '#' + lastHash) { lastHash = h.slice(1); openLink(h); } });

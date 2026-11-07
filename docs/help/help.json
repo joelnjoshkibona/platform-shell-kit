@@ -47,6 +47,24 @@
   "text": "Every list in the product works the same way: search, quick tabs, filters and sort sit in the same places, and the list remembers them in its link, so you can copy the link and send someone the same view. 1 Search this list (on a phone, tap the magnifier) 2 Filters: by any field, simple or advanced 3 Sort: which field, and up or down Steps Type a word in the search box at the top 1 . On a list page it searches that list; the list narrows as you type. On a phone, tap the magnifier first. Many lists have quick tabs above the rows (for example All , Cash , M-Pesa ). Tap one to see only that group; its number says how many rows it holds. For anything more, open Filters 2 . Choose the field, then what it should be. Each filter you add shows as a chip; tap the × on a chip to remove it. Use Sort 3 to choose the order. Tap it again to turn the order around. The list keeps your search, filters and sort in its link. Press Refresh to load the newest rows without losing them."
  },
  {
+  "id": "open-another-records-tab",
+  "lang": "en",
+  "title": "See another record's tab without leaving your page",
+  "module": "Lists",
+  "who": "Anyone who can open that record",
+  "screens": [
+   "request",
+   "location",
+   "role"
+  ],
+  "related": [
+   "find-records-in-a-list"
+  ],
+  "summary": "Some links open a tab of another record in a window over your page, so you can look something up and come straight back.",
+  "html": "<p>Some links open a tab of another record in a window over your page, so you can look something up and come straight back.</p>\n<figure class=\"help-shot\"><picture><source media=\"(max-width: 640px)\" srcset=\"@help/shots/open-another-records-tab-1__phone.png\"><img src=\"@help/shots/open-another-records-tab-1__desktop.png\" alt=\"See another record's tab without leaving your page: the screen with markers 1 to 1\" loading=\"lazy\"></picture><ol class=\"help-marks\"><li><span class=\"mk\">1</span><span>Opens the location's people, over this page</span></li></ol></figure>\n<h2>Steps</h2>\n<ol><li>Tap a link with the window icon <span class=\"mk\">1</span>, such as <strong>Its people</strong>. The location's <strong>Users</strong> tab opens over your page.</li></ol>\n<figure class=\"help-shot\"><picture><source media=\"(max-width: 640px)\" srcset=\"@help/shots/open-another-records-tab-2__phone.png\"><img src=\"@help/shots/open-another-records-tab-2__desktop.png\" alt=\"See another record's tab without leaving your page: the screen with markers 1 to 3\" loading=\"lazy\"></picture><ol class=\"help-marks\"><li><span class=\"mk\">1</span><span>The record's other tabs</span></li><li><span class=\"mk\">2</span><span>Back to your page</span></li><li><span class=\"mk\">3</span><span>Go to the record itself, on this tab</span></li></ol></figure>\n<ol><li>Switch to another of its tabs <span class=\"mk\">1</span> if you need to. A link inside opens another window on top; each one closes on its own.</li><li>Tap <strong>Close</strong> <span class=\"mk\">2</span> (or press Esc, or the phone's Back) to return to your page, exactly as you left it.</li><li>Tap <strong>Open full page</strong> <span class=\"mk\">3</span> to go to the record itself, on the same tab. Back brings you back.</li></ol>\n<p class=\"note\">The window only closes with its buttons, never by tapping outside it, so you can't lose your place by accident.</p>",
+  "text": "Some links open a tab of another record in a window over your page, so you can look something up and come straight back. 1 Opens the location's people, over this page Steps Tap a link with the window icon 1 , such as Its people . The location's Users tab opens over your page. 1 The record's other tabs 2 Back to your page 3 Go to the record itself, on this tab Switch to another of its tabs 1 if you need to. A link inside opens another window on top; each one closes on its own. Tap Close 2 (or press Esc, or the phone's Back) to return to your page, exactly as you left it. Tap Open full page 3 to go to the record itself, on the same tab. Back brings you back. The window only closes with its buttons, never by tapping outside it, so you can't lose your place by accident."
+ },
+ {
   "id": "choose-your-notifications",
   "lang": "en",
   "title": "Choose how you are notified",

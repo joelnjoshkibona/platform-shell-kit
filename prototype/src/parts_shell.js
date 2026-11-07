@@ -907,14 +907,17 @@ const ShellMod = (() => {
   }
 
   const RolePage = {
-    setup() {
-      const R2 = reactive({ draft: [], leave: null, tab: G.pendingTab || 'overview', filter: 'all', q: '', loading: false, updatedAt: Date.now(), edit: false, name: '', desc: '', copy: false, from: '', del: false, shown: 6, hLoading: false });
-      const role = computed(() => roleById(G.roleId));
+    props: { embedId: String, embedTab: String },   /* P101: embedId set = only one tab, inside a record dialog (the dialog's header has the tabs) */
+    emits: ['tabs', 'update:embedTab'],
+    setup(props, { emit }) {
+      const curId = computed(() => props.embedId || G.roleId);
+      const R2 = reactive({ draft: [], leave: null, tab: props.embedId ? (props.embedTab || 'overview') : (G.pendingTab || 'overview'), filter: 'all', q: '', loading: false, updatedAt: Date.now(), edit: false, name: '', desc: '', copy: false, from: '', del: false, shown: 6, hLoading: false });
+      const role = computed(() => roleById(curId.value));
       /* D42: ticks are staged in a draft; a save bar shows the diff and who it affects */
       const reseed = () => { R2.draft = role.value ? [...role.value.perms] : []; };
       reseed();
       // sync: another role opened from this page (Back, a link) must not be checked against this role's staged ticks
-      watch(() => G.roleId, () => { reseed(); R2.tab = 'overview'; R2.filter = 'all'; R2.q = ''; window.scrollTo({ top: 0 }); }, { flush: 'sync' });
+      watch(curId, () => { reseed(); R2.tab = 'overview'; R2.filter = 'all'; R2.q = ''; if (!props.embedId) window.scrollTo({ top: 0 }); }, { flush: 'sync' });
       const diff = computed(() => { if (!role.value) return { add: [], remove: [] }; const saved = role.value.perms; return { add: R2.draft.filter(p => !saved.includes(p)), remove: saved.filter(p => !R2.draft.includes(p)) }; });
       const dirty = computed(() => diff.value.add.length + diff.value.remove.length > 0);
       function saveDraft() { const n = holders.value.length; role.value.perms.splice(0, role.value.perms.length, ...R2.draft); Object.assign(role.value, { updatedAt: 'Today', updatedBy: ME.name }); G.toast('Role saved', n ? 'Applies to ' + n + (n === 1 ? ' person' : ' people') + ' on their next request.' : 'Nobody holds it yet.', 'Shield'); }
@@ -925,8 +928,9 @@ const ShellMod = (() => {
       const onUnload = (e) => { if (dirty.value) { e.preventDefault(); e.returnValue = ''; } };
       onMounted(() => window.addEventListener('beforeunload', onUnload));
       onBeforeUnmount(() => { G.leaveGuard = null; window.removeEventListener('beforeunload', onUnload); });
-      watch(() => G.pendingTab, (v) => { if (v) R2.tab = v; });
-      watch(() => R2.tab, (t) => { G.tab = t; }, { immediate: true });   // P39: the tab is part of the link
+      watch(() => G.pendingTab, (v) => { if (v && !props.embedId) R2.tab = v; });
+      watch(() => props.embedTab, (v) => { if (v && props.embedId) R2.tab = v; });
+      watch(() => R2.tab, (t) => { if (props.embedId) emit('update:embedTab', t); else G.tab = t; }, { immediate: true });   // P39: the tab is part of the link (the page's own)
       const ro = computed(() => !role.value || role.value.locked || !canEditRole());
       const modules = computed(() => { const out = {}; PERMS.forEach(p => (out[p.module] = out[p.module] || []).push(p)); return Object.entries(out); });
       const has = (pn) => R2.draft.includes(pn);
@@ -944,6 +948,8 @@ const ShellMod = (() => {
       const byModule = computed(() => modules.value.map(([mod, list], i) => { const n = list.filter(p => has(p.name)).length; return { mod, n, total: list.length, pct: Math.round(n / list.length * 100), color: 'var(--c' + ((i % 5) + 1) + ')' }; }));
       const kpi = computed(() => { const r = role.value; const locs = new Set(holders.value.flatMap(h => h.locs)); return { pct: Math.round(applied.value / PERMS.length * 100), menus: MENU.filter(m => menuVisibleFor(m, R2.draft)).length, people: holders.value.length, locs: locs.size, direct: holders.value.filter(h => directOf(h.m).length).length }; });
       const tabs = computed(() => [{ value: 'overview', label: 'Overview' }, { value: 'perms', label: 'Permissions', count: applied.value }, { value: 'menus', label: 'Menus' }, { value: 'people', label: 'People', count: holders.value.length }, { value: 'history', label: 'History' }]);
+      watch(tabs, (t) => { if (props.embedId) emit('tabs', t); }, { immediate: true });
+      guardTab(() => R2.tab, (v) => { R2.tab = v; }, tabs, 'Roles');
       function goModule(mod) { R2.filter = 'all'; R2.q = mod; R2.tab = 'perms'; }
       function refresh() { if (R2.loading) return; R2.loading = true; setTimeout(() => { R2.loading = false; R2.updatedAt = Date.now(); }, 700); }
       /* edit name + description (custom roles; main role names are fixed) */
@@ -987,9 +993,9 @@ const ShellMod = (() => {
         PERMS, MENU, leaves, menuVisibleFor, leafVisible, permLabel, roleIcon, canViewAs, canEditRole, initials, locById, openLoc, nav, ROLES };
     },
     template: `<div v-if="!role" class="mx-auto grid max-w-md place-items-center gap-2 py-16 text-center"><span class="grid h-12 w-12 place-items-center rounded-full bg-muted"><Icon name="ShieldOff" :size="22" class="text-muted-foreground"/></span><h2 class="text-lg font-semibold">Role not found</h2><p class="text-sm text-muted-foreground">It may have been deleted.</p><Button class="mt-2" variant="outline" @click="nav('roles')"><Icon name="ArrowLeft" :size="14"/>All roles</Button></div>
-    <div v-else class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">
-      <nav class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground" aria-label="Breadcrumb"><BackButton/><button type="button" class="hover:text-foreground" @click="nav('roles')">Roles</button><Icon name="ChevronRight" :size="12"/><span class="font-medium text-foreground">{{ role.name }}</span></nav>
-      <div class="flex flex-wrap items-start justify-between gap-3">
+    <div v-else :class="['grid grid-cols-[minmax(0,1fr)] gap-4', embedId ? '' : 'mx-auto max-w-[1200px]']">
+      <nav v-if="!embedId" class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground" aria-label="Breadcrumb"><BackButton/><button type="button" class="hover:text-foreground" @click="nav('roles')">Roles</button><Icon name="ChevronRight" :size="12"/><span class="font-medium text-foreground">{{ role.name }}</span></nav>
+      <div v-if="!embedId" class="flex flex-wrap items-start justify-between gap-3">
         <div class="flex min-w-0 items-center gap-3"><span :class="['grid h-11 w-11 shrink-0 place-items-center rounded-lg', role.locked ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary']"><Icon :name="roleIcon(role)" :size="20"/></span>
           <div class="min-w-0"><h2 class="truncate text-xl font-semibold tracking-tight sm:text-2xl">{{ role.name }}</h2><p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground"><Badge :variant="role.system ? 'secondary' : 'outline'">{{ role.system ? 'Main role' : 'Custom role' }}</Badge><Badge v-if="role.locked" variant="secondary"><Icon name="Lock" :size="11"/>Locked</Badge><span class="tnum">{{ applied }} of {{ PERMS.length }} permissions</span></p></div></div>
         <div class="flex gap-1.5"><RefreshButton :loading="R2.loading" :updated-at="R2.updatedAt" @refresh="refresh"/>
@@ -997,7 +1003,7 @@ const ShellMod = (() => {
           <Button v-if="canEditRole() && !role.locked" variant="outline" aria-label="Edit role" @click="startEdit"><Icon name="Pencil" :size="14"/><span class="hidden sm:inline">Edit</span></Button>
           <DropdownMenu :items="moreItems" @select="onMore"><template #trigger><Button variant="outline" size="icon" aria-label="More actions"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu></div>
       </div>
-      <div class="max-w-full overflow-x-auto"><Tabs v-model="R2.tab" :items="tabs"/></div>
+      <div v-if="!embedId" class="max-w-full overflow-x-auto"><Tabs v-model="R2.tab" :items="tabs"/></div>
       <div :class="['grid grid-cols-[minmax(0,1fr)] gap-4 transition-opacity', R2.loading && 'pointer-events-none opacity-60']">
 
       <!-- OVERVIEW -->
@@ -1172,7 +1178,7 @@ const ShellMod = (() => {
       demo: `<div class="flex flex-wrap items-center gap-5"><label class="flex items-center gap-2 text-sm"><Checkbox v-model="s.cb"/>Checkbox</label><label class="flex items-center gap-2 text-sm"><Switch v-model="s.sw"/>Switch</label><label class="flex items-center gap-2 text-sm"><RadioGroupItem :checked="s.rd==='a'" @select="s.rd='a'"/>Radio A</label><label class="flex items-center gap-2 text-sm"><RadioGroupItem :checked="s.rd==='b'" @select="s.rd='b'"/>Radio B</label><span class="flex items-center gap-2 text-sm"><span class="grid h-4 w-4 place-items-center rounded-sm border border-primary bg-primary text-primary-foreground"><Icon name="Minus" :size="12" stroke-width="3"/></span>Indeterminate</span></div>` },
     { name: 'Badge · Status pill', ui: 'Badge', tag: 'Display', specs: [['Badge', '12px / 600, 8px x · 2px y, rounded-md'], ['Pill', '11px / 500, 8px x · 2px y, rounded-full, 6px dot'], ['Colour', 'state colour at 15% fill, text in text token (never series colour)']], variants: 'default, secondary, outline, destructive, warning, success; StatusPill (P47) reads label and tone from the workflow lookup', used: 'Form status, request status, invite status, roles, violations.',
       demo: `<div class="flex flex-wrap items-center gap-2"><Badge>Default</Badge><Badge variant="secondary">Secondary</Badge><Badge variant="outline">Outline</Badge><Badge variant="warning"><Icon name="Timer" :size="12"/>Timed</Badge><Badge variant="destructive">Voided</Badge><StatusPill workflow="form" code="live"/><StatusPill workflow="form" code="closed"/><StatusPill workflow="request" code="in_review"/><StatusPill workflow="request" code="approved"/><StatusPill workflow="request" code="not_seeded"/></div>` },
-    { name: 'Tabs', ui: 'Tabs, TabsList, TabsTrigger', tag: 'Navigation', specs: [['Track', '36px, muted fill, 4px padding, rounded-lg'], ['Trigger', '12px x, 4px y, 14px / 500, active = background + shadow'], ['Count', '11px pill inside the trigger'], ['Overflow', 'wrapper scrolls sideways on phones']], variants: 'inline, full width (phone header row)', used: 'Builder tabs, results sub-tabs, roles detail, status filters.',
+    { name: 'Tabs', ui: 'Tabs, TabsList, TabsTrigger', tag: 'Navigation', specs: [['Track', '36px, muted fill, 4px padding, rounded-lg'], ['Trigger', '12px x, 4px y, 14px / 500, active = background + shadow'], ['Count', '11px pill inside the trigger'], ['Keys', '← → Home End move and open; only the open tab is in the Tab order (P101)'], ['Overflow', 'scrolls sideways with faded edges; the open tab scrolls into view; More lists every tab']], variants: 'inline, full width (phone header row)', used: 'Builder tabs, results sub-tabs, roles detail, status filters.',
       demo: `<Tabs v-model="s.tab" :items="[{value:'q',label:'Questions'},{value:'r',label:'Responses',count:142},{value:'s',label:'Settings'}]"/>` },
     { name: 'Card · KPI tile', ui: 'Card (+ app pattern)', tag: 'Display', specs: [['Card', 'rounded-xl, 1px border, card fill, shadow-sm; padding 16px (sm: 20px)'], ['KPI tile', '14px padding, label 12px/500, value 24px/600 tabular, icon chip 24×24 rounded-md'], ['Gap', '8px between tiles, 12px between cards'], ['Motion', 'rise-in 420ms, stagger 60ms, count-up 700ms']], variants: 'plain, with top accent strip (4px), KPI with sparkline or meter', used: 'All dashboards and lists.',
       demo: `<div class="grid max-w-md grid-cols-2 gap-2"><div class="rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Responses</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Inbox" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tabular-nums">140</p><p class="mt-1 text-[11px] text-muted-foreground">Daily, since 1 Oct</p></div><div class="rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Completed</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="CircleCheck" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tabular-nums">92.1%</p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full w-[92%] rounded-full bg-c1"></div></div></div></div>` },
@@ -1212,6 +1218,8 @@ const ShellMod = (() => {
       demo: `<div class="grid max-w-xs gap-2"><DatePicker v-model="s.date" label="Due date"/><p class="text-xs text-muted-foreground">Selected: {{ s.date || 'none' }}</p></div>` },
     { name: 'Drafts', ui: 'DraftBanner, DraftStatus, My drafts (useFormDraft)', tag: 'Feedback', specs: [['Autosave', '4s after the last change, to the server'], ['Footer', 'Saving… / Draft saved 12:41 / Unsaved changes + Save draft'], ['Create', '"You have 2 drafts" → picker: Resume, Delete'], ['Edit', 'warning banner: unsaved changes from 2 hours ago · Discard · Restore'], ['Never', 'secrets, one-shot dialogs, wizards']], variants: 'create · edit', used: 'New location, location details; every create/edit form',
       demo: `<div class="grid max-w-lg gap-3"><div class="flex items-center gap-3 rounded-lg border bg-muted/40 px-3 py-2 text-sm"><Icon name="History" :size="15" class="text-muted-foreground"/><span class="flex-1">You have 2 drafts for this form.</span><Button size="sm" variant="outline" class="h-7">View drafts</Button></div><div class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm"><Icon name="History" :size="15" class="text-warning"/><span class="flex-1">You have unsaved changes from 2 hours ago.</span><Button size="sm" variant="outline" class="h-7 bg-background">Discard</Button><Button size="sm" class="h-7">Restore</Button></div><div class="flex flex-wrap items-center gap-4 text-xs text-muted-foreground"><span class="flex items-center gap-1.5"><Icon name="LoaderCircle" :size="13" class="animate-spin"/>Saving draft…</span><span class="flex items-center gap-1.5"><Icon name="Check" :size="13" class="text-c1"/>Draft saved 12:41</span><Button variant="outline" size="sm" @click="G.myDrafts=true"><Icon name="FilePen" :size="14"/>Open My drafts</Button></div></div>` },
+    { name: 'AppDialog · Record dialog', ui: 'openDialog, DialogStack, RecordTabView (P100, P101)', tag: 'Overlays', specs: [['Sizes', 'sm 420 · md 560 · lg 760 · xl 1100 · full; from what it holds, never from depth'], ['Header', 'module · title · ⤢ Full screen (remembered) · the record\'s tabs; a trail of the dialogs below'], ['Footer', 'Close · Open full page (left) · status · actions (right, main furthest right, More)'], ['Closing', 'only the footer, Esc or Back, top dialog first; no ×; outside clicks do nothing'], ['Link', '?open=locations/ARU-01/users keeps the stack']], variants: 'record · confirm · info (form with P100)', used: 'Requests (Its people), Locations (parent)',
+      demo: `<div class="grid gap-2 text-sm"><p class="text-muted-foreground">Open a location's Users tab without leaving this page:</p><p><RecordLink module="Locations" id="aru" tab="users" label="Arusha Branch · Users"/></p></div>` },
     { name: 'Help · How do I…', ui: 'HelpPage, HelpArticlePage, HowDoI (P98)', tag: 'Help', specs: [['Articles', 'Markdown in docs/help/articles/<lang>/, one per task, grouped by module'], ['Pictures', 'tools/help/build.js draws ①②③ on the named elements; desktop light + phone dark; legend under each'], ['In the app', 'Help and guides (sidebar foot) · How do I… (top bar, every screen) · #/help/<id>'], ['Checks', 'a missing marker fails the build; a screen change carries its articles (check.sh)']], variants: 'list · search · article · sheet', used: 'Help',
       demo: `<div class="grid gap-2 text-sm"><p class="text-muted-foreground">Open Help and guides for the articles with their marked pictures, or press How do I… in the top bar.</p><Button size="sm" variant="outline" class="justify-self-start" @click="nav(\'help\')"><Icon name="LifeBuoy" :size="14"/>Open Help and guides</Button></div>` },
     { name: 'Report table · Chart builder', ui: 'ReportTable, ColumnChooser, ChartBuilder (Highcharts), SavedViews (P96)', tag: 'Data', specs: [['Page', 'a list page: Refresh · Filters · Sort · Group · Columns … Export; quick tabs, search, chips'], ['Table', 'scrolls both ways in its card; header, pinned columns and totals row stay put'], ['Totals', 'row under the table for the rows shown · strip at the top for every filtered row (server)'], ['Group, Columns', 'dialogs like Filters: group by one field (start folded); show, order, pin, total per number column'], ['Chart', 'Highcharts: column, bar, line, area, pie, scatter, number; X, measures, series, top N'], ['Exports', 'table: Excel, CSV, PDF as a job · chart: PNG, SVG, PDF, data in the browser']], variants: 'paged · all rows · grouped · strip on', used: 'Reports',
@@ -1589,8 +1597,9 @@ const ShellMod = (() => {
       <MyDraftsSheet/>
       <NotifPrefsSheet/>
       <NewRequestDialog/>
+      <DialogStack/>
       <AppNotifsAsk/><AppUpdateRequired/><AppBackHint/><AppSplash/><PhoneOverlays/>
-      <div class="pointer-events-none fixed inset-x-0 bottom-4 z-[60] flex flex-col items-center gap-2 px-3 lg:left-auto lg:right-4 lg:items-end" aria-live="polite">
+      <div class="pointer-events-none fixed inset-x-0 bottom-4 z-[99] flex flex-col items-center gap-2 px-3 lg:left-auto lg:right-4 lg:items-end" aria-live="polite">
         <TransitionGroup name="toast"><div v-for="t in T.toasts" :key="t.id" class="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border bg-popover p-3.5 text-popover-foreground shadow-lg"><Icon :name="t.icon" class="mt-0.5 text-primary"/><div class="min-w-0"><p class="text-sm font-medium">{{ t.title }}</p><p v-if="t.desc" class="text-xs text-muted-foreground">{{ t.desc }}</p></div></div></TransitionGroup>
       </div>
     </div>`

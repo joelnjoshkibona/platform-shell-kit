@@ -28,6 +28,20 @@ A report is a list page like any other (the same toolbar, Filters, quick tabs an
 
 Anything that takes more than a few seconds runs in the background. The button says so and you keep working. When it ends, a notification opens its **job page**: what you asked for, the result with Download and its first rows, or what went wrong in plain words, and Run again. Everything you started is under **My exports and reports** in the avatar menu.
 
+## Tabs and record dialogs (P101)
+
+A details page has tabs, and each tab has its own address (`?tab=users`). You don't have to go to a record to see one of its tabs: a link can open **another record's tab in a dialog**, over the page you are on. The dialog's header has the record's name and its tabs; the middle scrolls; the footer has **Close** and **Open full page**.
+
+```html
+<RecordLink module="Locations" :id="req.loc" tab="users" label="Its people"/>
+```
+
+For that to work, the module tells the kit its tabs and its page, in `defineModule({ tabs: [...], page: LocationPage })`. The page draws only one tab when it is given `embedId`.
+
+Dialogs stack: a link inside a dialog opens another on top, at its own size. Close, Esc or the phone's Back closes the top one only. A dialog never closes from a click outside it, so nobody loses work by accident.
+
+Tabs also work from the keyboard (← → Home End), and when there are too many to fit they scroll, with a **More** menu listing them all.
+
 ## Links between records (P85)
 
 Anywhere a record points at another (a task's project, a request's location), it is a `RecordLink`:

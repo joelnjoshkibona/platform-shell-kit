@@ -74,6 +74,7 @@
   function phoneBack() {
     if (APP.closed) return;
     if (APP.askNotifs) { APP.askNotifs = false; return; }
+    if (G.dialogs && G.dialogs.length) { G.closeTopDialog(); return; }   // P100/P101: Back closes the top dialog only
     if (G.mobileNav) { G.mobileNav = false; return; }
     if (TRAIL.length || BACK_PARENT[G.route]) { goBack(); return; }
     const now = Date.now();

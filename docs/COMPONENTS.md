@@ -10,7 +10,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Locked field, File picker · Media library, API select, Rich text, Date picker, Accent picker
 - **Display**: Badge · Status pill, Card · KPI tile, App icon and splash
 - **Navigation**: Tabs, Sidebar item, Record link, Core module page, Top-bar search, Organisation switcher
-- **Overlays**: DropdownMenu, Dialog · Sheet
+- **Overlays**: DropdownMenu, Dialog · Sheet, AppDialog · Record dialog
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, Job progress · Job page, View as banner
 - **Data**: List rows, Charts, List toolbar · Filters, List card, Report table · Chart builder, Approval steps
 - **Help**: Help · How do I…
@@ -424,22 +424,25 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | Track | 36px, muted fill, 4px padding, rounded-lg |
 | Trigger | 12px x, 4px y, 14px / 500, active = background + shadow |
 | Count | 11px pill inside the trigger |
-| Overflow | wrapper scrolls sideways on phones |
+| Keys | ← → Home End move and open; only the open tab is in the Tab order (P101) |
+| Overflow | scrolls sideways with faded edges; the open tab scrolls into view; More lists every tab |
 | Variants | inline, full width (phone header row) |
 | Used in | Builder tabs, results sub-tabs, roles detail, status filters. |
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `modelValue` | `string` | – | v-model; DetailsTabs binds it to ?tab= |
+| `modelValue` | `string` | – | v-model; details pages bind it to ?tab= |
 | `items` | `{ value, label, count? }[]` | – |  |
-| `full` | `boolean` | `false` | Stretch to full width (phones) |
+| `full` | `boolean` | `false` | Stretch to full width |
 
 **Emits:** `update:modelValue` (string)
 
-- Do: Wrap in overflow-x-auto on phones
+- Do: ← → Home End move and open (P101); only the open tab is in the Tab order
+- Do: Let the strip scroll and show More when the tabs don't fit (built in)
 - Do: Quick-filter tabs sync with the Filters dialog
 - Don't: Nested routes for tabs
 - Don't: Curtain transition between tabs
+- Don't: Wrap tabs onto two lines
 
 ### Sidebar item
 
@@ -629,6 +632,39 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: Escape closes only the top-most dialog or sheet, and only when no popover inside it consumed the key first
 - Don't: Local ref(false) + static instance
 - Don't: Dialog without a title/description
+
+### AppDialog · Record dialog
+
+`src/app/dialogs/AppDialog.vue, DialogStack.vue, openDialog.ts; src/components/app/RecordTabView.vue`
+
+| Spec | Value |
+| --- | --- |
+| Sizes | sm 420 · md 560 · lg 760 · xl 1100 · full; from what it holds, never from depth |
+| Header | module · title · ⤢ Full screen (remembered) · the record's tabs; a trail of the dialogs below |
+| Footer | Close · Open full page (left) · status · actions (right, main furthest right, More) |
+| Closing | only the footer, Esc or Back, top dialog first; no ×; outside clicks do nothing |
+| Link | ?open=locations/ARU-01/users keeps the stack |
+| Variants | record · confirm · info (form with P100) |
+| Used in | Requests (Its people), Locations (parent) |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `kind` | `'confirm' \| 'form' \| 'record' \| 'info'` | `'form'` | A preset: size, full screen, footer |
+| `title` | `string` | – |  |
+| `size` | `'sm' \| 'md' \| 'lg' \| 'xl'` | `from kind` | From what it holds, never from how deep it is |
+| `fullscreen` | `boolean` | `from kind` | Shows ⤢; the choice is remembered per kind of dialog |
+| `fullPage` | `(d) => void` | – | Where Open full page goes; without it the button is hidden |
+| `actions` | `{ label, run, primary?, danger?, keepOpen? }[]` | – | Right of the footer; main furthest right, one more beside it, the rest under More |
+| `status` | `string` | – | Middle of the footer |
+| `beforeClose` | `(d) => Promise<boolean \| void>` | – | Runs on every close; false keeps it open (P100: a form saves its draft here) |
+| `confirmText` | `string` | – | A word to type before the main action works |
+
+- Do: Open another record's tab with RecordLink tab= or openRecordTab()
+- Do: Let dialogs stack; close the top one with Close, Esc or Back
+- Do: Give each dialog the size its content needs
+- Don't: Add a corner × or close on an outside click
+- Don't: Shrink a dialog because it is deeper in the stack
+- Don't: Build a dialog without AppDialog
 
 ## Feedback
 
