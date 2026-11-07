@@ -28,6 +28,19 @@ A report is a list page like any other (the same toolbar, Filters, quick tabs an
 
 Anything that takes more than a few seconds runs in the background. The button says so and you keep working. When it ends, a notification opens its **job page**: what you asked for, the result with Download and its first rows, or what went wrong in plain words, and Run again. Everything you started is under **My exports and reports** in the avatar menu.
 
+## Batch mode (P99)
+
+A list never shows tick boxes until someone asks for them. The **Batch** button (or a long press on a phone) turns batch mode on; then people tick rows, tick the whole page, or choose **All N that match**, which sends the filter to the server instead of thousands of ids. The module gives its bulk actions to `useBatch`, each saying which rows it can't apply to and why:
+
+```js
+useBatch(LS, { noun: 'users', actions: [
+  { key: 'remove', label: 'Remove from the organisation', danger: true, typeYes: true,
+    can: m => m.role === 'owner' ? "the owner can't be removed" : true, apply: m => api.remove(m) },
+] })
+```
+
+Up to 100 rows are done at once, with a result listing what was skipped and why; more, or all that match, run as a background job.
+
 ## Tabs and record dialogs (P101)
 
 A details page has tabs, and each tab has its own address (`?tab=users`). You don't have to go to a record to see one of its tabs: a link can open **another record's tab in a dialog**, over the page you are on. The dialog's header has the record's name and its tabs; the middle scrolls; the footer has **Close** and **Open full page**.
