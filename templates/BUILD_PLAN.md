@@ -33,15 +33,22 @@ Screens and their screenshot names are in `docs/design/SCREENS.md`. Behaviour ru
   - their users and roles, the location tree, and the approval requests.
 - CI (GitHub Actions) runs Pint and Pest for the API, and type-check, lint, unit tests and visual tests for the web app.
 
+**Modules and deliverables (P80–P92)**
+- The module loaders: the API's module provider (finds every `module.json`, loads migrations, routes with their permissions, providers, policies; the system seeder upserts each module's permissions and menu row) and `php artisan modules:check`; the web's `defineModule` and `import.meta.glob('./modules/*/module.ts')` loader with a typed `ModuleKey`.
+- `BaseService` (execute → validateData → process in a transaction; only validated keys reach the model; services resolved from the container), the list contract (`ListService`: operators, allowlists, default filters, bulk, export, grouped counts), the P88 response shape (`code` equals the status, `errors`, `version` and 409).
+- `RecordLink` and its registry; the child-tab routes (`/{parent}/{uuid}/{child}/...`).
+- The convention tests (P90) on both sides.
+- `docs/IMPLEMENTATION_PLAN.md` (from `templates/IMPLEMENTATION_PLAN.md`) with every phase broken into steps, `docs/PROGRESS.md`, `docs/guide/` (from `templates/guide/`, plus the kit's `tools/guide/build.py` and `check.sh`; `templates/guide/build.args` goes to `tools/guide/build.args`), and `tools/guide/check.sh` in CI.
+
 **Frontend (`web/`)**
-- Scaffold Vue 3 + Vite + TypeScript + Vue Router + Pinia + Tailwind + shadcn-vue, with Lucide icons, the Geist font and vue-i18n (English + Swahili).
+- Scaffold Vue 3 + Vite + strict TypeScript (`strict`, strict templates, `vue-tsc --noEmit` in CI, P89) + Vue Router + Pinia + Tailwind + shadcn-vue, with Lucide icons, the Geist font and vue-i18n (English + Swahili).
 - Port the design tokens exactly from the prototype into `web/src/styles/tokens.css` and `tailwind.config.ts`. Read them from `docs/design/prototype/index.html`, specifically the `:root` and dark blocks and the tailwind config:
   - colours, `--radius`, chart colours c1–c5 (with opacity support), curtain colours, shadows and fonts;
   - light, dark and system themes.
 - Build the **whole component library** in `COMPONENTS.md` / `components_api.json` before any screen:
   - Button, Input, Select, Checkbox, Switch, Radio, Badge, Card, Tabs, Tooltip, DropdownMenu, Dialog/Sheet (portalled; Escape closes the top-most only), Toast;
   - DatePicker (month/year switchers inside the card; popover on desktop, modal on phone);
-  - ApiSelect (D36), FilePicker + MediaLibraryDialog, RichText, DraftBanner/DraftStatus, DeleteDialog, RelatedLink;
+  - ApiSelect (D36), FilePicker + MediaLibraryDialog, RichText, DraftBanner/DraftStatus, DeleteDialog, RecordLink (P85);
   - RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, the KPI tile, Spark, SaveBar + useLeaveGuard (D42).
 
   Props, emits and slots must match `components_api.json`.
@@ -200,4 +207,6 @@ Screens and their screenshot names are in `docs/design/SCREENS.md`. Behaviour ru
 - [ ] Pest tests for services, permissions and tenant scoping; web unit tests for composables.
 - [ ] English and Swahili strings.
 - [ ] Any new behaviour is recorded as a new decision in `docs/architecture/erd_data.py` (then run `python3 build.py`). Any new component is added to `COMPONENTS.md` / `components_api.json`.
+- [ ] The module rules hold (P80–P90): each module in its own folder with its manifest, nothing added to a central file, services take only validated data, related records are `RecordLink`s; the convention tests and `vue-tsc --noEmit` pass.
+- [ ] **Plan, tracker and guide (P91, P92):** the plan steps are corrected to what was done, the tracker rows are updated with how each was verified, the guide chapters explain this phase's work for a beginner, `docs/guide/index.html` is rebuilt, and `tools/guide/check.sh` passes.
 - [ ] The PR description has the screens built, the endpoints added, the decisions touched, the screenshots or compare summary, and open questions.

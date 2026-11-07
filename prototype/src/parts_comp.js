@@ -468,16 +468,51 @@
     </Dialog>`
   };
 
-  /* ---------- Related-record preview: the target's own panel in a sheet */
-  const RelatedLink = {
-    props: { locId: String },
-    setup(p) { const open = ref(false); const l = computed(() => locById(p.locId)); return { open, l, LTYPES, LSTAT, usersAt, respOf, openLoc, formsAt }; },
-    template: `<span><button type="button" class="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline" @click="open=true"><Icon name="PanelRightOpen" :size="13"/>{{ l ? l.name : '–' }}</button>
-      <Sheet :open="open" @update:open="v => open = v"><template v-if="l">
-        <div class="border-b p-4 pr-12"><div class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary"><Icon :name="LTYPES[l.type].icon" :size="18"/></span><div class="min-w-0"><h2 class="truncate font-semibold">{{ l.name }}</h2><p class="text-xs text-muted-foreground"><span class="font-mono">{{ l.code }}</span> · {{ LTYPES[l.type].label }} · {{ LSTAT[l.status].label }}</p></div></div>
-          <div class="mt-3 flex gap-2"><Button size="sm" variant="outline" @click="open=false; openLoc(l.id)"><Icon name="Maximize2" :size="14"/>View full page</Button></div></div>
-        <div class="grid gap-3 overflow-y-auto p-4 text-sm">
-          <div class="grid grid-cols-3 gap-2"><div class="rounded-lg border p-2.5"><p class="text-xs text-muted-foreground">People</p><p class="text-lg font-semibold tnum">{{ usersAt(l.id).length }}</p></div><div class="rounded-lg border p-2.5"><p class="text-xs text-muted-foreground">Forms</p><p class="text-lg font-semibold tnum">{{ formsAt(l.id, true).length }}</p></div><div class="rounded-lg border p-2.5"><p class="text-xs text-muted-foreground">Resp. 30d</p><p class="text-lg font-semibold tnum">{{ respOf(l.id) }}</p></div></div>
-          <dl class="grid grid-cols-[7rem_minmax(0,1fr)] gap-x-3 gap-y-2"><dt class="text-muted-foreground">Phone</dt><dd class="tnum">{{ l.phone || '–' }}</dd><dt class="text-muted-foreground">Email</dt><dd class="truncate">{{ l.email || '–' }}</dd><dt class="text-muted-foreground">Address</dt><dd>{{ [l.address, l.ward, l.district, l.region].filter(Boolean).join(', ') || '–' }}</dd><dt class="text-muted-foreground">Hours</dt><dd>{{ l.hours }}</dd></dl>
-        </div></template></Sheet></span>`
+  /* ---------- P85: related records are links, from one registry (MODULES, filled by defineModule in parts_links.js)
+     RecordLink   module = a registered key ('Locations'), id = the record's id; label and deleted are optional (the API sends
+                  { uuid, label, sub, deleted }; the prototype can look them up with the module's find()).
+                  A real link to the full page: a plain click opens the module's own preview in the side sheet (full width on a phone; the phone app uses its bottom sheet)
+                  with View full page; a modifier or middle click is left to the browser (new tab). Without the module's
+                  permission it is plain text with the reason; empty is "–"; a deleted record keeps its label with Deleted;
+                  a missing one says so. */
+  const LocationPreview = { props: { id: String },
+    setup(p) { const l = computed(() => locById(p.id)); return { l, LTYPES, LSTAT, usersAt, respOf, formsAt }; },
+    template: `<div v-if="l" class="grid gap-3 text-sm">
+      <div class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary"><Icon :name="LTYPES[l.type].icon" :size="18"/></span><div class="min-w-0"><h2 class="truncate font-semibold">{{ l.name }}</h2><p class="text-xs text-muted-foreground"><span class="font-mono">{{ l.code }}</span> · {{ LTYPES[l.type].label }} · {{ LSTAT[l.status].label }}</p></div></div>
+      <div class="grid grid-cols-3 gap-2"><div class="rounded-lg border p-2.5"><p class="text-xs text-muted-foreground">People</p><p class="text-lg font-semibold tnum">{{ usersAt(l.id).length }}</p></div><div class="rounded-lg border p-2.5"><p class="text-xs text-muted-foreground">Forms</p><p class="text-lg font-semibold tnum">{{ formsAt(l.id, true).length }}</p></div><div class="rounded-lg border p-2.5"><p class="text-xs text-muted-foreground">Resp. 30d</p><p class="text-lg font-semibold tnum">{{ respOf(l.id) }}</p></div></div>
+      <dl class="grid grid-cols-[7rem_minmax(0,1fr)] gap-x-3 gap-y-2"><dt class="text-muted-foreground">Phone</dt><dd class="tnum">{{ l.phone || '–' }}</dd><dt class="text-muted-foreground">Email</dt><dd class="truncate">{{ l.email || '–' }}</dd><dt class="text-muted-foreground">Address</dt><dd>{{ [l.address, l.ward, l.district, l.region].filter(Boolean).join(', ') || '–' }}</dd><dt class="text-muted-foreground">Hours</dt><dd>{{ l.hours }}</dd></dl></div>`
   };
+  const RolePreview = { props: { id: String },
+    setup(p) { const r = computed(() => roleById(p.id)); const people = computed(() => MEMBERS.filter(m => m.role === p.id).length); return { r, people }; },
+    template: `<div v-if="r" class="grid gap-3 text-sm">
+      <div class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary"><Icon name="Shield" :size="18"/></span><div class="min-w-0"><h2 class="truncate font-semibold">{{ r.name }}</h2><p class="text-xs text-muted-foreground">{{ r.system ? 'Built-in role' : 'Custom role' }}</p></div></div>
+      <p class="text-muted-foreground">{{ r.desc }}</p>
+      <div class="grid grid-cols-2 gap-2"><div class="rounded-lg border p-2.5"><p class="text-xs text-muted-foreground">People (main role)</p><p class="text-lg font-semibold tnum">{{ people }}</p></div><div class="rounded-lg border p-2.5"><p class="text-xs text-muted-foreground">Permissions</p><p class="text-lg font-semibold tnum">{{ r.perms.length }}</p></div></div></div>`
+  };
+  const RecordLink = {
+    props: { module: String, id: [String, Number], label: String, deleted: Boolean, tab: String },
+    setup(p) {
+      const open = ref(false);
+      const def = computed(() => MODULES[p.module]);
+      const rec = computed(() => (p.id != null && p.id !== '' && def.value && def.value.find) ? def.value.find(p.id) : null);
+      const text = computed(() => p.label || (rec.value && rec.value.label) || '');
+      const gone = computed(() => p.id != null && p.id !== '' && !p.label && def.value && def.value.find && !rec.value);
+      const isDeleted = computed(() => p.deleted || !!(rec.value && rec.value.deleted));
+      const allowed = computed(() => !def.value || !def.value.perm || myPerms.value.includes(def.value.perm));
+      const href = computed(() => def.value ? '#/' + def.value.path + '/' + encodeURIComponent(def.value.linkId ? def.value.linkId(p.id) : p.id) + (p.tab ? '?tab=' + encodeURIComponent(p.tab) : '') : null);
+      const why = computed(() => def.value ? "You can't open " + def.value.plural + ' (' + def.value.perm + ')' : '');
+      function click(e) { if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return; e.preventDefault(); open.value = true; }
+      function full() { open.value = false; def.value.open(p.id, p.tab); }
+      return { open, def, text, gone, isDeleted, allowed, href, why, click, full, isPhoneNow };
+    },
+    template: `<span v-if="id == null || id === ''" class="text-muted-foreground">–</span>
+      <span v-else-if="gone" class="inline-flex items-center gap-1 text-muted-foreground" title="That record no longer exists"><Icon name="CircleSlash" :size="13"/>No longer exists</span>
+      <span v-else-if="!def || !allowed" class="inline-flex items-center gap-1" :title="why"><span :class="isDeleted ? 'text-muted-foreground line-through' : ''">{{ text }}</span><Icon v-if="def" name="Lock" :size="12" class="text-muted-foreground"/></span>
+      <span v-else><a :href="href" @click="click" class="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline" :aria-label="'Preview ' + text"><Icon name="PanelRightOpen" :size="13"/><span :class="isDeleted ? 'line-through' : ''">{{ text }}</span></a><Badge v-if="isDeleted" variant="secondary" class="ml-1.5">Deleted</Badge>
+        <Sheet :open="open" @update:open="v => open = v"><div class="flex h-full min-h-0 flex-col">
+          <div class="flex items-center gap-2 border-b p-4 pr-12"><span class="text-xs font-medium text-muted-foreground">{{ def.label }}</span><span class="flex-1"></span><Button size="sm" variant="outline" @click="full"><Icon name="Maximize2" :size="14"/>View full page</Button></div>
+          <p v-if="isDeleted" class="mx-4 mt-3 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">This record was deleted. It is shown read-only.</p>
+          <div class="min-h-0 flex-1 overflow-y-auto p-4"><component :is="def.preview" :id="id"/></div></div></Sheet></span>`
+  };
+  /* kept for products written before P85: a location link */
+  const RelatedLink = { props: { locId: String }, template: `<RecordLink module="Locations" :id="locId"/>` };

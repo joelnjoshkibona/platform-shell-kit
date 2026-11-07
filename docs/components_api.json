@@ -1981,5 +1981,52 @@
   "dont": [
    "Show it on a forced screen"
   ]
+ },
+ "Record link": {
+  "file": "src/components/app/RecordLink.vue",
+  "props": [
+   [
+    "module",
+    "ModuleKey",
+    "",
+    "A registered module key (defineModule); a typo fails the type check"
+   ],
+   [
+    "id",
+    "string",
+    "",
+    "The related record's uuid"
+   ],
+   [
+    "label",
+    "string",
+    "the registry's find()",
+    "The label the API sent with the row ({ uuid, label, sub, deleted })"
+   ],
+   [
+    "deleted",
+    "boolean",
+    "false",
+    "Soft-deleted: label struck through, Deleted badge, read-only preview"
+   ],
+   [
+    "tab",
+    "string",
+    "",
+    "The tab View full page opens"
+   ]
+  ],
+  "emits": [],
+  "slots": [],
+  "do": [
+   "Use it for every value that points at another record: list cells, overview fields, child rows, activity lines (P85)",
+   "Let a modifier or middle click open the full page in a new tab",
+   "Show the reason when the person cannot open it"
+  ],
+  "dont": [
+   "Show a related record as plain text or a raw id",
+   "Keep a hand-made map of routes for links; register the module with defineModule",
+   "Open a summary that is not the module's own preview"
+  ]
  }
 }

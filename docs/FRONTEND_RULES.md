@@ -162,9 +162,12 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 - A Timeline card (Created, Created by, Updated, Updated by) and both halves of the audit pair are always shown when the API returns them.
 - A field that points at another record is a related-record link, never plain text or a raw id.
 
-**Related-record preview**
+**Related-record links (P85, amends P39)**
 
-- A related-record link opens the target module's own details panel in a side sheet (not a summary), with a View full page button that carries the active tab and stamps `?back=`.
+- Every value that points at another record (list cell, overview field, child row, activity line) is a `RecordLink module id`, never plain text or a raw id.
+- It is a real link to the full page (`#/{path}/{id}`): a plain click opens the target module's own preview in the side sheet with View full page (keeps `?tab=`, stamps `?back=`); a modifier or middle click opens a new tab.
+- The target comes from the module registry (`defineModule`, P81), never from a hand-kept map.
+- Without the module's permission it is plain text with a lock and the reason; empty is "–"; a deleted record keeps its label struck through with Deleted and previews read-only; a missing one says "No longer exists".
 
 **Activity**
 
@@ -319,6 +322,18 @@ The phone app is the web shell inside a product's Android app (NativePHP web vie
 - **Debugging and tests (P69, P70)**: web debugging off in release builds; a checklist per movement; a harness that drives a real web view.
 - Sizes: phone pieces use 48px buttons, 52px rows, 56px keys; the web shell's own controls keep the sizes they are drawn at.
 
+## Locked: modules and code structure (P80–P90)
+
+Guide: `docs/architecture/MODULES.md`.
+
+- **A module owns its files (P80)**: `api/app/Modules/{Tier}/{Group}/{Module}/`, `web/src/modules/{module}/`, `phone/src/modules/{module}/`. Nothing about a module lives outside its folder; file names say what they do.
+- **One manifest, found by glob (P81, P82)**: `module.json` on the API, `defineModule()` in `module.ts` on web and phone. No central registry, menu file or picker trait. Adding a module is adding a folder.
+- **One service per operation, container instances (P83)**: `{Module}{Op}Service`, `execute → validateData → process`; models take only validated data plus server fields.
+- **Actions declared once (P84)**: service + route + `{Module}.{action}` + button placement + form type in one manifest entry.
+- **Related records are links (P85)** and **child tabs are the child's scoped list (P86)**.
+- **List contract (P87)** and **API shape (P88)**: see the backend contract below.
+- **Strict TypeScript (P89)**; **every convention has a test (P90)**.
+
 ## Constrained-creative and Free
 
 **Constrained-creative** (pick an existing shape):
@@ -348,12 +363,20 @@ The phone app is the web shell inside a product's Android app (NativePHP web vie
 | Media | `POST /media/create`, `GET /media/list`, `/media/{uuid}/info`, `/download` | Download needs the bearer token, so fetch as a blob |
 | Location context | `X-Location-Id` header + `location_filter` param | Header checks permission; param narrows data |
 | Booleans in FormData | `1` / `0` | Never `true` / `false` strings |
+| List filters (P87) | `filters[field] = { operator, value }`; operators `eq neq in nin gt gte lt lte between contains begins ends null not_null`; allowlisted fields and sorts; `per_page` ≤ 100; `paginate=false` | A person's filter on a field replaces that field's default filter |
+| Actions (P84) | `POST /{module}/{uuid}/{action}`; `POST /{module}/bulk-action { action, ids[] \| filter, payload }` | Gated by `{Module}.{action}` (and `{Module}.bulkAction`) |
+| Child lists (P86) | `GET /{parent}/{uuid}/{child}/list` and the child's create, edit, delete under the same prefix | Scoped by the server, gated by the child's permissions |
+| Related records (P85) | `{ uuid, label, sub, deleted }` | One eager load per list, soft-deleted included |
+| Responses (P88) | Body `code` equals the HTTP status; 422 `errors: { field: [messages] }`; writes send `version`, a stale one gets 409 with the current record | API types generated for web and phone |
 
-- Services validate before touching a model; only validated keys reach `create`/`update`.
+- Services validate before touching a model; only validated keys (plus server fields the service sets) reach `create`/`update` (P83).
 - Permissions are checked by middleware with the same name the menu uses.
 
 ## Review checklist before merging a screen
 
+- [ ] The module lives in its own folder with its manifest; no central file was edited to add it (P80–P82)
+- [ ] Every related record is a `RecordLink` from the registry; checked without the permission, deleted and missing (P85)
+- [ ] The implementation plan, the progress tracker and the build guide are updated in the same change (P91–P92)
 - [ ] Checked at 360px and 1280px, light and dark; no horizontal page scroll
 - [ ] Zero console errors and zero console warnings (e2e asserts it)
 - [ ] Every menu, select, popover and tooltip is portalled and stays on screen

@@ -93,6 +93,13 @@
   const delegOf = () => DELEG[G.org.id] || (DELEG[G.org.id] = []);
   const rtById = (id) => rtypesOf().find(t => t.id === id);
   const reqById = (id) => reqsOf().find(r => r.id === id);
+  const RequestPreview = { props: { id: String },   /* P85: what a RecordLink to a request shows */
+    setup(p) { const r = computed(() => reqById(p.id)); const t = computed(() => r.value && rtById(r.value.type)); return { r, t, nameOf, locById }; },
+    template: `<div v-if="r" class="grid gap-3 text-sm">
+      <div class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary"><Icon name="Stamp" :size="18"/></span><div class="min-w-0"><h2 class="truncate font-semibold">{{ t ? t.name : 'Request' }}</h2><p class="text-xs text-muted-foreground"><span class="font-mono">{{ r.no }}</span></p></div><span class="ml-auto"><StatusPill workflow="request" :code="r.status"/></span></div>
+      <p>{{ r.subject.label }}</p>
+      <dl class="grid grid-cols-[7rem_minmax(0,1fr)] gap-x-3 gap-y-2"><dt class="text-muted-foreground">Requested by</dt><dd>{{ nameOf(r.requester) }}</dd><dt class="text-muted-foreground">Location</dt><dd>{{ (locById(r.loc) || {}).name || '–' }}</dd><dt class="text-muted-foreground">Note</dt><dd>{{ r.note || '–' }}</dd></dl></div>`
+  };
   const nameOf = (e) => (memberByEmail(e) || { name: e }).name;
   const delegState = (d) => d.end < isoDay(TODAY) ? 'expired' : d.start > isoDay(TODAY) ? 'upcoming' : 'active';
   const approverText = (a) => a.kind === 'role' ? (roleById(a.id) || {}).name : a.kind === 'main' ? ROLE[a.id] + ' (main role)' : a.kind === 'perm' ? 'Anyone with ' + a.id : nameOf(a.id);
@@ -357,7 +364,7 @@
             <Card class="kpi" style="animation-delay:60ms"><div class="p-4"><h3 class="text-sm font-semibold">Request</h3>
               <dl class="mt-2 grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3 gap-y-2.5 text-sm">
                 <dt class="flex items-center gap-1.5 text-muted-foreground"><Icon name="UserPlus" :size="13"/>By</dt><dd class="flex items-center gap-1.5"><span class="grid h-5 w-5 place-items-center rounded-full bg-primary/10 text-[9px] font-semibold uppercase text-primary">{{ initials(nameOf(req.requester)) }}</span>{{ nameOf(req.requester) }}</dd>
-                <dt class="flex items-center gap-1.5 text-muted-foreground"><Icon name="MapPin" :size="13"/>Location</dt><dd><RelatedLink :loc-id="req.loc"/></dd>
+                <dt class="flex items-center gap-1.5 text-muted-foreground"><Icon name="MapPin" :size="13"/>Location</dt><dd><RecordLink module="Locations" :id="req.loc"/></dd>
                 <dt class="flex items-center gap-1.5 text-muted-foreground"><Icon name="ClipboardList" :size="13"/>About</dt><dd><button v-if="req.subject.kind==='form'" type="button" class="text-left text-primary underline-offset-4 hover:underline" @click="openForm(FORMS.find(f => f.id===req.subject.id) || {})">{{ req.subject.label }}</button><span v-else>{{ req.subject.label }}</span></dd>
                 <dt class="flex items-center gap-1.5 text-muted-foreground"><Icon name="AlignLeft" :size="13"/>Note</dt><dd>{{ req.note || '–' }}</dd></dl></div></Card>
             <Card class="kpi" style="animation-delay:120ms"><div class="p-4"><h3 class="text-sm font-semibold">When approved</h3><p class="mt-1 text-sm text-muted-foreground">{{ ACTIONS[t.action].effect }}</p></div></Card>

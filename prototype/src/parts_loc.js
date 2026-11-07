@@ -504,7 +504,7 @@
               <dt class="text-muted-foreground">Name</dt><dd class="font-medium">{{ loc.name }}</dd>
               <dt class="text-muted-foreground">Code</dt><dd class="font-mono text-xs leading-5">{{ loc.code }}</dd>
               <dt class="text-muted-foreground">Type</dt><dd>{{ LTYPES[loc.type].label }}</dd>
-              <dt class="text-muted-foreground">Parent</dt><dd><RelatedLink v-if="loc.parent" :loc-id="loc.parent"/><span v-else class="text-muted-foreground">Top level</span></dd>
+              <dt class="text-muted-foreground">Parent</dt><dd><RecordLink v-if="loc.parent" module="Locations" :id="loc.parent"/><span v-else class="text-muted-foreground">Top level</span></dd>
               <dt class="text-muted-foreground">Status</dt><dd>{{ LSTAT[loc.status].label }}</dd>
               <dt class="text-muted-foreground">Sells to public</dt><dd>{{ loc.sales ? 'Yes' : 'No' }}</dd></dl></div></Card>
           <Card class="kpi" style="animation-delay:60ms"><div class="p-4"><h3 class="text-sm font-semibold">Contact</h3>

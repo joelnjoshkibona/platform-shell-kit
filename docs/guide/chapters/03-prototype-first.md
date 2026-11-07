@@ -1,0 +1,27 @@
+# Prototype first
+
+Before any server or app code, a product is drawn as a **clickable prototype**: a single `index.html` that looks and behaves like the finished product, with fake data. People click through it, argue about it and agree on it. Changing a prototype costs minutes; changing built code costs days.
+
+## Making one
+
+1. Copy the kit's `prototype/` into the product's `docs/design/prototype/`.
+2. Edit `src/product.js`: the product's name, icon, domain and accent colour.
+3. Add the product's modules as new files, `src/parts_<module>.js` (Shelui Tasks: `parts_tasks.js`). Register their menu items, permissions, routes and links at the kit's extension points (the table in the kit `README.md`), and register each record type with `defineModule` so links and Back work.
+4. Remove the example product's modules (Fomu's forms, templates, builder, results).
+5. Run `python3 src/assemble.py`. It joins the parts into `index.html`.
+6. Open `index.html` in a browser. The **Screens** button at the bottom left jumps to every screen.
+
+```bash
+cd docs/design/prototype
+python3 src/assemble.py      # → index.html and the component docs
+```
+
+## Checking it
+
+Every screen is checked at 1280px wide in light mode and 390px wide in dark mode, at least: no errors in the browser console, no sideways scrolling, nothing cut off. The kit's `tools/prototype-shots/` takes the screenshots that later prove the real app matches.
+
+> **Watch out**: Write a D decision for every product choice you make while drawing (what a field means, who can see what, what happens on delete). The prototype shows the result; the decision keeps the reason.
+
+## The phone app's prototype
+
+A product with a phone app draws it separately in `docs/design/prototype-phone/` (from the kit's `prototype-phone/`). It is drawn for a phone only, 360 to 430 pixels wide, with its own shell (bottom bar, sheets) and its own screens. It shares the data and the decisions with the web prototype, not its components.
