@@ -501,14 +501,14 @@
       const allowed = computed(() => !def.value || !def.value.perm || myPerms.value.includes(def.value.perm));
       const href = computed(() => def.value ? '#/' + def.value.path + '/' + encodeURIComponent(def.value.linkId ? def.value.linkId(p.id) : p.id) + (p.tab ? '?tab=' + encodeURIComponent(p.tab) : '') : null);
       const why = computed(() => def.value ? "You can't open " + def.value.plural + ' (' + def.value.perm + ')' : '');
-      function click(e) { if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return; e.preventDefault(); open.value = true; }
+      function click(e) { if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return; e.preventDefault(); if (p.tab && def.value.page) { G.openRecordTab(p.module, p.id, p.tab); return; } open.value = true; }   // P101: a link to a tab opens it in a record dialog
       function full() { open.value = false; def.value.open(p.id, p.tab); }
       return { open, def, text, gone, isDeleted, allowed, href, why, click, full, isPhoneNow };
     },
     template: `<span v-if="id == null || id === ''" class="text-muted-foreground">–</span>
       <span v-else-if="gone" class="inline-flex items-center gap-1 text-muted-foreground" title="That record no longer exists"><Icon name="CircleSlash" :size="13"/>No longer exists</span>
       <span v-else-if="!def || !allowed" class="inline-flex items-center gap-1" :title="why"><span :class="isDeleted ? 'text-muted-foreground line-through' : ''">{{ text }}</span><Icon v-if="def" name="Lock" :size="12" class="text-muted-foreground"/></span>
-      <span v-else><a :href="href" @click="click" class="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline" :aria-label="'Preview ' + text"><Icon name="PanelRightOpen" :size="13"/><span :class="isDeleted ? 'line-through' : ''">{{ text }}</span></a><Badge v-if="isDeleted" variant="secondary" class="ml-1.5">Deleted</Badge>
+      <span v-else><a :href="href" @click="click" class="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline" :aria-label="(tab && def.page ? 'Open ' : 'Preview ') + text"><Icon :name="tab && def.page ? 'PanelTop' : 'PanelRightOpen'" :size="13"/><span :class="isDeleted ? 'line-through' : ''">{{ text }}</span></a><Badge v-if="isDeleted" variant="secondary" class="ml-1.5">Deleted</Badge>
         <Sheet :open="open" @update:open="v => open = v"><div class="flex h-full min-h-0 flex-col">
           <div class="flex items-center gap-2 border-b p-4 pr-12"><span class="text-xs font-medium text-muted-foreground">{{ def.label }}</span><span class="flex-1"></span><Button size="sm" variant="outline" @click="full"><Icon name="Maximize2" :size="14"/>View full page</Button></div>
           <p v-if="isDeleted" class="mx-4 mt-3 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">This record was deleted. It is shown read-only.</p>

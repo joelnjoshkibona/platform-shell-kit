@@ -166,11 +166,40 @@ const Sheet = {
       <button type="button" class="absolute right-4 top-4 z-10 rounded-sm opacity-70 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" style="margin-top:env(safe-area-inset-top,0px)" @click="$emit('update:open', false)" aria-label="Close"><Icon name="X" :size="16"/></button>
       <slot/></div></Transition></Teleport>`
 };
+/* P101: tabs people can move through. Keyboard (WAI-ARIA tabs): ← → move and open, Home/End go to the ends, Tab moves into
+   the content (only the open tab is in the Tab order). Too many to fit: the strip scrolls sideways with faded edges, the
+   open tab always scrolls into view, and a More menu lists every tab with its count. */
 const Tabs = {
   props: { modelValue: String, items: Array, full: Boolean }, emits: ['update:modelValue'],
-  template: `<div role="tablist" :class="['inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground', full ? 'grid w-full' : '']" :style="full ? 'grid-template-columns:repeat(' + items.length + ',minmax(0,1fr))' : ''">
-    <button v-for="t in items" :key="t.value" type="button" role="tab" :aria-selected="modelValue===t.value" @click="$emit('update:modelValue', t.value)"
-      :class="['inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', modelValue===t.value ? 'bg-background text-foreground shadow' : 'hover:text-foreground']">
-      {{ t.label }}<span v-if="t.count != null" class="tnum rounded-full bg-muted-foreground/15 px-1.5 text-[11px] leading-4">{{ t.count }}</span></button></div>`
+  setup(p, { emit }) {
+    const scroller = ref(null); const fade = reactive({ l: false, r: false }); const more = ref(false);
+    const measure = () => { const s = scroller.value; if (!s) return; fade.l = s.scrollLeft > 2; fade.r = s.scrollLeft + s.clientWidth < s.scrollWidth - 2; more.value = !p.full && s.scrollWidth > s.clientWidth + 2; };
+    const show = () => nextTick(() => { const s = scroller.value; if (!s) return; const b = s.querySelector('[aria-selected="true"]');
+      if (b && !p.full) { const l = b.offsetLeft, r = l + b.offsetWidth; if (l < s.scrollLeft + 24) s.scrollLeft = Math.max(0, l - 24); else if (r > s.scrollLeft + s.clientWidth - 24) s.scrollLeft = r - s.clientWidth + 24; }
+      measure(); });
+    watch(() => p.modelValue, show); watch(() => (p.items || []).map(t => t.value + ':' + t.count).join(), show);
+    let ro; onMounted(() => { show(); if (window.ResizeObserver && scroller.value) { ro = new ResizeObserver(measure); ro.observe(scroller.value); } });
+    onBeforeUnmount(() => { if (ro) ro.disconnect(); });
+    function key(e) {
+      const n = (p.items || []).length; if (!n) return; const i = Math.max(0, p.items.findIndex(t => t.value === p.modelValue)); let j = null;
+      if (e.key === 'ArrowRight') j = (i + 1) % n; else if (e.key === 'ArrowLeft') j = (i - 1 + n) % n; else if (e.key === 'Home') j = 0; else if (e.key === 'End') j = n - 1;
+      if (j === null) return; e.preventDefault(); emit('update:modelValue', p.items[j].value);
+      nextTick(() => { const b = scroller.value && scroller.value.querySelectorAll('[role=tab]')[j]; if (b) b.focus(); });
+    }
+    const moreItems = computed(() => (p.items || []).map(t => ({ id: t.value, label: t.label + (t.count != null ? ' · ' + t.count : ''), checked: t.value === p.modelValue })));
+    return { scroller, fade, more, measure, key, moreItems };
+  },
+  template: `<div :class="full ? 'w-full' : 'flex min-w-0 max-w-full items-center gap-1'">
+    <div :class="full ? '' : 'relative min-w-0'">
+      <div ref="scroller" role="tablist" @scroll="measure" @keydown="key" style="scrollbar-width:none"
+        :class="['h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground', full ? 'grid w-full' : 'inline-flex max-w-full overflow-x-auto']" :style="full ? 'grid-template-columns:repeat(' + items.length + ',minmax(0,1fr))' : ''">
+        <button v-for="t in items" :key="t.value" type="button" role="tab" :aria-selected="modelValue===t.value" :tabindex="modelValue===t.value ? 0 : -1" @click="$emit('update:modelValue', t.value)"
+          :class="['inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', modelValue===t.value ? 'bg-background text-foreground shadow' : 'hover:text-foreground']">
+          {{ t.label }}<span v-if="t.count != null" class="tnum rounded-full bg-muted-foreground/15 px-1.5 text-[11px] leading-4">{{ t.count }}</span></button></div>
+      <span v-if="fade.l" class="pointer-events-none absolute inset-y-0 left-0 w-8 rounded-l-lg bg-gradient-to-r from-muted to-transparent" aria-hidden="true"></span>
+      <span v-if="fade.r" class="pointer-events-none absolute inset-y-0 right-0 w-8 rounded-r-lg bg-gradient-to-l from-muted to-transparent" aria-hidden="true"></span>
+    </div>
+    <DropdownMenu v-if="more" :items="moreItems" label="All tabs" @select="it => $emit('update:modelValue', it.id)"><template #trigger><Button variant="ghost" size="sm" class="h-9 shrink-0 px-2" aria-label="More tabs"><span class="hidden sm:inline">More</span><Icon name="ChevronDown" :size="15"/></Button></template></DropdownMenu>
+  </div>`
 };
 

@@ -335,6 +335,13 @@ Guide: `docs/architecture/MODULES.md`.
 - **List contract (P87)** and **API shape (P88)**: see the backend contract below.
 - **Strict TypeScript (P89)**; **every convention has a test (P90)**.
 
+## Locked: tabs and record dialogs (P101)
+
+- To show another record's tab without leaving the page, use `RecordLink` with `tab`, or `openRecordTab(module, id, tab)`. Never copy the tab's content into another module.
+- Every module with a details page declares its `tabs` and its `page` in `defineModule`; the page draws one tab when given `embedId`.
+- Dialogs go through AppDialog only (`openDialog`): they stack, each at its own size; the footer has Close on the left; there is no × and clicking outside does nothing; Esc and Back close the top one.
+- Tabs move with ← → Home End, scroll with a More menu when they don't fit, and a link to a hidden tab falls back to the first with a toast.
+
 ## Locked: the user guide (P98)
 
 - Every task a person does on a screen has an article in `docs/help/articles/`, and the screen is in its `screens:` so How do I… offers it.

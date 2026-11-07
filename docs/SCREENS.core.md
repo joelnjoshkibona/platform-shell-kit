@@ -160,6 +160,12 @@ Designed from SYSTEM_SHELL's backend (`app/Project/Logs`, `Queue`, `ScheduledTas
 | My exports and reports | `/my-jobs` (avatar menu) | The person's runs by status (Running, Ready, Failed), with the progress, the rows and the days kept; Download on a ready row | `my-jobs__*` |
 | Job page | `/jobs/JOB-0041` | What was asked; progress; the result with Download and the first rows; errors in plain words; expired; Run again, Cancel | `job__*` |
 
+## Record dialogs (P101)
+
+| Screen | Route | What it shows | Screenshots |
+| --- | --- | --- | --- |
+| Another record's tab | a dialog over any page, `?open=locations/ARU-01/users` | Header: module, record name, its tabs, ⤢ Full screen; the tab's content (scrolls); footer: Close · Open full page. Stacks, with a trail (desktop) or a back arrow (phone) | `rec-dialog*` (kit check) |
+
 ## Help and guides (P98)
 
 | Screen | Route | What it shows | Screenshots |

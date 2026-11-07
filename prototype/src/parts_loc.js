@@ -351,12 +351,16 @@
 
   /* ---------- Location detail: Overview / Details / Users / Forms */
   const LocationPage = {
-    setup() {
-      const T = reactive({ loading: false, updatedAt: Date.now(), tab: G.pendingTab || 'overview', edit: false, inherited: true, incForms: true, assign: false, who: '', roles: [], primary: false });
-      const loc = computed(() => locById(G.locId));
-      watch(() => G.locId, () => { T.tab = 'overview'; T.edit = false; window.scrollTo({ top: 0 }); });
-      watch(() => G.pendingTab, (v) => { if (v) T.tab = v; });
-      watch(() => T.tab, (t) => { G.tab = t; }, { immediate: true });   // P39: the tab is part of the link
+    props: { embedId: String, embedTab: String },   /* P101: embedId set = only one tab, inside a record dialog (the dialog's header has the tabs) */
+    emits: ['tabs', 'update:embedTab'],
+    setup(props, { emit }) {
+      const curId = computed(() => props.embedId ? (locsOf().find(l => l.code === props.embedId || l.id === props.embedId) || {}).id : G.locId);
+      const T = reactive({ loading: false, updatedAt: Date.now(), tab: props.embedId ? (props.embedTab || 'overview') : (G.pendingTab || 'overview'), edit: false, inherited: true, incForms: true, assign: false, who: '', roles: [], primary: false });
+      const loc = computed(() => locById(curId.value));
+      watch(curId, () => { T.tab = 'overview'; T.edit = false; if (!props.embedId) window.scrollTo({ top: 0 }); });
+      watch(() => G.pendingTab, (v) => { if (v && !props.embedId) T.tab = v; });
+      watch(() => props.embedTab, (v) => { if (v && props.embedId) T.tab = v; });
+      watch(() => T.tab, (t) => { if (props.embedId) emit('update:embedTab', t); else G.tab = t; }, { immediate: true });   // P39: the tab is part of the link (the page's own, not a dialog's)
       const crumbs = computed(() => loc.value ? ancestorsOf(loc.value.id) : []);
       const kids = computed(() => loc.value ? childrenOf(loc.value.id).filter(c => inScope(c.id)) : []);
       const direct = computed(() => loc.value ? usersAt(loc.value.id) : []);
@@ -386,7 +390,7 @@
       const uTabs = computed(() => { const all = [...direct.value, ...inheritedRows.value]; return [{ value: 'all', label: 'All', count: all.length }, { value: 'here', label: 'Here', count: direct.value.length }, { value: 'above', label: 'From above', count: inheritedRows.value.length }]; });
       const uQuick = computed({ get: () => { const f = LSU.S.filters, k = Object.keys(f); if (!k.length) return 'all'; if (k.length === 1 && f.from && f.from.op === 'in' && f.from.value.length === 1) return f.from.value[0]; return ''; },
         set: v => { LSU.S.filters = v === 'all' ? {} : { from: { op: 'in', value: [v] } }; LSU.refresh(); } });
-      registerUrlList(LSU, { get: () => QU.q, set: v => { QU.q = v; } }, () => T.tab === 'users');
+      registerUrlList(LSU, { get: () => QU.q, set: v => { QU.q = v; } }, () => !props.embedId && T.tab === 'users');
       // P40 columns for the Users tab: main role folds to a title badge; roles here, overrides and since into the meta line
       const ucols = [
         { key: 'person', label: 'Person', identity: true, priority: 1, min: 220, text: a => (memberByEmail(a.email) || { name: a.email }).name },
@@ -395,10 +399,12 @@
         { key: 'ov', label: 'Overrides', priority: 3, min: 140, fold: 'meta', text: a => [a.granted.length ? '+' + a.granted.length + ' granted' : '', a.denied.length ? '−' + a.denied.length + ' denied' : ''].filter(Boolean).join(' ') },
         { key: 'since', label: 'Since', priority: 5, min: 100, fold: 'meta', muted: true, text: a => a.since ? 'Since ' + a.since : '' },
       ];
-      watch(() => G.locId, () => { QU.q = ''; LSU.S.filters = {}; });
+      watch(curId, () => { QU.q = ''; LSU.S.filters = {}; });
       const exportUsers = () => exportList(LSU, [['Person', a => (memberByEmail(a.email) || {}).name], ['Email', a => a.email], ['Main role', a => ROLE[(memberByEmail(a.email) || {}).role]], ['Roles here', a => a.roles.map(r => (roleById(r) || {}).name).join('; ')], ['Assigned at', a => a.from ? a.from.name : loc.value.name], ['Granted', a => a.granted.join('; ')], ['Denied', a => a.denied.join('; ')], ['Since', a => a.since]], 'people', loc.value.name);
 
       const tabs = computed(() => [{ value: 'overview', label: 'Overview' }, { value: 'details', label: 'Details' }, { value: 'users', label: 'Users', count: direct.value.length }, { value: 'forms', label: 'Forms', count: loc.value ? formsAt(loc.value.id, true).filter(formVisible).length : 0 }, { value: 'history', label: 'History' }]);
+      watch(tabs, (t) => { if (props.embedId) emit('tabs', t); }, { immediate: true });
+      guardTab(() => T.tab, (v) => { T.tab = v; }, tabs, 'Locations');
       const bars = computed(() => {
         if (!loc.value) return [];
         const list = kids.value.length ? kids.value.map(k => ({ label: k.name, v: respOf(k.id), id: k.id })) : formsAt(loc.value.id).map(f => ({ label: f.title, v: Math.round(f.responses * 0.4) }));
@@ -409,7 +415,7 @@
       const canAssign = () => canManage() || (!G.viewAs && myPerms.value.includes('Locations.assign'));
       /* details editing */
       const D = reactive({});
-      const draft = useFormDraft({ module: 'Locations', recordKey: () => G.locId, title: () => (loc.value ? loc.value.name : '') + ': details', getPayload: () => ({ name: D.name, code: D.code, type: D.type, parent: D.parent, status: D.status, sales: D.sales, phone: D.phone, email: D.email, hours: D.hours, address: D.address, ward: D.ward, district: D.district, photo: D.photo, notes: D.notes }), applyPayload: (p) => Object.assign(D, p) });
+      const draft = useFormDraft({ module: 'Locations', recordKey: () => curId.value, title: () => (loc.value ? loc.value.name : '') + ': details', getPayload: () => ({ name: D.name, code: D.code, type: D.type, parent: D.parent, status: D.status, sales: D.sales, phone: D.phone, email: D.email, hours: D.hours, address: D.address, ward: D.ward, district: D.district, photo: D.photo, notes: D.notes }), applyPayload: (p) => Object.assign(D, p) });
       watch(() => JSON.stringify(D), () => { if (T.edit) draft.touch(); });
       function startEdit() { if (G.viewAs) return readOnly(); Object.keys(D).forEach(k => delete D[k]); Object.assign(D, JSON.parse(JSON.stringify(loc.value))); draft.D.key = loc.value.id; T.edit = true; nextTick(() => draft.arm()); }
       function cancelEdit() { draft.flush(); T.edit = false; if (draft.D.state !== 'idle') toast('Draft kept', 'Your changes are waiting the next time you edit.', 'History'); }
@@ -457,14 +463,14 @@
       return { QU, LSU, ucols, uTabs, uQuick, exportUsers, draft, cancelEdit, H, HIST, moreHist, X, deps, blocking, doDelete, moreItems, onMore, G, T, D, loc, crumbs, kids, direct, people, forms, tabs, bars, kpi, LTYPES, LSTAT, STAT, ACCENTS, activityOf, ROLE, openLoc, nav, memberByEmail, roleById, initials, canEditLoc, canAssign, canViewAs, startEdit, saveEdit, parentOpts, typeOpts, statusOpts, assignable, openAssign, doAssign, userMenu, onUser, customRoles, toggleRole, usersAt, respOf, audienceOf, locName, openForm, newFormHere, refresh, startViewAs, inScope, ME, myPerms, mediaById, subtreeIds, locById };
     },
     template: `<div v-if="!loc || !inScope(loc.id)" class="mx-auto grid max-w-md place-items-center gap-2 py-16 text-center"><span class="grid h-12 w-12 place-items-center rounded-full bg-muted"><Icon name="MapPinOff" :size="22" class="text-muted-foreground"/></span><h2 class="text-lg font-semibold">{{ loc ? 'Not one of their locations' : 'Location not found' }}</h2><p class="text-sm text-muted-foreground">{{ loc ? G.viewAs.name + ' is not assigned here or above it, so this page returns 403 for them.' : 'It may have been removed or belong to another organisation.' }}</p><Button class="mt-2" variant="outline" @click="nav('locations')"><Icon name="ArrowLeft" :size="14"/>All locations</Button></div>
-    <div v-else class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">
-      <nav class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground" aria-label="Breadcrumb"><BackButton/><button type="button" class="hover:text-foreground" @click="nav('locations')">Locations</button><template v-for="c in crumbs" :key="c.id"><Icon name="ChevronRight" :size="12"/><button type="button" class="hover:text-foreground disabled:hover:text-muted-foreground" :disabled="!inScope(c.id)" @click="openLoc(c.id)">{{ c.name }}</button></template><Icon name="ChevronRight" :size="12"/><span class="font-medium text-foreground">{{ loc.name }}</span></nav>
-      <div class="flex flex-wrap items-start justify-between gap-3">
+    <div v-else :class="['grid grid-cols-[minmax(0,1fr)] gap-4', embedId ? '' : 'mx-auto max-w-[1200px]']">
+      <nav v-if="!embedId" class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground" aria-label="Breadcrumb"><BackButton/><button type="button" class="hover:text-foreground" @click="nav('locations')">Locations</button><template v-for="c in crumbs" :key="c.id"><Icon name="ChevronRight" :size="12"/><button type="button" class="hover:text-foreground disabled:hover:text-muted-foreground" :disabled="!inScope(c.id)" @click="openLoc(c.id)">{{ c.name }}</button></template><Icon name="ChevronRight" :size="12"/><span class="font-medium text-foreground">{{ loc.name }}</span></nav>
+      <div v-if="!embedId" class="flex flex-wrap items-start justify-between gap-3">
         <div class="flex min-w-0 items-center gap-3"><span :class="['grid h-11 w-11 shrink-0 place-items-center rounded-lg', loc.type==='org' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary']"><Icon :name="LTYPES[loc.type].icon" :size="20"/></span>
           <div class="min-w-0"><h2 class="truncate text-xl font-semibold tracking-tight sm:text-2xl">{{ loc.name }}</h2><p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground"><span class="font-mono text-xs">{{ loc.code }}</span><span>·</span><span>{{ LTYPES[loc.type].label }}</span><span :class="['inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium', LSTAT[loc.status].cls]"><span :class="['h-1.5 w-1.5 rounded-full', LSTAT[loc.status].dot]"></span>{{ LSTAT[loc.status].label }}</span></p></div></div>
         <div class="flex gap-1.5"><RefreshButton :loading="T.loading" :updated-at="T.updatedAt" @refresh="refresh"/><Button v-if="canEditLoc() && T.tab!=='details'" variant="outline" @click="T.tab='details'; startEdit()"><Icon name="Pencil" :size="14"/>Edit</Button><Button v-if="canEditLoc()" @click="G.newLoc = loc.id"><Icon name="CirclePlus" :size="14"/><span class="hidden sm:inline">Add child</span><span class="sm:hidden">Child</span></Button><DropdownMenu :items="moreItems" @select="onMore"><template #trigger><Button variant="outline" size="icon" aria-label="More actions"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu></div>
       </div>
-      <div class="max-w-full overflow-x-auto"><Tabs v-model="T.tab" :items="tabs"/></div>
+      <div v-if="!embedId" class="max-w-full overflow-x-auto"><Tabs v-model="T.tab" :items="tabs"/></div>
       <div :class="['grid grid-cols-[minmax(0,1fr)] gap-4 transition-opacity', T.loading && 'pointer-events-none opacity-60']">
 
       <!-- OVERVIEW -->
@@ -504,7 +510,7 @@
               <dt class="text-muted-foreground">Name</dt><dd class="font-medium">{{ loc.name }}</dd>
               <dt class="text-muted-foreground">Code</dt><dd class="font-mono text-xs leading-5">{{ loc.code }}</dd>
               <dt class="text-muted-foreground">Type</dt><dd>{{ LTYPES[loc.type].label }}</dd>
-              <dt class="text-muted-foreground">Parent</dt><dd><RecordLink v-if="loc.parent" module="Locations" :id="loc.parent"/><span v-else class="text-muted-foreground">Top level</span></dd>
+              <dt class="text-muted-foreground">Parent</dt><dd class="flex flex-wrap items-center gap-x-3 gap-y-1"><RecordLink v-if="loc.parent" module="Locations" :id="loc.parent"/><RecordLink v-if="loc.parent" module="Locations" :id="loc.parent" tab="users" label="Its people"/><span v-else class="text-muted-foreground">Top level</span></dd>
               <dt class="text-muted-foreground">Status</dt><dd>{{ LSTAT[loc.status].label }}</dd>
               <dt class="text-muted-foreground">Sells to public</dt><dd>{{ loc.sales ? 'Yes' : 'No' }}</dd></dl></div></Card>
           <Card class="kpi" style="animation-delay:60ms"><div class="p-4"><h3 class="text-sm font-semibold">Contact</h3>
