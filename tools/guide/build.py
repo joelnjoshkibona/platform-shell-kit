@@ -2,7 +2,7 @@
 """Builds the build guide (P91): Markdown chapters -> one self-contained HTML page (contents, search, light/dark, print).
 No dependencies. Copy this file into a product as tools/guide/build.py.
 
-  python3 tools/guide/build.py                       # kit defaults (docs/guide/chapters -> docs/guide/index.html)
+  python3 tools/guide/build.py                       # the options in tools/guide/build.args, else the kit defaults
   python3 tools/guide/build.py --title "Shelui Tasks: build guide" \
       --chapters docs/guide/chapters --page "Implementation plan=docs/IMPLEMENTATION_PLAN.md" \
       --page "Progress=docs/PROGRESS.md" --out docs/guide/index.html
@@ -11,7 +11,7 @@ Markdown it understands: # to #### headings, paragraphs, - and 1. lists (nested 
 | tables |, > quotes (a quote starting with **Note**, **Tip** or **Watch out** becomes a coloured box), **bold**,
 *italic*, `code`, [links](url), --- rules. The first # heading of a chapter is its title.
 """
-import argparse, glob, html, os, re
+import argparse, glob, html, os, re, shlex, sys
 
 ap = argparse.ArgumentParser()
 ap.add_argument('--root', default=os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
@@ -20,6 +20,10 @@ ap.add_argument('--chapters', default='docs/guide/chapters')
 ap.add_argument('--page', action='append', default=[], help='Title=path/to/file.md, added after the chapters')
 ap.add_argument('--out', default='docs/guide/index.html')
 a = ap.parse_args()
+# a product keeps its options in tools/guide/build.args (one line, shell quoting); they apply when no options are given
+_args_file = os.path.join(a.root, 'tools', 'guide', 'build.args')
+if len(sys.argv) == 1 and os.path.exists(_args_file):
+    a = ap.parse_args(shlex.split(open(_args_file, encoding='utf-8').read()))
 R = lambda p: os.path.join(a.root, p)
 
 def slug(t, used):

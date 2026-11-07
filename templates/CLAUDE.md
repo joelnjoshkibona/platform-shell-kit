@@ -71,7 +71,7 @@ tools/guide/             build.py (chapters → index.html), check.sh (P92), bui
 - **Plan, tracker and guide (P91, P92):** every pull request that changes `api/`, `web/` or `phone/` also, in the same PR:
   - names its step in `docs/IMPLEMENTATION_PLAN.md` and corrects the step if the work differed;
   - updates its row in `docs/PROGRESS.md` (status, PR, date, how it was verified);
-  - adds or updates the chapter in `docs/guide/chapters/` that explains it for a beginner (why, files, commands, checks), and rebuilds `docs/guide/index.html` with `python3 tools/guide/build.py $(cat tools/guide/build.args)`;
+  - adds or updates the chapter in `docs/guide/chapters/` that explains it for a beginner (why, files, commands, checks), and rebuilds `docs/guide/index.html` with `python3 tools/guide/build.py`;
   - runs `tools/guide/check.sh` (CI runs it too).
 - **Backend:**
   - its list/select/drafts/media/approvals contracts, and the endpoint shapes in `FRONTEND_RULES.md` → "Backend contract";
@@ -107,7 +107,7 @@ cd tools/prototype-shots && npm i && npm run shots    # regenerate docs/design/s
 node compare.js --app ../../web/tests/visual/__screenshots__
 
 # Build guide after editing docs/guide/chapters, IMPLEMENTATION_PLAN.md or PROGRESS.md
-python3 tools/guide/build.py $(cat tools/guide/build.args) && tools/guide/check.sh
+python3 tools/guide/build.py && tools/guide/check.sh
 
 # ERD after editing docs/architecture/erd_data.py
 cd docs/architecture && python3 build.py

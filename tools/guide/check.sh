@@ -14,9 +14,8 @@ if [ -n "$code" ]; then
   done
 fi
 # the HTML page must match its chapters
-ARGS_FILE="tools/guide/build.args"; ARGS=""; [ -f "$ARGS_FILE" ] && ARGS="$(cat "$ARGS_FILE")"
 tmp="$(mktemp)"; cp docs/guide/index.html "$tmp" 2>/dev/null || true
-eval python3 tools/guide/build.py $ARGS >/dev/null
+python3 tools/guide/build.py >/dev/null   # reads tools/guide/build.args when the product has one
 if ! cmp -s "$tmp" docs/guide/index.html; then echo "✗ docs/guide/index.html was out of date; it is rebuilt now: commit it"; fail=1; fi
 rm -f "$tmp"
 if [ "$fail" = 0 ]; then echo "✓ Plan, tracker and guide move with the code (P92)"; fi
