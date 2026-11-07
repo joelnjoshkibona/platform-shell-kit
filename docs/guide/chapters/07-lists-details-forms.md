@@ -20,6 +20,10 @@ Every screen of a product is one of a few shapes. Each shape is decided once (th
 - Create and edit open as one dialog. Every form keeps a **draft** on the server as you type, and offers it back if you leave and return.
 - No browser-native pickers: dates, times, files and selects use the library's pickers. Required fields have an asterisk.
 
+## Exports, reports and imports (P95)
+
+Anything that takes more than a few seconds runs in the background. The button says so and you keep working. When it ends, a notification opens its **job page**: what you asked for, the result with Download and its first rows, or what went wrong in plain words, and Run again. Everything you started is under **My exports and reports** in the avatar menu.
+
 ## Links between records (P85)
 
 Anywhere a record points at another (a task's project, a request's location), it is a `RecordLink`:

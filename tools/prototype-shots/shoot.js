@@ -51,6 +51,7 @@ const SCREENS = [
   ['delegations', 'Delegations', { full: true }], ['media', 'Media library', { full: true }], ['workspace', 'Settings', { full: true }],
   ['logs', 'Logs (activity, sign-ins, errors, requests)', { full: true }], ['queue', 'Queue', { full: true }], ['scheduled-tasks', 'Scheduled tasks', { full: true }],
   ['trash', 'Trash', { full: true }], ['notifications', 'Notifications (inbox, settings, rules, announcements)', { full: true }], ['permissions', 'Permissions', { full: true }],
+  ['my-jobs', 'My exports and reports', { full: true }], ['job', 'Job page (a ready export)', { full: true }],
   ['menus', 'Menu management', { full: true }], ['design', 'Design system (tokens, components, rules)', { full: true }],
   ['builder', 'Form builder'], ['responses', 'Results and responses', { full: true }], ['respondent', 'Respondent (live form)'],
 ].map(([route, title, o = {}]) => ({ name: route, route, title, combos: ALL, ...o }));
