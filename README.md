@@ -22,6 +22,7 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `docs/mobile/` | The mobile kit: `PHONE_MODEL.md` (what a phone is, how it moves), `DEVICE_TESTING.md`, `PLUGINS.md` (the shared Android plugins on v4), `PROPOSAL.md` (the evidence from four apps) |
 | `templates/mobile/` | The product's Android app: catch-all route, build, icon and splash, signed release, tests, the `src/phone/` contract |
 | `templates/` | CLAUDE.md, BUILD_PLAN.md, IMPLEMENTATION_PLAN.md, PROGRESS.md, HANDOFF_PROMPT.md, PRODUCT.md, SCREENS.md and `guide/` (the product's build guide chapters) for a product's repo, with `{{PRODUCT_NAME}}` placeholders |
+| `skills/platform-prototype/SKILL.md` | The Claude skill that starts, extends and hands off products on the kit. Upload it to the claude.ai skills when it changes |
 | `tools/prototype-shots/` | Regenerates screenshots; builds a side-by-side compare page against a real app |
 
 The prototype still carries **Fomu's modules (Forms, Templates, Builder, Results, Respondent) as a worked example** of a product module. They show how a module plugs into the shell; a product replaces them with its own.
