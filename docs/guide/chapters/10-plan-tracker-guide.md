@@ -1,6 +1,6 @@
 # The plan, the tracker and the guide
 
-Four things are delivered with every product (P92): the **prototype**, the **implementation plan**, the **progress tracker** and the **build guide**. The last three are updated in the same pull request as the code they describe. `tools/guide/check.sh` fails a pull request that changes `api/`, `web/` or `phone/` without them.
+Four things are delivered with every product (P92): the **prototype**, the **implementation plan**, the **progress tracker** and the **build guide**. The last three are updated in the same pull request as the code they describe. `tools/guide/check.sh` fails a pull request that changes `api/`, `web/` or `mobile/` without them.
 
 ## The implementation plan: `docs/IMPLEMENTATION_PLAN.md`
 

@@ -5,7 +5,7 @@ Status: **decided** (kit 1.12.0). From PROJECT_GENERATOR (`PHP/PROJECT_GENERATOR
 ## Decision
 
 - API `module.json`: `key`, `tier`, `group`, `enabled`, `label` (the field a picker and a link show), `references` (`{ "project_id": { "module": "Projects", "label": "name" } }`), `permissions` beyond CRUD, `actions`, `children` (child tabs, P86), `menu`.
-- Web and phone `module.ts`: `export default defineModule({ key, path, routes, detailsPanel, preview, permission, backParent, menu, actions, locales })`. Typed: `ModuleKey` is the union of every registered key, so `RecordLink module="Projcts"` fails the type check.
+- Web `module.ts`: `export default defineModule({ key, path, routes, detailsPanel, preview, permission, backParent, menu, actions, locales, phone })`; `phone: { screens, actions }` says what the phone app offers (leave it out and the phone does not show the module). Typed: `ModuleKey` is the union of every registered key, so `RecordLink module="Projcts"` fails the type check.
 - No central registry, `modules.json`, menu seed file or picker trait to edit.
 - A test fails when the API and web manifests disagree on a key, a permission or a reference (P90).
 

@@ -10,8 +10,10 @@ api/                      Laravel: the platform core trimmed to what the product
     Custom/               this product's modules (Tasks, Tickets, Projects…)
 web/                      Vue 3 + TypeScript
   src/modules/{module}/   one folder per module (see chapter 5)
-phone/                    NativePHP app (if the product has one)
-  src/modules/{module}/   one folder per module the phone shows
+    phone/                its phone app screens, if the phone shows the module
+  src/main.phone.ts       the phone app's entry: a phone-only build (VITE_APP=1)
+  src/phone/              the phone contract: bridge, network, lifecycle, back stack, lock, …
+mobile/                   the phone app's Android shell (NativePHP), if the product has one
 docs/
   product/                PRODUCT.md, DECISIONS.md (the D-log)
   design/                 prototype/, prototype-phone/, screenshots/, SCREENS.md
