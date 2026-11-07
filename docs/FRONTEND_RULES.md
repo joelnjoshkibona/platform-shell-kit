@@ -335,6 +335,12 @@ Guide: `docs/architecture/MODULES.md`.
 - **List contract (P87)** and **API shape (P88)**: see the backend contract below.
 - **Strict TypeScript (P89)**; **every convention has a test (P90)**.
 
+## Locked: the phone app's data modes (P102)
+
+- Phone screens read and write through the data layer (`list / view / save / delete / action`) only; they never call the API or the local Laravel directly, so the mode can change without touching a screen.
+- Sync mode: every change has a key; a 409 shows mine and theirs and keeps mine as a draft; refused changes are listed with why; signing out with changes waiting asks first.
+- On-the-phone mode has backups instead of a server; no signal bar.
+
 ## Locked: forms with settings and AppDialog (P100)
 
 - Open a form with `openForm(module, ctx)`, never by building a one-off dialog. Prefill, lock, hide and disable come from the context; the server checks the context and rejects a changed locked or hidden field (422).
@@ -412,6 +418,7 @@ Guide: `docs/architecture/MODULES.md`.
 | Location context | `X-Location-Id` header + `location_filter` param | Header checks permission; param narrows data |
 | Booleans in FormData | `1` / `0` | Never `true` / `false` strings |
 | List filters (P87) | `filters[field] = { operator, value }`; operators `eq neq in nin gt gte lt lte between contains begins ends null not_null`; allowlisted fields and sorts; `per_page` ≤ 100; `paginate=false` | A person's filter on a field replaces that field's default filter |
+| Sync (P102) | `GET /sync/changes?since=&modules=` → `{ changes, cursor, has_more }`; `POST /sync/push { changes: [{ key, module, op, id, record, version }] }` → per change `done` · `conflict` (+ the server's record) · `refused` (+ reason) | Keys make a repeat harmless; permissions are checked per change |
 | Form context (P100) | `GET /{module}/create/splash?prefill…&lock…&hide…&disable…` → the fields with locked, hidden and disabled flags, or 403 for a context the person may not use; `POST /{module}/create` → 422 when a locked or hidden field differs | The context is checked twice: when the form opens and when it saves |
 | Actions (P84, P99) | `POST /{module}/{uuid}/{action}`; `POST /{module}/bulk-action { action, mode: ids, ids[] }` or `{ action, mode: filter, filters }` → `{ done, skipped: [{ uuid, label, reason }] }` or 202 with a job run | Gated by `{Module}.{action}` (and `{Module}.bulkAction`); each row checked, failures skipped with a reason |
 | Child lists (P86) | `GET /{parent}/{uuid}/{child}/list` and the child's create, edit, delete under the same prefix | Scoped by the server, gated by the child's permissions |

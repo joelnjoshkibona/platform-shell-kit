@@ -34,6 +34,16 @@ The interface calls the product's API directly with the token from secure storag
 with the web app (from `templates/shared/`): the API client and types, permission names, statuses, formatters, module keys.
 Never import a web screen or component.
 
+## Data mode (P102)
+
+Set `APP_DATA_MODE` in `.env` (`tools/new-product` asks):
+
+- **connected**: the interface calls the API; the phone keeps only drafts, the last data and the log.
+- **phone**: the phone's own Laravel holds the modules' tables and services (`/api/local/*`), with backups to a file. No server.
+- **sync**: `/api/local/*` on a working copy, a `sync_queue` of changes sent in order with keys, and the server's `/sync/changes` and `/sync/push`.
+
+Screens use `src/app/data.ts` only, so they work the same in every mode.
+
 ## Steps
 
 1. Create the app: `composer create-project laravel/laravel mobile`, `composer require nativephp/mobile:^4` and the plugins the product

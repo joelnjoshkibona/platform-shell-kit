@@ -7,7 +7,7 @@ const Kpi = { props: { label: String, icon: String, tone: { type: String, defaul
     <span :class="['grid h-8 w-8 place-items-center rounded-lg', { primary: 'bg-primary/10 text-primary', warning: 'bg-warning/15 text-warning', success: 'bg-success/15 text-success' }[tone]]"><Icon :name="icon" :size="16"/></span></div>
     <p class="mt-2 text-2xl font-bold leading-tight tracking-tight tnum">{{ value }}</p><p class="mt-0.5 truncate text-xs text-muted-foreground">{{ hint }}</p></div>` };
 
-const Home = { components: { Header, Icon, Section, Kpi, Av, Tile, Pill, AgeChip, LevelBadge, Balance },
+const Home = { components: { Header, Icon, Section, Kpi, Av, Tile, Pill, AgeChip, LevelBadge, Balance, SyncLine },
   setup() {
     const owner = computed(() => S.role === 'owner');
     const hour = 'Good afternoon';
@@ -22,6 +22,7 @@ const Home = { components: { Header, Icon, Section, Kpi, Av, Tile, Pill, AgeChip
     <div class="scroll min-h-0 flex-1 overflow-y-auto px-4 pb-6 pt-4">
       <p class="text-xs text-muted-foreground">Office Shop · Tue 13 Oct 2026</p>
       <h2 class="text-xl font-bold leading-tight tracking-tight">{{ hour }}, {{ ME.name }}</h2>
+      <SyncLine/>
 
       <button v-if="owner && waitingN" type="button" class="press rise mt-4 flex w-full items-center gap-3 rounded-xl border border-warning/40 bg-warning/10 p-4 text-left" @click="go('waiting')">
         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-warning/20 text-warning"><Icon name="Hourglass" :size="22"/></span>

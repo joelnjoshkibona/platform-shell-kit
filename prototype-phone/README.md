@@ -37,6 +37,10 @@ update ready, update required.
 Use the picker to switch the signed-in person (Amina the owner, Rehema the cashier: her changes wait for the owner), the theme,
 the list state, and to open any sheet. The menu is flat (grouped labels, no dropdowns) and owner-only groups hide for the cashier.
 
+## Data modes (P102)
+
+The picker's **Data mode (P102)** switches between connected (as drawn everywhere else), on the phone and sync. Sync adds the sync line on Home, the Sync page (waiting, couldn't be sent, what is kept), the no-signal bar that says to keep working, the conflict screen (mine and theirs), the first sync, and signing out with changes waiting. On the phone shows Data and backups. Drawn in `src/25_sync.js`.
+
 ## Receipts (DevBiz D204-D208, Phase 12e)
 
 Drawn here first, so the owner can approve the look before anything is built (`src/73_receipt.js`).
