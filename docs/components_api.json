@@ -2213,5 +2213,40 @@
    "Shrink a dialog because it is deeper in the stack",
    "Build a dialog without AppDialog"
   ]
+ },
+ "Batch mode": {
+  "file": "src/components/app/list-card/useBatch.ts, BatchBar.vue (ListRows selectable)",
+  "props": [
+   [
+    "list",
+    "ListState",
+    "",
+    "The list; useBatch adds list.batch"
+   ],
+   [
+    "actions",
+    "BatchAction[]",
+    "",
+    "{ key, label, icon, danger?, typeYes?, can?(row), apply(row) }: the module's bulk actions"
+   ],
+   [
+    "usable",
+    "() => boolean",
+    "",
+    "Whether this person may use any bulk action here"
+   ]
+  ],
+  "emits": [],
+  "slots": [],
+  "do": [
+   "Keep tick boxes hidden until Batch is pressed",
+   "Send All that match as the filter",
+   "Show what was skipped and why"
+  ],
+  "dont": [
+   "Show tick boxes on a list by default",
+   "Send thousands of ids",
+   "Fail the whole batch for one row"
+  ]
  }
 }

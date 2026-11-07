@@ -234,7 +234,7 @@ async function shoot(arts) {
           const l = Math.max(2, b.x - 4), w = Math.min(innerWidth - 2, b.x + b.width + 4) - l;
           ring.style.cssText = `position:absolute;left:${l}px;top:${b.y - 4}px;width:${w}px;height:${b.height + 8}px;border:2.5px solid #ea580c;border-radius:9px;box-shadow:0 0 0 2px rgba(255,255,255,.9)`;
           const dot = document.createElement('div'); dot.textContent = b.n;
-          dot.style.cssText = `position:absolute;left:${Math.max(2, Math.min(innerWidth - 30, b.x - 15))}px;top:${Math.max(2, Math.min(innerHeight - 30, b.y - 15))}px;width:26px;height:26px;border-radius:50%;background:#ea580c;color:#fff;font:700 14px/26px Geist,system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px #fff,0 2px 6px rgba(0,0,0,.35)`;
+          dot.style.cssText = `position:absolute;left:${Math.max(2, Math.min(innerWidth - 30, b.x - 22))}px;top:${Math.max(2, Math.min(innerHeight - 30, b.y - 22))}px;width:26px;height:26px;border-radius:50%;background:#ea580c;color:#fff;font:700 14px/26px Geist,system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px #fff,0 2px 6px rgba(0,0,0,.35)`;
           root.append(ring, dot);
         }
         document.body.appendChild(root);

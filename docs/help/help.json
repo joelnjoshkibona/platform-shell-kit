@@ -65,6 +65,23 @@
   "text": "Some links open a tab of another record in a window over your page, so you can look something up and come straight back. 1 Opens the location's people, over this page Steps Tap a link with the window icon 1 , such as Its people . The location's Users tab opens over your page. 1 The record's other tabs 2 Back to your page 3 Go to the record itself, on this tab Switch to another of its tabs 1 if you need to. A link inside opens another window on top; each one closes on its own. Tap Close 2 (or press Esc, or the phone's Back) to return to your page, exactly as you left it. Tap Open full page 3 to go to the record itself, on the same tab. Back brings you back. The window only closes with its buttons, never by tapping outside it, so you can't lose your place by accident."
  },
  {
+  "id": "act-on-many-rows",
+  "lang": "en",
+  "title": "Do the same thing to many rows at once",
+  "module": "Lists",
+  "who": "People allowed to do that action on those records",
+  "screens": [
+   "members",
+   "trash"
+  ],
+  "related": [
+   "find-records-in-a-list"
+  ],
+  "summary": "Batch mode lets you tick several rows, or everything your filters match, and act on them together.",
+  "html": "<p>Batch mode lets you tick several rows, or everything your filters match, and act on them together.</p>\n<figure class=\"help-shot\"><picture><source media=\"(max-width: 640px)\" srcset=\"@help/shots/act-on-many-rows-1__phone.png\"><img src=\"@help/shots/act-on-many-rows-1__desktop.png\" alt=\"Do the same thing to many rows at once: the screen with markers 1 to 1\" loading=\"lazy\"></picture><ol class=\"help-marks\"><li><span class=\"mk\">1</span><span>Turn batch mode on</span></li></ol></figure>\n<ol><li>Filter the list to the rows you want (see <a href=\"#/help/find-records-in-a-list\" data-help=\"find-records-in-a-list\">Find what you need in a list</a>).</li><li>Tap <strong>Batch</strong> <span class=\"mk\">1</span>. Tick boxes appear. On a phone you can also press and hold a row.</li></ol>\n<figure class=\"help-shot\"><img src=\"@help/shots/act-on-many-rows-2__desktop.png\" alt=\"Do the same thing to many rows at once: the screen with markers 1 to 4\" loading=\"lazy\"><ol class=\"help-marks\"><li><span class=\"mk\">1</span><span>How many you are acting on</span></li><li><span class=\"mk\">2</span><span>Tick every row on the screen</span></li><li><span class=\"mk\">3</span><span>Everything your filters match, on every page</span></li><li><span class=\"mk\">4</span><span>The actions</span></li></ol></figure>\n<ol><li>Tick rows one by one, or tap <strong>Tick this page</strong> <span class=\"mk\">2</span>, or <strong>All that match</strong> <span class=\"mk\">3</span> for every row your filters match. The count <span class=\"mk\">1</span> always says which.</li><li>Choose an action <span class=\"mk\">4</span> (more are under <strong>More</strong>). Actions that can't be undone ask first; deleting asks you to type YES.</li><li>You see what was done, and which rows were skipped and why. Large batches run in the background, and you get a notification when they finish.</li><li>Tap <strong>Done</strong> (or press Esc) to leave batch mode.</li></ol>\n<p class=\"note\">Changing the filters or the search clears your ticks, so you never act on rows you can no longer see.</p>",
+  "text": "Batch mode lets you tick several rows, or everything your filters match, and act on them together. 1 Turn batch mode on Filter the list to the rows you want (see Find what you need in a list ). Tap Batch 1 . Tick boxes appear. On a phone you can also press and hold a row. 1 How many you are acting on 2 Tick every row on the screen 3 Everything your filters match, on every page 4 The actions Tick rows one by one, or tap Tick this page 2 , or All that match 3 for every row your filters match. The count 1 always says which. Choose an action 4 (more are under More ). Actions that can't be undone ask first; deleting asks you to type YES. You see what was done, and which rows were skipped and why. Large batches run in the background, and you get a notification when they finish. Tap Done (or press Esc) to leave batch mode. Changing the filters or the search clears your ticks, so you never act on rows you can no longer see."
+ },
+ {
   "id": "choose-your-notifications",
   "lang": "en",
   "title": "Choose how you are notified",

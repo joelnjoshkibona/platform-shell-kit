@@ -12,7 +12,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - **Navigation**: Tabs, Sidebar item, Record link, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet, AppDialog · Record dialog
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, Job progress · Job page, View as banner
-- **Data**: List rows, Charts, List toolbar · Filters, List card, Report table · Chart builder, Approval steps
+- **Data**: List rows, Charts, List toolbar · Filters, List card, Batch mode, Report table · Chart builder, Approval steps
 - **Help**: Help · How do I…
 - **Phone**: Phone foundations, Lock screen, Session ended, Permission ask, Action sheet, Scan view, Printer picker, Freshness stamp, Bottom bar, No connection, App updates, Back key hint
 
@@ -929,6 +929,32 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Don't: Card grids inside the list card (forms, media, delegations keep ListToolbar)
 - Don't: Search and tabs sharing a row
 - Don't: A second layout for phones: the folded row is the same component
+
+### Batch mode
+
+`src/components/app/list-card/useBatch.ts, BatchBar.vue (ListRows selectable)`
+
+| Spec | Value |
+| --- | --- |
+| Off | no tick boxes; Batch in the toolbar (or a long press on a phone) turns it on |
+| Bar | Done · count · Tick this page · All N that match · Clear · actions (2 + More; phone: bottom bar) |
+| Run | ≤100 at once with done/skipped and why; all that match or more = a job (P95); deletes need YES |
+| Clears | filters or search change clears the ticks (toast); Esc or Done ends |
+| Variants | off · ticked rows · all that match · result |
+| Used in | Users, Trash |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `list` | `ListState` | – | The list; useBatch adds list.batch |
+| `actions` | `BatchAction[]` | – | { key, label, icon, danger?, typeYes?, can?(row), apply(row) }: the module's bulk actions |
+| `usable` | `() => boolean` | – | Whether this person may use any bulk action here |
+
+- Do: Keep tick boxes hidden until Batch is pressed
+- Do: Send All that match as the filter
+- Do: Show what was skipped and why
+- Don't: Show tick boxes on a list by default
+- Don't: Send thousands of ids
+- Don't: Fail the whole batch for one row
 
 ### Report table · Chart builder
 

@@ -83,13 +83,13 @@
             <Tooltip v-if="d.canFull" :content="d.full ? 'Back to its size' : 'Full screen'" side="bottom" class="hidden sm:block"><Button variant="ghost" size="icon" class="h-8 w-8" :aria-label="d.full ? 'Leave full screen' : 'Full screen'" :aria-pressed="d.full" @click="toggleFull"><Icon :name="d.full ? 'Minimize2' : 'Maximize2'" :size="15"/></Button></Tooltip></div>
           <div v-if="d.tabs" class="mt-2"><Tabs v-model="d.tab" :items="d.tabs"/></div>
         </header>
-        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5" data-testid="dialog-body"><component v-if="d.component" :is="d.component" v-bind="d.props" :dialog="d"/><p v-else-if="d.text" class="text-sm text-muted-foreground">{{ d.text }}</p></div>
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5" data-testid="dialog-body"><component v-if="d.component" :is="d.component" v-bind="d.props" :dialog="d"/><p v-else-if="d.text" class="text-sm text-muted-foreground">{{ d.text }}</p>
+          <label v-if="d.confirmText" class="mt-4 grid gap-1.5 text-sm"><span>Type <b>{{ d.confirmText }}</b> to confirm</span><Input v-model="d.typed" :aria-label="'Type ' + d.confirmText + ' to confirm'" autocomplete="off" data-autofocus/></label></div>
         <footer class="shrink-0 border-t bg-background px-4 pt-3 sm:px-5" style="padding-bottom:calc(.75rem + env(safe-area-inset-bottom,0px))" data-testid="dialog-footer">
           <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
             <div class="flex gap-2"><Button variant="outline" class="flex-1 sm:flex-none" :disabled="d.busy" @click="closeDialog(d)">{{ d.closeLabel }}</Button><Button v-if="d.fullPage" variant="ghost" class="flex-1 sm:flex-none" :disabled="d.busy" @click="full">Open full page<Icon name="ArrowUpRight" :size="14"/></Button></div>
             <p v-if="d.status" class="text-xs text-muted-foreground sm:ml-1" role="status">{{ d.status }}</p>
-            <div v-if="shown.length || d.confirmText" class="flex flex-wrap items-center gap-2 sm:ml-auto sm:flex-nowrap">
-              <Input v-if="d.confirmText" v-model="d.typed" class="h-9 w-full sm:w-28" :placeholder="'Type ' + d.confirmText" :aria-label="'Type ' + d.confirmText + ' to confirm'" data-autofocus/>
+            <div v-if="shown.length" class="flex flex-wrap items-center gap-2 sm:ml-auto">
               <DropdownMenu v-if="extra.length" :items="extra.map((a, k) => ({ id: k, label: a.label }))" @select="it => run(extra[it.id])"><template #trigger><Button variant="outline" :disabled="d.busy">More<Icon name="ChevronDown" :size="14"/></Button></template></DropdownMenu>
               <Button v-for="a in shown" :key="a.label" :variant="a.primary ? (a.danger ? 'destructive' : 'default') : 'outline'" class="flex-1 sm:flex-none" :disabled="d.busy || locked(a)" @click="run(a)"><Icon v-if="d.busy && a.primary" name="LoaderCircle" :size="14" class="animate-spin"/>{{ a.label }}</Button></div>
           </div></footer>

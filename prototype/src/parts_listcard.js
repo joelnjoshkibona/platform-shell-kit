@@ -12,23 +12,26 @@
 
   const ListCard = {
     props: { list: Object, tabs: Array, quick: String, search: { type: String, default: undefined }, placeholder: { type: String, default: 'Search' }, refresh: { type: Boolean, default: true } },
-    emits: ['update:quick', 'update:search'],
+    emits: ['update:quick', 'update:search'],   /* P99: batch mode comes from the list itself (useBatch sets list.batch) */
     setup(p) {
       const sortItems = computed(() => [...p.list.sorts.map(s => ({ id: s.value, label: s.label, checked: p.list.S.sort === s.value })), { separator: true }, { id: '__asc', label: 'Ascending', icon: 'ArrowUpNarrowWide', checked: p.list.S.dir === 'asc' }, { id: '__desc', label: 'Descending', icon: 'ArrowDownWideNarrow', checked: p.list.S.dir === 'desc' }]);
       function onSort(it) { if (it.id === '__asc' || it.id === '__desc') p.list.S.dir = it.id.slice(2); else p.list.S.sort = it.id; p.list.refresh(); }
       const sortLabel = computed(() => (p.list.sorts.find(s => s.value === p.list.S.sort) || {}).label);
       const own = computed(() => p.search !== undefined);
       const topQ = computed(() => own.value ? '' : (G.search || '').trim());
-      return { sortItems, onSort, sortLabel, own, topQ, G };
+      const B = computed(() => p.list.batch || null);
+      return { sortItems, onSort, sortLabel, own, topQ, G, B };
     },
     template: `<section class="kpi min-w-0 overflow-hidden rounded-xl border bg-card shadow-sm" data-list-card>
       <div class="grid grid-cols-[minmax(0,1fr)] gap-2 border-b p-2 sm:px-3">
-        <div class="flex flex-wrap items-center gap-x-1 gap-y-2">
+        <BatchBar v-if="B && B.on" :b="B"/>
+        <div v-else class="flex flex-wrap items-center gap-x-1 gap-y-2">
           <div class="flex items-center gap-1">
             <RefreshButton v-if="refresh" :loading="list.S.loading" :updated-at="list.S.updatedAt" @refresh="list.refresh()"/>
             <Button variant="ghost" size="sm" class="gap-1.5 max-sm:px-2" @click="list.openFilters()" data-testid="filter-trigger-btn" :aria-label="'Filters' + (list.activeCount.value ? ', ' + list.activeCount.value + ' active' : '')"><Icon name="ListFilter" :size="15"/><span class="hidden sm:inline">Filters</span><span v-if="list.activeCount.value" class="tnum rounded-full bg-primary px-1.5 text-[11px] font-semibold leading-4 text-primary-foreground">{{ list.activeCount.value }}</span></Button>
             <Button v-if="list.activeCount.value" variant="ghost" size="sm" class="gap-1.5 text-muted-foreground max-sm:px-2" @click="list.clearAll()" :aria-label="'Clear ' + list.activeCount.value + ' filters'"><Icon name="X" :size="15"/><span class="hidden sm:inline">Clear {{ list.activeCount.value }}</span></Button>
             <DropdownMenu :items="sortItems" @select="onSort" label="Sort by" align="start"><template #trigger><Button variant="ghost" size="sm" class="gap-1.5 max-sm:px-2" :aria-label="'Sort: ' + sortLabel + ', ' + (list.S.dir==='asc' ? 'ascending' : 'descending')"><Icon name="ArrowDownUp" :size="15"/><span class="hidden sm:inline">Sort: {{ sortLabel }}</span><span class="text-muted-foreground">{{ list.S.dir==='asc' ? '↑' : '↓' }}</span></Button></template></DropdownMenu>
+            <Button v-if="B && B.usable()" variant="ghost" size="sm" class="gap-1.5 max-sm:px-2" @click="B.start()" aria-label="Batch: act on many rows at once" data-testid="batch-toggle"><Icon name="ListChecks" :size="15"/><span class="hidden sm:inline">Batch</span></Button>
             <slot name="tools"/>
           </div>
           <div v-if="$slots.actions" class="ml-auto flex items-center gap-1.5"><slot name="actions"/></div>
@@ -43,8 +46,77 @@
       </div>
       <div v-if="$slots.summary" class="border-b"><slot name="summary"/></div>
       <div :class="['transition-opacity', list.S.loading && 'pointer-events-none opacity-60']"><slot/></div>
+      <div v-if="B && B.on" class="h-24 sm:hidden" aria-hidden="true"></div>   <!-- P99: room for the batch bar at the bottom of a phone, so the last row can scroll above it -->
     </section>
     <FiltersDialog :list="list"/>`
+  };
+
+  /* ================================================================ P99: BATCH MODE
+     useBatch(LS, { noun, key, label, actions, usable })  Batch is off until the person turns it on (the Batch button, or a long
+     press on a phone). Then: tick rows, Tick this page, or All N that match (sent as the filter, mode: filter); a bar with the
+     count, Clear and the bulk actions; Done or Esc ends it. Changing the filters or the search clears the ticks (with a toast);
+     All that match follows the filters. Actions: { key, label, icon, danger?, typeYes?, can?(row) -> true | reason, apply(row), allowed?() }.
+     Up to 100 ticked rows are done at once with a result (done, skipped with why); All that match, or more than 100, runs as
+     a background job (P95). Destructive actions ask first, with the count; deletes need YES. Ticks are never in the link. */
+  function useBatch(LS, o) {
+    const key = o.key || (r => r.id);
+    const B = reactive({ on: false, ids: [], all: false, noun: o.noun || 'rows' });
+    B.actions = computed(() => (o.actions || []).filter(a => !a.allowed || a.allowed()));
+    B.usable = () => (o.usable ? o.usable() : true) && B.actions.length > 0;
+    B.total = computed(() => LS.rows.value.length);
+    B.count = computed(() => B.all ? B.total : B.ids.length);
+    B.isTicked = (r) => B.all || B.ids.includes(key(r));
+    B.start = (r) => { B.on = true; B.all = false; B.ids = r ? [key(r)] : []; };
+    B.stop = () => { B.on = false; B.all = false; B.ids = []; };
+    B.tick = (r) => { if (B.all) { B.all = false; B.ids = LS.rows.value.map(key).filter(k => k !== key(r)); return; } const k = key(r), i = B.ids.indexOf(k); if (i > -1) B.ids.splice(i, 1); else B.ids.push(k); };
+    B.tickPage = () => { B.all = false; const ks = LS.rows.value.map(key); B.ids = [...new Set([...B.ids, ...ks])]; };
+    B.selectAll = () => { B.all = true; B.ids = []; };
+    B.clear = () => { B.all = false; B.ids = []; };
+    LS.batch = B;
+    watch(() => [JSON.stringify(LS.S.filters), o.query ? o.query() : G.search], () => {
+      if (!B.on || B.all || !B.ids.length) return; B.ids = []; toast('Ticks cleared', 'The filters or the search changed, so nothing is acted on that you no longer see.', 'ListX');
+    });
+    const onKey = (e) => { if (e.key === 'Escape' && B.on && !OVERLAYS.length) B.stop(); };
+    onMounted(() => window.addEventListener('keydown', onKey)); onBeforeUnmount(() => { window.removeEventListener('keydown', onKey); B.stop(); });
+    B.run = (a) => {
+      const rows = B.all ? [...LS.rows.value] : LS.rows.value.filter(r => B.ids.includes(key(r))); const n = rows.length; if (!n) return;
+      const what = B.all ? 'all ' + n + ' ' + B.noun + ' that match' : n + ' ' + (n === 1 ? B.noun.replace(/s$/, '') : B.noun);
+      const exec = () => {
+        if (B.all || n > 100) {   // P95: big batches run in the background
+          startJobRun({ kind: 'bulk', title: a.label + ': ' + what, format: '—', params: [['Action', a.label], ['Rows', B.all ? 'All that match (sent as the filter)' : n + ' ticked'], ['Filters', LS.chips().map(c => c.text).join(' · ') || 'None']], rows: n });
+          rows.forEach(r => { if (!a.can || a.can(r) === true) a.apply(r); }); B.stop(); return;
+        }
+        const done = [], skipped = [];
+        rows.forEach(r => { const ok = a.can ? a.can(r) : true; if (ok === true) { a.apply(r); done.push(r); } else skipped.push({ label: o.label ? o.label(r) : key(r), reason: ok }); });
+        B.ids = B.ids.filter(k => !done.some(r => key(r) === k) || LS.rows.value.some(r => key(r) === k));
+        if (skipped.length) openDialog({ kind: 'info', title: a.label + ': ' + done.length + ' done, ' + skipped.length + ' skipped', component: BatchResult, props: { done: done.length, skipped } });
+        else toast(a.label + ': ' + done.length + ' done', '', a.icon || 'CircleCheck');
+      };
+      if (a.danger || a.confirm) openDialog({ kind: 'confirm', title: a.label + ': ' + what + '?', text: a.confirm || 'This applies to ' + what + '.' + (a.typeYes ? ' It cannot be undone.' : ''), confirmText: a.typeYes ? 'YES' : '', actions: [{ label: a.label, primary: true, danger: !!a.danger, run: () => exec() }] });
+      else exec();
+    };
+    return B;
+  }
+  const BatchResult = { props: { done: Number, skipped: Array, dialog: Object },
+    template: `<div class="grid gap-3 text-sm"><p>{{ done }} done. These were skipped:</p><ul class="divide-y rounded-lg border" data-testid="batch-skipped"><li v-for="(x, i) in skipped" :key="i" class="flex flex-wrap items-baseline justify-between gap-x-3 px-3 py-2"><span class="font-medium">{{ x.label }}</span><span class="text-muted-foreground">{{ x.reason }}</span></li></ul></div>` };
+  const BatchBar = {
+    props: { b: Object },
+    setup(p) { const shown = computed(() => p.b.actions.slice(0, 2)); const extra = computed(() => p.b.actions.slice(2)); const pExtra = computed(() => p.b.actions.slice(1)); return { shown, extra, pExtra }; },   // a phone shows the first action and More
+    template: `<div class="flex flex-wrap items-center gap-x-2 gap-y-2" data-testid="batch-bar">
+      <Button variant="outline" size="sm" @click="b.stop()"><Icon name="Check" :size="14"/>Done</Button>
+      <span class="text-sm font-medium tnum" role="status" data-testid="batch-count">{{ b.all ? 'All ' + b.total + ' that match' : b.ids.length + ' ticked' }}</span>
+      <Button v-if="!b.all" variant="ghost" size="sm" @click="b.tickPage()">Tick this page</Button>
+      <Button v-if="!b.all" variant="ghost" size="sm" @click="b.selectAll()" data-testid="batch-all">All {{ b.total }} that match</Button>
+      <Button v-if="b.all || b.ids.length" variant="ghost" size="sm" class="text-muted-foreground" @click="b.clear()">Clear</Button>
+      <div class="ml-auto hidden items-center gap-1.5 sm:flex">
+        <DropdownMenu v-if="extra.length" :items="extra.map(a => ({ id: a.key, label: a.label, icon: a.icon }))" @select="it => b.run(extra.find(a => a.key === it.id))"><template #trigger><Button variant="outline" size="sm" :disabled="!b.count">More<Icon name="ChevronDown" :size="14"/></Button></template></DropdownMenu>
+        <Button v-for="(a, i) in shown" :key="a.key" size="sm" :variant="a.danger ? 'outline' : (i === shown.length - 1 ? 'default' : 'outline')" :class="a.danger && 'text-destructive'" :disabled="!b.count" @click="b.run(a)"><Icon v-if="a.icon" :name="a.icon" :size="14"/>{{ a.label }}</Button>
+      </div>
+      <Teleport to="body"><div class="fixed inset-x-0 bottom-0 z-40 border-t bg-background px-3 pt-3 shadow-[0_-4px_12px_rgba(0,0,0,.08)] sm:hidden" style="padding-bottom:calc(.75rem + env(safe-area-inset-bottom,0px))" data-testid="batch-bar-phone">
+        <div class="flex items-center gap-2"><span class="mr-auto text-sm font-medium tnum">{{ b.all ? 'All ' + b.total : b.ids.length + ' ticked' }}</span>
+          <DropdownMenu v-if="pExtra.length" :items="pExtra.map(a => ({ id: a.key, label: a.label, icon: a.icon }))" @select="it => b.run(pExtra.find(a => a.key === it.id))"><template #trigger><Button variant="outline" size="sm" :disabled="!b.count">More</Button></template></DropdownMenu>
+          <Button v-if="b.actions[0]" size="sm" :variant="b.actions[0].danger ? 'outline' : 'default'" :class="['min-w-0 max-w-[13rem]', b.actions[0].danger && 'text-destructive']" :disabled="!b.count" @click="b.run(b.actions[0])"><span class="truncate">{{ b.actions[0].label }}</span></Button></div></div></Teleport>
+    </div>`
   };
 
   /* ================================================================ P40: PRIORITY COLUMNS
@@ -99,9 +171,14 @@
         return { parts: isOpen ? [base].filter(Boolean) : [base, ...shown].filter(Boolean), rest, isOpen, k };
       }
       function toggle(k) { open[k] = !open[k]; }
-      function onRow(e, r) { if (!p.clickable) return; if (e.target.closest('button,a,input,select,textarea,label,[role=combobox],[data-stop]')) return; emit('open', r); }
+      const bOn = computed(() => !!(p.list && p.list.batch && p.list.batch.on));
+      let pressT = null, pressed = false;   // P99: a long press on a row starts batch mode with that row ticked
+      const pressStart = (e, r) => { if (!p.list || !p.list.batch || bOn.value || !p.list.batch.usable() || e.pointerType === 'mouse') return; pressed = false; pressT = setTimeout(() => { pressed = true; p.list.batch.start(r); if (navigator.vibrate) navigator.vibrate(15); }, 500); };
+      const pressEnd = () => clearTimeout(pressT);
+      const onCtx = (e) => { if (p.list && p.list.batch && p.list.batch.usable() && isPhoneNow()) e.preventDefault(); };   // the long press is ours, not the browser's menu
+      function onRow(e, r) { if (pressed) { pressed = false; return; } if (bOn.value) { if (e.target.closest('a,[data-stop]')) return; p.list.batch.tick(r); return; } if (!p.clickable) return; if (e.target.closest('button,a,input,select,textarea,label,[role=combobox],[data-stop]')) return; emit('open', r); }
       function sortBy(c) { const L = p.list; if (!L || !c.sort) return; if (L.S.sort === c.sort) L.S.dir = L.S.dir === 'asc' ? 'desc' : 'asc'; else { L.S.sort = c.sort; L.S.dir = 'asc'; } L.refresh(); }
-      return { root, P, meta, toggle, onRow, sortBy, slots };
+      return { root, P, meta, toggle, onRow, sortBy, slots, bOn, pressStart, pressEnd, onCtx };
     },
     template: `<div ref="root" class="min-w-0" :class="P.tight && 'lr-tight'">
       <div class="grid h-9 items-center gap-x-4 border-b px-4 text-xs font-medium text-muted-foreground" :style="{ gridTemplateColumns: P.tpl }">
@@ -114,11 +191,12 @@
       </div>
       <p v-if="!rows.length" class="grid h-32 place-items-center px-4 text-center text-sm text-muted-foreground">{{ empty || 'Nothing matches.' }}</p>
       <template v-for="r in rows" :key="rowKey(r)">
-        <div v-for="m in [meta(r)]" :key="m.k" :role="clickable ? 'link' : null" :tabindex="clickable ? 0 : null" :aria-label="clickable && P.liveCols[0] ? P.liveCols[0].text(r) : null"
+        <div v-for="m in [meta(r)]" :key="m.k" :role="bOn ? 'checkbox' : clickable ? 'link' : null" :aria-checked="bOn ? list.batch.isTicked(r) : null" :tabindex="bOn || clickable ? 0 : null" :aria-label="(bOn || clickable) && P.liveCols[0] ? P.liveCols[0].text(r) : null"
           :class="['grid min-h-14 gap-x-4', clickable && 'cursor-pointer', ' border-b px-4 py-2 outline-none transition-colors last:border-0 hover:bg-accent/60 focus-visible:bg-accent/60', P.tight ? 'items-start' : 'items-center', m.isOpen && 'border-b-0 bg-accent/60', rowClass(r)]"
-          :style="{ gridTemplateColumns: P.tpl }" @click="onRow($event, r)" @keydown.enter="onRow($event, r)">
+          :style="{ gridTemplateColumns: P.tpl }" @click="onRow($event, r)" @keydown.enter="onRow($event, r)" @keydown.space.prevent="bOn && onRow($event, r)" @pointerdown="pressStart($event, r)" @pointerup="pressEnd" @pointerleave="pressEnd" @pointercancel="pressEnd" @contextmenu="onCtx">
           <template v-for="c in P.liveCols" :key="c.key">
             <div v-if="c.identity" :class="['flex min-w-0 gap-3', P.tight ? 'items-start' : 'items-center']" :style="c.indent ? { paddingLeft: c.indent(r) + 'px' } : null">
+              <span v-if="bOn" :class="['mt-px grid h-5 w-5 shrink-0 place-items-center self-center rounded border', list.batch.isTicked(r) ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-background']" aria-hidden="true" data-tick><Icon v-if="list.batch.isTicked(r)" name="Check" :size="13"/></span>
               <div v-if="slots.icon" class="mt-px shrink-0"><slot name="icon" :row="r"/></div>
               <div class="min-w-0 flex-1">
                 <div class="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
@@ -127,7 +205,7 @@
                 </div>
                 <p v-if="m.parts.length || m.rest.length" class="lr-meta mt-0.5 text-xs leading-[1.5] text-muted-foreground [overflow-wrap:anywhere]"><span v-for="(t, i) in m.parts" :key="i"><span v-if="i" class="text-muted-foreground/60"> · </span>{{ t }}</span>
                   <button v-if="m.rest.length" type="button" class="relative z-10 ml-1.5 inline-flex min-h-[22px] items-center rounded-full border bg-card px-2 text-[11px] font-medium text-foreground hover:bg-accent" :aria-expanded="m.isOpen" @click.stop="toggle(m.k)">{{ m.isOpen ? 'Show less' : '+' + m.rest.length + ' more' }}</button></p>
-                <div v-if="P.actBelow" class="relative z-10 mt-2 flex flex-wrap items-center gap-1" data-stop><slot name="actions" :row="r"/></div>
+                <div v-if="P.actBelow && !bOn" class="relative z-10 mt-2 flex flex-wrap items-center gap-1" data-stop><slot name="actions" :row="r"/></div>
               </div>
             </div>
             <div v-else-if="c.hero" class="min-w-0 text-right">
@@ -139,8 +217,8 @@
             <div v-else :class="['min-w-0 truncate text-sm', c.right && 'tnum text-right', c.mono && 'font-mono text-xs', c.muted && 'text-muted-foreground']"><slot :name="'cell-' + c.key" :row="r">{{ c.text(r) }}</slot></div>
           </template>
           <div v-if="P.statusF && !P.hero" class="text-right"><slot :name="'cell-' + P.statusF.key" :row="r"><Badge v-if="P.statusF.text(r)" :variant="P.statusF.variant ? P.statusF.variant(r) : 'secondary'">{{ P.statusF.text(r) }}</Badge></slot></div>
-          <div v-if="P.actCol" class="relative z-10 flex items-center justify-end gap-1" data-stop><slot name="actions" :row="r"/></div>
-          <div v-if="P.actTop" class="relative z-10 -mr-2 -mt-1 flex items-center justify-end gap-1" data-stop><slot name="actions" :row="r"/></div>
+          <div v-if="P.actCol" class="relative z-10 flex items-center justify-end gap-1" data-stop><slot v-if="!bOn" name="actions" :row="r"/></div>
+          <div v-if="P.actTop" class="relative z-10 -mr-2 -mt-1 flex items-center justify-end gap-1" data-stop><slot v-if="!bOn" name="actions" :row="r"/></div>
           <Icon v-else-if="clickable" name="ChevronRight" :size="16" :class="['justify-self-end text-muted-foreground/70', P.tight && 'mt-3']"/><span v-else></span>
         </div>
         <div v-if="meta(r).isOpen" class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-6 border-b bg-accent/60 px-4 pb-3 pt-1 text-xs last:border-0" :class="!P.tight && slots.icon && 'pl-[68px]'">

@@ -335,6 +335,12 @@ Guide: `docs/architecture/MODULES.md`.
 - **List contract (P87)** and **API shape (P88)**: see the backend contract below.
 - **Strict TypeScript (P89)**; **every convention has a test (P90)**.
 
+## Locked: batch mode (P99)
+
+- No tick boxes until the person turns batch mode on (Batch, or a long press on a phone). Lists with bulk actions use `useBatch`; never add tick boxes by hand.
+- "All N that match" sends the filter, not the ids. Changing the filters or search clears the ticks.
+- Up to 100 rows run at once with a done/skipped result; more, or all that match, run as a background job. Destructive actions confirm; deletes need YES.
+
 ## Locked: tabs and record dialogs (P101)
 
 - To show another record's tab without leaving the page, use `RecordLink` with `tab`, or `openRecordTab(module, id, tab)`. Never copy the tab's content into another module.
@@ -399,7 +405,7 @@ Guide: `docs/architecture/MODULES.md`.
 | Location context | `X-Location-Id` header + `location_filter` param | Header checks permission; param narrows data |
 | Booleans in FormData | `1` / `0` | Never `true` / `false` strings |
 | List filters (P87) | `filters[field] = { operator, value }`; operators `eq neq in nin gt gte lt lte between contains begins ends null not_null`; allowlisted fields and sorts; `per_page` ≤ 100; `paginate=false` | A person's filter on a field replaces that field's default filter |
-| Actions (P84) | `POST /{module}/{uuid}/{action}`; `POST /{module}/bulk-action { action, ids[] \| filter, payload }` | Gated by `{Module}.{action}` (and `{Module}.bulkAction`) |
+| Actions (P84, P99) | `POST /{module}/{uuid}/{action}`; `POST /{module}/bulk-action { action, mode: ids, ids[] }` or `{ action, mode: filter, filters }` → `{ done, skipped: [{ uuid, label, reason }] }` or 202 with a job run | Gated by `{Module}.{action}` (and `{Module}.bulkAction`); each row checked, failures skipped with a reason |
 | Child lists (P86) | `GET /{parent}/{uuid}/{child}/list` and the child's create, edit, delete under the same prefix | Scoped by the server, gated by the child's permissions |
 | Related records (P85) | `{ uuid, label, sub, deleted }` | One eager load per list, soft-deleted included |
 | Reports (P96) | `GET /reports/{id}/rows` (the list contract), `/aggregate` (every filtered row, and per group), `POST /reports/{id}/run` (export job), `/views` | Totals of every filtered row come from `/aggregate`, never from the page |

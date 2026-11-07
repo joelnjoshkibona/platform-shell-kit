@@ -224,6 +224,10 @@
       const purge = () => { if (D.all) { const n = SYS.trash.length; SYS.trash.splice(0); toast('Trash emptied', n + ' records deleted for good.', 'Trash2'); } else { SYS.trash.splice(SYS.trash.indexOf(D.x), 1); toast('Deleted for good', D.x.label, 'Trash2'); } D.open = false; };
       const menu = () => [...(canRestore() ? [{ id: 'restore', label: 'Restore', icon: 'Undo2' }] : []), ...(canPurge() ? [{ separator: true }, { id: 'purge', label: 'Delete for good', icon: 'Trash2' }] : [])];
       const onMenu = (x, it) => { if (it.id === 'restore') restore(x); if (it.id === 'purge') askPurge(x); };
+      useBatch(LS, { noun: 'deleted records', label: x => x.label, actions: [   /* P99 */
+        { key: 'restore', label: 'Restore', icon: 'Undo2', allowed: canRestore, apply: x => { const i = SYS.trash.indexOf(x); if (i > -1) SYS.trash.splice(i, 1); } },
+        { key: 'purge', label: 'Delete for good', icon: 'Trash2', danger: true, typeYes: true, allowed: canPurge, apply: x => { const i = SYS.trash.indexOf(x); if (i > -1) SYS.trash.splice(i, 1); } },
+      ] });
       const cols = [{ key: 'label', label: 'Record', identity: true, priority: 1, min: 260, text: x => x.label }, { key: 'module', label: 'Module', priority: 4, min: 110, fold: 'badge', text: x => x.module, variant: () => 'outline' }, { key: 'by', label: 'Deleted by', priority: 3, min: 170, fold: 'meta', text: x => 'By ' + x.by + ' · ' + x.when }, { key: 'left', label: 'Goes for good', status: true, priority: 2, min: 140, text: x => 'In ' + x.left + (x.left === 1 ? ' day' : ' days'), variant: x => x.left <= 7 ? 'warning' : 'secondary' }];
       return { G, LS, quick, tabs, D, canRestore, canPurge, restore, askPurge, askEmpty, purge, menu, onMenu, cols };
     },
