@@ -55,6 +55,7 @@ The prototype still carries **Fomu's modules (Forms, Templates, Builder, Results
 | Recent activity (P45) | `parts_loc.js` → `ACTIVITY` per organisation + `logActivity` | form, people and location events per demo organisation |
 | Screens pill (prototype-only) | `assemble.py` → `ScreensPill` | lists the product's screens |
 | Modules: links, previews, deep links, Back (P39, P49, P81, P85) | `parts_links.js` → `defineModule({ key, route, path, label, plural, perm, get, set, linkId, find, preview, backParent })`; the preview component next to the module | Roles, Locations, Requests (`RolePreview`, `LocationPreview`, `RequestPreview`); `RecordLink module id` anywhere a related record shows. `LINK_DETAIL` and `BACK_PARENT` still accept direct entries from older products |
+| Reports (P96) | `parts_reports.js` → `REPORTS` (id, name, module, desc, rows, fields, views); `loadHighcharts()` | Sales lines, Sales by cashier |
 | Background work (P95) | `parts_jobs.js` → `startJobRun({ kind, title, format, params, rows, columns, preview, file, download })`; `ListShare`'s Export uses it | the Location page's Users export; Logs export |
 | Lists that show rows (P39, P40) | `parts_listcard.js` → `ListCard` + `ListRows` (priority columns) + `useList({ scope, query })` + `registerUrlList` | Roles, Users, Approvals, Locations, Location › Users tab |
 

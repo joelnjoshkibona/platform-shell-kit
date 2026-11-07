@@ -12,7 +12,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - **Navigation**: Tabs, Sidebar item, Record link, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, Job progress · Job page, View as banner
-- **Data**: List rows, Charts, List toolbar · Filters, List card, Approval steps
+- **Data**: List rows, Charts, List toolbar · Filters, List card, Report table · Chart builder, Approval steps
 - **Phone**: Phone foundations, Lock screen, Session ended, Permission ask, Action sheet, Scan view, Printer picker, Freshness stamp, Bottom bar, No connection, App updates, Back key hint
 
 ## Actions
@@ -892,6 +892,37 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Don't: Card grids inside the list card (forms, media, delegations keep ListToolbar)
 - Don't: Search and tabs sharing a row
 - Don't: A second layout for phones: the folded row is the same component
+
+### Report table · Chart builder
+
+`src/components/app/ReportTable.vue, ColumnsDialog.vue, GroupDialog.vue, ChartBuilder.vue, Chart.vue (inside ListCard)`
+
+| Spec | Value |
+| --- | --- |
+| Page | a list page: Refresh · Filters · Sort · Group · Columns … Export; quick tabs, search, chips |
+| Table | scrolls both ways in its card; header, pinned columns and totals row stay put |
+| Totals | row under the table for the rows shown · strip at the top for every filtered row (server) |
+| Group, Columns | dialogs like Filters: group by one field (start folded); show, order, pin, total per number column |
+| Chart | Highcharts: column, bar, line, area, pie, scatter, number; X, measures, series, top N |
+| Exports | table: Excel, CSV, PDF as a job · chart: PNG, SVG, PDF, data in the browser |
+| Variants | paged · all rows · grouped · strip on |
+| Used in | Reports |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `report` | `ReportDef` | – | The definition: fields, views |
+| `view` | `ReportView` | – | Filters, columns, pins, groupBy, totals, chart |
+| `rows` | `Row[]` | – | The page of rows (or all rows) |
+| `aggregate` | `Record<string, number>` | – | Totals of every filtered row, from GET /reports/{id}/aggregate |
+
+**Emits:** `update:view` (the person changed columns, pins, grouping, totals or the chart), `export` (format: xlsx · csv · pdf, starts a job (P95))
+
+- Do: Keep the header row, pinned columns and totals row fixed while the table scrolls both ways
+- Do: Take totals of every filtered row from the server
+- Do: Use Highcharts only, loaded on report pages, with the kit's chart colours
+- Don't: Total only the page and call it the total
+- Don't: Build table exports in the browser
+- Don't: Add a second chart library
 
 ### Approval steps
 
