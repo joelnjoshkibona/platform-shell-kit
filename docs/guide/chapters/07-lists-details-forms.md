@@ -20,6 +20,17 @@ Every screen of a product is one of a few shapes. Each shape is decided once (th
 - Create and edit open as one dialog. Every form keeps a **draft** on the server as you type, and offers it back if you leave and return.
 - No browser-native pickers: dates, times, files and selects use the library's pickers. Required fields have an asterisk.
 
+## Opening a form with settings (P100)
+
+A form is often opened from somewhere that already knows part of the answer: "New location under Arusha" knows the parent. Instead of a new dialog for each place, every module registers its form once (`defineForm`) and any screen opens it with a context:
+
+```js
+openForm('Locations', { title: 'New branch in Arusha', lock: { parent: 'aru' }, hide: { type: 'branch' },
+  prefill: { code: 'ARU-02' }, disable: { code: 'Codes are given by head office' }, after: 'open' })
+```
+
+The server checks the context twice: when the form opens (a lock to something you can't see is refused) and when it saves (a locked or hidden field that changed is a 422). The form gives its buttons to its host with `useDialogFooter`, so the same form works in a dialog and, after **Open full page**, as a page. Closing a form you changed saves your draft at once ("Kept as a draft"); if that can't happen, the form stays open.
+
 ## Reports (P96)
 
 A report is a list page like any other (the same toolbar, Filters, quick tabs and search), with two more dialogs, Group and Columns. It lets people shape the numbers themselves: which columns (pinned or not), totals for the rows shown or for everything the filters match, grouping with subtotals, and a chart built with Highcharts. A view is saved for yourself or shared. The table exports as Excel, CSV or PDF (made on the server, in the background); the chart downloads as a picture or as data.

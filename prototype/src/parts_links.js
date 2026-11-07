@@ -69,6 +69,10 @@
     if (G.tab && G.tab !== 'overview') qs.push('tab=' + enc(G.tab));   // details tabs, and page-level tabs (e.g. the count's History)
     const ds = DIALOGS.filter(d => d.link && MODULES[d.link.module]);   // P101: open record dialogs, bottom first
     if (ds.length) qs.push('open=' + enc(ds.map(d => { const m = MODULES[d.link.module]; return m.path + '/' + (m.linkId ? m.linkId(d.link.id) : d.link.id) + '/' + (d.tab || 'overview'); }).join(',')));
+    const fd = [...DIALOGS].reverse().find(d => d.formLink);   // P100: the open form and its context
+    if (fd) { const c = fd.formLink.ctx; const m = MODULES[fd.formLink.module]; qs.push('form=' + enc((m ? m.path : fd.formLink.module.toLowerCase()) + '.' + c.mode));
+      ['prefill', 'lock', 'hide', 'disable'].forEach(g => Object.entries(c[g] || {}).forEach(([k, v]) => qs.push(g + '[' + enc(k) + ']=' + enc(v))));
+      if (c.title) qs.push('ftitle=' + enc(c.title)); if (c.after) qs.push('after=' + enc(c.after)); }
     const L = ACT.value;
     if (L) {
       const q = L.q ? L.q.get() : ''; if (q) qs.push('q=' + enc(q));
@@ -80,21 +84,26 @@
   function parseHash(h) {
     h = (h || '').replace(/^#/, ''); if (!h) return null;
     const [path, query] = h.split('?'); const seg = path.split('/').filter(Boolean).map(decodeURIComponent);
-    const out = { route: 'dashboard', id: null, tab: null, list: { filters: {}, q: '', sort: null, dir: 'asc' } };
+    const out = { route: 'dashboard', id: null, tab: null, list: { filters: {}, q: '', sort: null, dir: 'asc' }, form: null, fctx: {} };
     if (seg.length) { if (LINK_PATHS[seg[0]] && seg[1]) { out.route = LINK_PATHS[seg[0]]; out.id = seg[1]; } else out.route = seg[0]; }
     (query || '').split('&').filter(Boolean).forEach(kv => { const i = kv.indexOf('='); const k = decodeURIComponent(kv.slice(0, i)), v = decodeURIComponent(kv.slice(i + 1));
-      if (k === 'open') out.open = v.split(',').filter(Boolean).map(x => x.split('/')); else if (k === 'tab') out.tab = v; else if (k === 'q') out.list.q = v; else if (k === 'sort') { out.list.dir = v[0] === '-' ? 'desc' : 'asc'; out.list.sort = v.replace(/^-/, ''); }
+      const fm = k.match(/^(prefill|lock|hide|disable)\[(.+)\]$/);
+      if (fm) { (out.fctx[fm[1]] = out.fctx[fm[1]] || {})[fm[2]] = v; } else if (k === 'form') out.form = v; else if (k === 'ftitle') out.fctx.title = v; else if (k === 'after') out.fctx.after = v;
+      else if (k === 'open') out.open = v.split(',').filter(Boolean).map(x => x.split('/')); else if (k === 'tab') out.tab = v; else if (k === 'q') out.list.q = v; else if (k === 'sort') { out.list.dir = v[0] === '-' ? 'desc' : 'asc'; out.list.sort = v.replace(/^-/, ''); }
       else { const m = k.match(/^f\[(.+)\]\[(op|value)\]$/); if (m) { const f = out.list.filters[m[1]] || (out.list.filters[m[1]] = { op: 'eq', value: '' }); if (m[2] === 'op') f.op = v; else f.value = v; } } });
     Object.values(out.list.filters).forEach(f => { if (['in', 'nin'].includes(f.op)) f.value = f.value ? f.value.split(',') : []; else if (f.op === 'between') f.value = f.value.split(','); });
     return out;
   }
   /* P101: make the open record dialogs match a link (a pasted link, Back, Forward): keep the ones that match, close the rest top first, open the missing */
-  async function syncDialogs(list) {
+  async function syncDialogs(list, form, fctx) {
     const want = (list || []).map(([path, id, tab]) => { const key = Object.keys(MODULES).find(k => MODULES[k].path === path); const m = MODULES[key]; return key ? { key, id: m.resolve ? m.resolve(id) : id, tab } : null; }).filter(Boolean);
     const have = DIALOGS.filter(d => d.link); let n = 0;
     while (n < have.length && n < want.length && have[n].link.module === want[n].key && String(have[n].link.id) === String(want[n].id)) { if (want[n].tab) have[n].tab = want[n].tab; n++; }
     for (let i = have.length - 1; i >= n; i--) { if (!(await closeDialog(have[i]))) return; }
     for (let i = n; i < want.length; i++) if (want[i].id) openRecordTab(want[i].key, want[i].id, want[i].tab);
+    const fo = DIALOGS.find(d => d.formLink);   // P100: a form in the link opens with its context; a link without one closes it (its draft is kept)
+    if (form && !fo) { const [path, mode] = form.split('.'); const key = Object.keys(FORM_DEFS || {}).find(k => (MODULES[k] ? MODULES[k].path : k.toLowerCase()) === path); if (key) openForm(key, { ...fctx, mode: mode || 'create' }); }
+    else if (!form && fo) await closeDialog(fo);
   }
   let lastHash = '';
   function write(push) {
@@ -108,7 +117,7 @@
     applying = true; PENDING_LIST = st.list; G.tab = st.tab;
     if (G.route === st.route) { if (st.tab) G.pendingTab = st.tab; if (ACT.value && !st.tab) { const p = PENDING_LIST; PENDING_LIST = null; applyListState(ACT.value, p); } }
     else nav(st.route, st.tab || undefined);
-    setTimeout(() => syncDialogs(st.open), moving ? 700 : 0);
+    setTimeout(() => syncDialogs(st.open, st.form, st.fctx), moving ? 700 : 0);
     setTimeout(() => { applying = false; write(false); }, 1200);
     return true;
   }
@@ -122,7 +131,7 @@
   // sync: reset the tab the moment the route/record changes, before the new page mounts and sets its own tab
   watch(() => [G.route, ...Object.values(LINK_DETAIL).map(d => d.get())], () => { G.tab = G.pendingTab || null; nextTick(() => write(true)); }, { flush: 'sync' });
   watch(() => G.tab, () => write(true), { flush: 'sync' });
-  watch(() => DIALOGS.map(d => d.link ? d.id + ':' + d.tab : '').join(), () => write(true));   // P101: opening, closing or switching a record dialog's tab is a history entry   // a tab change is a new history entry: push before the list watcher replaces
+  watch(() => DIALOGS.map(d => d.link ? d.id + ':' + d.tab : d.formLink ? 'f' + d.id : '').join(), () => write(true));   // P101: opening, closing or switching a record dialog's tab is a history entry   // a tab change is a new history entry: push before the list watcher replaces
   watch(() => ACT.value && [ACT.value.LS, JSON.stringify(ACT.value.LS.S.filters), ACT.value.LS.S.sort, ACT.value.LS.S.dir, ACT.value.q ? ACT.value.q.get() : ''], () => write(false));
   window.addEventListener('popstate', () => { const h = location.hash; if (h && h !== '#' + lastHash) { lastHash = h.slice(1); openLink(h); } });
   window.addEventListener('hashchange', () => { if (applying) return; const h = location.hash; if (h && h !== '#' + lastHash) { lastHash = h.slice(1); openLink(h); } });

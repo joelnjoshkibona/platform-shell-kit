@@ -635,7 +635,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 ### AppDialog · Record dialog
 
-`src/app/dialogs/AppDialog.vue, DialogStack.vue, openDialog.ts; src/components/app/RecordTabView.vue`
+`src/app/dialogs/AppDialog.vue, DialogStack.vue, openDialog.ts, openForm.ts, useDialogFooter.ts; src/components/app/RecordTabView.vue`
 
 | Spec | Value |
 | --- | --- |
@@ -643,8 +643,9 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | Header | module · title · ⤢ Full screen (remembered) · the record's tabs; a trail of the dialogs below |
 | Footer | Close · Open full page (left) · status · actions (right, main furthest right, More) |
 | Closing | only the footer, Esc or Back, top dialog first; no ×; outside clicks do nothing |
-| Link | ?open=locations/ARU-01/users keeps the stack |
-| Variants | record · confirm · info (form with P100) |
+| Forms (P100) | openForm(module, { prefill, lock, hide, disable, title, after }); useDialogFooter; a changed form keeps its draft when it closes |
+| Link | ?open=locations/ARU-01/users keeps the stack; ?form=locations.create&lock[parent]=… keeps a form |
+| Variants | record · confirm · form · info |
 | Used in | Requests (Its people), Locations (parent) |
 
 | Prop | Type | Default | Notes |
@@ -662,9 +663,13 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: Open another record's tab with RecordLink tab= or openRecordTab()
 - Do: Let dialogs stack; close the top one with Close, Esc or Back
 - Do: Give each dialog the size its content needs
+- Do: Open forms with openForm(module, ctx) and give their buttons to the host with useDialogFooter
+- Do: Save the draft before a changed form closes (keepDraftOnClose)
 - Don't: Add a corner × or close on an outside click
 - Don't: Shrink a dialog because it is deeper in the stack
 - Don't: Build a dialog without AppDialog
+- Don't: Draw buttons inside a form: the footer or the page's save bar has them
+- Don't: Trust a locked or hidden field from the browser: the server checks it
 
 ## Feedback
 

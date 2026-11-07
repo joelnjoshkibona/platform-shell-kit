@@ -408,8 +408,19 @@
     function dismiss() { const i = DRAFTS.indexOf(D.pendingRestore); if (i >= 0) DRAFTS.splice(i, 1); D.pendingRestore = null; }
     function deleteDraft(d) { const i = DRAFTS.indexOf(d); if (i >= 0) DRAFTS.splice(i, 1); if (d.key === D.key) { D.key = null; D.state = 'idle'; } }
     function onSuccess() { clearTimeout(timer); discard(true); }
+    /* P100: closing a changed form saves its draft at once, not on the next 4-second autosave */
+    const changed = () => D.armed && !D.pendingRestore && JSON.stringify(payload()) !== D.initial;
+    function saveNow() {
+      clearTimeout(timer); if (G.viewAs) return true;
+      if (G.draftsDown) { D.state = 'failed'; return false; }   // prototype switch: the draft service can't be reached
+      if (!changed()) { if (D.initial !== '__') discard(true); return true; }
+      const now = JSON.stringify(payload()); let d = DRAFTS.find(x => x.org === G.org.id && x.module === o.module && x.key === D.key);
+      if (!D.key) D.key = ulid('dk');
+      if (!d) { d = reactive({ id: ulid('d'), module: o.module, form: isEdit ? 'edit' : 'create', key: D.key, org: G.org.id }); DRAFTS.push(d); }
+      Object.assign(d, { title: o.title(), payload: JSON.parse(now), at: Date.now() }); D.state = 'saved'; D.savedAt = Date.now(); return true;
+    }
     onBeforeUnmount(() => clearTimeout(timer));
-    return { D, isEdit, list, arm, touch, save, flush, resume, restore, dismiss, deleteDraft, onSuccess };
+    return { D, isEdit, list, arm, touch, save, flush, resume, restore, dismiss, deleteDraft, onSuccess, changed, saveNow };
   }
   const DraftBanner = {
     props: { draft: Object },
