@@ -21,6 +21,23 @@
   "text": "An export runs in the background, so you can keep working while it is made. When it is ready, you get a notification that opens its page, where you download it. 1 Export: choose Excel, CSV or PDF Start the export Filter and sort the list the way you want it in the file (see Find what you need in a list ). The export uses the same rows and columns. Tap Export 1 and choose the format. A message says the export has started. Download it 1 Download the file 2 Make it again with the same settings When the notification arrives, open it. You can also find every export under your picture, top right, in My exports and reports . Tap Download 1 . The page also shows the first rows and how many rows the file has. Files are kept for 7 days. After that, tap Run again 2 to make a fresh one with the same settings. If an export fails, its page says why in plain words. Fix the cause, then tap Run again ."
  },
  {
+  "id": "keep-your-unfinished-work",
+  "lang": "en",
+  "title": "Come back to a form you didn't finish",
+  "module": "Forms",
+  "who": "Everyone, for their own drafts",
+  "screens": [
+   "locations",
+   "location"
+  ],
+  "related": [
+   "find-records-in-a-list"
+  ],
+  "summary": "You never lose what you typed in a form. While you type, it is saved as a draft every few seconds, and the moment you close the form it is saved again. Only you see your drafts.",
+  "html": "<p>You never lose what you typed in a form. While you type, it is saved as a draft every few seconds, and the moment you close the form it is saved again. Only you see your drafts.</p>\n<figure class=\"help-shot\"><picture><source media=\"(max-width: 640px)\" srcset=\"@help/shots/keep-your-unfinished-work-1__phone.png\"><img src=\"@help/shots/keep-your-unfinished-work-1__desktop.png\" alt=\"Come back to a form you didn't finish: the screen with markers 1 to 2\" loading=\"lazy\"></picture><ol class=\"help-marks\"><li><span class=\"mk\">1</span><span>Pick up a draft you left</span></li><li><span class=\"mk\">2</span><span>Close: what you typed is kept</span></li></ol></figure>\n<ol><li>Close a form whenever you like <span class=\"mk\">2</span>, with Close, Esc or the phone's Back. A message says <strong>Kept as a draft</strong>.</li><li>Open the same form again. It says how many drafts you have; tap <strong>View drafts</strong> <span class=\"mk\">1</span> to pick one up.</li><li>You can also find every draft under your picture, top right, in <strong>My drafts</strong>.</li></ol>\n<p class=\"note\">If the draft can't be saved (for example, with no signal), the form stays open and tells you, so you can try again or close without saving.</p>",
+  "text": "You never lose what you typed in a form. While you type, it is saved as a draft every few seconds, and the moment you close the form it is saved again. Only you see your drafts. 1 Pick up a draft you left 2 Close: what you typed is kept Close a form whenever you like 2 , with Close, Esc or the phone's Back. A message says Kept as a draft . Open the same form again. It says how many drafts you have; tap View drafts 1 to pick one up. You can also find every draft under your picture, top right, in My drafts . If the draft can't be saved (for example, with no signal), the form stays open and tells you, so you can try again or close without saving."
+ },
+ {
   "id": "find-records-in-a-list",
   "lang": "en",
   "title": "Find what you need in a list",

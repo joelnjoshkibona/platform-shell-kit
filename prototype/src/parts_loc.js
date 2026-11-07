@@ -145,31 +145,52 @@
   const readOnly = () => { toast('Read-only while viewing as someone', 'Exit View as to make changes.', 'Lock'); };
   function openLoc(id, tab) { G.locId = id; nav('location', tab); }
 
-  /* ---------- New location dialog */
-  const NewLocationDialog = {
-    setup() {
-      const N = reactive({ name: '', code: '', type: 'branch', parent: '', tried: false });
-      const draft = useFormDraft({ module: 'Locations', title: () => 'New location: ' + (N.name.trim() || 'untitled'), getPayload: () => ({ name: N.name, code: N.code, type: N.type, parent: N.parent }), applyPayload: (p) => Object.assign(N, p) });
+  /* ---------- New location: one form (P100) for the dialog and the full page, with a context (prefill, lock, hide, disable) */
+  const LocationForm = {
+    props: { ctx: Object, dialog: Object, page: Boolean },
+    setup(p) {
+      const ctx = p.ctx || ctxClean({}); const fixed = { ...ctx.lock, ...ctx.hide };
+      const N = reactive({ name: '', code: '', type: 'branch', parent: locsOf()[0].id, tried: false, ...ctx.prefill, ...fixed });
+      const err = ref('');
+      const draft = useFormDraft({ module: 'Locations', title: () => 'New location: ' + (N.name.trim() || 'untitled'), getPayload: () => ({ name: N.name, code: N.code, type: N.type, parent: N.parent }), applyPayload: (q) => Object.assign(N, q, fixed) });   // a lock wins over a draft
       watch(() => [N.name, N.code, N.type, N.parent], () => draft.touch());
-      watch(() => G.newLoc, (v) => { if (v) { Object.assign(N, { name: '', code: '', type: 'branch', parent: typeof v === 'string' ? v : locsOf()[0].id, tried: false }); draft.D.key = null; draft.D.state = 'idle'; nextTick(() => { draft.arm(); if (v && v.draft) { const d = DRAFTS.find(x => x.key === v.draft); if (d) draft.resume(d); } }); } });
+      onMounted(() => nextTick(() => { draft.arm(); if (ctx.draft) { const d = DRAFTS.find(x => x.key === ctx.draft); if (d) draft.resume(d); } }));
       const types = Object.entries(LTYPES).filter(([k]) => k !== 'org').map(([value, t]) => ({ value, label: t.label, icon: t.icon }));
       const ok = computed(() => N.name.trim().length > 1 && N.code.trim() && N.parent);
-      function close() { draft.flush(); G.newLoc = false; if (draft.D.state === 'dirty' || draft.D.state === 'saved') toast('Draft kept', 'Resume it from this form or from My drafts.', 'History'); }
-      function save() { N.tried = true; if (!ok.value) return; const id = ulid('loc'); const p = locById(N.parent); locsOf().push(L(id, N.name.trim(), N.code.trim().toUpperCase(), N.type, N.parent, { region: p.region, district: p.district, ward: '', address: '', phone: '', email: '' })); draft.onSuccess(); G.newLoc = false; toast('Location created', `Under ${p.name}. ${depthOf(id) + 1} closure rows written.`, 'MapPin'); openLoc(id, 'details'); }
-      function createParent(q) { toast('Opens New location for the parent', q ? 'Prefilled with "' + q + '".' : '', 'Info'); }
-      return { G, N, types, ok, save, close, draft, createParent };
+      const is = (k, g) => Object.prototype.hasOwnProperty.call(ctx[g] || {}, k);
+      const why = (k) => (ctx.disable || {})[k];
+      function save(after) {
+        N.tried = true; err.value = ''; if (!ok.value) return false;
+        const bad = checkContext('Locations', ctx, { name: N.name, code: N.code, type: N.type, parent: N.parent }); if (bad) { err.value = bad; return false; }   // the server's 422
+        const id = ulid('loc'); const par = locById(N.parent);
+        locsOf().push(L(id, N.name.trim(), N.code.trim().toUpperCase(), N.type, N.parent, { region: par.region, district: par.district, ward: '', address: '', phone: '', email: '' }));
+        draft.onSuccess(); toast('Location created', N.name.trim() + ' under ' + par.name, 'MapPin');
+        if (after === 'stay') { Object.assign(N, { name: '', code: '', tried: false, ...ctx.prefill, ...fixed }); nextTick(() => draft.arm()); return false; }
+        if ((after || ctx.after) === 'open') setTimeout(() => openLoc(id), 50);
+        return true;
+      }
+      useDialogFooter(p.dialog, { status: () => draftLine(draft), actions: () => [{ label: 'Create and add another', run: () => save('stay') }, { label: 'Create location', primary: true, run: () => save(ctx.after) }] });
+      if (p.dialog) keepDraftOnClose(draft, p.dialog);
+      const createParent = (q) => toast('Opens New location for the parent', q ? 'Prefilled with "' + q + '".' : '', 'Info');
+      return { N, types, ok, draft, err, is, why, createParent, locById, LTYPES };
     },
-    template: `<Dialog :open="!!G.newLoc" @update:open="v => { if (!v) close() }">
-      <div class="grid gap-1.5 pr-6"><h2 class="text-lg font-semibold leading-none">New location</h2><p class="text-sm text-muted-foreground">It inherits people and roles from its parent. Add address and contacts after.</p></div>
-      <form class="grid grid-cols-[minmax(0,1fr)] gap-3" @submit.prevent="save">
-        <DraftBanner :draft="draft"/>
-        <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem]"><div class="grid gap-1.5"><label for="nl-n" class="text-sm font-medium after:ml-0.5 after:text-destructive after:content-['*']">Name</label><Input id="nl-n" v-model="N.name" placeholder="Dodoma Branch"/><p v-if="N.tried && N.name.trim().length < 2" class="text-xs text-destructive">Give it a name.</p></div>
-          <div class="grid gap-1.5"><label for="nl-c" class="text-sm font-medium after:ml-0.5 after:text-destructive after:content-['*']">Code</label><Input id="nl-c" v-model="N.code" placeholder="DOD-01" class="font-mono uppercase"/><p v-if="N.tried && !N.code.trim()" class="text-xs text-destructive">Add a code.</p></div></div>
-        <div class="grid gap-1.5"><span class="text-sm font-medium">Type</span><Select v-model="N.type" :options="types"/></div>
-        <ApiSelect v-model="N.parent" module="locations" label="Parent" required placeholder="Choose a parent" :error="N.tried && !N.parent ? 'Choose where it sits.' : ''" @create="createParent"/>
-        <div class="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:items-center sm:justify-end"><DraftStatus :draft="draft"/><Button type="button" variant="outline" @click="close">Cancel</Button><Button type="submit"><Icon name="Plus" :size="14"/>Create location</Button></div>
-      </form></Dialog>`
+    template: `<form class="grid grid-cols-[minmax(0,1fr)] gap-3" @submit.prevent data-testid="location-form">
+      <p class="text-sm text-muted-foreground">It inherits people and roles from its parent. Add address and contacts after.</p>
+      <DraftBanner :draft="draft"/>
+      <p v-if="err" class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert" data-testid="form-error">{{ err }}</p>
+      <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem]">
+        <div class="grid content-start gap-1.5"><label for="nl-n" class="text-sm font-medium after:ml-0.5 after:text-destructive after:content-['*']">Name</label><Input id="nl-n" v-model="N.name" placeholder="Dodoma Branch" data-autofocus/><p v-if="N.tried && N.name.trim().length < 2" class="text-xs text-destructive">Give it a name.</p></div>
+        <LockedField v-if="is('code', 'lock')" label="Code" :value="N.code"/>
+        <div v-else-if="!is('code', 'hide')" class="grid content-start gap-1.5"><label for="nl-c" class="text-sm font-medium after:ml-0.5 after:text-destructive after:content-['*']">Code</label><Input id="nl-c" v-model="N.code" placeholder="DOD-01" class="font-mono uppercase" :disabled="!!why('code')" :aria-describedby="why('code') ? 'nl-c-why' : null"/><p v-if="why('code')" id="nl-c-why" class="text-xs text-muted-foreground" data-testid="why-code">{{ why('code') }}</p><p v-else-if="N.tried && !N.code.trim()" class="text-xs text-destructive">Add a code.</p></div></div>
+      <LockedField v-if="is('type', 'lock')" label="Type" :value="LTYPES[N.type].label"/>
+      <div v-else-if="!is('type', 'hide')" class="grid gap-1.5"><span class="text-sm font-medium">Type</span><Select v-model="N.type" :options="types" :disabled="!!why('type')"/><p v-if="why('type')" class="text-xs text-muted-foreground">{{ why('type') }}</p></div>
+      <LockedField v-if="is('parent', 'lock')" label="Parent" :value="(locById(N.parent) || {}).name" :sub="(locById(N.parent) || {}).code" data-testid="locked-parent"/>
+      <ApiSelect v-else-if="!is('parent', 'hide')" v-model="N.parent" module="locations" label="Parent" required placeholder="Choose a parent" :error="N.tried && !N.parent ? 'Choose where it sits.' : ''" @create="createParent"/>
+    </form>`
   };
+  defineForm('Locations', { title: 'New location', size: 'md', component: LocationForm, labels: { name: 'Name', code: 'Code', type: 'Type', parent: 'Parent' },
+    splash: (ctx) => { const pid = (ctx.lock || {}).parent || (ctx.hide || {}).parent; if (pid && (!locById(pid) || !inScope(pid))) return { refused: "You can't add locations under that one." }; return null; } });
+  const NewLocationDialog = { template: `` };   /* kept so pages that mount it still build; G.newLoc now opens the form (P100) */
 
   /* ---------- Locations list: tree table (cards on phones) */
   const LocationsPage = {
