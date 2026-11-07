@@ -4,7 +4,7 @@
 
 ## 01. Platform core: identity & access
 
-Shared kernel with Cobley (same table and column names) plus organization_id for tenancy. Users, statuses, organisations, roles with JSON permissions, menus. Builder URLs are path-based: /{org.slug}/forms.
+Shared kernel with Cobley (same table and column names) plus organization_id for tenancy. Users, statuses, roles with JSON permissions, menus. An organisation is the root of its location tree (P103). Builder URLs are path-based: /{org.slug}/forms.
 
 ```mermaid
 erDiagram
@@ -51,34 +51,6 @@ erDiagram
         string ip
         timestamp last_used_at
         timestamp expires_at "30 days"
-    }
-    ORGANIZATIONS {
-        bigint id PK
-        ulid public_id UK "exposed in API"
-        string name
-        string slug UK "path segment /{org}"
-        bigint root_location_id FK "locations.id of type organization"
-        json branding "logo, accent (preset key or #rrggbb), accent_tokens (derived, P46), default theme"
-        string timezone "default Africa/Dar_es_Salaam"
-        json summary_view_defaults "per question type chart view"
-        boolean require_2fa
-        bigint status_id FK "statuses.id"
-        bigint created_by_id FK "users.id"
-        bigint updated_by_id FK "users.id, nullable"
-        timestamp deleted_at "soft delete"
-        char uuid UK "uuid()"
-    }
-    ORGANIZATION_USERS {
-        bigint id PK
-        bigint organization_id FK
-        bigint user_id FK
-        bigint role_id FK "MAIN role (role_type = system): owner | admin | editor | viewer"
-        boolean is_owner "exactly one per org; owner role locked"
-        timestamp joined_at
-        bigint created_by_id FK "users.id"
-        bigint updated_by_id FK "users.id, nullable"
-        timestamp deleted_at "soft delete"
-        char uuid UK "uuid()"
     }
     ROLES {
         bigint id PK
@@ -137,17 +109,12 @@ erDiagram
         timestamp ended_at
     }
 
-    ORGANIZATIONS ||--o{ ORGANIZATION_USERS : "has members"
-    USERS ||--o{ ORGANIZATION_USERS : "joins"
-    USERS ||--o{ ORGANIZATIONS : "owns"
     USERS ||--o{ USER_TRUSTED_DEVICES : "remembers"
-    ORGANIZATIONS |o--o{ ROLES : "defines custom"
-    ROLES ||--o{ ORGANIZATION_USERS : "main role of"
+    LOCATIONS |o--o{ ROLES : "organisation defines custom"
     STATUSES ||--o{ USERS : "status of"
-    STATUSES ||--o{ ORGANIZATIONS : "status of"
     STATUSES ||--o{ ROLES : "status of"
     MENUS |o--o{ MENUS : "parent of"
-    ORGANIZATIONS ||--o{ IMPERSONATION_SESSIONS : "audits"
+    LOCATIONS ||--o{ IMPERSONATION_SESSIONS : "organisation audits"
     USERS ||--o{ IMPERSONATION_SESSIONS : "views as"
     ROLES |o--o{ IMPERSONATION_SESSIONS : "previewed in"
     LOCATIONS |o--o{ IMPERSONATION_SESSIONS : "context of"
@@ -157,9 +124,7 @@ erDiagram
 - **WORKFLOW_STATUSES (pattern)**: P47. Every workflow people see and filter by (requests in the core; forms, attempts, responses, invitations in Fomu; a product's bookings, invoices, orders) has its own `<workflow>_statuses` table. Code, transitions, guards, posting rules, tests and reports use `code` only; labels, Swahili, tone and order are edited in Settings › Statuses and audited. Adding a code is a migration plus a transition in code, never an admin action. Records hold `<workflow>_status_id`; no denormalised code copy. Technical pipeline states nobody relabels (notification deliveries, device tokens, exports, webhook deliveries) stay enums.
 - **USERS**: Cobley users + Fomu 2FA columns. Global: one user can belong to several organisations. Related Cobley auth tables kept as-is: otps, user_invitations, force_password_resets, personal_access_tokens, user_device_tokens.
 - **USER_TRUSTED_DEVICES**: Fomu addition. Skips the 2FA step on a remembered device.
-- **ORGANIZATIONS**: Fomu tenant. Every tenant-owned table carries organization_id behind a global scope. The org is also the root node of its location tree.
-- **ORGANIZATION_USERS**: Membership + the user's one main role in this organisation. Location-specific custom roles live on user_locations. UNIQUE(organization_id, user_id).
-- **ROLES**: Cobley roles + organization_id. System roles are assigned on organization_users; custom roles only on user_locations (never as a main role). Multi-valued index on permissions.
+- **ROLES**: Cobley roles + organization_id. System (main) roles are assigned on the member's primary user_locations row (role_id); custom roles only in user_locations.roles (never as a main role). Multi-valued index on permissions.
 - **PERMISSIONS**: Cobley core catalogue, seeded by the app (Cobley's Module.action naming). Global, not editable by tenants.
 - **MENUS**: Cobley menus + three display columns. Parent visible when ANY child is visible (OR).
 - **IMPERSONATION_SESSIONS**: Fomu addition: audit for 'View as'. Read-only mode; every write is refused while a session is open.
@@ -188,7 +153,8 @@ erDiagram
         string name "UNIQUE(organization_id, name)"
         string code "UNIQUE(organization_id, code), e.g. ARU-01"
         bigint location_type_id FK
-        bigint parent_id FK "self, NULL only for the org root"
+        bigint parent_id FK "self; NULL = a root location, which is an organisation (P103)"
+        string slug UK "only on a root location: the path segment /{org} (P103)"
         boolean allow_sales "Cobley core (unused by Fomu)"
         bigint status_id FK "statuses.id"
         string address "Fomu addition"
@@ -214,6 +180,7 @@ erDiagram
         bigint user_id FK
         bigint location_id FK
         boolean is_primary "one primary per user per organisation"
+        bigint role_id FK "MAIN role (role_type = system: owner | admin | editor | viewer), on the primary row only (P103)"
         json roles "several CUSTOM role ids (role_type = custom)"
         json granted_permissions "extra permission names at this location"
         json denied_permissions "removed here; deny always wins"
@@ -239,10 +206,9 @@ erDiagram
         bigint region_id
     }
 
-    ORGANIZATIONS ||--o{ LOCATIONS : "has"
-    LOCATIONS |o--o| ORGANIZATIONS : "is root of"
+    LOCATIONS ||--o{ LOCATIONS : "organisation (root) holds, via organization_id"
     LOCATION_TYPES ||--o{ LOCATIONS : "classifies"
-    ORGANIZATIONS |o--o{ LOCATION_TYPES : "defines"
+    LOCATIONS |o--o{ LOCATION_TYPES : "organisation defines"
     LOCATIONS |o--o{ LOCATIONS : "parent of"
     LOCATIONS ||--o{ LOCATION_CLOSURES : "ancestor in"
     STATUSES ||--o{ LOCATIONS : "status of"
@@ -253,9 +219,9 @@ erDiagram
 ```
 
 - **LOCATION_TYPES**: Cobley core + organization_id so tenants can add their own types.
-- **LOCATIONS**: Cobley location tree + organization_id and contact/geo columns. The manager is not stored here: it is whoever holds a Manager custom role in user_locations.
+- **LOCATIONS**: Cobley location tree + organization_id and contact/geo columns. **A root location (parent_id NULL) is an organisation (P103)**: it carries the slug, its id is the organization_id of every row in its tree (itself included), and its own settings (branding, require_2fa, time zone, quiet hours) live in settings rows scoped to it. The manager is not stored here: it is whoever holds a Manager custom role in user_locations.
 - **LOCATION_CLOSURES**: Cobley core. Every ancestor/descendant pair, so 'this location and everything under it' is one indexed query. Maintained on create/move.
-- **USER_LOCATIONS**: Cobley core minus role_id (main roles stay on organization_users). Applies to the location and its descendants. UNIQUE(user_id, location_id). Multi-valued indexes on the three JSON arrays; changes written to the activity log.
+- **USER_LOCATIONS**: Cobley core. Membership (P103): a person is a member of an organisation when they have a row anywhere in its tree; their one MAIN role is role_id on their primary row in that organisation (is_primary, one per organisation). Applies to the location and its descendants. UNIQUE(user_id, location_id). Multi-valued indexes on the three JSON arrays; changes written to the activity log.
 - **COUNTRIES**: Cobley reference list (global).
 - **WARDS**: Cobley reference list of Tanzanian wards (global).
 
@@ -387,7 +353,7 @@ erDiagram
         char uuid UK "uuid()"
     }
 
-    ORGANIZATIONS ||--o{ REQUEST_TYPES : "defines"
+    LOCATIONS ||--o{ REQUEST_TYPES : "organisation defines"
     REQUEST_TYPES ||--|{ REQUEST_TYPE_STEPS : "has steps"
     REQUEST_TYPES ||--o{ REQUESTS : "typed as"
     USERS ||--o{ REQUESTS : "raises"
