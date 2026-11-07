@@ -4,7 +4,7 @@ A product's phone app is its own app, drawn for a phone only (360 to 430 pixels 
 
 ## What is the same as the web
 
-- The modules: `phone/src/modules/{module}/`, with a `module.ts` that says which screens and actions the phone offers. A phone usually shows fewer modules (Shelui Tasks: my work, tasks, tickets, alerts).
+- The modules: each web module's `phone/` subfolder holds its phone screens and sheets, and its `module.ts` says which screens and actions the phone offers. A phone-only entry (`web/src/main.phone.ts`, `VITE_APP=1`) builds them without the desktop layout; `mobile/` (NativePHP, from `templates/mobile`) packages that build into the Android app. A phone usually shows fewer modules (Shelui Tasks: my work, tasks, tickets, alerts).
 - Links: a `RecordLink` on the phone opens a bottom sheet.
 - Strict TypeScript, the convention tests, the plan, tracker and guide.
 

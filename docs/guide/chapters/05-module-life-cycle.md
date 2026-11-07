@@ -44,7 +44,7 @@ In `web/src/modules/{module}/`:
 
 ## 7. The phone side (if the phone shows it)
 
-`phone/src/modules/{module}/`: its `module.ts` (which screens and actions the phone offers), its screens and sheets, its locales and tests.
+In the same web module folder: list the phone's screens and actions under `phone` in `module.ts`, and draw them in `web/src/modules/{module}/phone/` (screens, sheets), reusing the module's composables, locales and API calls. `mobile/` packages the phone build; it holds no module code.
 
 ## 8. Explain it
 

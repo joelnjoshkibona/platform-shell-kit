@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 BASE="${1:-origin/main}"
 CHANGED="$(git diff --name-only "$BASE"...HEAD; git diff --name-only; git diff --name-only --cached; git ls-files --others --exclude-standard)"
-code=$(printf '%s\n' "$CHANGED" | grep -E '^(api|web|phone)/' | sort -u || true)
+code=$(printf '%s\n' "$CHANGED" | grep -E '^(api|web|mobile)/' | sort -u || true)
 fail=0
 if [ -n "$code" ]; then
   for need in "docs/PROGRESS.md|the progress tracker row (docs/PROGRESS.md)" "docs/IMPLEMENTATION_PLAN.md|the implementation plan step (docs/IMPLEMENTATION_PLAN.md)" "docs/guide/chapters/|the guide chapter that explains it (docs/guide/chapters/)"; do

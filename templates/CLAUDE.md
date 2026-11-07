@@ -37,7 +37,8 @@ api/     Laravel (laravel/framework ^13) — the Cobley backend, the base we bui
   app/Modules/{Kernel|Core|Custom}/{Group}/{Module}/   one folder per module (P80): module.json, controller, model, routes, migrations, seeders, services, actions, tests
 web/     Vue 3 + Vite + strict TypeScript + Tailwind + shadcn-vue SPA (created in Phase 0)
   src/modules/{module}/   module.ts (defineModule), routes, pages, components, composables, locales, tests
-phone/   the phone app, if the product has one: src/modules/{module}/ for the modules it shows
+  src/modules/{module}/phone/   the phone app's screens for the module; src/main.phone.ts builds them (VITE_APP=1)
+mobile/  the phone app's NativePHP shell (from the kit's templates/mobile), if the product has one
 docs/    product, design (prototype, screenshots, screens), frontend rules, components, architecture,
          guide/ (chapters + index.html), BUILD_PLAN.md, IMPLEMENTATION_PLAN.md, PROGRESS.md
 tools/prototype-shots/   screenshots of the prototype + side-by-side compare with the app
@@ -68,7 +69,7 @@ tools/guide/             build.py (chapters → index.html), check.sh (P92), bui
   - every related record is a `RecordLink`; a child tab is the child's own scoped list;
   - lists follow the list contract; responses follow P88 (`version`, 409, `errors`);
   - strict TypeScript; the convention tests must pass.
-- **Plan, tracker and guide (P91, P92):** every pull request that changes `api/`, `web/` or `phone/` also, in the same PR:
+- **Plan, tracker and guide (P91, P92):** every pull request that changes `api/`, `web/` or `mobile/` also, in the same PR:
   - names its step in `docs/IMPLEMENTATION_PLAN.md` and corrects the step if the work differed;
   - updates its row in `docs/PROGRESS.md` (status, PR, date, how it was verified);
   - adds or updates the chapter in `docs/guide/chapters/` that explains it for a beginner (why, files, commands, checks), and rebuilds `docs/guide/index.html` with `python3 tools/guide/build.py`;

@@ -2,7 +2,7 @@
 
 # {{PRODUCT_NAME}}: implementation plan
 
-The build plan's phases (`docs/BUILD_PLAN.md`) broken into **numbered steps**. A step is small enough to finish and check in a day or two. Every pull request that changes `api/`, `web/` or `phone/` names its step, corrects the step here if the work differed, updates its row in `docs/PROGRESS.md` and the guide chapter that explains it (`tools/guide/check.sh` enforces it).
+The build plan's phases (`docs/BUILD_PLAN.md`) broken into **numbered steps**. A step is small enough to finish and check in a day or two. Every pull request that changes `api/`, `web/` or `mobile/` names its step, corrects the step here if the work differed, updates its row in `docs/PROGRESS.md` and the guide chapter that explains it (`tools/guide/check.sh` enforces it).
 
 How to write a step:
 
@@ -17,7 +17,7 @@ How to write a step:
 ## Phase 0: Foundation
 
 ### 0.1 Repository and tooling
-- **Goal**: `api/`, `web/` (and `phone/`) exist, install and start; CI runs on every pull request.
+- **Goal**: `api/`, `web/` (and `mobile/`) exist, install and start; CI runs on every pull request.
 - **Files**: `api/`, `web/package.json`, `web/tsconfig.json` (strict, P89), `.github/workflows/ci.yml`, `tools/guide/`.
 - **Commands**: `cd api && composer install && php artisan key:generate`; `cd web && npm i && npm run dev`.
 - **Check**: CI is green: Pest, `vue-tsc --noEmit`, lint, unit tests, `tools/guide/check.sh`.

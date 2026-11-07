@@ -31,8 +31,11 @@ web/src/modules/tasks/
   locales/  en.json  sw.json      merged under the module's namespace
   tests/  tasks.spec.ts  tasks.e2e.ts
 
-phone/src/modules/tasks/          only the modules the phone shows (Shelui D27)
-  module.ts  screens/  sheets/  locales/  tests/
+  phone/  screens/ sheets/        the phone app's screens for this module (only if module.ts lists them)
+
+web/src/main.phone.ts             the phone-only entry (VITE_APP=1): never loads the desktop layout
+web/src/phone/                    the phone contract: bridge, network, lifecycle, backstack, secureStore, lock, …
+mobile/                           the NativePHP shell from templates/mobile: packages the phone build
 ```
 
 Generator source: `SYSTEM_SHELL/BACKEND/app/Project/Modules/Core/Locations/Countries/`, `SYSTEM_SHELL/FRONTEND/src/pages/modules/countries/`, `docs/guide/architecture.md` (tiers). Kept: the folder and the names. Changed: tiers are Kernel, Core and Custom only; the phone has the same shape; nothing outside the folder.
@@ -60,7 +63,7 @@ API `module.json`:
 }
 ```
 
-Web and phone `module.ts`:
+Web `module.ts` (the phone screens are declared here too):
 ```ts
 export default defineModule({
   key: 'Tasks',                     // ModuleKey: the union of every registered key
@@ -71,6 +74,7 @@ export default defineModule({
   preview: () => import('./components/TasksPreview.vue'),   // what a RecordLink opens in a sheet
   backParent: 'tasks',              // Back with no trail (P49)
   menu: { group: 'Work', label: 'tasks.menu', icon: 'ListChecks', order: 10, permission: 'Tasks.list' },
+  phone: { screens: { list: () => import('./phone/screens/TasksScreen.vue'), details: () => import('./phone/screens/TaskScreen.vue') }, actions: ['setStatus'] },
   actions: { move: { label: 'tasks.move', icon: 'CornerDownRight', permission: 'Tasks.move', placement: 'more', opens: () => import('./components/TasksMoveDialog.vue') } },
 })
 ```
@@ -86,7 +90,7 @@ API, in the module provider's `boot()`:
 4. Register `{dir}/Providers/*` and `{dir}/Policies/*`.
 5. The system seeder calls each `{Module}Seeder`, which upserts the CRUD permissions (`list, view, create, edit, delete, bulkAction`), the manifest's extra permissions and its menu row by route.
 
-Web and phone, in `main.ts`:
+Web, in `main.ts` (and `main.phone.ts` for the phone build, which registers each module's `phone` screens):
 1. `import.meta.glob('./modules/*/module.ts', { eager: true })`.
 2. For each: add its routes under the app layout, its menu entry, its locales under its namespace, its actions and its link entry.
 
