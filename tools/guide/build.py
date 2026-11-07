@@ -111,7 +111,7 @@ for title, f in pages:
 nav = []; cnum = 0
 for c in chapters:
     label = c['title'] if c['extra'] else (str(cnum) + '. ' + c['title'] if cnum else c['title']); cnum += 0 if c['extra'] else 1
-    nav.append('<li><a href="#' + c['id'] + '" class="ch">' + html.escape(label) + '</a>' + ('<ul>' + ''.join('<li><a href="#' + h[2] + '">' + html.escape(h[1]) + '</a></li>' for h in c['heads']) + '</ul>' if c['heads'] else '') + '</li>')
+    nav.append('<li><a href="#' + c['id'] + '" class="ch">' + inline(label) + '</a>' + ('<ul>' + ''.join('<li><a href="#' + h[2] + '">' + inline(h[1]) + '</a></li>' for h in c['heads']) + '</ul>' if c['heads'] else '') + '</li>')
 main = '\n'.join('<section class="chapter" data-src="' + html.escape(c['src']) + '">' + c['html'] + '<p class="src">Source: <code>' + html.escape(c['src']) + '</code></p></section>' for c in chapters)
 CSS = r"""
 :root{--bg:#fbfbfa;--panel:#ffffff;--fg:#1c1d21;--muted:#62646c;--line:#e6e6e3;--accent:#1d5fd1;--accent-bg:#eaf1fd;--code:#f3f3f1;--note:#eaf1fd;--tip:#e8f6ef;--tip-fg:#13724a;--warn:#fdf2e3;--warn-fg:#9a5b06;--why:#f1edfb;--why-fg:#5b3fb5;color-scheme:light}
@@ -124,13 +124,13 @@ nav.side{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid
 nav.side h1{font-size:15px;line-height:1.3;margin:0 0 4px}nav.side .meta{color:var(--muted);font-size:12px;margin:0 0 14px}
 nav.side input{width:100%;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);padding:0 10px;font:inherit;font-size:14px}
 nav.side ul{list-style:none;margin:0;padding:0}nav.side>ul{margin-top:14px}nav.side li{margin:1px 0}nav.side a{display:block;text-decoration:none;color:var(--fg);font-size:14px;padding:4px 8px;border-radius:6px}
-nav.side a:hover{background:var(--accent-bg)}nav.side a.ch{font-weight:600}nav.side li ul a{color:var(--muted);font-size:13px;padding-left:18px}nav.side a.on{background:var(--accent-bg);color:var(--accent)}
+nav.side a:hover{background:var(--accent-bg)}nav.side a.ch{font-weight:600}nav.side li ul a{color:var(--muted);font-size:13px;padding-left:18px}nav.side code{font-size:.85em;padding:0 .25em}nav.side a.on{background:var(--accent-bg);color:var(--accent)}
 .tools{display:flex;gap:6px;margin-top:10px}.tools button{flex:1;height:30px;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:7px;font:inherit;font-size:12px;cursor:pointer}
 main{padding:40px clamp(16px,5vw,64px) 80px;max-width:900px}
 .chapter{padding-bottom:40px;margin-bottom:40px;border-bottom:1px solid var(--line)}
 h1{font-size:32px;line-height:1.2;letter-spacing:-.02em;margin:0 0 16px;text-wrap:balance}h2{font-size:22px;margin:36px 0 10px;letter-spacing:-.01em}h3{font-size:18px;margin:26px 0 8px}h4{font-size:16px;margin:20px 0 6px}
 h2 .anchor,h3 .anchor,h4 .anchor{opacity:0;margin-left:-1em;padding-right:.25em;text-decoration:none;color:var(--muted)}h2:hover .anchor,h3:hover .anchor,h4:hover .anchor{opacity:1}
-p,li{max-width:72ch}p,li,td,th,.box{overflow-wrap:anywhere}main{min-width:0}ul,ol{padding-left:1.4em}li{margin:4px 0}hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+p,li{max-width:72ch}p,li,.box{overflow-wrap:anywhere}th,td{min-width:7.5rem;overflow-wrap:break-word}th:first-child,td:first-child{min-width:4rem}main{min-width:0}ul,ol{padding-left:1.4em}li{margin:4px 0}hr{border:0;border-top:1px solid var(--line);margin:28px 0}
 .code{position:relative;margin:14px 0;border:1px solid var(--line);border-radius:10px;background:var(--code)}.code pre{margin:0;overflow:auto;padding:14px 16px;font-size:13.5px;line-height:1.55}.code code{background:none;padding:0}
 .code .lang{position:absolute;top:6px;right:62px;font:11px ui-monospace,monospace;color:var(--muted)}.code .copy{position:absolute;top:5px;right:6px;height:24px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;font-size:11px;cursor:pointer}
 .table{overflow:auto;margin:14px 0;border:1px solid var(--line);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;vertical-align:top;padding:8px 12px;border-bottom:1px solid var(--line)}th{background:var(--code);font-weight:600}tr:last-child td{border-bottom:0}
