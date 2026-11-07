@@ -140,21 +140,28 @@ Tokens, type, components inventory, layout rules. Build it in web/ as the living
 
 - **Personal notification settings (D43)** — [desktop-light](screenshots/user-menu--notification-settings__desktop-light.png), [phone-dark](screenshots/user-menu--notification-settings__phone-dark.png)
 
+## System screens (P97)
+
+Designed from SYSTEM_SHELL's backend (`app/Project/Logs`, `Queue`, `ScheduledTasks`; `Modules/Core/Trash`, `Notifications`). Each is a list page (P24, P40) with a details sheet.
+
+| Screen | Route | What it shows | Permissions | Screenshots |
+| --- | --- | --- | --- | --- |
+| Logs | `/logs?tab=activity\|signins\|errors\|requests` | Activity (who did what, RecordLinks to the records), sign-ins (failed ones flagged), errors grouped with counts and the call stack in a sheet, slow or failed requests; Export (P95) | `Logs.list` | `logs__*` |
+| Queue | `/queue` | KPIs; jobs by status (failed first) with progress, tries, who started them; a job sheet with the error; Retry failed, Retry, Cancel, Delete | `Queue.list`, `Queue.retry` | `queue__*` |
+| Scheduled tasks | `/scheduled-tasks` | Every cron task in words with its command, how often, last run (worked or failed, when, how long), next run; Run now; a sheet with recent runs and pause or resume | `ScheduledTasks.list`, `ScheduledTasks.manage` | `scheduled-tasks__*` |
+| Trash | `/trash` | Deleted records by module, who deleted them, days left (warning under a week), what went with them; Restore; Delete for good and Empty trash behind the YES gate | `Trash.list`, `Trash.restore`, `Trash.purge` | `trash__*` |
+| Notifications | `/notifications?tab=inbox\|settings\|rules\|announcements` | Inbox; my channels per kind and quiet hours; admin rules (who is told about what by which channel); announcements (Broadcasts folded in) with Send an announcement (who by role, channels, now or scheduled) | `Notifications.list`, `Notifications.manage`, `Notifications.announce` | `notifications__*` |
+| Permissions | `/permissions` | Every permission in words with its name and module, how many roles and people have it; a sheet with the roles (RecordLinks) and people | `Permissions.list` | `permissions__*` |
+
 ## In the menu but not designed
 
-These menu items exist (with permissions) but the prototype shows a placeholder. Build them in Phase 7 with the standard list + details pattern from `FRONTEND_RULES.md`, using Cobley's backend behaviour for the module. Raise a question in the PR if a screen needs more than the pattern gives.
+These menu items exist (with permissions) but the prototype shows a placeholder. Reports is redesigned by P96 (proposal); background work and its results by P95.
 
 | Menu | Permission |
 | --- | --- |
-| Permissions | `Permissions.list` |
 | Countries | `Countries.list` |
 | Mobile Releases | `MobileReleases.list` |
 | Reports | `Reports.list` |
-| Logs | `Logs.list` |
-| Scheduled Tasks | `ScheduledTasks.list` |
-| Notifications | `Notifications.list` |
-| Notification settings (system) | `NotificationSettings.manage` |
-| Broadcasts | `Broadcasts.send` |
 
 ## Prototype-only (do not build)
 

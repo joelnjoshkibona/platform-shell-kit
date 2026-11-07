@@ -401,9 +401,9 @@ const ShellMod = (() => {
     { id: 'reports', label: 'Reports', icon: 'ChartColumn', route: 'reports', perm: 'Reports.list', visible: true },
     { id: 'system', label: 'System', icon: 'Server', mode: 'panel', anim: 'default', visible: true,
       groups: [
-        { label: 'Monitoring', items: [{ id: 'logs', label: 'Logs', icon: 'History', route: 'logs', perm: 'Logs.list' }, { id: 'queue', label: 'Queue', icon: 'ListOrdered', route: 'queue', badge: '3', perm: 'Queue.list' }, { id: 'tasks', label: 'Scheduled Tasks', icon: 'CalendarClock', route: 'tasks', perm: 'ScheduledTasks.list' }] },
-        { label: 'Messaging', items: [{ id: 'notifications', label: 'Notifications', icon: 'Bell', route: 'notifications', perm: 'Notifications.list' }, { id: 'notif-settings', label: 'Notification settings', icon: 'Settings2', route: 'notif-settings', perm: 'NotificationSettings.manage' }, { id: 'broadcasts', label: 'Broadcasts', icon: 'Megaphone', route: 'broadcasts', perm: 'Broadcasts.send' }] },
-        { label: 'Content', items: [{ id: 'media', label: 'Media', icon: 'FolderOpen', route: 'media', perm: 'Media.list' }] },
+        { label: 'Monitoring', items: [{ id: 'logs', label: 'Logs', icon: 'History', route: 'logs', perm: 'Logs.list' }, { id: 'queue', label: 'Queue', icon: 'ListOrdered', route: 'queue', badge: '3', perm: 'Queue.list' }, { id: 'scheduled-tasks', label: 'Scheduled tasks', icon: 'CalendarClock', route: 'scheduled-tasks', perm: 'ScheduledTasks.list' }] },
+        { label: 'Messaging', items: [{ id: 'notifications', label: 'Notifications', icon: 'Bell', route: 'notifications', perm: 'Notifications.list' }] },
+        { label: 'Content', items: [{ id: 'media', label: 'Media', icon: 'FolderOpen', route: 'media', perm: 'Media.list' }, { id: 'trash', label: 'Trash', icon: 'Trash2', route: 'trash', perm: 'Trash.list' }] },
       ] },
     { id: 'config', label: 'Configuration', icon: 'SlidersHorizontal', mode: 'panel', anim: 'default', visible: true,
       groups: [{ label: '', items: [{ id: 'workspace', label: 'Settings', icon: 'Settings', route: 'workspace', perm: 'Settings.manage' }, { id: 'menus', label: 'Menu Management', icon: 'ListTree', route: 'menus', perm: 'Menus.manage' }, { id: 'request-types', label: 'Approval workflows', icon: 'Workflow', route: 'request-types', perm: 'RequestTypes.list' }] }] },
@@ -427,8 +427,8 @@ const ShellMod = (() => {
     { name: 'Users.list', label: 'See users', module: 'Users and access' }, { name: 'Users.invite', label: 'Invite and remove users', module: 'Users and access' }, { name: 'Roles.list', label: 'See roles', module: 'Users and access' }, { name: 'Roles.manage', label: 'Create and edit roles', module: 'Users and access' }, { name: 'Permissions.list', label: 'See permission catalogue', module: 'Users and access' }, { name: 'Users.impersonate', label: 'View as another person', module: 'Users and access' },
     { name: 'Locations.list', label: 'See locations', module: 'Locations' }, { name: 'Locations.manage', label: 'Create and edit locations', module: 'Locations' }, { name: 'Locations.assign', label: 'Assign people and location roles', module: 'Locations' }, { name: 'Countries.list', label: 'See countries', module: 'Locations' },
     { name: 'MobileReleases.list', label: 'See mobile releases', module: 'Mobile and reports' }, { name: 'MobileReleases.publish', label: 'Publish mobile releases', module: 'Mobile and reports' }, { name: 'Reports.list', label: 'See reports', module: 'Mobile and reports' },
-    { name: 'Logs.list', label: 'See logs', module: 'System' }, { name: 'Queue.list', label: 'See queue', module: 'System' }, { name: 'Queue.retry', label: 'Retry failed jobs', module: 'System' }, { name: 'ScheduledTasks.list', label: 'See scheduled tasks', module: 'System' },
-    { name: 'Notifications.list', label: 'See notifications', module: 'System' }, { name: 'NotificationSettings.manage', label: 'Manage notification settings', module: 'System' }, { name: 'Broadcasts.send', label: 'Send broadcasts', module: 'System' }, { name: 'Media.list', label: 'See media library', module: 'System' },
+    { name: 'Logs.list', label: 'See logs', module: 'System' }, { name: 'Queue.list', label: 'See queue', module: 'System' }, { name: 'Queue.retry', label: 'Retry, cancel and delete jobs', module: 'System' }, { name: 'ScheduledTasks.manage', label: 'Run, pause and resume scheduled tasks', module: 'System' }, { name: 'Trash.list', label: 'See deleted records', module: 'System' }, { name: 'Trash.restore', label: 'Restore deleted records', module: 'System' }, { name: 'Trash.purge', label: 'Delete records for good and empty the trash', module: 'System' }, { name: 'ScheduledTasks.list', label: 'See scheduled tasks', module: 'System' },
+    { name: 'Notifications.list', label: 'See notifications', module: 'System' }, { name: 'Notifications.manage', label: 'Set who is told about what (notification rules)', module: 'System' }, { name: 'Notifications.announce', label: 'Send announcements', module: 'System' }, { name: 'Media.list', label: 'See media library', module: 'System' },
     { name: 'Requests.list', label: 'See approval requests', module: 'Approvals' }, { name: 'Requests.create', label: 'Send requests for approval', module: 'Approvals' }, { name: 'Requests.manage', label: 'See and cancel all requests', module: 'Approvals' }, { name: 'Delegations.list', label: 'See and set delegations', module: 'Approvals' }, { name: 'RequestTypes.list', label: 'See approval workflows', module: 'Approvals' }, { name: 'RequestTypes.manage', label: 'Edit approval workflows', module: 'Approvals' },
     { name: 'Settings.manage', label: 'Manage workspace settings', module: 'Configuration' }, { name: 'Menus.manage', label: 'Manage menus', module: 'Configuration' },
   ];
@@ -1561,6 +1561,12 @@ const ShellMod = (() => {
           <RolePage v-else-if="G.view==='role'"/>
           <LocationsPage v-else-if="G.view==='locations'"/>
           <LocationPage v-else-if="G.view==='location'"/>
+          <LogsPage v-else-if="G.view==='logs'"/>
+          <QueuePage v-else-if="G.view==='queue'"/>
+          <ScheduledTasksPage v-else-if="G.view==='scheduled-tasks'"/>
+          <TrashPage v-else-if="G.view==='trash'"/>
+          <NotificationsPage v-else-if="G.view==='notifications'"/>
+          <PermissionsPage v-else-if="G.view==='permissions'"/>
           <PlaceholderPage v-else/>
         </main>
       </div>
