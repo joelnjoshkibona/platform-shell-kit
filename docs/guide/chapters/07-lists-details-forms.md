@@ -20,6 +20,10 @@ Every screen of a product is one of a few shapes. Each shape is decided once (th
 - Create and edit open as one dialog. Every form keeps a **draft** on the server as you type, and offers it back if you leave and return.
 - No browser-native pickers: dates, times, files and selects use the library's pickers. Required fields have an asterisk.
 
+## Reports (P96)
+
+A report is a list page like any other (the same toolbar, Filters, quick tabs and search), with two more dialogs, Group and Columns. It lets people shape the numbers themselves: which columns (pinned or not), totals for the rows shown or for everything the filters match, grouping with subtotals, and a chart built with Highcharts. A view is saved for yourself or shared. The table exports as Excel, CSV or PDF (made on the server, in the background); the chart downloads as a picture or as data.
+
 ## Exports, reports and imports (P95)
 
 Anything that takes more than a few seconds runs in the background. The button says so and you keep working. When it ends, a notification opens its **job page**: what you asked for, the result with Download and its first rows, or what went wrong in plain words, and Run again. Everything you started is under **My exports and reports** in the avatar menu.

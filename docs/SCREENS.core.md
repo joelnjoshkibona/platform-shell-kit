@@ -160,15 +160,21 @@ Designed from SYSTEM_SHELL's backend (`app/Project/Logs`, `Queue`, `ScheduledTas
 | My exports and reports | `/my-jobs` (avatar menu) | The person's runs by status (Running, Ready, Failed), with the progress, the rows and the days kept; Download on a ready row | `my-jobs__*` |
 | Job page | `/jobs/JOB-0041` | What was asked; progress; the result with Download and the first rows; errors in plain words; expired; Run again, Cancel | `job__*` |
 
+## Reports (P96)
+
+| Screen | Route | What it shows | Screenshots |
+| --- | --- | --- | --- |
+| Reports | `/reports` | The reports the person can open, with their module, saved views and rows | `reports__*` |
+| Report | `/reports/{id}` | A list page: saved views and Save view; the chart builder; the list card with Refresh, Filters (simple and advanced), Sort, Group (dialog), Columns (dialog with pins and totals), Export (Excel, CSV, PDF as a job); quick tabs by payment; search; chips; the aggregate strip, Totals row and All rows switches; the chart builder (Highcharts) with Download (PNG, SVG, PDF, data); the table with a fixed header, pinned columns and totals row, paged | `report__*` |
+
 ## In the menu but not designed
 
-These menu items exist (with permissions) but the prototype shows a placeholder. Reports is redesigned by P96 (proposal); background work and its results by P95.
+These menu items exist (with permissions) but the prototype shows a placeholder.
 
 | Menu | Permission |
 | --- | --- |
 | Countries | `Countries.list` |
 | Mobile Releases | `MobileReleases.list` |
-| Reports | `Reports.list` |
 
 ## Prototype-only (do not build)
 

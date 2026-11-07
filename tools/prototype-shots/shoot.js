@@ -51,6 +51,7 @@ const SCREENS = [
   ['delegations', 'Delegations', { full: true }], ['media', 'Media library', { full: true }], ['workspace', 'Settings', { full: true }],
   ['logs', 'Logs (activity, sign-ins, errors, requests)', { full: true }], ['queue', 'Queue', { full: true }], ['scheduled-tasks', 'Scheduled tasks', { full: true }],
   ['trash', 'Trash', { full: true }], ['notifications', 'Notifications (inbox, settings, rules, announcements)', { full: true }], ['permissions', 'Permissions', { full: true }],
+  ['reports', 'Reports', { full: true }], ['report', 'Report: Sales lines (table and chart)', { full: true }],
   ['my-jobs', 'My exports and reports', { full: true }], ['job', 'Job page (a ready export)', { full: true }],
   ['menus', 'Menu management', { full: true }], ['design', 'Design system (tokens, components, rules)', { full: true }],
   ['builder', 'Form builder'], ['responses', 'Results and responses', { full: true }], ['respondent', 'Respondent (live form)'],
@@ -117,6 +118,7 @@ const STATES = [
       if (u.includes('cdn.tailwindcss.com')) return r.fulfill({ body: 'window.tailwind={};', contentType: 'text/javascript' });
       if (u.includes('vue.global')) return r.fulfill({ path: require.resolve('vue/dist/vue.global.prod.js') });
       if (u.includes('lucide')) return r.fulfill({ path: require.resolve('lucide/dist/umd/lucide.min.js') });
+      if (u.includes('/npm/highcharts@')) return r.fulfill({ path: path.join(path.dirname(require.resolve('highcharts/package.json')), u.split(/highcharts@[^/]+\//)[1]), contentType: 'text/javascript' });   // P96: charts load on report pages only
       if (u.includes('fonts.googleapis.com')) return r.fulfill({ body: FONTS_CSS, contentType: 'text/css' });
       if (u.startsWith('http://fonts.local/')) {
         const [pkg, file] = u.slice('http://fonts.local/'.length).split('/');

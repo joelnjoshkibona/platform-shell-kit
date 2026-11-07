@@ -2057,5 +2057,55 @@
    "Download a large export in the request itself",
    "Show a stack trace to the person who started the job"
   ]
+ },
+ "Report table · Chart builder": {
+  "file": "src/components/app/ReportTable.vue, ColumnsDialog.vue, GroupDialog.vue, ChartBuilder.vue, Chart.vue (inside ListCard)",
+  "props": [
+   [
+    "report",
+    "ReportDef",
+    "",
+    "The definition: fields, views"
+   ],
+   [
+    "view",
+    "ReportView",
+    "",
+    "Filters, columns, pins, groupBy, totals, chart"
+   ],
+   [
+    "rows",
+    "Row[]",
+    "",
+    "The page of rows (or all rows)"
+   ],
+   [
+    "aggregate",
+    "Record<string, number>",
+    "",
+    "Totals of every filtered row, from GET /reports/{id}/aggregate"
+   ]
+  ],
+  "emits": [
+   [
+    "update:view",
+    "the person changed columns, pins, grouping, totals or the chart"
+   ],
+   [
+    "export",
+    "format: xlsx · csv · pdf, starts a job (P95)"
+   ]
+  ],
+  "slots": [],
+  "do": [
+   "Keep the header row, pinned columns and totals row fixed while the table scrolls both ways",
+   "Take totals of every filtered row from the server",
+   "Use Highcharts only, loaded on report pages, with the kit's chart colours"
+  ],
+  "dont": [
+   "Total only the page and call it the total",
+   "Build table exports in the browser",
+   "Add a second chart library"
+  ]
  }
 }

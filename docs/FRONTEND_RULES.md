@@ -335,6 +335,13 @@ Guide: `docs/architecture/MODULES.md`.
 - **List contract (P87)** and **API shape (P88)**: see the backend contract below.
 - **Strict TypeScript (P89)**; **every convention has a test (P90)**.
 
+## Locked: reports (P96)
+
+- A report is a list page: the toolbar is Refresh, Filters, Sort, Group, Columns, then Export; Group and Columns open dialogs like Filters; quick tabs, search and chips as on every list.
+- A report table may scroll both ways inside its card; its header row, pinned columns and totals row always stay put.
+- The totals row is for the rows shown; the aggregate strip (a switch) is for every row the filters match, computed by the server.
+- Charts are Highcharts only, loaded on report pages, in the kit's chart colours; chart pictures and data are made in the browser; table exports run as background jobs.
+
 ## Locked: background work (P95)
 
 - Anything that may take more than a few seconds (export, report, import, big bulk action) starts a job: the button says "We'll let you know when it is ready" and never blocks the page.
@@ -381,6 +388,7 @@ Guide: `docs/architecture/MODULES.md`.
 | Actions (P84) | `POST /{module}/{uuid}/{action}`; `POST /{module}/bulk-action { action, ids[] \| filter, payload }` | Gated by `{Module}.{action}` (and `{Module}.bulkAction`) |
 | Child lists (P86) | `GET /{parent}/{uuid}/{child}/list` and the child's create, edit, delete under the same prefix | Scoped by the server, gated by the child's permissions |
 | Related records (P85) | `{ uuid, label, sub, deleted }` | One eager load per list, soft-deleted included |
+| Reports (P96) | `GET /reports/{id}/rows` (the list contract), `/aggregate` (every filtered row, and per group), `POST /reports/{id}/run` (export job), `/views` | Totals of every filtered row come from `/aggregate`, never from the page |
 | Background work (P95) | `POST /{module}/export` → 202 + the run; `GET /job-runs/list`, `/job-runs/{uuid}/view`, `/download`; `POST /job-runs/{uuid}/rerun`, `/cancel` | The run carries params, status, progress, result, rows, errors, expires_at |
 | Responses (P88) | Body `code` equals the HTTP status; 422 `errors: { field: [messages] }`; writes send `version`, a stale one gets 409 with the current record | API types generated for web and phone |
 
