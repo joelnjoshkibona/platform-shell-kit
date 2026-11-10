@@ -36,3 +36,18 @@ CLAUDE.md                 how an agent works in this repository
 The most important rule of the code: **everything about one thing lives in one folder, under the same name on every side.** To change how tasks work you open `api/app/Modules/Custom/Work/Tasks/`, `web/src/modules/tasks/` and, on the phone, `mobile/resources/spa/src/modules/tasks/`; nothing about tasks is anywhere else. The file names say what they do: `TasksCreateService.php` creates a task, `TasksDetailsPanel.vue` is a task's details panel.
 
 > **Why**: In a large app most time goes into *finding* code. When the folder and the names are predictable, a new developer finds anything in seconds. PROJECT_GENERATOR proved this on many products; the kit made it the rule (P80).
+
+## When the API already exists (P105)
+
+Most products use their own `api/`. Some are a new web app for a system whose Laravel API already runs and keeps serving its old screens. Then the web app talks to that API through **an adapter** in product code, `web/src/backend/index.ts`:
+
+```ts
+import { defineBackend } from '@/app/backend'
+import { existingApi } from './existing'   // headers, sign-in, profile, menu, list and error mapping
+
+export default defineBackend(existingApi)
+```
+
+The adapter turns that API's answers into the kit's contracts (the list contract, P87, and `ApiError` with field errors), so modules never know which backend they run on. It also says which shell parts the backend can serve (drafts, media, search, notifications, view-as, access requests); the rest are left out, not shown broken. Kit files stay untouched, so kit updates keep applying. `api/` and `mobile/` stay in the repository as generated, unused.
+
+> **Why**: Rewriting an API that works, or putting a second backend in front of it, doubles what can break. One small adapter keeps one write path and keeps the product on the kit (P105).
