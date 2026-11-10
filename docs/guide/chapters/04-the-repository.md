@@ -51,3 +51,7 @@ export default defineBackend(existingApi)
 The adapter turns that API's answers into the kit's contracts (the list contract, P87, and `ApiError` with field errors), so modules never know which backend they run on. It also says which shell parts the backend can serve (drafts, media, search, notifications, view-as, access requests); the rest are left out, not shown broken. Kit files stay untouched, so kit updates keep applying. `api/` and `mobile/` stay in the repository as generated, unused.
 
 > **Why**: Rewriting an API that works, or putting a second backend in front of it, doubles what can break. One small adapter keeps one write path and keeps the product on the kit (P105).
+
+### The existing API's own screens (P106)
+
+The kit's core screens (Logs, Queue, …) read their data through a **module client**. The adapter can supply one (`modules: { Logs: { list, error, … } }`) that turns the existing API's answers into the kit's shapes, with the record's own key (an integer id is fine) where the kit says `uuid`. When the existing screen differs too much, a product module **replaces** the kit's (`defineModule({ key: 'OngezaMenus', replaces: ['Menus'] })`) and takes its address. A product adds to a kit screen by declaring, not editing: `logsTabs` for extra Logs tabs, `dashboardWidgets` for Home cards. Home's approvals card and platform figures follow the `approvals` and `platformStats` capabilities.
