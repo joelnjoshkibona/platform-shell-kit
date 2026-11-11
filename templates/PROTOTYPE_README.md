@@ -26,6 +26,7 @@
 | `parts_appr.js` | Approvals: workflows, routing, capacity rule, notifications, inbox, request page, editor, delegations, notification settings |
 | `parts_resp.js` | Results: summary charts, individual responses, filters, export, void/reset |
 | `parts_app.js` | Respondent: OTP, rules, timer, violations, gates, Prototype states panel |
+| `parts_fomu.js` | The example product's hooks into core parts: what its approvals do and where their records are picked from (P107, P108) |
 | `builder.html` | The builder (Questions + Settings), plus the base page: theme tokens, Tailwind config, fonts. The assembly starts from it |
 | `assemble.py` | Stitches everything into `index.html`, and holds the glue: the global store `G` (route, theme, org), `nav()`, the curtain, the Screens pill and app mounting. Its paths point to the original workspace |
 
