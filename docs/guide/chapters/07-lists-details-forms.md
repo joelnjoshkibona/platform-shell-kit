@@ -66,7 +66,7 @@ Dialogs stack: a link inside a dialog opens another on top, at its own size. Clo
 
 Tabs also work from the keyboard (← → Home End), and when there are too many to fit they scroll, with a **More** menu listing them all.
 
-## Actions that need approval (P107)
+## Actions that need approval (P107, P108)
 
 Any action can be put behind an approval workflow (Settings › Approval workflows). The module says what the action is and what happens once it is decided; the approvals engine itself is never edited:
 
@@ -77,7 +77,14 @@ ACTIONS['Proformas.discount'] = { label: 'Discount on a proforma', icon: 'Percen
   reject: (req) => api.dropDiscount(req.subject.id) }   // once, when any step rejects
 ```
 
-In the app the effect runs on the server: the module registers a handler for its action's `approved` and `rejected` events, and the page only refreshes the record.
+The button that does the action goes through the gate, which either runs it or asks for approval. The record brings its own location, because a workflow can apply only to records owned by a branch or zone, and its approvers are found at that location and above:
+
+```js
+approvalGate('Proformas.discount', { kind: 'proforma', id: pf.id, label: pf.no, loc: pf.store, note: reason },
+  () => api.applyDiscount(pf.id))     // runs at once when no workflow applies
+```
+
+In the app the effect runs on the server: the module registers a handler for its action's `approved` and `rejected` events, and the page only refreshes the record. The server also finds the record's location itself; it never trusts the one the page sends.
 
 ## Links between records (P85)
 

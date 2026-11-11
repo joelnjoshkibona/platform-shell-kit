@@ -49,6 +49,31 @@ const TESTS = {
     ok(fx.apply === 1 && fx.reject === 1, `P107: rejecting ran apply ${fx.apply}×, reject ${fx.reject}× in all (want 1, 1)`);
     await done('P107');
   },
+  /* P108: the subject brings its own location (and a note); New request picks from the action's own source */
+  async P108(b) {
+    const { p, done } = await open(b, 'approvals');
+    const need = await p.evaluate(() => [G.approvalNeeded('Forms.publish', 'aru'), G.approvalNeeded('Forms.publish', undefined), G.approvalNeeded('Responses.export', 'aru'), G.approvalNeeded('Responses.export', undefined)]);
+    ok(need.join() === 'true,false,true,true', `P108: approvalNeeded by location gave ${need} (want a location-scoped workflow only with a location; an all-records one always)`);
+    await p.evaluate(() => { window.__ran = 0; G.approvalGate('Forms.publish', { kind: 'form', id: 'f6', label: 'Fire Safety Drill Quiz', loc: 'aru', note: 'Before the drill on Friday' }, () => __ran++); }); await p.waitForTimeout(400);
+    const d = p.locator('[role=dialog]').last();
+    ok((await d.locator('textarea').inputValue()) === 'Before the drill on Friday', 'P108: the gate did not prefill the note');
+    ok((await d.innerText()).includes('Location: Arusha Branch'), 'P108: the route preview is not at the record\'s location');
+    await d.locator('button:has-text("Send for approval")').click(); await p.waitForTimeout(400);
+    const r = await p.evaluate(() => { const r = G.openRequestFor('Forms.publish', { kind: 'form', id: 'f6' }); return r && { loc: r.loc, note: r.note, ran: __ran }; });
+    ok(r && r.loc === 'aru' && r.note === 'Before the drill on Friday' && r.ran === 0, `P108: the request was not made at the record's location with its note (${JSON.stringify(r)})`);
+    await p.evaluate(() => G.approvalGate('Forms.publish', { kind: 'form', id: 'f1', label: 'Customer Service Assessment Q4' }, () => __ran++)); await p.waitForTimeout(200);
+    ok(await p.evaluate(() => __ran) === 1, 'P108: a record with no location should not need the location-scoped workflow');
+    // New request: the action's pick source, the picked record's location
+    await go(p, () => nav('approvals'));
+    await p.locator('main button:has-text("New request")').first().click(); await p.waitForTimeout(400);
+    const d2 = p.locator('[role=dialog]').last();
+    await d2.locator('button:has-text("Choose a form")').first().click(); await p.waitForTimeout(1600);
+    await p.locator('[role=option]:has-text("Branch Opening Checklist")').first().click(); await p.waitForTimeout(300);
+    ok((await d2.innerText()).includes('Location: Arusha Branch'), 'P108: New request does not route at the picked record\'s location');
+    await d2.locator('button:has-text("Send for approval")').click(); await p.waitForTimeout(800);
+    ok(await p.locator('main dd button:has-text("Branch Opening Checklist")').count() === 1, 'P108: the new request\'s About is not a link to the record (pick.open)');
+    await done('P108');
+  },
 };
 
 (async () => {

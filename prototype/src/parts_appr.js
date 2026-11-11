@@ -3,11 +3,14 @@
   /* P47: approval request statuses are a workflow lookup (codes fixed, labels/tone/order editable in Settings › Statuses) */
   const RQ_STATUS = defineWorkflow('request', 'Approval requests', [['draft', 'Draft', 'muted', 'Rasimu'], ['submitted', 'Submitted', 'info', 'Imetumwa'], ['in_review', 'In review', 'wait', 'Inakaguliwa'], ['approved', 'Approved', 'ok', 'Imeidhinishwa', true], ['rejected', 'Rejected', 'bad', 'Imekataliwa', true], ['cancelled', 'Cancelled', 'off', 'Imeghairiwa', true]]);
   const OPEN_RQ = ['submitted', 'in_review'];
-  const ACTIONS = { 'Forms.publish': { label: 'Publish a form', icon: 'Send', effect: 'The form goes live and starts accepting responses.' }, 'Responses.export': { label: 'Export responses', icon: 'FileSpreadsheet', effect: 'The export is generated and the requester gets a download link valid for 24 hours.' }, 'Responses.void': { label: 'Reset a respondent', icon: 'RotateCcw', effect: 'The respondent can answer the form again; their old response is voided.' }, 'Locations.manage': { label: 'Deactivate a location', icon: 'MapPinOff', effect: 'The location is deactivated and its forms stop accepting responses.' } };
+  const ACTIONS = { 'Forms.publish': { label: 'Publish a form', icon: 'Send', effect: 'The form goes live and starts accepting responses.' }, 'Responses.export': { label: 'Export responses', icon: 'FileSpreadsheet', effect: 'The export is generated and the requester gets a download link valid for 24 hours.' }, 'Responses.void': { label: 'Reset a respondent', icon: 'RotateCcw', effect: 'The respondent can answer the form again; their old response is voided.' }, 'Locations.manage': { label: 'Deactivate a location', icon: 'MapPinOff', effect: 'The location is deactivated and its forms stop accepting responses.',
+    pick: { module: 'locations', kind: 'location', label: 'Location', find: (id) => { const l = locById(id); return l && { label: l.name, loc: l.id }; } } } };
   /* EXTENSION POINT (P107): a product's gated actions. ACTIONS[action] = { label, icon, effect, apply?(req), reject?(req) }.
      effect is the sentence on the request page; apply runs once when the last step approves, reject once when any step rejects
      (neither for a cancelled request). A product sets apply / reject from its own code, next to its records (Fomu: parts_fomu.js);
-     the engine names no product record. In the app the effect is the module's server-side approval handler. */
+     the engine names no product record. In the app the effect is the module's server-side approval handler.
+     pick = { module, kind, label, find(id) → { label, loc }, open?(id) } (P108): where New request picks the record from (an
+     ApiSelect source) and how it finds the record's label and owning location; open(id) makes "About" on the request a link. */
   const hAgo = (h) => Date.now() - h * 3600e3;
   const RTYPES = reactive({
     k: [
@@ -169,20 +172,21 @@
     if (a && a.apply) a.apply(req);
   }
   function openReq(id, tab) { G.reqId = id; nav('request', tab); }
-  const NR = reactive({ open: false, type: 'rt_pub', form: '', note: '', subject: null, loc: '', onSent: null });
-  function newRequest(prefill = {}) { if (G.viewAs) return readOnly(); Object.assign(NR, { open: true, type: 'rt_pub', form: '', note: '', subject: null, loc: '', onSent: null }, prefill); }
-  /* D41: actions with an active workflow ask for approval instead of running. subject = { kind, id, label, form?, meta? } */
+  const NR = reactive({ open: false, type: '', pickId: '', note: '', subject: null, loc: '', onSent: null });
+  function newRequest(prefill = {}) { if (G.viewAs) return readOnly(); Object.assign(NR, { open: true, type: (rtypesOf().find(t => t.active) || {}).id || '', pickId: '', note: '', subject: null, loc: '', onSent: null }, prefill); }
+  /* D41: actions with an active workflow ask for approval instead of running.
+     P108: subject = { kind, id, label, meta?, loc, note? }: the record brings its own owning location (the route is chosen with it,
+     P18) and may prefill the note. In the app the server resolves the location from the record it is asked to change. */
   const openRequestFor = (action, subject) => reqsOf().find(r => OPEN_RQ.includes(r.status) && (rtById(r.type) || {}).action === action && r.subject.kind === subject.kind && r.subject.id === subject.id && (r.subject.meta || '') === (subject.meta || ''));
   function approvalGate(action, subject, run) {
-    const f = FORMS.find(x => x.id === (subject.form || subject.id)) || {};
-    const t = typeNeeded(action, f); if (!t) return run();
+    const t = typeNeeded(action, subject.loc); if (!t) return run();
     if (G.viewAs) return readOnly();
     const open = openRequestFor(action, subject);
     if (open) { toast('Already waiting for approval', open.no + ' · ' + RQ_STATUS[open.status].label + '. Open Approvals to follow it.', 'Stamp'); return; }
-    newRequest({ type: t.id, subject, loc: f.loc || 'ho' });
+    newRequest({ type: t.id, subject, loc: subject.loc || 'ho', note: subject.note || '' });
   }
-  Object.assign(G, { approvalGate, openRequestFor, openReq: (id) => openReq(id), approvalActions: ACTIONS, approvalNeeded: (action, formId) => !!typeNeeded(action, FORMS.find(x => x.id === formId) || {}) });
-  const typeNeeded = (action, f) => rtypesOf().find(t => t.active && t.action === action && (t.scope === 'all' || !!f.loc));
+  Object.assign(G, { approvalGate, openRequestFor, openReq: (id) => openReq(id), approvalActions: ACTIONS, approvalNeeded: (action, loc) => !!typeNeeded(action, loc) });
+  const typeNeeded = (action, loc) => rtypesOf().find(t => t.active && t.action === action && (t.scope === 'all' || !!loc));   /* scope 'location': records owned by a location */
 
   /* ---------- step timeline (used by the list rows in compact mode and the request page) */
   const ApprovalSteps = {
@@ -226,20 +230,22 @@
   const NewRequestDialog = {
     setup() {
       const types = computed(() => rtypesOf().filter(t => t.active).map(t => ({ value: t.id, label: t.name, icon: ACTIONS[t.action].icon })));
-      const form = computed(() => FORMS.find(f => f.id === NR.form));
       const t = computed(() => rtById(NR.type));
+      const pick = computed(() => t.value && (ACTIONS[t.value.action] || {}).pick);   /* P108: the action says where its record is picked from */
+      const picked = computed(() => pick.value && NR.pickId ? pick.value.find(NR.pickId) : null);
+      watch(() => pick.value && pick.value.module, (v, o) => { if (o && v !== o) NR.pickId = ''; });   /* another kind of record: pick again */
       const tried = ref(false);
       watch(() => NR.open, v => { if (v) tried.value = false; });
-      const reqLoc = computed(() => NR.subject ? NR.loc : form.value ? (form.value.loc || 'ho') : '');
+      const reqLoc = computed(() => NR.subject ? NR.loc : picked.value ? (picked.value.loc || 'ho') : '');
       const preview = computed(() => { if (!t.value || !reqLoc.value) return []; const req = { loc: reqLoc.value, requester: ME.email }; return t.value.steps.map(st => ({ st, ...resolveStep(st, req) })); });
       function submit() {
-        tried.value = true; if (!NR.subject && !NR.form) return;
-        const f = form.value; const no = 'RQ-2026-' + String(Math.max(0, ...reqsOf().map(r => +r.no.slice(-4))) + 1).padStart(4, '0');
-        const r = reactive({ id: ulid('rq'), no, type: NR.type, status: 'submitted', step: 0, requester: ME.email, loc: reqLoc.value, subject: NR.subject ? { ...NR.subject } : { kind: 'form', id: f.id, label: f.title }, note: NR.note.trim(), at: Date.now(), approvals: [] });
+        tried.value = true; if (!NR.subject && !picked.value) return;
+        const f = picked.value; const no = 'RQ-2026-' + String(Math.max(0, ...reqsOf().map(r => +r.no.slice(-4))) + 1).padStart(4, '0');
+        const r = reactive({ id: ulid('rq'), no, type: NR.type, status: 'submitted', step: 0, requester: ME.email, loc: reqLoc.value, subject: NR.subject ? { ...NR.subject } : { kind: pick.value.kind, id: NR.pickId, label: f.label }, note: NR.note.trim(), at: Date.now(), approvals: [] });
         r.log = reactive([]); reqsOf().unshift(r); notifyStep(r); NR.open = false; toast('Request sent', no + ' goes to ' + preview.value[0].people.map(p => p.name).join(', ') + '. You can keep working; we notify you when it is decided.', 'Send');
         if (!NR.subject) openReq(r.id);
       }
-      return { NR, types, t, form, preview, submit, tried, ruleText, ACTIONS, locName, reqLoc, locById };
+      return { NR, types, t, pick, preview, submit, tried, ruleText, ACTIONS, locName, reqLoc, locById };
     },
     template: `<Dialog :open="NR.open" @update:open="v => NR.open = v">
       <div class="grid gap-1.5 pr-6"><h2 class="text-lg font-semibold leading-none">{{ NR.subject ? 'This needs approval' : 'New request' }}</h2><p class="text-sm text-muted-foreground">{{ NR.subject ? 'A workflow is on for this action. Send it for sign-off; it runs by itself once approved.' : 'Ask for sign-off on an action that needs approval.' }}</p></div>
@@ -247,7 +253,7 @@
         <div v-if="NR.subject" class="flex items-start gap-3 rounded-lg border p-3"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Icon :name="ACTIONS[t.action].icon" :size="16"/></span><div class="min-w-0 text-sm"><p class="font-medium">{{ t.name }}</p><p class="text-muted-foreground">{{ NR.subject.label }}</p><p v-if="NR.subject.meta" class="text-xs text-muted-foreground">{{ NR.subject.meta }}</p></div></div>
         <template v-else>
         <div class="grid gap-1.5"><span class="text-sm font-medium">What for</span><Select v-model="NR.type" :options="types"/></div>
-        <ApiSelect v-model="NR.form" module="forms" label="Form" required placeholder="Choose a form" :error="tried && !NR.form ? 'Choose the form this is about.' : ''"/></template>
+        <ApiSelect v-if="pick" :key="pick.module" v-model="NR.pickId" :module="pick.module" :label="pick.label" required :placeholder="'Choose a ' + pick.label.toLowerCase()" :error="tried && !NR.pickId ? 'Choose the ' + pick.label.toLowerCase() + ' this is about.' : ''"/></template>
         <div class="grid gap-1.5"><label for="nr-note" class="text-sm font-medium">Note for approvers</label><Textarea id="nr-note" v-model="NR.note" :rows="3" placeholder="Why, and by when"/></div>
         <div v-if="preview.length" class="rounded-lg border bg-muted/30 p-3 text-sm"><p class="font-medium">Route</p><p class="text-xs text-muted-foreground">Location: {{ reqLoc === 'ho' ? 'Head Office (organisation-wide)' : (locById(reqLoc) || {}).name }}</p>
           <ol class="mt-2 grid gap-1.5"><li v-for="(p, i) in preview" :key="i" class="flex gap-2"><span class="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-background text-[11px] font-semibold tnum ring-1 ring-border">{{ i + 1 }}</span><span class="min-w-0"><span class="font-medium">{{ p.st.name }}</span> → {{ p.people.map(x => x.name).join(', ') }}<span v-if="p.escalated" class="text-warning"> (escalated)</span><span v-if="p.short" class="text-warning"> (short: Owner joins)</span></span></li></ol>
@@ -346,7 +352,8 @@
         if (r.status === 'cancelled') return { tone: 'muted', icon: 'Ban', text: 'Cancelled by ' + nameOf(r.requester) + '. It is read-only.' }; return null; });
       const hist = computed(() => { const r = req.value; if (!r) return []; return [...r.approvals.map(a => ({ icon: a.decision === 'approved' ? 'Check' : 'X', text: nameOf(a.by) + ' ' + a.decision + ' step ' + (a.step + 1) + (a.actedBy ? ' (by ' + nameOf(a.actedBy) + ', delegated)' : ''), at: a.at })).reverse(), { icon: 'Send', text: nameOf(r.requester) + ' submitted the request', at: r.at }]; });
       const completable = computed(() => canComplete(req.value));
-      return { log, logGroups, nextReminder, CHANNELS, NEVENTS, completable, completeStep, G, req, t, T, act, D, open, confirm, refresh, moreItems, onMore, banner, hist, RQ_STATUS, ACTIONS, nameOf, initials, nav, agoLong, openForm, FORMS, isMine, memberByEmail, ROLE };
+      const opener = computed(() => { const pk = t.value && (ACTIONS[t.value.action] || {}).pick; return pk && pk.open && req.value && pk.kind === req.value.subject.kind ? pk : null; });   /* P108 */
+      return { opener, log, logGroups, nextReminder, CHANNELS, NEVENTS, completable, completeStep, G, req, t, T, act, D, open, confirm, refresh, moreItems, onMore, banner, hist, RQ_STATUS, ACTIONS, nameOf, initials, nav, agoLong, isMine, memberByEmail, ROLE };
     },
     template: `<div v-if="!req" class="mx-auto grid max-w-md place-items-center gap-2 py-16 text-center"><Icon name="SearchX" :size="24" class="text-muted-foreground/60"/><p class="font-medium">Request not found</p><Button variant="outline" @click="nav('approvals')"><Icon name="ArrowLeft" :size="14"/>Approvals</Button></div>
     <div v-else class="mx-auto grid max-w-[1100px] grid-cols-[minmax(0,1fr)] gap-4">
@@ -368,7 +375,7 @@
               <dl class="mt-2 grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3 gap-y-2.5 text-sm">
                 <dt class="flex items-center gap-1.5 text-muted-foreground"><Icon name="UserPlus" :size="13"/>By</dt><dd class="flex items-center gap-1.5"><span class="grid h-5 w-5 place-items-center rounded-full bg-primary/10 text-[9px] font-semibold uppercase text-primary">{{ initials(nameOf(req.requester)) }}</span>{{ nameOf(req.requester) }}</dd>
                 <dt class="flex items-center gap-1.5 text-muted-foreground"><Icon name="MapPin" :size="13"/>Location</dt><dd class="flex flex-wrap items-center gap-x-3 gap-y-1"><RecordLink module="Locations" :id="req.loc"/><RecordLink module="Locations" :id="req.loc" tab="users" label="Its people"/></dd>
-                <dt class="flex items-center gap-1.5 text-muted-foreground"><Icon name="ClipboardList" :size="13"/>About</dt><dd><button v-if="req.subject.kind==='form'" type="button" class="text-left text-primary underline-offset-4 hover:underline" @click="openForm(FORMS.find(f => f.id===req.subject.id) || {})">{{ req.subject.label }}</button><span v-else>{{ req.subject.label }}</span></dd>
+                <dt class="flex items-center gap-1.5 text-muted-foreground"><Icon name="ClipboardList" :size="13"/>About</dt><dd><button v-if="opener" type="button" class="text-left text-primary underline-offset-4 hover:underline" @click="opener.open(req.subject.id)">{{ req.subject.label }}</button><span v-else>{{ req.subject.label }}</span></dd>
                 <dt class="flex items-center gap-1.5 text-muted-foreground"><Icon name="AlignLeft" :size="13"/>Note</dt><dd>{{ req.note || '–' }}</dd></dl></div></Card>
             <Card class="kpi" style="animation-delay:120ms"><div class="p-4"><h3 class="text-sm font-semibold">When approved</h3><p class="mt-1 text-sm text-muted-foreground">{{ ACTIONS[t.action].effect }}</p></div></Card>
           </div>
@@ -399,7 +406,7 @@
         <AppNotifsRow/>
         <div v-for="(c, k) in CHANNELS" :key="k" class="flex items-center gap-3 rounded-lg border p-3">
           <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Icon :name="c.icon" :size="16"/></span>
-          <div class="min-w-0 flex-1"><p class="text-sm font-medium">{{ c.label }}</p><p class="truncate text-xs text-muted-foreground">{{ k==='inapp' ? 'Bell and Approvals badge' : k==='email' ? me.email : k==='sms' ? (me.phone || 'Add a phone number first') : (APP_USERS.has(ME.email) ? 'Fomu app on your phone' : 'Install the app to get push') }}</p></div>
+          <div class="min-w-0 flex-1"><p class="text-sm font-medium">{{ c.label }}</p><p class="truncate text-xs text-muted-foreground">{{ k==='inapp' ? 'Bell and Approvals badge' : k==='email' ? me.email : k==='sms' ? (me.phone || 'Add a phone number first') : (APP_USERS.has(ME.email) ? PRODUCT.name + ' app on your phone' : 'Install the app to get push') }}</p></div>
           <Switch v-if="k!=='inapp'" v-model="p[k]" :aria-label="c.label"/><Icon v-else name="Lock" :size="14" class="text-muted-foreground" aria-label="Always on"/></div>
         <p class="text-xs text-muted-foreground">Some workflow steps mark their channels as required; those still reach you so urgent sign-offs are not missed.</p>
       </div></Sheet>`

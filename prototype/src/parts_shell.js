@@ -1671,12 +1671,12 @@ const ShellMod = (() => {
         { id: 'open', label: f.status === 'draft' ? 'Edit' : 'Open', icon: 'Pencil' },
         ...(f.responses ? [{ id: 'res', label: 'Results', icon: 'ChartBarBig' }] : []),
         ...(f.status === 'live' ? [{ id: 'link', label: 'Copy link', icon: 'Link' }, { id: 'live', label: 'Open live form', icon: 'ExternalLink' }] : []),
-        ...(f.status === 'draft' && typeNeeded('Forms.publish', f) ? [{ id: 'reqpub', label: 'Request to publish', icon: 'Stamp' }] : []),
+        ...(f.status === 'draft' && G.approvalNeeded('Forms.publish', f.loc) ? [{ id: 'reqpub', label: 'Request to publish', icon: 'Stamp' }] : []),
         { id: 'dup', label: 'Duplicate', icon: 'Copy' }, { separator: true },
         { id: 'arch', label: f.status === 'archived' ? 'Restore' : 'Archive', icon: f.status === 'archived' ? 'ArchiveRestore' : 'Archive' },
       ];
       function onMenu(f, it) {
-        if (it.id === 'reqpub') newRequest({ type: typeNeeded('Forms.publish', f).id, form: f.id });
+        if (it.id === 'reqpub') newRequest({ type: typeNeeded('Forms.publish', f.loc).id, pickId: f.id });
         if (it.id === 'open') openForm(f);
         if (it.id === 'res') { nav('responses'); if (!f.sample) G.toast('Prototype opens the sample results', '', 'Info'); }
         if (it.id === 'live') nav('respondent');

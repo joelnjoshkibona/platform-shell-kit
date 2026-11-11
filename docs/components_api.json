@@ -1275,9 +1275,9 @@
    ],
    [
     "subject",
-    "{type,id,label,meta}",
+    "{kind,id,label,meta?,loc,note?}",
     "",
-    "What the request is about"
+    "What the request is about. loc: the record's owning location, which picks the route (P108; in the app the server resolves it from the record); note prefills the request's note"
    ],
    [
     "channels (ChannelPicker)",
@@ -1306,13 +1306,15 @@
   ],
   "slots": [],
   "do": [
-   "Call gate(action, subject, run): runs directly when no workflow applies",
+   "Call gate(action, subject, run): runs directly when no workflow applies; approvalNeeded(action, loc) says whether one does (P108)",
    "Show the open request number instead of creating a duplicate",
-   "Show delivery chips per channel with skip reasons"
+   "Show delivery chips per channel with skip reasons",
+   "Declare what the action does when decided as its own apply(req) / reject(req), from the module's code (P107)"
   ],
   "dont": [
    "One-click approve links in email",
-   "Letting users turn off in-app"
+   "Letting users turn off in-app",
+   "Looking the subject up in another module's table inside the approvals engine (P108)"
   ]
  },
  "List card": {

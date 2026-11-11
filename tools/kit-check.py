@@ -77,6 +77,7 @@ def names_none(where, text, words):
 appr = src('parts_appr.js')
 if appr:
     names_none('P107: the approvals engine\'s decision code (decide … applyEffect)', part(appr, 'function decide(', 'function openReq('), [r'FORMS', r'Responses', r"'form'"])
+    names_none('P108: parts_appr.js', appr, [r'\bFORMS\b'])
 
 if errors:
     print('\n'.join('kit-check: ' + e for e in errors)); sys.exit(1)
