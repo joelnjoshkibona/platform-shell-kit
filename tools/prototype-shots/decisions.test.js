@@ -153,6 +153,26 @@ const TESTS = {
     ok(await dialogs().count() === 0 && await p.locator('[role=dialog]:has-text("View full page")').count() === 1, 'P111: a link to a module with no page did not open its sheet preview');
     await done('P111');
   },
+  /* P112: on a narrow list whose titles would not fit beside the status / hero, they sit under the title */
+  async P112(b) {
+    for (const w of [360, 390, 430, 1280]) {
+      const { p, done } = await open(b, 'scheduled-tasks', { w, h: 844, mobile: w < 500 });
+      const stacked = await p.locator('main [data-testid=lr-stack]').count(), rows = await p.locator('main [role=link]').count();
+      if (w <= 390) {
+        ok(rows > 0 && stacked === rows, `P112 ${w}px: Scheduled tasks stacked ${stacked} of ${rows} rows (want all)`);
+        const right = await p.locator('main [role=link]').first().evaluate(r => getComputedStyle(r).gridTemplateColumns.split(' ').length);
+        ok(right === 2, `P112 ${w}px: a stacked row still has a right-hand column (${right} grid columns, want title + chevron)`);
+      }
+      if (w === 1280) ok(stacked === 0, 'P112 1280px: a wide list stacked');
+      if (w === 390) { await go(p, () => nav('queue')); ok(await p.locator('main [data-testid=lr-stack]').count() === 0, 'P112 390px: Queue, whose titles fit, stacked'); }
+      for (const r of ['scheduled-tasks', 'locations', 'approvals', 'members', 'queue', 'trash', 'my-jobs']) {
+        await go(p, (r) => nav(r), r);
+        const sx = await p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+        ok(sx <= 0, `P112 ${w}px: ${r} scrolls sideways by ${sx}px`);
+      }
+      await done('P112 ' + w);
+    }
+  },
 };
 
 (async () => {

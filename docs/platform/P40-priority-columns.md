@@ -1,6 +1,6 @@
 # P40 · Priority columns, one row shape, one list stack
 
-Status: **decided 2026-10-15**, explored in the reference prototype `docs/platform/p40-priority-columns.html` (kit 1.1.0 → 1.2.0).
+Status: **decided 2026-10-15**, explored in the reference prototype `docs/platform/p40-priority-columns.html` (kit 1.1.0 → 1.2.0). Tight rows amended by **P50** and **P112** (kit 1.26.0).
 Supersedes the table/row-cards switch in P6, P24 and P39. Builds on P5 (row opens on click, actions above the link), P22 (contextual search), P24 (toolbar, filters, URL state), P25 (Refresh), P31 (filter controls), P39 (one card, scoped lists, links).
 Sources: the COBLEY row list (`FRONTEND/docs/module-patterns.md`, "avatar + primary line + meta line + right-aligned meta + chevron, no `<table>`") and the Fomu ListCard.
 
@@ -29,7 +29,7 @@ Every list that shows rows is one `ListCard` whose rows are a CSS grid driven by
 **Fold order and placement**
 
 1. The card measures its own width (container, not viewport; one `ResizeObserver`, the same the P39 container query used). It folds the unfolded column with the highest `priority` number until identity (at its 40% floor) + hero + the remaining columns + gaps fit.
-2. **Status** folds to the right: a badge level with the title, with the hero number directly under it, both top-anchored. Once folded it is shown for every row, including the default state (Active), so the numbers line up across rows.
+2. **Status** folds to the right: a badge level with the title, with the hero number directly under it, both top-anchored. Once folded it is shown for every row, including the default state (Active), so the numbers line up across rows. **Amended by P112**: on a tight card where the widest title does not fit beside the widest status or hero, the status and the hero sit on a line under the title instead, on every row of the list.
 3. **Identity badges** (`fold: 'badge'`) go onto the title line after the name.
 4. **Meta columns** (`fold: 'meta'`) fill the row's meta line in priority order (lowest number first), after the module's base meta, separated by `·`, while they fit on **two lines**. What does not fit is counted in a **`+N more`** chip at the end of the meta line.
 5. `+N more` opens a label/value strip under the row listing the fields the meta line could not carry (two columns of `Label … value`, one column when tight). The chip sits above the row link (P5); the row click and the chevron always open the record. Expand state is page state, never URL state (P39 puts list state in the link; which rows are open is not list state).

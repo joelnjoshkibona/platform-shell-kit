@@ -831,6 +831,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 - Do: One identity column (never folds, 40% floor) and at most one hero (never folds, right-aligned, tabular)
 - Do: Fold by the card's own width, highest priority number first; status folds right above the hero; identity badges fold to the title line; meta columns fill two lines then a +N more chip
+- Do: On a tight card, let the status and hero stack under the title when the widest title would not fit beside them (P112); one decision per list
 - Do: Header shows unfolded columns only; header click sorts
 - Do: Top-align the identity cell when the title can wrap; keep the icon level with the first line
 - Do: Status columns: give them a #cell-<key> slot if they use a custom pill; it renders in the column and in the folded position
@@ -838,6 +839,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Don't: Sideways scroll inside a ListCard (report tables with no identity are not ListCards)
 - Don't: A column that hides without folding (every value stays reachable: meta line, strip or details)
 - Don't: Expand state in the URL
+- Don't: Let a record number or code break mid-word beside a right-hand status or hero column (P112)
 
 ### Charts
 

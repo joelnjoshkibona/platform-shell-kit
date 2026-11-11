@@ -112,6 +112,7 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 - One `identity` column (name or number with its icon tile) never folds and keeps at least 40% of the card while anything else is unfolded. At most one `hero` number never folds: right-aligned, `tabular-nums`, one-word sub-label when there is room.
 - Every other column has a `priority` (2 and up) and a `fold` target. The highest number folds first, until identity + hero + the rest fit with no sideways scroll.
 - Status folds right: a badge level with the title, the hero number directly under it, both top-anchored. Once folded it shows on every row, including the default state, so the numbers line up.
+- On a tight card, when the widest title on the page does not fit beside the widest status or hero, every row stacks: title (and badges), then status and hero on a line under it, then the meta line; no right-hand column, and the header shows only the identity's heading (P112, amends P40).
 - Identity badges (SKU, record number; `fold: 'badge'`) fold onto the title line. Meta columns (`fold: 'meta'`) fill the row's meta line after the module's base meta, in priority order, while they fit on two lines; the rest is a `+N more` chip that opens a label/value strip under the row. The chip sits above the row link; the row and the chevron always open the record. Which rows are open is page state, not link state.
 - Tight (identity's own minimum and the hero cannot both be met): identity takes what is left, the hero shrinks to its content, row actions move under the meta line, the toolbar goes icon-only, the title may wrap and the identity cell top-aligns so the icon stays level with the first line.
 - Header click sorts an unfolded column; the Sort control lists every sortable column, folded or not.
@@ -444,7 +445,7 @@ Guide: `docs/architecture/MODULES.md`.
 - [ ] Every menu, select, popover and tooltip is portalled and stays on screen
 - [ ] Toolbar order is Refresh, Filters, Clear, Sort, then Export / Copy link / New; no cards/table toggle; Refresh keeps content visible
 - [ ] Filters, sort, page and tab are in the URL and survive a reload
-- [ ] Lists that show rows are one ListCard stacked toolbar · tabs · search · chips · header · rows · footer; columns fold by priority as the card narrows (dragged from 1280 to 360 with the sidebar open): identity and hero never fold, status folds right above the hero, `+N more` only when the meta line would overflow two lines, nothing scrolls sideways
+- [ ] Lists that show rows are one ListCard stacked toolbar · tabs · search · chips · header · rows · footer; columns fold by priority as the card narrows (dragged from 1280 to 360 with the sidebar open): identity and hero never fold, status folds right above the hero (under the title when the titles would not fit beside it, P112), `+N more` only when the meta line would overflow two lines, nothing scrolls sideways
 - [ ] Tabs that show records use the module list with a scope (parent filter/column/search removed, own search, Export, Copy link, create with the parent locked)
 - [ ] Top-bar search filters this module; "Search everywhere" works; top-bar actions sit at the right edge with or without search
 - [ ] Activity, KPIs and lists show only the current organisation after a switch

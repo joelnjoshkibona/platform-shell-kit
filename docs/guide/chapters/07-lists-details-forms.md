@@ -6,6 +6,7 @@ Every screen of a product is one of a few shapes. Each shape is decided once (th
 
 - One `ListCard` per list: toolbar (Refresh, Filters, Sort, then New on the right), quick tabs, search, filter chips, the rows.
 - Rows are `ListRows` with **priority columns**: as the card gets narrower, the least important columns fold into the line under the title, so nothing ever scrolls sideways.
+- On a phone, when the titles would not fit beside the status and the main number, those move to a line under the title, on every row of the list (P112), so a record number never breaks in the middle.
 - Search, filters, sort and the page are in the address, so a copied link opens the same view.
 - The API side is the **list contract**: filters as `{ operator, value }` on allowlisted fields, allowlisted sorts, at most 100 per page, bulk actions, export.
 
