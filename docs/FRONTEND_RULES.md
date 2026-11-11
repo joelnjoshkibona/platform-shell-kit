@@ -165,7 +165,7 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 **Related-record links (P85, amends P39)**
 
 - Every value that points at another record (list cell, overview field, child row, activity line) is a `RecordLink module id`, never plain text or a raw id.
-- It is a real link to the full page (`#/{path}/{id}`): a plain click opens the target module's own preview in the side sheet with View full page (keeps `?tab=`, stamps `?back=`); a modifier or middle click opens a new tab.
+- It is a real link to the full page (`#/{path}/{id}`): a plain click opens the record's details page in the record dialog (P101), on Overview or the link's `tab` (P111, amends P85); a module with no `page` opens its own preview in the side sheet with View full page (keeps `?tab=`, stamps `?back=`); a modifier or middle click opens a new tab. The link's icon is PanelTop ("Open …"); PanelRightOpen ("Preview …") only for the sheet.
 - The target comes from the module registry (`defineModule`, P81), never from a hand-kept map.
 - Without the module's permission it is plain text with a lock and the reason; empty is "–"; a deleted record keeps its label struck through with Deleted and previews read-only; a missing one says "No longer exists".
 
@@ -359,7 +359,7 @@ Guide: `docs/architecture/MODULES.md`.
 
 ## Locked: tabs and record dialogs (P101)
 
-- To show another record's tab without leaving the page, use `RecordLink` with `tab`, or `openRecordTab(module, id, tab)`. Never copy the tab's content into another module.
+- To show another record (on Overview) or one of its tabs without leaving the page, use `RecordLink` (with `tab` for a tab, P111), or `openRecordTab(module, id, tab)`. Never copy the tab's content into another module.
 - Every module with a details page declares its `tabs` and its `page` in `defineModule`; the page draws one tab when given `embedId`.
 - Dialogs go through AppDialog only (`openDialog`): they stack, each at its own size; the footer has Close on the left; there is no × and clicking outside does nothing; Esc and Back close the top one.
 - Tabs move with ← → Home End, scroll with a More menu when they don't fit, and a link to a hidden tab falls back to the first with a toast.
@@ -437,7 +437,7 @@ Guide: `docs/architecture/MODULES.md`.
 ## Review checklist before merging a screen
 
 - [ ] The module lives in its own folder with its manifest; no central file was edited to add it (P80–P82); its permissions, role defaults and detail pages are in the product registry (P110)
-- [ ] Every related record is a `RecordLink` from the registry; checked without the permission, deleted and missing (P85)
+- [ ] Every related record is a `RecordLink` from the registry; checked without the permission, deleted and missing (P85); a plain click opens the record dialog, so the module declares `page` (P111)
 - [ ] The implementation plan, the progress tracker and the build guide are updated in the same change (P91–P92)
 - [ ] Checked at 360px and 1280px, light and dark; no horizontal page scroll
 - [ ] Zero console errors and zero console warnings (e2e asserts it)

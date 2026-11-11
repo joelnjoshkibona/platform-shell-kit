@@ -2016,21 +2016,22 @@
    [
     "tab",
     "string",
-    "",
-    "The tab View full page opens"
+    "'overview'",
+    "The tab the record dialog opens on (P101, P111), and the one Open full page opens"
    ]
   ],
   "emits": [],
   "slots": [],
   "do": [
    "Use it for every value that points at another record: list cells, overview fields, child rows, activity lines (P85)",
+   "Let a plain click open the record's details page in the record dialog (P111); declare page in defineModule so it can",
    "Let a modifier or middle click open the full page in a new tab",
    "Show the reason when the person cannot open it"
   ],
   "dont": [
    "Show a related record as plain text or a raw id",
    "Keep a hand-made map of routes for links; register the module with defineModule",
-   "Open a summary that is not the module's own preview"
+   "Open a summary that is not the module's own page (or, for a module with no page, its own preview)"
   ]
  },
  "Job progress · Job page": {

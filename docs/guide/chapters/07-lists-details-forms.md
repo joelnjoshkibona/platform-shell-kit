@@ -65,7 +65,7 @@ Up to 100 rows are done at once, with a result listing what was skipped and why;
 
 ## Tabs and record dialogs (P101)
 
-A details page has tabs, and each tab has its own address (`?tab=users`). You don't have to go to a record to see one of its tabs: a link can open **another record's tab in a dialog**, over the page you are on. The dialog's header has the record's name and its tabs; the middle scrolls; the footer has **Close** and **Open full page**.
+A details page has tabs, and each tab has its own address (`?tab=users`). You don't have to go to a record to see it or one of its tabs: a link opens **the other record in a dialog**, over the page you are on, on its Overview or on the tab the link names. The dialog's header has the record's name and its tabs; the middle scrolls; the footer has **Close** and **Open full page**.
 
 ```html
 <RecordLink module="Locations" :id="req.loc" tab="users" label="Its people"/>
@@ -97,11 +97,11 @@ approvalGate('Proformas.discount', { kind: 'proforma', id: pf.id, label: pf.no, 
 
 In the app the effect runs on the server: the module registers a handler for its action's `approved` and `rejected` events, and the page only refreshes the record. The server also finds the record's location itself; it never trusts the one the page sends.
 
-## Links between records (P85)
+## Links between records (P85, P111)
 
 Anywhere a record points at another (a task's project, a request's location), it is a `RecordLink`:
 
-- a click opens the other record's preview in a side sheet, with **View full page**;
+- a click opens the other record's details page in a dialog over yours (the record dialog above), on its Overview or on the link's tab, with **Close** and **Open full page**; a module with no details page shows its preview in a side sheet instead;
 - Ctrl-click or middle-click opens it in a new tab;
 - if you may not open it, it is plain text with a lock and the reason;
 - a deleted record shows its label struck through; a missing one says so.

@@ -38,7 +38,7 @@ In `web/src/modules/{module}/`:
 
 1. `module.ts`: `defineModule({...})`, the same key and permissions as the API's manifest.
 2. `routes.ts`, then the pages: the list, the details layout, the overview, the tabs.
-3. `components/`: the form dialog, the details panel, the preview (what a link to this module opens), action dialogs.
+3. `components/`: the form dialog, the details panel, the preview (what a link to this module opens when it has no details page; with one, the link opens the page in a dialog, P111), action dialogs.
 4. `locales/en.json` and `sw.json`.
 5. `tests/`: unit tests and the visual test that compares each screen with the prototype's screenshot.
 

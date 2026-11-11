@@ -471,12 +471,12 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 | Spec | Value |
 | --- | --- |
-| Look | primary text, PanelRightOpen 13px, underline on hover |
-| Click | plain: the module preview in the side sheet with View full page · modifier or middle: new tab |
+| Look | primary text, PanelTop 13px ("Open …"; PanelRightOpen "Preview …" for the sheet), underline on hover |
+| Click | plain: the record's details page in a record dialog, on Overview or the link's tab (P111); a module with no page: its preview in the side sheet with View full page · modifier or middle: new tab |
 | Address | a real href #/{path}/{id}; View full page keeps ?tab= and stamps ?back= |
 | No permission | plain text + lock, the reason in the tooltip |
 | Empty / deleted / missing | – · label struck through + Deleted · No longer exists |
-| Variants | link · no permission · deleted · missing · empty |
+| Variants | link (dialog) · link (sheet, no page) · no permission · deleted · missing · empty |
 | Used in | Location parent, approval request location; every foreign key on every page |
 
 | Prop | Type | Default | Notes |
@@ -485,14 +485,15 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | `id` | `string` | – | The related record's uuid |
 | `label` | `string` | `the registry's find()` | The label the API sent with the row ({ uuid, label, sub, deleted }) |
 | `deleted` | `boolean` | `false` | Soft-deleted: label struck through, Deleted badge, read-only preview |
-| `tab` | `string` | – | The tab View full page opens |
+| `tab` | `string` | `'overview'` | The tab the record dialog opens on (P101, P111), and the one Open full page opens |
 
 - Do: Use it for every value that points at another record: list cells, overview fields, child rows, activity lines (P85)
+- Do: Let a plain click open the record's details page in the record dialog (P111); declare page in defineModule so it can
 - Do: Let a modifier or middle click open the full page in a new tab
 - Do: Show the reason when the person cannot open it
 - Don't: Show a related record as plain text or a raw id
 - Don't: Keep a hand-made map of routes for links; register the module with defineModule
-- Don't: Open a summary that is not the module's own preview
+- Don't: Open a summary that is not the module's own page (or, for a module with no page, its own preview)
 
 ### Core module page
 

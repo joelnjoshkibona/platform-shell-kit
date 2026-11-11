@@ -125,6 +125,34 @@ const TESTS = {
     ok(await s.p.evaluate(() => G.navRoute) === 'members', 'P110: a detail route does not highlight its parent menu item');
     await s.done('P110 detail route');
   },
+  /* P111: a plain click on a RecordLink opens the record's details page in the record dialog; the sheet only without a page */
+  async P111(b) {
+    const { ctx, p, done } = await open(b, 'approvals');
+    const dialogs = () => p.locator('[data-testid=app-dialog]');
+    const sheets = () => p.locator('[role=dialog]:not([data-testid=app-dialog])');
+    await go(p, () => G.openReq('rq14'));
+    await p.locator('main a[aria-label="Open Arusha Branch"]').click(); await p.waitForTimeout(600);
+    ok(await dialogs().count() === 1 && await sheets().count() === 0, 'P111: a plain click on a location link did not open one record dialog (and no sheet)');
+    ok((await dialogs().last().locator('[role=tab][aria-selected=true]').allInnerTexts()).join() === 'Overview', 'P111: the record dialog did not open on Overview');
+    await dialogs().last().locator('[data-testid=dialog-footer] button:has-text("Close")').click(); await p.waitForTimeout(400);
+    await p.locator('main a[aria-label="Open Its people"]').click(); await p.waitForTimeout(600);
+    ok((await dialogs().last().locator('[role=tab][aria-selected=true]').allInnerTexts()).join().startsWith('Users'), 'P111: a link with tab did not open that tab');
+    await dialogs().last().locator('[data-testid=dialog-footer] button:has-text("Close")').click(); await p.waitForTimeout(400);
+    // Ctrl/Cmd-click is the browser's (a new tab), not ours
+    const popup = ctx.waitForEvent('page', { timeout: 3000 }).catch(() => null);
+    await p.locator('main a[aria-label="Open Arusha Branch"]').click({ modifiers: ['ControlOrMeta'] });
+    const np = await popup; await p.waitForTimeout(300);
+    ok(await dialogs().count() === 0 && !!np, 'P111: Ctrl/Cmd-click was intercepted (want a new tab and no dialog)');
+    if (np) await np.close();
+    // a module with no page keeps the sheet preview (Requests, on the Design system page)
+    await go(p, () => nav('design'));
+    await p.locator('main [role=tab]:has-text("Components")').first().click(); await p.waitForTimeout(300);
+    await p.locator('main input[placeholder="Search components"]').fill('Record link'); await p.waitForTimeout(400);
+    const req = p.locator('main a[aria-label="Preview RQ-2026-0014"]').first();
+    await req.scrollIntoViewIfNeeded(); await req.click(); await p.waitForTimeout(600);
+    ok(await dialogs().count() === 0 && await p.locator('[role=dialog]:has-text("View full page")').count() === 1, 'P111: a link to a module with no page did not open its sheet preview');
+    await done('P111');
+  },
 };
 
 (async () => {

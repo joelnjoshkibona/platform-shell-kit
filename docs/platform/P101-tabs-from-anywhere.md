@@ -12,7 +12,7 @@ Status: **decided** (kit 1.18.0). The owner, 2026-11-07, approved in `docs/propo
   - **middle (scrolls)**: the tab exactly as on the details page. A list keeps its own search, filters, quick tabs and actions;
   - **footer (fixed)**: **Close** on the left; **Open full page** on the right. That one closes the dialogs and opens the details page on the same tab, and Back returns to where you were.
 - **Any module can open it**:
-  - `<RecordLink module="Locations" :id tab="users" label="Its people"/>` opens the dialog (without `tab`, RecordLink still opens the preview sheet, P85);
+  - `<RecordLink module="Locations" :id tab="users" label="Its people"/>` opens the dialog (without `tab`, ~~RecordLink still opens the preview sheet, P85~~ **amended by P111**: it opens the dialog on Overview);
   - actions, menu items and notifications call `openRecordTab(module, id, tab)`;
   - each module declares, in `defineModule`, its `tabs` (`{ key, label, perm? }`) and its details `page`, which can draw one tab (`embedId`, `embedTab`, emits `tabs`). A wrong tab name fails the type check; a tab the person may not see is not offered.
 

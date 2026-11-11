@@ -162,7 +162,7 @@ const columns = [
 </template>
 ```
 
-Notice `RecordLink`: the assignee is a link with a preview, never plain text (P85).
+Notice `RecordLink`: the assignee is a link, never plain text (P85); a click opens that person's details page in a dialog over the list (P111).
 
 **Check**: `npm run typecheck` passes (a typo in a module key fails here); the page at 1280 light and 390 dark matches the prototype's screenshots (`npm run test:visual`).
 
