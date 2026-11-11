@@ -66,6 +66,19 @@ Dialogs stack: a link inside a dialog opens another on top, at its own size. Clo
 
 Tabs also work from the keyboard (← → Home End), and when there are too many to fit they scroll, with a **More** menu listing them all.
 
+## Actions that need approval (P107)
+
+Any action can be put behind an approval workflow (Settings › Approval workflows). The module says what the action is and what happens once it is decided; the approvals engine itself is never edited:
+
+```js
+ACTIONS['Proformas.discount'] = { label: 'Discount on a proforma', icon: 'Percent',
+  effect: 'The discount is written into the proforma and it can be sent.',   // the sentence on the request page
+  apply: (req) => api.applyDiscount(req.subject.id),    // once, when the last step approves
+  reject: (req) => api.dropDiscount(req.subject.id) }   // once, when any step rejects
+```
+
+In the app the effect runs on the server: the module registers a handler for its action's `approved` and `rejected` events, and the page only refreshes the record.
+
 ## Links between records (P85)
 
 Anywhere a record points at another (a task's project, a request's location), it is a `RecordLink`:

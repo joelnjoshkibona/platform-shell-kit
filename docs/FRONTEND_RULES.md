@@ -268,6 +268,7 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 - Approved, rejected and cancelled requests show a banner explaining the outcome and that the request is read-only.
 - The editor previews who each step would go to at a chosen location and warns when fewer people qualify than the step needs.
 - Capacity rule (D40): a step needing 2+ approvals needs required + 1 people who can approve; the editor shows an inline error, Save stays disabled and the workflow can't be switched on. Existing failing workflows show a "Can't be met" badge; a short step adds the Owner, and an Owner completes a step that already has every approval it can get.
+- What an approved or rejected request does belongs to its action (P107): `ACTIONS[action].apply(req)` / `.reject(req)`, set by the module from its own code. The approvals engine never names a product's records; in the app the module's approval handler does the work on the server.
 - Gated actions (D41): when a workflow applies, the action button opens "This needs approval" (subject, route preview, note) instead of running. Labels change to say so ("Request another attempt"), menus show a disabled "Needs approval first" row, and an open request for the same subject shows its number instead of a second request.
 - Notifications (D43): the workflow editor has a Notifications block (channel chips, in-app locked on; event switches; reminder every N hours up to M). Each step can override channels and mark them required. The request page has a Notifications tab: one row per person and event with a chip per channel, crossed out with the reason when skipped. People manage their own email/SMS/push in Notification settings (user menu); in-app can't be turned off.
 - Email and quiet hours (D44): approval emails link to the request; nobody decides from an email. SMS and push inside the org's quiet hours (Settings, default 20:00–07:00 EAT) show as held (amber chip with the release time); required steps ignore quiet hours.
@@ -448,6 +449,7 @@ Guide: `docs/architecture/MODULES.md`.
 - [ ] No native pickers; required asterisks are CSS; errors sit under fields
 - [ ] Buttons and menus respect permissions; a direct URL without permission shows No access
 - [ ] Delete uses the delete check and the YES gate
+- [ ] A gated action's effect is its own `apply` / `reject` (P107); the approvals engine was not edited
 - [ ] Status pills come from the workflow lookup (P47); no code compares a label; filters and quick tabs follow the table's order
 - [ ] Phone app: checked at 360, 390 and 411px, light and dark, with the keyboard open and with the system back gesture; every fixed element adds its safe-area inset
 - [ ] Phone app: each movement in `PHONE_MODEL.md` has been tried (cold start, resume, kill, signal lost and back, 401, lock, permission asked and denied, back, keyboard, update) and nothing is lost or doubled

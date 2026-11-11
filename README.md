@@ -54,7 +54,7 @@ The kit is the design and the decisions; **[Bootbox](https://github.com/joelnjos
 | Dashboard KPIs and charts | `parts_list.js` → `DashboardPage` | forms and responses |
 | Demo data per organisation | `parts_shell.js` → `ORGS` / `FORMS` | the three demo organisations |
 | Records owned by a location | `parts_loc.js` → `formsAt`, `formVisible` | forms per location |
-| Actions behind approvals | `parts_appr.js` → `ACTIONS` + `approvalGate` | publish, export, reset |
+| Actions behind approvals (P107) | `parts_appr.js` → `ACTIONS` (label, icon, effect) + `approvalGate`; what a decided request does is the action's `apply(req)` / `reject(req)`, set from the module's own parts | publish, export, reset; their effects in `parts_fomu.js` |
 | Sign-in panel and mark (P48) | `product.js` → `signin`, `logo`; art component registered in `comps` | Fomu's headline, points and `FomuSignInArt` |
 | Phone app states and movements (P51–P79) | `parts_appshell.js` → `appState`, `APP`, the phone components; Screens pill › Phone app and Phone movements | the states and movements with Fomu's name and mark |
 | Settings tabs (P42) | `parts_shell.js` → `SETTINGS_TABS` | Fomu's Results tab (chart defaults) |

@@ -4,6 +4,10 @@
   const RQ_STATUS = defineWorkflow('request', 'Approval requests', [['draft', 'Draft', 'muted', 'Rasimu'], ['submitted', 'Submitted', 'info', 'Imetumwa'], ['in_review', 'In review', 'wait', 'Inakaguliwa'], ['approved', 'Approved', 'ok', 'Imeidhinishwa', true], ['rejected', 'Rejected', 'bad', 'Imekataliwa', true], ['cancelled', 'Cancelled', 'off', 'Imeghairiwa', true]]);
   const OPEN_RQ = ['submitted', 'in_review'];
   const ACTIONS = { 'Forms.publish': { label: 'Publish a form', icon: 'Send', effect: 'The form goes live and starts accepting responses.' }, 'Responses.export': { label: 'Export responses', icon: 'FileSpreadsheet', effect: 'The export is generated and the requester gets a download link valid for 24 hours.' }, 'Responses.void': { label: 'Reset a respondent', icon: 'RotateCcw', effect: 'The respondent can answer the form again; their old response is voided.' }, 'Locations.manage': { label: 'Deactivate a location', icon: 'MapPinOff', effect: 'The location is deactivated and its forms stop accepting responses.' } };
+  /* EXTENSION POINT (P107): a product's gated actions. ACTIONS[action] = { label, icon, effect, apply?(req), reject?(req) }.
+     effect is the sentence on the request page; apply runs once when the last step approves, reject once when any step rejects
+     (neither for a cancelled request). A product sets apply / reject from its own code, next to its records (Fomu: parts_fomu.js);
+     the engine names no product record. In the app the effect is the module's server-side approval handler. */
   const hAgo = (h) => Date.now() - h * 3600e3;
   const RTYPES = reactive({
     k: [
@@ -144,7 +148,7 @@
     const by = act.self ? ME.email : act.for;
     req.approvals.push({ step: req.step, by, actedBy: act.self ? null : ME.email, decision, comment, at: Date.now() });
     const t = rtById(req.type);
-    if (decision === 'rejected') { req.status = 'rejected'; dispatch(req, 'decision', [req.requester], null); toast('Request rejected', req.no + ' · ' + nameOf(req.requester) + ' is told why.', 'CircleX'); return; }
+    if (decision === 'rejected') { req.status = 'rejected'; const a = ACTIONS[t.action]; if (a && a.reject) a.reject(req); dispatch(req, 'decision', [req.requester], null); toast('Request rejected', req.no + ' · ' + nameOf(req.requester) + ' is told why.', 'CircleX'); return; }
     const n = req.approvals.filter(a => a.step === req.step && a.decision === 'approved').length;
     if (n >= resolveStep(t.steps[req.step], req).need) {
       req.step++;
@@ -160,11 +164,10 @@
     if (req.step >= t.steps.length) { req.status = 'approved'; applyEffect(req); dispatch(req, 'decision', [req.requester], null); toast('Approved', req.no + ': ' + ACTIONS[t.action].effect, 'CircleCheck'); }
     else { req.status = 'in_review'; notifyStep(req); toast('Step completed', req.no + ' moved to ' + t.steps[req.step].name, 'CircleCheck'); }
   }
-  function applyEffect(req) {
-    const t0 = rtById(req.type);
-    if (t0 && t0.action === 'Responses.void' && req.subject.kind === 'respondent' && typeof ResponsesMod !== 'undefined') { const r = ResponsesMod.RESP.find(x => x.id === req.subject.id); if (r) r.reset = true; }
-    if (t0 && t0.action === 'Responses.export') setTimeout(() => toast('Export ready for ' + nameOf(req.requester), (req.subject.meta || 'Excel') + '. Download link valid for 24 hours, also emailed.', 'FileSpreadsheet'), 900);
-    if (req.subject.kind === 'form') { const f = FORMS.find(x => x.id === req.subject.id); const t = rtById(req.type); if (f && t.action === 'Forms.publish') { f.status = 'live'; f.closes = 'No close date'; } } }
+  function applyEffect(req) {   /* P107: the action's own effect; the engine knows no product record */
+    const t = rtById(req.type); const a = t && ACTIONS[t.action];
+    if (a && a.apply) a.apply(req);
+  }
   function openReq(id, tab) { G.reqId = id; nav('request', tab); }
   const NR = reactive({ open: false, type: 'rt_pub', form: '', note: '', subject: null, loc: '', onSent: null });
   function newRequest(prefill = {}) { if (G.viewAs) return readOnly(); Object.assign(NR, { open: true, type: 'rt_pub', form: '', note: '', subject: null, loc: '', onSent: null }, prefill); }
@@ -178,7 +181,7 @@
     if (open) { toast('Already waiting for approval', open.no + ' · ' + RQ_STATUS[open.status].label + '. Open Approvals to follow it.', 'Stamp'); return; }
     newRequest({ type: t.id, subject, loc: f.loc || 'ho' });
   }
-  Object.assign(G, { approvalGate, openRequestFor, openReq: (id) => openReq(id), approvalNeeded: (action, formId) => !!typeNeeded(action, FORMS.find(x => x.id === formId) || {}) });
+  Object.assign(G, { approvalGate, openRequestFor, openReq: (id) => openReq(id), approvalActions: ACTIONS, approvalNeeded: (action, formId) => !!typeNeeded(action, FORMS.find(x => x.id === formId) || {}) });
   const typeNeeded = (action, f) => rtypesOf().find(t => t.active && t.action === action && (t.scope === 'all' || !!f.loc));
 
   /* ---------- step timeline (used by the list rows in compact mode and the request page) */
