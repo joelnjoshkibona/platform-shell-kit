@@ -1584,7 +1584,7 @@ const ShellMod = (() => {
           <HelpPage v-else-if="G.view==='help'"/>
           <FormPage v-else-if="G.view==='form'"/>
           <HelpArticlePage v-else-if="G.view==='help-article'"/>
-          <ReportPage v-else-if="G.view==='report'"/>
+          <ReportPage v-else-if="G.view==='report'" :key="G.reportId"/>
           <JobPage v-else-if="G.view==='job'"/>
           <QueuePage v-else-if="G.view==='queue'"/>
           <ScheduledTasksPage v-else-if="G.view==='scheduled-tasks'"/>

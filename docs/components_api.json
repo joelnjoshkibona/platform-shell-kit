@@ -2069,7 +2069,7 @@
     "report",
     "ReportDef",
     "",
-    "The definition: fields, views"
+    "The definition: fields, views, quick (the quick-tab field, or { key, values }) and sorts ([{ value, label, get }]); P109"
    ],
    [
     "view",
@@ -2104,12 +2104,14 @@
   "do": [
    "Keep the header row, pinned columns and totals row fixed while the table scrolls both ways",
    "Take totals of every filtered row from the server",
-   "Use Highcharts only, loaded on report pages, with the kit's chart colours"
+   "Use Highcharts only, loaded on report pages, with the kit's chart colours",
+   "Take the quick tabs and sorts from the report's definition (P109)"
   ],
   "dont": [
    "Total only the page and call it the total",
    "Build table exports in the browser",
-   "Add a second chart library"
+   "Add a second chart library",
+   "Name a report's field in the viewer (P109)"
   ]
  },
  "Help · How do I…": {

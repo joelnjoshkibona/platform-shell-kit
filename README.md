@@ -65,7 +65,7 @@ The kit is the design and the decisions; **[Bootbox](https://github.com/joelnjos
 | Batch mode (P99) | `useBatch(LS, { noun, key, label, usable, actions })` in `parts_listcard.js` | Users (remind, resend, remove), Trash (restore, delete for good) |
 | Record dialogs and tabs (P101) | `defineModule({ tabs, page, resolve })` in `parts_links.js`; `openRecordTab()`, `openDialog()` in `parts_dialog.js`; `RecordLink` `tab` | Locations and Roles open a tab in a dialog |
 | User guide (P98) | `docs/help/articles/<lang>/<id>.md` (front matter: title, module, screens, who, related; `::: shot` specs) → `node tools/help/build.js` | Six core articles: lists, exports, reports (2), trash, notifications |
-| Reports (P96) | `parts_reports.js` → `REPORTS` (id, name, module, desc, rows, fields, views); `loadHighcharts()` | Sales lines, Sales by cashier |
+| Reports (P96, P109) | `parts_reports.js` → `REPORTS` (id, name, module, desc, rows, fields, views, `quick`, `sorts`); `loadHighcharts()` | Sales lines, Sales by cashier (quick tabs by payment, three sorts) |
 | Background work (P95) | `parts_jobs.js` → `startJobRun({ kind, title, format, params, rows, columns, preview, file, download })`; `ListShare`'s Export uses it | the Location page's Users export; Logs export |
 | Lists that show rows (P39, P40) | `parts_listcard.js` → `ListCard` + `ListRows` (priority columns) + `useList({ scope, query })` + `registerUrlList` | Roles, Users, Approvals, Locations, Location › Users tab |
 

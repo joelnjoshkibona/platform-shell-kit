@@ -35,6 +35,17 @@ The server checks the context twice: when the form opens (a lock to something yo
 
 A report is a list page like any other (the same toolbar, Filters, quick tabs and search), with two more dialogs, Group and Columns. It lets people shape the numbers themselves: which columns (pinned or not), totals for the rows shown or for everything the filters match, grouping with subtotals, and a chart built with Highcharts. A view is saved for yourself or shared. The table exports as Excel, CSV or PDF (made on the server, in the background); the chart downloads as a picture or as data.
 
+A report is declared once in the module, and the page is built from it; it names its own quick tabs and sorts (P109):
+
+```js
+{ id: 'conversion', name: 'Proforma conversion', module: 'Proformas', rows: () => api.rows('conversion'),
+  fields: [{ key: 'no', label: 'Proforma', type: 'text' }, { key: 'status', label: 'Status', type: 'text', group: true },
+           { key: 'total', label: 'Total', type: 'money', agg: 'sum' }],
+  quick: 'status',                                                      // tabs: All, then each status, with counts
+  sorts: [{ value: 'total', label: 'Total', get: r => r.total }],       // left out: its date and number fields
+  views: [/* … */] }
+```
+
 ## Exports, reports and imports (P95)
 
 Anything that takes more than a few seconds runs in the background. The button says so and you keep working. When it ends, a notification opens its **job page**: what you asked for, the result with Download and its first rows, or what went wrong in plain words, and Run again. Everything you started is under **My exports and reports** in the avatar menu.

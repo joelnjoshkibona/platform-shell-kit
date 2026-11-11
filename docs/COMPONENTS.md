@@ -978,7 +978,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `report` | `ReportDef` | – | The definition: fields, views |
+| `report` | `ReportDef` | – | The definition: fields, views, quick (the quick-tab field, or { key, values }) and sorts ([{ value, label, get }]); P109 |
 | `view` | `ReportView` | – | Filters, columns, pins, groupBy, totals, chart |
 | `rows` | `Row[]` | – | The page of rows (or all rows) |
 | `aggregate` | `Record<string, number>` | – | Totals of every filtered row, from GET /reports/{id}/aggregate |
@@ -988,9 +988,11 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: Keep the header row, pinned columns and totals row fixed while the table scrolls both ways
 - Do: Take totals of every filtered row from the server
 - Do: Use Highcharts only, loaded on report pages, with the kit's chart colours
+- Do: Take the quick tabs and sorts from the report's definition (P109)
 - Don't: Total only the page and call it the total
 - Don't: Build table exports in the browser
 - Don't: Add a second chart library
+- Don't: Name a report's field in the viewer (P109)
 
 ### Approval steps
 

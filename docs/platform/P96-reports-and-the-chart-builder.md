@@ -1,12 +1,12 @@
 # P96 · Reports and the chart builder
 
-Status: **decided** (kit 1.16.0). The owner, 2026-11-07: "Reports should be designed in a new way to enable viewing the reports either paginated or not with totals or aggregates, fixed headers or columns decided by users, summarize the reports into charts by using a chart builder and ability to download it choosing axes"; then "Highcharts, use it only. Check to ensure headers stick, columns can show totals bottom, or we can have an aggregate at the top as a toggle based on the filters chosen on that page while ignoring pagination. Exports are present too primarily: Excel, CSV, PDF, or image for charts." Proposal `docs/proposals/P94-P98.md`.
+Status: **decided** (kit 1.16.0); quick tabs and sorts amended by **P109** (kit 1.26.0). The owner, 2026-11-07: "Reports should be designed in a new way to enable viewing the reports either paginated or not with totals or aggregates, fixed headers or columns decided by users, summarize the reports into charts by using a chart builder and ability to download it choosing axes"; then "Highcharts, use it only. Check to ensure headers stick, columns can show totals bottom, or we can have an aggregate at the top as a toggle based on the filters chosen on that page while ignoring pagination. Exports are present too primarily: Excel, CSV, PDF, or image for charts." Proposal `docs/proposals/P94-P98.md`.
 
 ## Decision
 
 - **A report** is a definition over a module's data: a source (the module's list endpoint, or a report service for joins and calculations), fields (label, type, whether a field can be grouped, its default aggregate) and default filters. Products ship reports; admins can add more.
 - **The viewer is a list page** (`/reports/{id}`; owner, 2026-11-07, after reviewing a sample against a separate report layout): the chart builder on top, then one list card (P24, P39, P40) with the toolbar **Refresh · Filters · Sort · Group · Columns** and **Export** on the right, quick tabs, its search, the filter chips, a summary row (the row count and the totals switches), then the report table.
-  - **Filters**: the list's own Filters dialog, simple and advanced, on any field of the report (P87); quick tabs for the most used field (Sales lines: payment).
+  - **Filters**: the list's own Filters dialog, simple and advanced, on any field of the report (P87); quick tabs for the most used field (Sales lines: payment). **Amended by P109**: the report names that field (`quick`) and its sorts (`sorts`); the viewer names none.
   - **Paged or all rows**: the "All rows" switch. Above a limit set in Settings it offers an export instead.
   - **Columns** (a dialog, like Filters): tick to show, move up or down, **pin** to the left, and choose each number column's total (sum, average, count, min, max or none).
   - **The header row, the pinned columns and the totals row stay put while the table scrolls both ways.** A test scrolls a long report down and right and checks all three.
@@ -43,4 +43,4 @@ Status: **decided** (kit 1.16.0). The owner, 2026-11-07: "Reports should be desi
 
 ## Extension point
 
-`REPORTS` in the prototype's `parts_reports.js` (a definition: id, name, module, desc, rows, fields, views); `loadHighcharts()`.
+`REPORTS` in the prototype's `parts_reports.js` (a definition: id, name, module, desc, rows, fields, views, and since P109 `quick` and `sorts`); `loadHighcharts()`.

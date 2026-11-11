@@ -74,6 +74,26 @@ const TESTS = {
     ok(await p.locator('main dd button:has-text("Branch Opening Checklist")').count() === 1, 'P108: the new request\'s About is not a link to the record (pick.open)');
     await done('P108');
   },
+  /* P109: a report declares its quick tabs and sorts */
+  async P109(b) {
+    const { p, done } = await open(b, 'report');
+    await p.waitForTimeout(1500);
+    const tabs = (await p.locator('main .lc-tabs [role=tab]').allInnerTexts()).map(t => t.split('\n')[0]);
+    ok(tabs.join() === 'All,Cash,M-Pesa,Card,Credit', `P109: the demo report's quick tabs are ${tabs} (want All, Cash, M-Pesa, Card, Credit)`);
+    const sorts = async () => { await p.locator('main button:has-text("Sort")').first().click(); await p.waitForTimeout(250); const t = await p.locator('[role=menu]').last().innerText(); await p.keyboard.press('Escape'); await p.waitForTimeout(150); return t.split('\n').filter(x => x && !['Sort by', 'Ascending', 'Descending'].includes(x)); };
+    ok((await sorts()).join() === 'Date,Total,Qty', 'P109: the demo report\'s declared sorts are not offered');
+    await p.evaluate(() => { G.reports.push({ id: 'p109', name: 'Plain', module: 'Test', desc: '', rows: () => [{ id: 'a', n: 2, d: '2026-10-01', s: 'Open' }, { id: 'b', n: 1, d: '2026-10-02', s: 'Done' }, { id: 'c', n: 5, d: '2026-10-03', s: 'Open' }],
+      fields: [{ key: 'id', label: 'Id', type: 'text' }, { key: 's', label: 'Status', type: 'text', group: true }, { key: 'd', label: 'Day', type: 'date' }, { key: 'n', label: 'Count', type: 'number', agg: 'sum' }],
+      views: [{ id: 'v', name: 'All', owner: 'Amina Juma', shared: 'Everyone', def: true, cols: ['id', 's', 'd', 'n'], pinned: [], groupBy: '', chart: { type: 'column', x: 's', bucket: 'month', ys: [{ key: 'n', agg: 'sum' }], series: '', top: 0, labels: false } }] }); G.reportId = 'p109'; });
+    await p.waitForTimeout(900);
+    ok(await p.locator('main .lc-tabs').count() === 0, 'P109: a report without quick shows quick tabs');
+    ok((await sorts()).join() === 'Day,Count', 'P109: a report without sorts does not sort by its date and number fields');
+    await p.evaluate(() => { G.reports.find(r => r.id === 'p109').quick = 's'; G.reportId = 'sales'; }); await p.waitForTimeout(300);
+    await p.evaluate(() => { G.reportId = 'p109'; }); await p.waitForTimeout(900);
+    const qt = (await p.locator('main .lc-tabs [role=tab]').allInnerTexts()).map(t => t.replace(/\s+/g, ' ').trim());
+    ok(qt.join() === 'All 3,Done 1,Open 2', `P109: quick: 's' gave tabs ${qt} (want All 3, Done 1, Open 2)`);
+    await done('P109');
+  },
 };
 
 (async () => {

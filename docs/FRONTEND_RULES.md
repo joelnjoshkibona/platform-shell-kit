@@ -373,6 +373,7 @@ Guide: `docs/architecture/MODULES.md`.
 ## Locked: reports (P96)
 
 - A report is a list page: the toolbar is Refresh, Filters, Sort, Group, Columns, then Export; Group and Columns open dialogs like Filters; quick tabs, search and chips as on every list.
+- A report names its own quick-tab field (`quick`) and its sorts (`sorts`); without them it has no quick tabs and sorts by its date and number fields (P109). The report page never names a report's field.
 - A report table may scroll both ways inside its card; its header row, pinned columns and totals row always stay put.
 - The totals row is for the rows shown; the aggregate strip (a switch) is for every row the filters match, computed by the server.
 - Charts are Highcharts only, loaded on report pages, in the kit's chart colours; chart pictures and data are made in the browser; table exports run as background jobs.
