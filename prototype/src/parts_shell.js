@@ -1,5 +1,9 @@
 /* ================================================================ SHELL MODULE: auth, sidebar, forms list, templates, members, workspace */
 const ShellMod = (() => {
+  /* P110: the product's registry (parts_product.js, put above this line by assemble.py). The shell names no product
+     permission, role default or route: they all come from here. With no registry, the shell runs with the core modules only. */
+  const REG = Object.assign({ permissions: [], roles: {}, detailRoutes: [] }, typeof PRODUCT_REGISTRY === 'undefined' ? {} : PRODUCT_REGISTRY);
+  const detailOf = (r) => REG.detailRoutes.find(d => d.route === r);   // a product page inside the shell: { route, title(G), parent? }
   const T = reactive({ toasts: [] });
   function toast(title, desc = '', icon = 'CircleCheck') { if (G.route === 'responses' && G.respToast) return G.respToast(title, desc, icon); const t = { id: ulid('t'), title, desc, icon }; T.toasts.push(t); setTimeout(() => { T.toasts = T.toasts.filter(x => x.id !== t.id) }, 3400); }
   G.toast = toast;
@@ -140,7 +144,7 @@ const ShellMod = (() => {
   }
   G.switchOrg = switchOrg; G.orgs = ORGS;
   G.locId = 'aru'; G.viewAs = null; G.viewAsPick = false; G.assignEdit = null; G.newLoc = false;
-  watchEffect(() => { G.navRoute = G.route === 'location' ? 'locations' : G.route === 'request' ? 'approvals' : G.route === 'role' ? 'roles' : G.route; });
+  watchEffect(() => { G.navRoute = G.route === 'location' ? 'locations' : G.route === 'request' ? 'approvals' : G.route === 'role' ? 'roles' : (detailOf(G.route) || {}).parent || G.route; });
   const sidebarNav = computed(() => [
     { id: 'forms', label: 'Forms', icon: 'ClipboardList', count: FORMS.filter(f => f.status !== 'archived').length },
     { id: 'templates', label: 'Templates', icon: 'LayoutTemplate' },
@@ -416,14 +420,12 @@ const ShellMod = (() => {
   const ALL_LEAVES = computed(() => MENU.flatMap(leaves));
   const findLeaf = (route) => ALL_LEAVES.value.find(l => l.route === route);
   const parentOf = (route) => MENU.find(m => m.groups && leaves(m).some(l => l.route === route));
-  const isShell = (r) => r === 'design' || r === 'location' || r === 'request' || r === 'role' || r === 'job' || r === 'my-jobs' || r === 'report' || r === 'help' || r === 'help-article' || r === 'form' || ALL_LEAVES.value.some(l => l.route === r);
+  const isShell = (r) => r === 'design' || r === 'location' || r === 'request' || r === 'role' || r === 'job' || r === 'my-jobs' || r === 'report' || r === 'help' || r === 'help-article' || r === 'form' || !!detailOf(r) || ALL_LEAVES.value.some(l => l.route === r);   // 'form': P100's form as a page
   G.isShell = isShell;
 
   /* ---------- Access: permission catalogue, roles, OR rule (spatie-style) */
   const PERMS = [
-    { name: 'Forms.list', label: 'See forms', module: 'Forms' }, { name: 'Forms.create', label: 'Create and edit forms', module: 'Forms' }, { name: 'Forms.publish', label: 'Publish and close forms', module: 'Forms' }, { name: 'Forms.delete', label: 'Archive and delete forms', module: 'Forms' },
-    { name: 'Templates.list', label: 'See templates', module: 'Forms' },
-    { name: 'Responses.list', label: 'See results', module: 'Results' }, { name: 'Responses.export', label: 'Export results', module: 'Results' }, { name: 'Responses.void', label: 'Void responses and reset people', module: 'Results' },
+    ...REG.permissions,   /* P110: the product's catalogue first, from its registry */
     { name: 'Users.list', label: 'See users', module: 'Users and access' }, { name: 'Users.invite', label: 'Invite and remove users', module: 'Users and access' }, { name: 'Roles.list', label: 'See roles', module: 'Users and access' }, { name: 'Roles.manage', label: 'Create and edit roles', module: 'Users and access' }, { name: 'Permissions.list', label: 'See permission catalogue', module: 'Users and access' }, { name: 'Users.impersonate', label: 'View as another person', module: 'Users and access' },
     { name: 'Locations.list', label: 'See locations', module: 'Locations' }, { name: 'Locations.manage', label: 'Create and edit locations', module: 'Locations' }, { name: 'Locations.assign', label: 'Assign people and location roles', module: 'Locations' }, { name: 'Countries.list', label: 'See countries', module: 'Locations' },
     { name: 'MobileReleases.list', label: 'See mobile releases', module: 'Mobile and reports' }, { name: 'MobileReleases.publish', label: 'Publish mobile releases', module: 'Mobile and reports' }, { name: 'Reports.list', label: 'See reports', module: 'Mobile and reports' },
@@ -434,15 +436,19 @@ const ShellMod = (() => {
   ];
   const P = (...names) => names;
   const ALLP = PERMS.map(p => p.name);
+  const roleReg = (id) => REG.roles[id] || {};
+  const withProduct = (id, core) => [...(roleReg(id).perms || []), ...core];   /* P110: the product's defaults for this role, then the core ones */
   const ROLES = reactive([
     { id: 'owner', name: 'Owner', desc: 'Everything, including billing and deleting the organisation.', system: true, locked: true, perms: [...ALLP] },
-    { id: 'admin', name: 'Admin', desc: 'Runs the workspace: users, roles, settings and system pages.', system: true, perms: ALLP.filter(n => !['Forms.delete'].includes(n)) },
-    { id: 'editor', name: 'Editor', desc: 'Builds forms and works with results.', system: true, perms: P('Forms.list', 'Forms.create', 'Forms.publish', 'Templates.list', 'Responses.list', 'Responses.export', 'Users.list', 'Locations.list', 'Countries.list', 'Reports.list', 'Media.list', 'Notifications.list', 'Requests.list', 'Requests.create', 'Delegations.list') },
-    { id: 'viewer', name: 'Viewer', desc: 'Reads results and reports only.', system: true, perms: P('Forms.list', 'Responses.list', 'Reports.list', 'Notifications.list', 'Requests.list') },
-    { id: 'supervisor', name: 'Branch supervisor', desc: 'Custom role for branch heads: results and their locations.', system: false, perms: P('Forms.list', 'Responses.list', 'Responses.export', 'Locations.list', 'Reports.list', 'Notifications.list', 'Requests.list', 'Requests.create', 'Delegations.list') },
-    { id: 'zone_manager', name: 'Zone manager', desc: 'Custom role: runs a zone, its branches and their forms.', system: false, perms: P('Forms.list', 'Forms.create', 'Forms.publish', 'Templates.list', 'Responses.list', 'Responses.export', 'Responses.void', 'Locations.list', 'Locations.assign', 'Users.list', 'Reports.list', 'Notifications.list', 'Requests.list', 'Requests.create', 'Delegations.list') },
-    { id: 'auditor', name: 'Branch auditor', desc: 'Custom role: reads results and exports them for audits.', system: false, perms: P('Forms.list', 'Responses.list', 'Responses.export', 'Reports.list') },
+    { id: 'admin', name: 'Admin', desc: 'Runs the workspace: users, roles, settings and system pages.', system: true, perms: ALLP.filter(n => !REG.permissions.some(x => x.name === n) || (roleReg('admin').perms || []).includes(n)) },
+    { id: 'editor', name: 'Editor', desc: roleReg('editor').desc || "Works with the product's records.", system: true, perms: withProduct('editor', P('Users.list', 'Locations.list', 'Countries.list', 'Reports.list', 'Media.list', 'Notifications.list', 'Requests.list', 'Requests.create', 'Delegations.list')) },
+    { id: 'viewer', name: 'Viewer', desc: roleReg('viewer').desc || 'Reads records and reports only.', system: true, perms: withProduct('viewer', P('Reports.list', 'Notifications.list', 'Requests.list')) },
+    { id: 'supervisor', name: 'Branch supervisor', desc: roleReg('supervisor').desc || 'Custom role for branch heads and their locations.', system: false, perms: withProduct('supervisor', P('Locations.list', 'Reports.list', 'Notifications.list', 'Requests.list', 'Requests.create', 'Delegations.list')) },
+    { id: 'zone_manager', name: 'Zone manager', desc: roleReg('zone_manager').desc || 'Custom role: runs a zone and its branches.', system: false, perms: withProduct('zone_manager', P('Locations.list', 'Locations.assign', 'Users.list', 'Reports.list', 'Notifications.list', 'Requests.list', 'Requests.create', 'Delegations.list')) },
+    { id: 'auditor', name: 'Branch auditor', desc: roleReg('auditor').desc || 'Custom role: reads reports for audits.', system: false, perms: withProduct('auditor', P('Reports.list')) },
   ]);
+  /* a role the registry names that the shell does not have is added: { name, desc, system?, perms } */
+  Object.entries(REG.roles).forEach(([id, r]) => { if (r.name && !ROLES.some(x => x.id === id)) ROLES.push({ id, name: r.name, desc: r.desc || '', system: r.system !== false, perms: [...(r.perms || [])] }); });
   const DIRECT = reactive({}); // email -> [perm]
   const roleById = (id) => ROLES.find(r => r.id === id);
   const permsOfSubject = (sub) => !sub ? [] : sub.kind === 'role' ? roleById(sub.id).perms : (() => { const m = MEMBERS.find(x => x.email + x.phone === sub.id); if (!m) return []; return [...new Set([...(roleById(m.role) || { perms: [] }).perms, ...(DIRECT[m.email + m.phone] || [])])]; })();
@@ -1509,11 +1515,11 @@ const ShellMod = (() => {
       function onPhoneUser(it) { if (it.id === '__notifs') nav('notifications'); else if (it.id === '__viewas') G.viewAsPick = true; else if (it.id.startsWith('__theme-')) G.theme = it.id.slice(8); else onUser(it); }
       function onUser(it) { if (it.id === 'jobs') { nav('my-jobs'); return; } if (it.id === 'notifs') { G.myNotifs = true; return; } if (it.id === 'drafts') { G.myDrafts = true; return; } if (it.id === 'out') { G.route = 'login'; G.toast('Signed out', '', 'LogOut'); } else G.toast(it.label, 'Profile screens come later.', 'Info'); }
       function toggleMenu() { if (window.matchMedia('(min-width: 1024px)').matches) G.navCollapsed = !G.navCollapsed; else G.mobileNav = true; }
-      const titles = new Proxy({}, { get: (_, r) => r === 'design' ? 'Design system' : r === 'workspace' ? 'Settings' : r === 'members' ? 'Users' : r === 'location' ? ((locById(G.locId) || {}).name || 'Location') : r === 'request' ? ((reqById(G.reqId) || {}).no || 'Request') : r === 'role' ? ((roleById(G.roleId) || {}).name || 'Role') : r === 'approvals' ? 'Approvals' : r === 'my-jobs' ? 'My exports and reports' : r === 'report' ? ((REPORTS.find(x => x.id === G.reportId) || {}).name || 'Report') : r === 'help' ? 'Help and guides' : r === 'form' ? ((G.formPage && (G.formPage.ctx.title || ((FORM_DEFS || {})[G.formPage.module] || {}).title)) || 'Form') : r === 'help-article' ? ((helpById(G.helpId) || {}).title || 'Help') : r === 'job' ? ((jobById(G.jobId) || {}).no || 'Job') : (findLeaf(r) || {}).label || '' });
+      const titles = new Proxy({}, { get: (_, r) => r === 'design' ? 'Design system' : r === 'workspace' ? 'Settings' : r === 'members' ? 'Users' : r === 'location' ? ((locById(G.locId) || {}).name || 'Location') : r === 'request' ? ((reqById(G.reqId) || {}).no || 'Request') : r === 'role' ? ((roleById(G.roleId) || {}).name || 'Role') : r === 'approvals' ? 'Approvals' : r === 'my-jobs' ? 'My exports and reports' : r === 'report' ? ((REPORTS.find(x => x.id === G.reportId) || {}).name || 'Report') : r === 'help' ? 'Help and guides' : r === 'form' ? ((G.formPage && (G.formPage.ctx.title || ((FORM_DEFS || {})[G.formPage.module] || {}).title)) || 'Form') : r === 'help-article' ? ((helpById(G.helpId) || {}).title || 'Help') : r === 'job' ? ((jobById(G.jobId) || {}).no || 'Job') : detailOf(r) ? detailOf(r).title(G) : (findLeaf(r) || {}).label || '' });
       const onKey = (e) => { if (e.altKey && /^Digit[1-9]$/.test(e.code)) { const o = ORGS[+e.code.slice(5) - 1]; if (o) { e.preventDefault(); switchOrg(o.id); } } };
       onMounted(() => document.addEventListener('keydown', onKey));
       onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
-      const allowed = computed(() => { const l = findLeaf(G.view === 'location' ? 'locations' : G.view === 'request' ? 'approvals' : G.view === 'role' ? 'roles' : G.view === 'report' ? 'reports' : G.view); return !l || !l.perm || myPerms.value.includes(l.perm); });
+      const allowed = computed(() => { const l = findLeaf(G.view === 'location' ? 'locations' : G.view === 'request' ? 'approvals' : G.view === 'role' ? 'roles' : G.view === 'report' ? 'reports' : (detailOf(G.view) || {}).parent || G.view); return !l || !l.perm || myPerms.value.includes(l.perm); });
       return { allowed, G, T, notif, onNotif, unread, userItems, onUser, phoneItems, onPhoneUser, toggleMenu, titles, canViewAs, exitViewAs, SEARCH_SCOPE };
     },
     template: `

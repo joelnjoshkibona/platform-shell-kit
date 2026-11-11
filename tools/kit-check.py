@@ -82,6 +82,16 @@ reports = src('parts_reports.js')
 if reports:
     i = reports.find('const ReportsPage = {')
     names_none('P109: the report page code (ReportsPage, ReportPage)', reports[i:] if i > -1 else None, [r'\bpay\b', r'RP_PAY'])
+shell = src('parts_shell.js')
+if shell:
+    reg = src('parts_product.js')
+    mods = sorted(set(re.findall(r"name: '(\w+)\.\w+'", reg)))   # the product's permission modules (Fomu: Forms, Responses, Templates)
+    words = [r"'%s\." % m for m in mods] or [r'(?!)']
+    names_none('P110: the shell\'s permission catalogue and roles (parts_shell.js)', part(shell, 'const PERMS = [', 'const DIRECT = '), words)
+    names_none('P110: the shell\'s route check and page titles (parts_shell.js)', (part(shell, 'const isShell = ', '\n') or '') + (part(shell, 'const titles = new Proxy', '\n') or '') if 'const isShell = ' in shell else None,
+               [r"r === '%s'" % d for d in re.findall(r"route: '([\w-]+)'", reg)] + words or [r'(?!)'])
+    asm = src('assemble.py')
+    if asm and not re.search(r"'const ShellMod = \(\(\) => \{\\n' \+ open\(SP \+ 'parts_product.js'\)", asm): errors.append('P110: assemble.py does not load parts_product.js first, inside the shell module')
 
 if errors:
     print('\n'.join('kit-check: ' + e for e in errors)); sys.exit(1)

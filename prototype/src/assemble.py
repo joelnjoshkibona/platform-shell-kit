@@ -15,6 +15,8 @@ atoms = open(SP + 'parts_atoms.js').read()
 resp = open(SP + 'parts_resp.js').read()
 respd = open(SP + 'parts_app.js').read()
 shell = open(SP + 'parts_shell.js').read()
+# P110: the product's registry (permissions, role defaults, detail routes) loads first, inside the shell module: the shell builds PERMS, ROLES and its route check from it
+shell = shell.replace('const ShellMod = (() => {\n', 'const ShellMod = (() => {\n' + open(SP + 'parts_product.js').read(), 1)
 loc = open(SP + 'parts_loc.js').read()
 loc += open(SP + 'parts_list.js').read()
 loc += open(SP + 'parts_listcard.js').read()   # P39: ListCard, ListShare, LockedField, exportList

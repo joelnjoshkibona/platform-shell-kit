@@ -6,14 +6,25 @@ Before any server or app code, a product is drawn as a **clickable prototype**: 
 
 1. Copy the kit's `prototype/` into the product's `docs/design/prototype/`.
 2. Edit `src/product.js`: the product's name, icon, domain and accent colour.
-3. Add the product's modules as new files, `src/parts_<module>.js` (Shelui Tasks: `parts_tasks.js`). Register their menu items, permissions, routes and links at the kit's extension points (the table in the kit `README.md`), and register each record type with `defineModule` so links and Back work.
-4. Remove the example product's modules (Fomu's forms, templates, builder, results).
-5. Run `python3 src/assemble.py`. It joins the parts into `index.html`.
-6. Open `index.html` in a browser. The **Screens** button at the bottom left jumps to every screen.
+3. Replace `src/parts_product.js`, the **product registry** (P110), with the product's: its permissions, what each role gets of them, and its detail pages that live inside the shell. The shell is built from it, so the kit's own files stay as they are and the next kit update applies cleanly.
+4. Add the product's modules as new files, `src/parts_<module>.js` (Shelui Tasks: `parts_tasks.js`), listed in `assemble.py` where the example's `parts_fomu.js` is. Register their menu items, routes and links at the kit's extension points (the table in the kit `README.md`), and register each record type with `defineModule` so links and Back work.
+5. Remove the example product's modules (Fomu's forms, templates, builder, results).
+6. Run `python3 src/assemble.py`. It joins the parts into `index.html`.
+7. Open `index.html` in a browser. The **Screens** button at the bottom left jumps to every screen.
 
 ```bash
 cd docs/design/prototype
 python3 src/assemble.py      # → index.html and the component docs
+```
+
+The registry, in the prototype:
+
+```js
+const PRODUCT_REGISTRY = {
+  permissions: [{ name: 'Tasks.list', label: 'See tasks', module: 'Tasks' }, { name: 'Tasks.create', label: 'Create tasks', module: 'Tasks' }],
+  roles: { editor: { desc: 'Plans and does the work.', perms: ['Tasks.list', 'Tasks.create'] }, viewer: { perms: ['Tasks.list'] } },
+  detailRoutes: [{ route: 'task', title: (G) => taskById(G.taskId).title, parent: 'tasks' }],
+};
 ```
 
 ## Checking it

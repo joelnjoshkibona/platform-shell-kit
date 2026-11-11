@@ -333,6 +333,7 @@ Guide: `docs/architecture/MODULES.md`.
 - **One manifest, found by glob (P81, P82)**: `module.json` on the API, `defineModule()` in `module.ts` on web and phone. No central registry, menu file or picker trait. Adding a module is adding a folder.
 - **One service per operation, container instances (P83)**: `{Module}{Op}Service`, `execute → validateData → process`; models take only validated data plus server fields.
 - **Actions declared once (P84)**: service + route + `{Module}.{action}` + button placement + form type in one manifest entry.
+- **A product registry (P110)**: the product's permission catalogue, role defaults and detail pages are declared once (`web/src/product/registry.ts`; the prototype's `parts_product.js`) and loaded before the shell; the shell's files name no product route, permission or role.
 - **Related records are links (P85)** and **child tabs are the child's scoped list (P86)**.
 - **List contract (P87)** and **API shape (P88)**: see the backend contract below.
 - **Strict TypeScript (P89)**; **every convention has a test (P90)**.
@@ -435,7 +436,7 @@ Guide: `docs/architecture/MODULES.md`.
 
 ## Review checklist before merging a screen
 
-- [ ] The module lives in its own folder with its manifest; no central file was edited to add it (P80–P82)
+- [ ] The module lives in its own folder with its manifest; no central file was edited to add it (P80–P82); its permissions, role defaults and detail pages are in the product registry (P110)
 - [ ] Every related record is a `RecordLink` from the registry; checked without the permission, deleted and missing (P85)
 - [ ] The implementation plan, the progress tracker and the build guide are updated in the same change (P91–P92)
 - [ ] Checked at 360px and 1280px, light and dark; no horizontal page scroll

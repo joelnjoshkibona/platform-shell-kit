@@ -18,6 +18,7 @@
 | --- | --- |
 | `parts_helpers.js` | Vue imports and helpers (ulid, class names, dates) |
 | `parts_atoms.js` | Atoms mirroring shadcn-vue: Button, Input, Select, Checkbox, Switch, Badge, Card, Tabs, Tooltip, DropdownMenu, Dialog, Sheet, `usePopover`, Escape handling |
+| `parts_product.js` | The product registry (P110): its permissions, role defaults and detail pages, loaded first so the shell is built from them |
 | `parts_shell.js` | App shell: sign-in, org switcher, sidebar, menus/permissions model, Roles list/details, Design system page, Forms list, Templates, Users, Settings, ShellView |
 | `parts_list.js` | `useList`, ListToolbar, FiltersDialog, DatePicker, HeaderSearch (contextual/global), Dashboard |
 | `parts_comp.js` | ApiSelect (paging, labels, stale states), FilePicker, Media library, RichText, drafts, DeleteDialog, RelatedLink |

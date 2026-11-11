@@ -5,8 +5,11 @@
  *   npm run css && node decisions.test.js      # every check
  *   node decisions.test.js --only P107,P111    # some of them
  */
+const fs = require('fs');
+const path = require('path');
 const { chromium } = require('playwright');
 const { routeProto } = require('./serve');
+const L = require('./layout');
 
 const args = process.argv.slice(2);
 const ONLY = args.includes('--only') ? (args[args.indexOf('--only') + 1] || '').split(',').filter(Boolean) : [];
@@ -18,6 +21,10 @@ async function open(b, route, o = {}) {
   const ctx = await b.newContext({ viewport: { width: o.w || 1280, height: o.h || 900 }, colorScheme: o.dark ? 'dark' : 'light', isMobile: !!o.mobile, hasTouch: !!o.mobile, reducedMotion: 'reduce' });
   await ctx.addInitScript(() => { window.__SLOW_PAGE = false; });
   await routeProto(ctx, route);
+  if (o.html) {   // the prototype with a change (P110: another product registry); same page shell as serve.js
+    const css = fs.readFileSync(path.resolve(__dirname, '.tw.css'), 'utf8'), html = o.html(fs.readFileSync(L.HTML, 'utf8'));
+    await ctx.route('http://proto/', r => r.fulfill({ contentType: 'text/html', body: '<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>' + css + '</style></head><body><script>window.__INIT_ROUTE=' + JSON.stringify(route) + '</script>' + html + '</body></html>' }));
+  }
   const p = await ctx.newPage(); const errs = [];
   p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
   await p.goto('http://proto/'); await p.waitForTimeout(1500);
@@ -93,6 +100,30 @@ const TESTS = {
     const qt = (await p.locator('main .lc-tabs [role=tab]').allInnerTexts()).map(t => t.replace(/\s+/g, ' ').trim());
     ok(qt.join() === 'All 3,Done 1,Open 2', `P109: quick: 's' gave tabs ${qt} (want All 3, Done 1, Open 2)`);
     await done('P109');
+  },
+  /* P110: the product registry feeds the shell's permissions, roles, route check and page titles */
+  async P110(b) {
+    const registry = (body) => (h) => { const i = h.indexOf('const PRODUCT_REGISTRY = {'), j = h.indexOf('\n  };\n', i); if (i < 0 || j < 0) throw new Error('no PRODUCT_REGISTRY in the prototype'); return h.slice(0, i) + 'const PRODUCT_REGISTRY = ' + body + ';' + h.slice(j + 5); };
+    // an empty registry: the shell runs with the core modules only
+    let s = await open(b, 'permissions', { html: registry('{ permissions: [], roles: {}, detailRoutes: [] }') });
+    let t = await s.p.locator('main').innerText();
+    ok(t.includes('Users.list') && !t.includes('Forms.list'), 'P110: with an empty registry the catalogue is not the core one');
+    await go(s.p, () => nav('dashboard'));
+    ok(!(await s.p.locator('aside').first().innerText()).includes('Forms'), 'P110: with an empty registry the product\'s menu still shows (no role gets Forms.list)');
+    await s.done('P110 empty registry');
+    // Fomu's registry: its catalogue and role defaults
+    s = await open(b, 'roles');
+    t = await s.p.locator('main').innerText();
+    ok(t.includes('Reads results and reports only.'), 'P110: the registry\'s role description is not used');
+    await s.done('P110 Fomu');
+    // a detail route: inside the shell with its title and its parent's menu item; one not listed is not
+    s = await open(b, 'members', { html: registry("{ permissions: [], roles: {}, detailRoutes: [{ route: 'thing', title: () => 'Thing T-1', parent: 'members' }] }") });
+    const r = await s.p.evaluate(() => [G.isShell('thing'), G.isShell('nothing')]);
+    ok(r.join() === 'true,false', `P110: isShell for a listed / an unlisted route gave ${r}`);
+    await go(s.p, () => nav('thing'));
+    ok((await s.p.locator('header, main').first().innerText()).includes('Thing T-1') || (await s.p.title()).includes('Thing T-1') || (await s.p.locator('body').innerText()).includes('Thing T-1'), 'P110: a detail route does not get its title');
+    ok(await s.p.evaluate(() => G.navRoute) === 'members', 'P110: a detail route does not highlight its parent menu item');
+    await s.done('P110 detail route');
   },
 };
 

@@ -35,7 +35,7 @@ The kit is the design and the decisions; **[Bootbox](https://github.com/joelnjos
 
 ## How a product uses the kit
 
-1. **Prototype:** copy `prototype/` into the product's design folder. Edit `product.js`. Add the product's modules as new `parts_<module>.js` files, register them in `assemble.py` where the example modules are, and remove the example modules. Rebuild. The shell, the core screens and the components stay as they are.
+1. **Prototype:** copy `prototype/` into the product's design folder. Edit `product.js`. Replace `parts_product.js` (the product registry, P110: permissions, role defaults, detail routes) with the product's. Add the product's modules as new `parts_<module>.js` files, register them in `assemble.py` where the example modules are (`parts_fomu.js`), and remove the example modules. Rebuild. The shell, the core screens and the components stay as they are.
 2. **Decisions:** the product keeps its own log `D1, D2, …` for product decisions. It references P-numbers for anything the shell already decided. If the shell itself must change, that is a new P in this kit, not a D in the product.
 3. **Build guide, plan and tracker (P91, P92):** every product keeps `docs/guide/` (its build guide, an HTML page built from chapters), `docs/IMPLEMENTATION_PLAN.md` and `docs/PROGRESS.md`, and every change to the code updates them, so anyone can follow the guide and build the product again.
 4. **User guide (P98):** every product keeps `docs/help/` (the kit's core articles plus its own). Articles are Markdown with shot specs; `node tools/help/build.js` makes the marked pictures, `docs/help/index.html` and the in-app Help. A pull request that changes a screen changes its articles.
@@ -46,9 +46,10 @@ The kit is the design and the decisions; **[Bootbox](https://github.com/joelnjos
 | Extension point | File | What the example (Fomu) does there |
 | --- | --- | --- |
 | Sidebar menu items + permissions | `parts_shell.js` → `MENU` | Forms, Templates (+ core items) |
-| Permission catalogue | `parts_shell.js` → `PERMS` | `Forms.*`, `Responses.*`, `Templates.*` |
-| Role defaults | `parts_shell.js` → `ROLES` | which permissions each main role gets |
+| Permission catalogue (P110) | `parts_product.js` → `permissions` (the product registry, loaded before the shell; merged into the shell's `PERMS`) | `Forms.*`, `Responses.*`, `Templates.*` |
+| Role defaults (P110) | `parts_product.js` → `roles` (merged into the shell's `ROLES`) | which of its permissions each role gets, and how its roles are described |
 | Pages per route | `parts_shell.js` → `ShellView` template | `FormsList`, `TemplatesPage` |
+| Detail pages inside the shell (P110) | `parts_product.js` → `detailRoutes` (`[{ route, title(G), parent? }]`): the route check, page titles and sidebar highlight | none (Fomu's own views are full-screen) |
 | Routes outside the shell (full-screen views) | `assemble.py` → `App` | `BuilderView`, `ResponsesView`, `RespondentView` |
 | Global search groups | `parts_list.js` → `GROUPS` | forms, responses, templates |
 | Dashboard KPIs and charts | `parts_list.js` → `DashboardPage` | forms and responses |
