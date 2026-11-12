@@ -324,10 +324,10 @@ const ResponseSheet = {
         : { icon: 'Send', label: 'Submitted', at: x.duration });
       return out.sort((a, b) => a.at - b.at);
     });
-    const subjectOf = (x) => ({ kind: 'respondent', id: x.id, form: 'f1', label: x.email + ' on Customer Service Assessment Q4' });
+    const subjectOf = (x) => ({ kind: 'respondent', id: x.id, label: x.email + ' on Customer Service Assessment Q4', loc: G.formLoc('f1') });   // P108: the form's location
     function reset() { const x = r.value; G.approvalGate('Responses.void', subjectOf(x), () => { x.reset = true; toast('Respondent can try again', x.email + ' may start a new attempt.', 'RotateCcw'); }); }
     const pending = computed(() => r.value && G.openRequestFor ? G.openRequestFor('Responses.void', subjectOf(r.value)) : null);
-    const needsOk = computed(() => G.approvalNeeded && G.approvalNeeded('Responses.void', 'f1'));
+    const needsOk = computed(() => G.approvalNeeded && G.approvalNeeded('Responses.void', G.formLoc('f1')));
     function openPending() { S.open = null; G.openReq(pending.value.id); }
     return { S, r, tab, answerText, timeline, SECS, STATUS, fmtDur, fmtDate, reset, pending, needsOk, openPending };
   },
@@ -402,13 +402,13 @@ const App = {
 
     function exportAs(it) {
       const meta = it.label + ' · ' + counted.value.length + ' responses' + (S.filters.length ? ', filtered' : '');
-      G.approvalGate('Responses.export', { kind: 'form', id: 'f1', label: 'Customer Service Assessment Q4', meta }, () => runExport(it));
+      G.approvalGate('Responses.export', { kind: 'form', id: 'f1', label: 'Customer Service Assessment Q4', meta, loc: G.formLoc('f1') }, () => runExport(it));
     }
     function runExport(it) {
       S.exportBusy = true; toast(`Preparing ${it.label}`, `${counted.value.length} responses${S.filters.length ? ', filtered' : ''}. We will notify you when it is ready.`, 'Hourglass');
       setTimeout(() => { S.exportBusy = false; toast(`${it.label} ready`, 'Download link valid for 24 hours. Also emailed to you.', 'FileSpreadsheet'); }, 2200);
     }
-    const exportNeedsOk = computed(() => G.approvalNeeded && G.approvalNeeded('Responses.export', 'f1'));
+    const exportNeedsOk = computed(() => G.approvalNeeded && G.approvalNeeded('Responses.export', G.formLoc('f1')));
     const exportItems = computed(() => [...(exportNeedsOk.value ? [{ id: '__h', label: 'Needs approval first', icon: 'Stamp', disabled: true }, { separator: true }] : []), { id: 'xlsx', label: 'Excel (.xlsx)', icon: 'FileSpreadsheet' }, { id: 'csv', label: 'CSV (.csv)', icon: 'FileText' }]);
 
     const statusOpts = [{ value: 'all', label: 'All statuses' }, { value: 'submitted', label: 'Submitted' }, { value: 'auto', label: 'Auto-submitted' }, { value: 'voided', label: 'Voided' }, { value: 'flagged', label: 'Has violations' }];

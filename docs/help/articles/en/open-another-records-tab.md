@@ -7,7 +7,7 @@ who: Anyone who can open that record
 related: find-records-in-a-list
 order: 2
 ---
-Some links open a tab of another record in a window over your page, so you can look something up and come straight back.
+A link to another record opens that record in a window over your page, so you can look something up and come straight back. It opens on the record's **Overview**, or on the tab the link names.
 
 ::: shot route=#/requests/RQ-2026-0014
 1 = main a[aria-label="Open Its people"]  Opens the location's people, over this page
@@ -15,7 +15,7 @@ Some links open a tab of another record in a window over your page, so you can l
 
 ## Steps
 
-1. Tap a link with the window icon ①, such as **Its people**. The location's **Users** tab opens over your page.
+1. Tap a link with the window icon ①. **Its people** opens the location's **Users** tab over your page; the location's name opens its **Overview**.
 
 ::: shot route=#/requests/RQ-2026-0014
 > click main a[aria-label="Open Its people"]
@@ -29,3 +29,5 @@ Some links open a tab of another record in a window over your page, so you can l
 4. Tap **Open full page** ③ to go to the record itself, on the same tab. Back brings you back.
 
 > The window only closes with its buttons, never by tapping outside it, so you can't lose your place by accident.
+
+> A few kinds of record (an approval request, for example) open a short preview at the side instead, with **View full page**.

@@ -29,8 +29,13 @@
       out.push({ id: 'S-' + String(4100 + i), date: '2026-10-' + String(d).padStart(2, '0'), branch: RP_BRANCH[Math.floor(rnd() * RP_BRANCH.length)], product: pr[0], category: pr[1], qty, price: pr[2], total: qty * pr[2], pay: RP_PAY[Math.floor(rnd() * RP_PAY.length)], cashier: RP_CASHIER[Math.floor(rnd() * RP_CASHIER.length)] }); }
     return out.sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0); })();
   const RP_MONEY = (n) => 'TZS ' + Math.round(n).toLocaleString('en-US');
+  /* EXTENSION POINT (P96): a product's reports. P109: a report names its quick-tab field (quick: 'key', or { key, values } to
+     fix the tabs' order; none = no quick tabs) and its sorts ([{ value, label, get(row) }]; none = its date, money and number
+     fields in field order). The report page names no field of its own. */
+  const RP_SORTS = [{ value: 'date', label: 'Date', get: r => r.date }, { value: 'total', label: 'Total', get: r => r.total || 0 }, { value: 'qty', label: 'Qty', get: r => r.qty || 0 }];
   const REPORTS = reactive([
     { id: 'sales', name: 'Sales lines', module: 'Sales', desc: 'Every item sold, with its branch, product, payment and cashier.', rows: () => SALES_ROWS,
+      quick: { key: 'pay', values: RP_PAY }, sorts: RP_SORTS,
       fields: [
         { key: 'id', label: 'Sale', type: 'text', w: 104 }, { key: 'date', label: 'Date', type: 'date', w: 112, group: true },
         { key: 'branch', label: 'Branch', type: 'text', w: 160, group: true }, { key: 'product', label: 'Product', type: 'text', w: 170, group: true },
@@ -44,14 +49,19 @@
         { id: 'v3', name: 'Daily takings', owner: 'Amina Juma', shared: 'Just me', cols: ['date', 'branch', 'total', 'pay'], pinned: ['date'], groupBy: 'date', chart: { type: 'line', x: 'date', bucket: 'day', ys: [{ key: 'total', agg: 'sum' }], series: '', top: 0, labels: false } },
       ] },
     { id: 'staff', name: 'Sales by cashier', module: 'Sales', desc: 'Who sold what, for commissions and coaching.', rows: () => SALES_ROWS,
+      quick: { key: 'pay', values: RP_PAY }, sorts: RP_SORTS,
       fields: [{ key: 'cashier', label: 'Cashier', type: 'text', w: 160, group: true }, { key: 'branch', label: 'Branch', type: 'text', w: 160, group: true }, { key: 'date', label: 'Date', type: 'date', w: 112, group: true }, { key: 'qty', label: 'Qty', type: 'number', w: 80, agg: 'sum' }, { key: 'total', label: 'Total', type: 'money', w: 150, agg: 'sum' }],
       views: [{ id: 'v1', name: 'By cashier', owner: 'Amina Juma', shared: 'Everyone', def: true, cols: ['cashier', 'branch', 'date', 'qty', 'total'], pinned: ['cashier'], groupBy: 'cashier', chart: { type: 'pie', x: 'cashier', bucket: 'month', ys: [{ key: 'total', agg: 'sum' }], series: '', top: 0, labels: true } }] },
   ]);
   const AGG = { sum: ['Sum', a => a.reduce((s, v) => s + v, 0)], avg: ['Average', a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0], count: ['Count', a => a.length], min: ['Min', a => a.length ? Math.min(...a) : 0], max: ['Max', a => a.length ? Math.max(...a) : 0] };
+  /* P109: what the report page needs from a report, read from the report itself */
+  const rpSorts = (rep) => rep.sorts && rep.sorts.length ? rep.sorts : (() => { const s = rep.fields.filter(f => ['date', 'money', 'number'].includes(f.type)).map(f => ({ value: f.key, label: f.label, get: r => r[f.key] == null ? '' : r[f.key] })); return s.length ? s : [{ value: rep.fields[0].key, label: rep.fields[0].label, get: r => r[rep.fields[0].key] }]; })();
+  const rpQuick = (rep) => !rep.quick ? null : typeof rep.quick === 'string' ? { key: rep.quick, values: null } : rep.quick;
   const rpFmt = (f, v) => v == null || v === '' ? '–' : f.type === 'money' ? RP_MONEY(v) : f.type === 'number' ? Math.round(v * 100) / 100 + '' : f.type === 'date' ? fmtDay(v) : v;
   const rpBucket = (iso, b) => { if (b === 'day') return iso; const d = new Date(iso); if (b === 'week') { const t = new Date(d); t.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return 'Week of ' + t.toISOString().slice(5, 10); } return iso.slice(0, 7); };
   function openReport(id) { G.reportId = id; nav('report'); }
   if (!G.reportId) G.reportId = 'sales';
+  G.reports = REPORTS;   /* the P96 extension point, also for product code outside the shell module */
 
   /* ---------------------------------------------------------------- the list of reports */
   const ReportsPage = {
@@ -73,21 +83,24 @@
     setup() {
       const rep = computed(() => REPORTS.find(r => r.id === G.reportId) || REPORTS[0]);
       const F = (k) => rep.value.fields.find(f => f.key === k);
-      const R = reactive({ viewId: '', cols: [], pinned: [], groupBy: '', aggs: {}, footer: true, strip: false, all: false, page: 1, size: 25, q: '', branch: '', pay: '', range: 'all', collapsed: {}, chooser: false, groupOpen: false, groupPick: '', groupFolded: false, save: false, saveName: '', saveShare: 'me',
-        chart: { type: 'column', x: 'branch', bucket: 'month', ys: [{ key: 'total', agg: 'sum' }], series: '', top: 0, labels: false }, chartErr: '', chartReady: false });
+      const R = reactive({ viewId: '', cols: [], pinned: [], groupBy: '', aggs: {}, footer: true, strip: false, all: false, page: 1, size: 25, q: '', range: 'all', collapsed: {}, chooser: false, groupOpen: false, groupPick: '', groupFolded: false, save: false, saveName: '', saveShare: 'me',
+        chart: { type: 'column', x: '', bucket: 'month', ys: [], series: '', top: 0, labels: false }, chartErr: '', chartReady: false });
       function applyView(v) { R.viewId = v.id; R.cols = v.cols.slice(); R.pinned = v.pinned.slice(); R.groupBy = v.groupBy; R.chart = JSON.parse(JSON.stringify(v.chart)); R.page = 1; R.collapsed = {};
         R.aggs = Object.fromEntries(rep.value.fields.filter(f => f.agg).map(f => [f.key, f.agg])); }
       watch(() => rep.value.id, () => applyView(rep.value.views.find(v => v.def) || rep.value.views[0]), { immediate: true });
       const view = computed(() => rep.value.views.find(v => v.id === R.viewId));
       const viewOpts = computed(() => rep.value.views.map(v => ({ value: v.id, label: v.name + (v.shared === 'Just me' ? ' (mine)' : ' · ' + v.shared) })));
       /* filters (the list contract's in the app) */
-      /* the list page design: the list contract's filters (simple and advanced), sort, quick tabs by payment, search, chips (P24, P39, P40, P87) */
+      /* the list page design: the list contract's filters (simple and advanced), sort, the report's quick tabs, search, chips (P24, P39, P40, P87) */
       const LS = useList({ noun: 'rows', rows: () => rep.value.rows(), query: () => R.q, search: (r, q) => Object.values(r).join(' ').toLowerCase().includes(q), dir: 'desc',
-        sorts: [{ value: 'date', label: 'Date', get: r => r.date }, { value: 'total', label: 'Total', get: r => r.total || 0 }, { value: 'qty', label: 'Qty', get: r => r.qty || 0 }],
+        sorts: rpSorts(rep.value),   /* P109: the report's own sorts */
         fields: () => rep.value.fields.filter(f => f.key !== 'id').map(f => f.type === 'date' ? { key: f.key, label: f.label, type: 'date', get: r => r[f.key] } : ['number', 'money'].includes(f.type) ? { key: f.key, label: f.label, type: 'number', get: r => r[f.key] } : { key: f.key, label: f.label, type: 'select', options: [...new Set(rep.value.rows().map(r => r[f.key]))].sort().map(v => ({ value: v, label: v })), get: r => r[f.key] }) });
       registerUrlList(LS, { get: () => R.q, set: (v) => { R.q = v; } });
-      const quick = computed({ get: () => { const f = LS.S.filters.pay; return !f ? 'all' : (f.op === 'in' && f.value.length === 1) ? f.value[0] : ''; }, set: v => LS.setFilter('pay', v === 'all' ? null : { op: 'in', value: [v] }) });
-      const payTabs = computed(() => [{ value: 'all', label: 'All', count: rep.value.rows().length }, ...RP_PAY.map(p => ({ value: p, label: p, count: rep.value.rows().filter(r => r.pay === p).length }))]);
+      /* P109: the quick tabs are "All" plus the values of the report's quick field, with counts; no quick field, no tabs */
+      const QK = computed(() => rpQuick(rep.value));
+      const quick = computed({ get: () => { const f = QK.value && LS.S.filters[QK.value.key]; return !f ? 'all' : (f.op === 'in' && f.value.length === 1) ? f.value[0] : ''; }, set: v => { if (QK.value) LS.setFilter(QK.value.key, v === 'all' ? null : { op: 'in', value: [v] }); } });
+      const quickTabs = computed(() => { const q = QK.value; if (!q) return null; const rows = rep.value.rows(); const vals = q.values || [...new Set(rows.map(r => r[q.key]))].filter(v => v != null && v !== '').sort();
+        return [{ value: 'all', label: 'All', count: rows.length }, ...vals.map(v => ({ value: v, label: String(v), count: rows.filter(r => r[q.key] === v).length }))]; });
       const filtered = computed(() => LS.rows.value);   /* the list page design (owner, 2026-11-07): the list contract filters the report */
       const shown = computed(() => R.cols.map(F).filter(Boolean));
       const ordered = computed(() => [...shown.value.filter(f => R.pinned.includes(f.key)), ...shown.value.filter(f => !R.pinned.includes(f.key))]);
@@ -160,7 +173,7 @@
       const types = [['column', 'Column', 'ChartColumn'], ['bar', 'Bar', 'ChartBar'], ['line', 'Line', 'ChartLine'], ['area', 'Area', 'ChartArea'], ['pie', 'Pie', 'ChartPie'], ['scatter', 'Scatter', 'ChartScatter'], ['kpi', 'Number', 'Hash']];
       const saveChart = () => { if (view.value) { view.value.chart = JSON.parse(JSON.stringify(R.chart)); toast('Chart saved with the view', view.value.name, 'Bookmark'); } else R.save = true; };
       return { G, R, rep, view, viewOpts, F, filtered, shown, ordered, left, tableW, aggOf, groups, pages, pageRows, pageGroups, visibleRows, numFields, groupFields, toggleCol, moveCol, togglePin, chooserList, saveView, applyView,
-        exportItems, exportTable, openGroup, applyGroup, LS, quick, payTabs, chartEl, chartItems, exportChart, addY, types, saveChart, rpFmt, AGG, RP_BRANCH, RP_PAY, nav, RP_MONEY };
+        exportItems, exportTable, openGroup, applyGroup, LS, quick, quickTabs, chartEl, chartItems, exportChart, addY, types, saveChart, rpFmt, AGG, nav, RP_MONEY };
     },
     template: `<div class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">
       <nav class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground" aria-label="Breadcrumb"><BackButton/><button type="button" class="hover:text-foreground" @click="nav('reports')">Reports</button><Icon name="ChevronRight" :size="12"/><span class="text-foreground">{{ rep.name }}</span></nav>
@@ -185,7 +198,7 @@
           <div v-if="R.chart.type==='kpi'" class="grid place-items-center rounded-lg border bg-muted/30 py-10 text-center"><p class="text-xs text-muted-foreground">{{ AGG[R.chart.ys[0].agg][0] }} of {{ F(R.chart.ys[0].key).label.toLowerCase() }}</p><p class="mt-1 text-3xl font-semibold tnum">{{ rpFmt(F(R.chart.ys[0].key), R.kpi || 0) }}</p></div>
           <div v-show="R.chart.type!=='kpi'" ref="chartEl" class="min-h-[320px]" data-testid="chart" aria-label="Chart"></div>
           <p class="text-[11px] text-muted-foreground">Charts use Highcharts; pictures and the chart's data are made in your browser.</p></div></div></Card>
-      <ListCard :list="LS" :tabs="payTabs" :quick="quick" :search="R.q" placeholder="Search the report" @update:quick="v => quick = v" @update:search="v => R.q = v">
+      <ListCard :list="LS" :tabs="quickTabs" :quick="quick" :search="R.q" placeholder="Search the report" @update:quick="v => quick = v" @update:search="v => R.q = v">
         <template #tools><Button variant="ghost" size="sm" @click="openGroup" :aria-label="'Group rows' + (R.groupBy ? ': by ' + F(R.groupBy).label : '')"><Icon name="Layers" :size="15"/><span class="hidden sm:inline">Group</span><Badge v-if="R.groupBy" variant="secondary" class="ml-0.5">{{ F(R.groupBy).label }}</Badge></Button><Button variant="ghost" size="sm" @click="R.chooser = true"><Icon name="Columns3" :size="15"/><span class="hidden sm:inline">Columns · {{ R.cols.length }}</span></Button></template>
         <template #actions><DropdownMenu :items="exportItems" @select="exportTable"><template #trigger><Button size="sm"><Icon name="FileDown" :size="15"/><span class="hidden sm:inline">Export</span></Button></template></DropdownMenu></template>
         <template #summary><div class="grid gap-3 px-3 py-2.5 sm:px-4">

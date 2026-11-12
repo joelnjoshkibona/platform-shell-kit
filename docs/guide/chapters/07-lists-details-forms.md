@@ -6,6 +6,7 @@ Every screen of a product is one of a few shapes. Each shape is decided once (th
 
 - One `ListCard` per list: toolbar (Refresh, Filters, Sort, then New on the right), quick tabs, search, filter chips, the rows.
 - Rows are `ListRows` with **priority columns**: as the card gets narrower, the least important columns fold into the line under the title, so nothing ever scrolls sideways.
+- On a phone, when the titles would not fit beside the status and the main number, those move to a line under the title, on every row of the list (P112), so a record number never breaks in the middle.
 - Search, filters, sort and the page are in the address, so a copied link opens the same view.
 - The API side is the **list contract**: filters as `{ operator, value }` on allowlisted fields, allowlisted sorts, at most 100 per page, bulk actions, export.
 
@@ -35,6 +36,17 @@ The server checks the context twice: when the form opens (a lock to something yo
 
 A report is a list page like any other (the same toolbar, Filters, quick tabs and search), with two more dialogs, Group and Columns. It lets people shape the numbers themselves: which columns (pinned or not), totals for the rows shown or for everything the filters match, grouping with subtotals, and a chart built with Highcharts. A view is saved for yourself or shared. The table exports as Excel, CSV or PDF (made on the server, in the background); the chart downloads as a picture or as data.
 
+A report is declared once in the module, and the page is built from it; it names its own quick tabs and sorts (P109):
+
+```js
+{ id: 'conversion', name: 'Proforma conversion', module: 'Proformas', rows: () => api.rows('conversion'),
+  fields: [{ key: 'no', label: 'Proforma', type: 'text' }, { key: 'status', label: 'Status', type: 'text', group: true },
+           { key: 'total', label: 'Total', type: 'money', agg: 'sum' }],
+  quick: 'status',                                                      // tabs: All, then each status, with counts
+  sorts: [{ value: 'total', label: 'Total', get: r => r.total }],       // left out: its date and number fields
+  views: [/* … */] }
+```
+
 ## Exports, reports and imports (P95)
 
 Anything that takes more than a few seconds runs in the background. The button says so and you keep working. When it ends, a notification opens its **job page**: what you asked for, the result with Download and its first rows, or what went wrong in plain words, and Run again. Everything you started is under **My exports and reports** in the avatar menu.
@@ -54,7 +66,7 @@ Up to 100 rows are done at once, with a result listing what was skipped and why;
 
 ## Tabs and record dialogs (P101)
 
-A details page has tabs, and each tab has its own address (`?tab=users`). You don't have to go to a record to see one of its tabs: a link can open **another record's tab in a dialog**, over the page you are on. The dialog's header has the record's name and its tabs; the middle scrolls; the footer has **Close** and **Open full page**.
+A details page has tabs, and each tab has its own address (`?tab=users`). You don't have to go to a record to see it or one of its tabs: a link opens **the other record in a dialog**, over the page you are on, on its Overview or on the tab the link names. The dialog's header has the record's name and its tabs; the middle scrolls; the footer has **Close** and **Open full page**.
 
 ```html
 <RecordLink module="Locations" :id="req.loc" tab="users" label="Its people"/>
@@ -66,11 +78,31 @@ Dialogs stack: a link inside a dialog opens another on top, at its own size. Clo
 
 Tabs also work from the keyboard (← → Home End), and when there are too many to fit they scroll, with a **More** menu listing them all.
 
-## Links between records (P85)
+## Actions that need approval (P107, P108)
+
+Any action can be put behind an approval workflow (Settings › Approval workflows). The module says what the action is and what happens once it is decided; the approvals engine itself is never edited:
+
+```js
+ACTIONS['Proformas.discount'] = { label: 'Discount on a proforma', icon: 'Percent',
+  effect: 'The discount is written into the proforma and it can be sent.',   // the sentence on the request page
+  apply: (req) => api.applyDiscount(req.subject.id),    // once, when the last step approves
+  reject: (req) => api.dropDiscount(req.subject.id) }   // once, when any step rejects
+```
+
+The button that does the action goes through the gate, which either runs it or asks for approval. The record brings its own location, because a workflow can apply only to records owned by a branch or zone, and its approvers are found at that location and above:
+
+```js
+approvalGate('Proformas.discount', { kind: 'proforma', id: pf.id, label: pf.no, loc: pf.store, note: reason },
+  () => api.applyDiscount(pf.id))     // runs at once when no workflow applies
+```
+
+In the app the effect runs on the server: the module registers a handler for its action's `approved` and `rejected` events, and the page only refreshes the record. The server also finds the record's location itself; it never trusts the one the page sends.
+
+## Links between records (P85, P111)
 
 Anywhere a record points at another (a task's project, a request's location), it is a `RecordLink`:
 
-- a click opens the other record's preview in a side sheet, with **View full page**;
+- a click opens the other record's details page in a dialog over yours (the record dialog above), on its Overview or on the link's tab, with **Close** and **Open full page**; a module with no details page shows its preview in a side sheet instead;
 - Ctrl-click or middle-click opens it in a new tab;
 - if you may not open it, it is plain text with a lock and the reason;
 - a deleted record shows its label struck through; a missing one says so.

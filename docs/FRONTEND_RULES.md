@@ -112,6 +112,7 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 - One `identity` column (name or number with its icon tile) never folds and keeps at least 40% of the card while anything else is unfolded. At most one `hero` number never folds: right-aligned, `tabular-nums`, one-word sub-label when there is room.
 - Every other column has a `priority` (2 and up) and a `fold` target. The highest number folds first, until identity + hero + the rest fit with no sideways scroll.
 - Status folds right: a badge level with the title, the hero number directly under it, both top-anchored. Once folded it shows on every row, including the default state, so the numbers line up.
+- On a tight card, when the widest title on the page does not fit beside the widest status or hero, every row stacks: title (and badges), then status and hero on a line under it, then the meta line; no right-hand column, and the header shows only the identity's heading (P112, amends P40).
 - Identity badges (SKU, record number; `fold: 'badge'`) fold onto the title line. Meta columns (`fold: 'meta'`) fill the row's meta line after the module's base meta, in priority order, while they fit on two lines; the rest is a `+N more` chip that opens a label/value strip under the row. The chip sits above the row link; the row and the chevron always open the record. Which rows are open is page state, not link state.
 - Tight (identity's own minimum and the hero cannot both be met): identity takes what is left, the hero shrinks to its content, row actions move under the meta line, the toolbar goes icon-only, the title may wrap and the identity cell top-aligns so the icon stays level with the first line.
 - Header click sorts an unfolded column; the Sort control lists every sortable column, folded or not.
@@ -165,7 +166,7 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 **Related-record links (P85, amends P39)**
 
 - Every value that points at another record (list cell, overview field, child row, activity line) is a `RecordLink module id`, never plain text or a raw id.
-- It is a real link to the full page (`#/{path}/{id}`): a plain click opens the target module's own preview in the side sheet with View full page (keeps `?tab=`, stamps `?back=`); a modifier or middle click opens a new tab.
+- It is a real link to the full page (`#/{path}/{id}`): a plain click opens the record's details page in the record dialog (P101), on Overview or the link's `tab` (P111, amends P85); a module with no `page` opens its own preview in the side sheet with View full page (keeps `?tab=`, stamps `?back=`); a modifier or middle click opens a new tab. The link's icon is PanelTop ("Open …"); PanelRightOpen ("Preview …") only for the sheet.
 - The target comes from the module registry (`defineModule`, P81), never from a hand-kept map.
 - Without the module's permission it is plain text with a lock and the reason; empty is "–"; a deleted record keeps its label struck through with Deleted and previews read-only; a missing one says "No longer exists".
 
@@ -268,6 +269,8 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 - Approved, rejected and cancelled requests show a banner explaining the outcome and that the request is read-only.
 - The editor previews who each step would go to at a chosen location and warns when fewer people qualify than the step needs.
 - Capacity rule (D40): a step needing 2+ approvals needs required + 1 people who can approve; the editor shows an inline error, Save stays disabled and the workflow can't be switched on. Existing failing workflows show a "Can't be met" badge; a short step adds the Owner, and an Owner completes a step that already has every approval it can get.
+- What an approved or rejected request does belongs to its action (P107): `ACTIONS[action].apply(req)` / `.reject(req)`, set by the module from its own code. The approvals engine never names a product's records; in the app the module's approval handler does the work on the server.
+- The gate is given the record's owning location and an optional note: `approvalGate(action, { kind, id, label, meta?, loc, note? }, run)`, `approvalNeeded(action, loc)` (P108). The route is chosen at that location; the engine never looks the record up in a module's table. New request picks the record from the action's `pick` source.
 - Gated actions (D41): when a workflow applies, the action button opens "This needs approval" (subject, route preview, note) instead of running. Labels change to say so ("Request another attempt"), menus show a disabled "Needs approval first" row, and an open request for the same subject shows its number instead of a second request.
 - Notifications (D43): the workflow editor has a Notifications block (channel chips, in-app locked on; event switches; reminder every N hours up to M). Each step can override channels and mark them required. The request page has a Notifications tab: one row per person and event with a chip per channel, crossed out with the reason when skipped. People manage their own email/SMS/push in Notification settings (user menu); in-app can't be turned off.
 - Email and quiet hours (D44): approval emails link to the request; nobody decides from an email. SMS and push inside the org's quiet hours (Settings, default 20:00–07:00 EAT) show as held (amber chip with the release time); required steps ignore quiet hours.
@@ -331,6 +334,7 @@ Guide: `docs/architecture/MODULES.md`.
 - **One manifest, found by glob (P81, P82)**: `module.json` on the API, `defineModule()` in `module.ts` on web and phone. No central registry, menu file or picker trait. Adding a module is adding a folder.
 - **One service per operation, container instances (P83)**: `{Module}{Op}Service`, `execute → validateData → process`; models take only validated data plus server fields.
 - **Actions declared once (P84)**: service + route + `{Module}.{action}` + button placement + form type in one manifest entry.
+- **A product registry (P110)**: the product's permission catalogue, role defaults and detail pages are declared once (`web/src/product/registry.ts`; the prototype's `parts_product.js`) and loaded before the shell; the shell's files name no product route, permission or role.
 - **Related records are links (P85)** and **child tabs are the child's scoped list (P86)**.
 - **List contract (P87)** and **API shape (P88)**: see the backend contract below.
 - **Strict TypeScript (P89)**; **every convention has a test (P90)**.
@@ -356,7 +360,7 @@ Guide: `docs/architecture/MODULES.md`.
 
 ## Locked: tabs and record dialogs (P101)
 
-- To show another record's tab without leaving the page, use `RecordLink` with `tab`, or `openRecordTab(module, id, tab)`. Never copy the tab's content into another module.
+- To show another record (on Overview) or one of its tabs without leaving the page, use `RecordLink` (with `tab` for a tab, P111), or `openRecordTab(module, id, tab)`. Never copy the tab's content into another module.
 - Every module with a details page declares its `tabs` and its `page` in `defineModule`; the page draws one tab when given `embedId`.
 - Dialogs go through AppDialog only (`openDialog`): they stack, each at its own size; the footer has Close on the left; there is no × and clicking outside does nothing; Esc and Back close the top one.
 - Tabs move with ← → Home End, scroll with a More menu when they don't fit, and a link to a hidden tab falls back to the first with a toast.
@@ -371,6 +375,7 @@ Guide: `docs/architecture/MODULES.md`.
 ## Locked: reports (P96)
 
 - A report is a list page: the toolbar is Refresh, Filters, Sort, Group, Columns, then Export; Group and Columns open dialogs like Filters; quick tabs, search and chips as on every list.
+- A report names its own quick-tab field (`quick`) and its sorts (`sorts`); without them it has no quick tabs and sorts by its date and number fields (P109). The report page never names a report's field.
 - A report table may scroll both ways inside its card; its header row, pinned columns and totals row always stay put.
 - The totals row is for the rows shown; the aggregate strip (a switch) is for every row the filters match, computed by the server.
 - Charts are Highcharts only, loaded on report pages, in the kit's chart colours; chart pictures and data are made in the browser; table exports run as background jobs.
@@ -432,15 +437,15 @@ Guide: `docs/architecture/MODULES.md`.
 
 ## Review checklist before merging a screen
 
-- [ ] The module lives in its own folder with its manifest; no central file was edited to add it (P80–P82)
-- [ ] Every related record is a `RecordLink` from the registry; checked without the permission, deleted and missing (P85)
+- [ ] The module lives in its own folder with its manifest; no central file was edited to add it (P80–P82); its permissions, role defaults and detail pages are in the product registry (P110)
+- [ ] Every related record is a `RecordLink` from the registry; checked without the permission, deleted and missing (P85); a plain click opens the record dialog, so the module declares `page` (P111)
 - [ ] The implementation plan, the progress tracker and the build guide are updated in the same change (P91–P92)
 - [ ] Checked at 360px and 1280px, light and dark; no horizontal page scroll
 - [ ] Zero console errors and zero console warnings (e2e asserts it)
 - [ ] Every menu, select, popover and tooltip is portalled and stays on screen
 - [ ] Toolbar order is Refresh, Filters, Clear, Sort, then Export / Copy link / New; no cards/table toggle; Refresh keeps content visible
 - [ ] Filters, sort, page and tab are in the URL and survive a reload
-- [ ] Lists that show rows are one ListCard stacked toolbar · tabs · search · chips · header · rows · footer; columns fold by priority as the card narrows (dragged from 1280 to 360 with the sidebar open): identity and hero never fold, status folds right above the hero, `+N more` only when the meta line would overflow two lines, nothing scrolls sideways
+- [ ] Lists that show rows are one ListCard stacked toolbar · tabs · search · chips · header · rows · footer; columns fold by priority as the card narrows (dragged from 1280 to 360 with the sidebar open): identity and hero never fold, status folds right above the hero (under the title when the titles would not fit beside it, P112), `+N more` only when the meta line would overflow two lines, nothing scrolls sideways
 - [ ] Tabs that show records use the module list with a scope (parent filter/column/search removed, own search, Export, Copy link, create with the parent locked)
 - [ ] Top-bar search filters this module; "Search everywhere" works; top-bar actions sit at the right edge with or without search
 - [ ] Activity, KPIs and lists show only the current organisation after a switch
@@ -448,6 +453,7 @@ Guide: `docs/architecture/MODULES.md`.
 - [ ] No native pickers; required asterisks are CSS; errors sit under fields
 - [ ] Buttons and menus respect permissions; a direct URL without permission shows No access
 - [ ] Delete uses the delete check and the YES gate
+- [ ] A gated action's effect is its own `apply` / `reject` (P107) and its gate is given the record's `loc` (P108); the approvals engine was not edited
 - [ ] Status pills come from the workflow lookup (P47); no code compares a label; filters and quick tabs follow the table's order
 - [ ] Phone app: checked at 360, 390 and 411px, light and dark, with the keyboard open and with the system back gesture; every fixed element adds its safe-area inset
 - [ ] Phone app: each movement in `PHONE_MODEL.md` has been tried (cold start, resume, kill, signal lost and back, 401, lock, permission asked and denied, back, keyboard, update) and nothing is lost or doubled

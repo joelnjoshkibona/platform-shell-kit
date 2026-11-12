@@ -11,7 +11,7 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `prototype/index.html` | The runnable prototype (open in a browser). The visual source of truth for the shell |
 | `prototype/src/product.js` | **The one file a product edits for branding:** name, tagline, icon, domain, city, storage key |
 | `prototype/src/parts_*.js`, `builder.html`, `assemble.py` | The shell's source, by area. `python3 prototype/src/assemble.py` rebuilds `index.html` and `docs/COMPONENTS.md` |
-| `docs/PLATFORM_DECISIONS.md` | P1–P102: the locked decisions, each with the decision it came from (P38 withdrawn); P51–P79 are the phone app; P80–P90 the code structure; P91–P92 the build guide, plan and tracker |
+| `docs/PLATFORM_DECISIONS.md` | P1–P112: the locked decisions, each with the decision it came from (P38 withdrawn); P51–P79 are the phone app; P80–P90 the code structure; P91–P92 the build guide, plan and tracker; P107–P112 came from Max Yield's build |
 | `docs/architecture/MODULES.md` | How a product's code is laid out, found and wired (P80–P90): module folders, manifests, loading, services, actions, links, child tabs |
 | `docs/guide/index.html` | **The build guide**: how a product is built on this kit, from an empty folder, explained for a beginner (P91). Source: `docs/guide/chapters/*.md`, built by `python3 tools/guide/build.py` |
 | `docs/help/index.html` | **The user guide** for the people using a product: how to do each task, with marked pictures (P98). Source: `docs/help/articles/`, built by `node tools/help/build.js`. The kit's core articles; products add theirs. |
@@ -35,7 +35,7 @@ The kit is the design and the decisions; **[Bootbox](https://github.com/joelnjos
 
 ## How a product uses the kit
 
-1. **Prototype:** copy `prototype/` into the product's design folder. Edit `product.js`. Add the product's modules as new `parts_<module>.js` files, register them in `assemble.py` where the example modules are, and remove the example modules. Rebuild. The shell, the core screens and the components stay as they are.
+1. **Prototype:** copy `prototype/` into the product's design folder. Edit `product.js`. Replace `parts_product.js` (the product registry, P110: permissions, role defaults, detail routes) with the product's. Add the product's modules as new `parts_<module>.js` files, register them in `assemble.py` where the example modules are (`parts_fomu.js`), and remove the example modules. Rebuild. The shell, the core screens and the components stay as they are.
 2. **Decisions:** the product keeps its own log `D1, D2, …` for product decisions. It references P-numbers for anything the shell already decided. If the shell itself must change, that is a new P in this kit, not a D in the product.
 3. **Build guide, plan and tracker (P91, P92):** every product keeps `docs/guide/` (its build guide, an HTML page built from chapters), `docs/IMPLEMENTATION_PLAN.md` and `docs/PROGRESS.md`, and every change to the code updates them, so anyone can follow the guide and build the product again.
 4. **User guide (P98):** every product keeps `docs/help/` (the kit's core articles plus its own). Articles are Markdown with shot specs; `node tools/help/build.js` makes the marked pictures, `docs/help/index.html` and the in-app Help. A pull request that changes a screen changes its articles.
@@ -46,26 +46,27 @@ The kit is the design and the decisions; **[Bootbox](https://github.com/joelnjos
 | Extension point | File | What the example (Fomu) does there |
 | --- | --- | --- |
 | Sidebar menu items + permissions | `parts_shell.js` → `MENU` | Forms, Templates (+ core items) |
-| Permission catalogue | `parts_shell.js` → `PERMS` | `Forms.*`, `Responses.*`, `Templates.*` |
-| Role defaults | `parts_shell.js` → `ROLES` | which permissions each main role gets |
+| Permission catalogue (P110) | `parts_product.js` → `permissions` (the product registry, loaded before the shell; merged into the shell's `PERMS`) | `Forms.*`, `Responses.*`, `Templates.*` |
+| Role defaults (P110) | `parts_product.js` → `roles` (merged into the shell's `ROLES`) | which of its permissions each role gets, and how its roles are described |
 | Pages per route | `parts_shell.js` → `ShellView` template | `FormsList`, `TemplatesPage` |
+| Detail pages inside the shell (P110) | `parts_product.js` → `detailRoutes` (`[{ route, title(G), parent? }]`): the route check, page titles and sidebar highlight | none (Fomu's own views are full-screen) |
 | Routes outside the shell (full-screen views) | `assemble.py` → `App` | `BuilderView`, `ResponsesView`, `RespondentView` |
 | Global search groups | `parts_list.js` → `GROUPS` | forms, responses, templates |
 | Dashboard KPIs and charts | `parts_list.js` → `DashboardPage` | forms and responses |
 | Demo data per organisation | `parts_shell.js` → `ORGS` / `FORMS` | the three demo organisations |
 | Records owned by a location | `parts_loc.js` → `formsAt`, `formVisible` | forms per location |
-| Actions behind approvals | `parts_appr.js` → `ACTIONS` + `approvalGate` | publish, export, reset |
+| Actions behind approvals (P107, P108) | `parts_appr.js` → `ACTIONS` (label, icon, effect, `pick`) + `approvalGate(action, { kind, id, label, loc, note? })`; what a decided request does is the action's `apply(req)` / `reject(req)`, set from the module's own parts | publish, export, reset; their effects and form picker in `parts_fomu.js`, `loc: form.loc` |
 | Sign-in panel and mark (P48) | `product.js` → `signin`, `logo`; art component registered in `comps` | Fomu's headline, points and `FomuSignInArt` |
 | Phone app states and movements (P51–P79) | `parts_appshell.js` → `appState`, `APP`, the phone components; Screens pill › Phone app and Phone movements | the states and movements with Fomu's name and mark |
 | Settings tabs (P42) | `parts_shell.js` → `SETTINGS_TABS` | Fomu's Results tab (chart defaults) |
 | Recent activity (P45) | `parts_loc.js` → `ACTIVITY` per organisation + `logActivity` | form, people and location events per demo organisation |
 | Screens pill (prototype-only) | `assemble.py` → `ScreensPill` | lists the product's screens |
-| Modules: links, previews, deep links, Back (P39, P49, P81, P85) | `parts_links.js` → `defineModule({ key, route, path, label, plural, perm, get, set, linkId, find, preview, backParent })`; the preview component next to the module | Roles, Locations, Requests (`RolePreview`, `LocationPreview`, `RequestPreview`); `RecordLink module id` anywhere a related record shows. `LINK_DETAIL` and `BACK_PARENT` still accept direct entries from older products |
+| Modules: links, previews, deep links, Back (P39, P49, P81, P85) | `parts_links.js` → `defineModule({ key, route, path, label, plural, perm, get, set, linkId, find, preview, backParent })`; the preview component next to the module | Roles, Locations, Requests (`RolePreview`, `LocationPreview`, `RequestPreview`); `RecordLink module id` anywhere a related record shows; a plain click opens the record's `page` in the record dialog (P111), the preview sheet only without one. `LINK_DETAIL` and `BACK_PARENT` still accept direct entries from older products |
 | Forms with settings (P100) | `defineForm(module, { title, size, component, labels, splash })`, `openForm(module, ctx)`, `useDialogFooter()` in `parts_dialog.js` | Locations: New location (parent locked from a location, New branch demo on the design page) |
 | Batch mode (P99) | `useBatch(LS, { noun, key, label, usable, actions })` in `parts_listcard.js` | Users (remind, resend, remove), Trash (restore, delete for good) |
 | Record dialogs and tabs (P101) | `defineModule({ tabs, page, resolve })` in `parts_links.js`; `openRecordTab()`, `openDialog()` in `parts_dialog.js`; `RecordLink` `tab` | Locations and Roles open a tab in a dialog |
 | User guide (P98) | `docs/help/articles/<lang>/<id>.md` (front matter: title, module, screens, who, related; `::: shot` specs) → `node tools/help/build.js` | Six core articles: lists, exports, reports (2), trash, notifications |
-| Reports (P96) | `parts_reports.js` → `REPORTS` (id, name, module, desc, rows, fields, views); `loadHighcharts()` | Sales lines, Sales by cashier |
+| Reports (P96, P109) | `parts_reports.js` → `REPORTS` (id, name, module, desc, rows, fields, views, `quick`, `sorts`); `loadHighcharts()` | Sales lines, Sales by cashier (quick tabs by payment, three sorts) |
 | Background work (P95) | `parts_jobs.js` → `startJobRun({ kind, title, format, params, rows, columns, preview, file, download })`; `ListShare`'s Export uses it | the Location page's Users export; Logs export |
 | Lists that show rows (P39, P40) | `parts_listcard.js` → `ListCard` + `ListRows` (priority columns) + `useList({ scope, query })` + `registerUrlList` | Roles, Users, Approvals, Locations, Location › Users tab |
 

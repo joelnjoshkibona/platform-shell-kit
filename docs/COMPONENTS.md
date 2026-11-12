@@ -471,12 +471,12 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 | Spec | Value |
 | --- | --- |
-| Look | primary text, PanelRightOpen 13px, underline on hover |
-| Click | plain: the module preview in the side sheet with View full page · modifier or middle: new tab |
+| Look | primary text, PanelTop 13px ("Open …"; PanelRightOpen "Preview …" for the sheet), underline on hover |
+| Click | plain: the record's details page in a record dialog, on Overview or the link's tab (P111); a module with no page: its preview in the side sheet with View full page · modifier or middle: new tab |
 | Address | a real href #/{path}/{id}; View full page keeps ?tab= and stamps ?back= |
 | No permission | plain text + lock, the reason in the tooltip |
 | Empty / deleted / missing | – · label struck through + Deleted · No longer exists |
-| Variants | link · no permission · deleted · missing · empty |
+| Variants | link (dialog) · link (sheet, no page) · no permission · deleted · missing · empty |
 | Used in | Location parent, approval request location; every foreign key on every page |
 
 | Prop | Type | Default | Notes |
@@ -485,14 +485,15 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | `id` | `string` | – | The related record's uuid |
 | `label` | `string` | `the registry's find()` | The label the API sent with the row ({ uuid, label, sub, deleted }) |
 | `deleted` | `boolean` | `false` | Soft-deleted: label struck through, Deleted badge, read-only preview |
-| `tab` | `string` | – | The tab View full page opens |
+| `tab` | `string` | `'overview'` | The tab the record dialog opens on (P101, P111), and the one Open full page opens |
 
 - Do: Use it for every value that points at another record: list cells, overview fields, child rows, activity lines (P85)
+- Do: Let a plain click open the record's details page in the record dialog (P111); declare page in defineModule so it can
 - Do: Let a modifier or middle click open the full page in a new tab
 - Do: Show the reason when the person cannot open it
 - Don't: Show a related record as plain text or a raw id
 - Don't: Keep a hand-made map of routes for links; register the module with defineModule
-- Don't: Open a summary that is not the module's own preview
+- Don't: Open a summary that is not the module's own page (or, for a module with no page, its own preview)
 
 ### Core module page
 
@@ -830,6 +831,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 - Do: One identity column (never folds, 40% floor) and at most one hero (never folds, right-aligned, tabular)
 - Do: Fold by the card's own width, highest priority number first; status folds right above the hero; identity badges fold to the title line; meta columns fill two lines then a +N more chip
+- Do: On a tight card, let the status and hero stack under the title when the widest title would not fit beside them (P112); one decision per list
 - Do: Header shows unfolded columns only; header click sorts
 - Do: Top-align the identity cell when the title can wrap; keep the icon level with the first line
 - Do: Status columns: give them a #cell-<key> slot if they use a custom pill; it renders in the column and in the folded position
@@ -837,6 +839,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Don't: Sideways scroll inside a ListCard (report tables with no identity are not ListCards)
 - Don't: A column that hides without folding (every value stays reachable: meta line, strip or details)
 - Don't: Expand state in the URL
+- Don't: Let a record number or code break mid-word beside a right-hand status or hero column (P112)
 
 ### Charts
 
@@ -978,7 +981,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `report` | `ReportDef` | – | The definition: fields, views |
+| `report` | `ReportDef` | – | The definition: fields, views, quick (the quick-tab field, or { key, values }) and sorts ([{ value, label, get }]); P109 |
 | `view` | `ReportView` | – | Filters, columns, pins, groupBy, totals, chart |
 | `rows` | `Row[]` | – | The page of rows (or all rows) |
 | `aggregate` | `Record<string, number>` | – | Totals of every filtered row, from GET /reports/{id}/aggregate |
@@ -988,9 +991,11 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: Keep the header row, pinned columns and totals row fixed while the table scrolls both ways
 - Do: Take totals of every filtered row from the server
 - Do: Use Highcharts only, loaded on report pages, with the kit's chart colours
+- Do: Take the quick tabs and sorts from the report's definition (P109)
 - Don't: Total only the page and call it the total
 - Don't: Build table exports in the browser
 - Don't: Add a second chart library
+- Don't: Name a report's field in the viewer (P109)
 
 ### Approval steps
 

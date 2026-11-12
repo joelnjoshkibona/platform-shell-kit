@@ -127,9 +127,12 @@
                 identity (exactly one) and hero (at most one) never fold; the highest priority number folds first.
                 status folds right: badge level with the title, the hero directly under it. fold:'badge' -> title line.
                 fold:'meta' -> the meta line after baseMeta(row), while it fits on two lines; the rest -> "+N more" strip.
+                P112 (amends P40): on a tight card, when the widest title on the page does not fit beside the widest status pill
+                or hero, every row stacks: title (and badges), then the status and the hero on a line under it, then the meta
+                line. No right-hand column; the header shows the identity heading only. One decision per list.
      slots      #icon="{ row }" (40px tile), #cell-<key>="{ row }" (grid cell when unfolded), #actions="{ row }" (own column; on tight rows in the chevron's place while the identity keeps 140px, else on a line under the meta line, P50)
      emits      open(row): the whole row and the chevron open the record. Reference: docs/platform/p40-priority-columns.html */
-  const LR_GAP = 16, LR_PADX = 32, LR_CHEV = 16, ACT_TOP_MIN_ID = 140;   // P50: actions go level with the title only while the identity keeps 140px (icon tile + a readable name)
+  const LR_GAP = 16, LR_PADX = 32, LR_CHEV = 16, ACT_TOP_MIN_ID = 140, STACK_MIN_ID = 170;   // P50: actions go level with the title only while the identity keeps 140px (icon tile + a readable name); P112: below 170px beside the hero, the hero moves under the title
   let _lrCtx = null;
   function lrMeasure(t) { try { if (!_lrCtx) { _lrCtx = document.createElement('canvas').getContext('2d'); _lrCtx.font = '12px Geist, ui-sans-serif, system-ui, sans-serif'; } return _lrCtx.measureText(t).width; } catch (e) { return t.length * 6.3; } }
   const ListRows = {
@@ -160,8 +163,19 @@
         if (actCol) tpl.push(p.actionsWidth + 'px');   // fixed: each row is its own grid, so rows with and without actions line up
         tpl.push(actTop ? 'max-content' : LR_CHEV + 'px');
         const heroW = hero ? (tight ? 110 : minOf(hero)) : 0;
-        const identW = tight ? w - LR_PADX - (actTop ? p.actionsWidth : LR_CHEV) - LR_GAP * 2 - (hero || statusF ? 110 : 0) : w - (others - (hero ? minOf(hero) - heroW : 0));
-        return { actCol, actTop, actBelow, liveCols, folded, tight, hero, statusF, badgeF: folded.filter(c => c.fold === 'badge' && !c.status), metaF: folded.filter(c => c.fold !== 'badge' && !c.status), tpl: tpl.join(' '), cap: Math.max(80, (identW - 52) * 2 - 76) };
+        let identW = tight ? w - LR_PADX - (actTop ? p.actionsWidth : LR_CHEV) - LR_GAP * 2 - (hero || statusF ? 110 : 0) : w - (others - (hero ? minOf(hero) - heroW : 0));
+        // P112: on a tight card the hero (and the folded status) leave the right and sit on a line under the title, so the name keeps the width
+        let stack = tight && !!(hero || statusF) && identW < STACK_MIN_ID;
+        if (tight && !stack && (hero || statusF) && p.rows && p.rows.length) {   // measured: the widest name must fit beside the widest status / hero
+          const k = 14 / 12 * 1.06, txt = (c, r) => { try { return String(c.text(r) || ''); } catch (e) { return ''; } };
+          let nameW = 0, rightW = 0;
+          for (const r of p.rows.slice(0, 60)) { nameW = Math.max(nameW, lrMeasure(txt(idc, r)) * k); rightW = Math.max(rightW, statusF ? lrMeasure(txt(statusF, r)) + 30 : 0, hero ? lrMeasure(txt(hero, r)) * k : 0); }
+          const room = w - LR_PADX - (actTop ? p.actionsWidth : LR_CHEV) - LR_GAP * 2 - rightW - (slots.icon ? 52 : 0);
+          stack = room < nameW;
+        }
+        let gridCols = liveCols, tplS = tpl;
+        if (stack) { gridCols = liveCols.filter(c => !c.hero); tplS = gridCols.map(c => c.identity ? 'minmax(0,1fr)' : minOf(c) + 'px'); if (actCol) tplS.push(p.actionsWidth + 'px'); tplS.push(actTop ? 'max-content' : LR_CHEV + 'px'); identW = w - LR_PADX - (actTop ? p.actionsWidth : LR_CHEV) - LR_GAP; }
+        return { stack, gridCols, actCol, actTop, actBelow, liveCols, folded, tight, hero, statusF, badgeF: folded.filter(c => c.fold === 'badge' && !c.status), metaF: folded.filter(c => c.fold !== 'badge' && !c.status), tpl: tplS.join(' '), cap: Math.max(80, (identW - 52) * 2 - 76) };
       });
       // greedy meta fill: folded meta columns join the meta line in priority order while two lines hold them
       function meta(r) {
@@ -182,19 +196,19 @@
     },
     template: `<div ref="root" class="min-w-0" :class="P.tight && 'lr-tight'">
       <div class="grid h-9 items-center gap-x-4 border-b px-4 text-xs font-medium text-muted-foreground" :style="{ gridTemplateColumns: P.tpl }">
-        <template v-for="c in P.liveCols" :key="c.key">
+        <template v-for="c in P.gridCols" :key="c.key">
           <button v-if="c.sort && list" type="button" :class="['flex min-w-0 items-center gap-1 truncate hover:text-foreground', c.hero && 'justify-end']" @click="sortBy(c)" :aria-label="'Sort by ' + c.label">
             <span class="truncate">{{ P.tight && c.short ? c.short : c.label }}</span><Icon v-if="list.S.sort === c.sort" :name="list.S.dir === 'asc' ? 'ChevronUp' : 'ChevronDown'" :size="12"/></button>
           <span v-else :class="['truncate', c.hero && 'text-right']">{{ P.tight && c.short ? c.short : c.label }}</span>
         </template>
-        <span v-if="P.statusF && !P.hero"></span><span v-if="P.actCol"></span><span></span>
+        <span v-if="P.statusF && !P.hero && !P.stack"></span><span v-if="P.actCol"></span><span></span>
       </div>
       <p v-if="!rows.length" class="grid h-32 place-items-center px-4 text-center text-sm text-muted-foreground">{{ empty || 'Nothing matches.' }}</p>
       <template v-for="r in rows" :key="rowKey(r)">
         <div v-for="m in [meta(r)]" :key="m.k" :role="bOn ? 'checkbox' : clickable ? 'link' : null" :aria-checked="bOn ? list.batch.isTicked(r) : null" :tabindex="bOn || clickable ? 0 : null" :aria-label="(bOn || clickable) && P.liveCols[0] ? P.liveCols[0].text(r) : null"
           :class="['grid min-h-14 gap-x-4', clickable && 'cursor-pointer', ' border-b px-4 py-2 outline-none transition-colors last:border-0 hover:bg-accent/60 focus-visible:bg-accent/60', P.tight ? 'items-start' : 'items-center', m.isOpen && 'border-b-0 bg-accent/60', rowClass(r)]"
           :style="{ gridTemplateColumns: P.tpl }" @click="onRow($event, r)" @keydown.enter="onRow($event, r)" @keydown.space.prevent="bOn && onRow($event, r)" @pointerdown="pressStart($event, r)" @pointerup="pressEnd" @pointerleave="pressEnd" @pointercancel="pressEnd" @contextmenu="onCtx">
-          <template v-for="c in P.liveCols" :key="c.key">
+          <template v-for="c in P.gridCols" :key="c.key">
             <div v-if="c.identity" :class="['flex min-w-0 gap-3', P.tight ? 'items-start' : 'items-center']" :style="c.indent ? { paddingLeft: c.indent(r) + 'px' } : null">
               <span v-if="bOn" :class="['mt-px grid h-5 w-5 shrink-0 place-items-center self-center rounded border', list.batch.isTicked(r) ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-background']" aria-hidden="true" data-tick><Icon v-if="list.batch.isTicked(r)" name="Check" :size="13"/></span>
               <div v-if="slots.icon" class="mt-px shrink-0"><slot name="icon" :row="r"/></div>
@@ -203,6 +217,9 @@
                   <span :class="['min-w-0 font-medium', P.tight ? 'break-words' : 'truncate', c.mono && 'font-mono text-[13px]']"><slot :name="'cell-' + c.key" :row="r">{{ c.text(r) }}</slot></span>
                   <template v-for="b in P.badgeF" :key="b.key"><Badge v-if="b.text(r)" :variant="b.variant ? b.variant(r) : 'outline'" :class="b.mono && 'font-mono font-medium'">{{ b.text(r) }}</Badge></template>
                 </div>
+                <div v-if="P.stack && ((P.statusF && P.statusF.text(r)) || P.hero)" class="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1" data-testid="lr-stack">
+                  <slot v-if="P.statusF && P.statusF.text(r)" :name="'cell-' + P.statusF.key" :row="r"><Badge :variant="P.statusF.variant ? P.statusF.variant(r) : 'secondary'">{{ P.statusF.text(r) }}</Badge></slot>
+                  <span v-if="P.hero" class="tnum text-sm font-semibold"><slot :name="'cell-' + P.hero.key" :row="r">{{ P.hero.text(r) }}</slot></span></div>
                 <p v-if="m.parts.length || m.rest.length" class="lr-meta mt-0.5 text-xs leading-[1.5] text-muted-foreground [overflow-wrap:anywhere]"><span v-for="(t, i) in m.parts" :key="i"><span v-if="i" class="text-muted-foreground/60"> · </span>{{ t }}</span>
                   <button v-if="m.rest.length" type="button" class="relative z-10 ml-1.5 inline-flex min-h-[22px] items-center rounded-full border bg-card px-2 text-[11px] font-medium text-foreground hover:bg-accent" :aria-expanded="m.isOpen" @click.stop="toggle(m.k)">{{ m.isOpen ? 'Show less' : '+' + m.rest.length + ' more' }}</button></p>
                 <div v-if="P.actBelow && !bOn" class="relative z-10 mt-2 flex flex-wrap items-center gap-1" data-stop><slot name="actions" :row="r"/></div>
@@ -216,7 +233,7 @@
             <div v-else-if="c.status || c.fold === 'badge'" class="min-w-0"><slot :name="'cell-' + c.key" :row="r"><Badge v-if="c.text(r)" :variant="c.variant ? c.variant(r) : (c.status ? 'secondary' : 'outline')" :class="c.mono && 'font-mono font-medium'">{{ c.text(r) }}</Badge></slot></div>
             <div v-else :class="['min-w-0 truncate text-sm', c.right && 'tnum text-right', c.mono && 'font-mono text-xs', c.muted && 'text-muted-foreground']"><slot :name="'cell-' + c.key" :row="r">{{ c.text(r) }}</slot></div>
           </template>
-          <div v-if="P.statusF && !P.hero" class="text-right"><slot :name="'cell-' + P.statusF.key" :row="r"><Badge v-if="P.statusF.text(r)" :variant="P.statusF.variant ? P.statusF.variant(r) : 'secondary'">{{ P.statusF.text(r) }}</Badge></slot></div>
+          <div v-if="P.statusF && !P.hero && !P.stack" class="text-right"><slot :name="'cell-' + P.statusF.key" :row="r"><Badge v-if="P.statusF.text(r)" :variant="P.statusF.variant ? P.statusF.variant(r) : 'secondary'">{{ P.statusF.text(r) }}</Badge></slot></div>
           <div v-if="P.actCol" class="relative z-10 flex items-center justify-end gap-1" data-stop><slot v-if="!bOn" name="actions" :row="r"/></div>
           <div v-if="P.actTop" class="relative z-10 -mr-2 -mt-1 flex items-center justify-end gap-1" data-stop><slot v-if="!bOn" name="actions" :row="r"/></div>
           <Icon v-else-if="clickable" name="ChevronRight" :size="16" :class="['justify-self-end text-muted-foreground/70', P.tight && 'mt-3']"/><span v-else></span>

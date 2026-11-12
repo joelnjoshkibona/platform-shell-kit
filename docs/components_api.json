@@ -523,6 +523,7 @@
   "do": [
    "One identity column (never folds, 40% floor) and at most one hero (never folds, right-aligned, tabular)",
    "Fold by the card's own width, highest priority number first; status folds right above the hero; identity badges fold to the title line; meta columns fill two lines then a +N more chip",
+   "On a tight card, let the status and hero stack under the title when the widest title would not fit beside them (P112); one decision per list",
    "Header shows unfolded columns only; header click sorts",
    "Top-align the identity cell when the title can wrap; keep the icon level with the first line",
    "Status columns: give them a #cell-<key> slot if they use a custom pill; it renders in the column and in the folded position"
@@ -531,7 +532,8 @@
    "A table/cards switch, a view toggle or per-user view memory",
    "Sideways scroll inside a ListCard (report tables with no identity are not ListCards)",
    "A column that hides without folding (every value stays reachable: meta line, strip or details)",
-   "Expand state in the URL"
+   "Expand state in the URL",
+   "Let a record number or code break mid-word beside a right-hand status or hero column (P112)"
   ]
  },
  "Charts": {
@@ -1275,9 +1277,9 @@
    ],
    [
     "subject",
-    "{type,id,label,meta}",
+    "{kind,id,label,meta?,loc,note?}",
     "",
-    "What the request is about"
+    "What the request is about. loc: the record's owning location, which picks the route (P108; in the app the server resolves it from the record); note prefills the request's note"
    ],
    [
     "channels (ChannelPicker)",
@@ -1306,13 +1308,15 @@
   ],
   "slots": [],
   "do": [
-   "Call gate(action, subject, run): runs directly when no workflow applies",
+   "Call gate(action, subject, run): runs directly when no workflow applies; approvalNeeded(action, loc) says whether one does (P108)",
    "Show the open request number instead of creating a duplicate",
-   "Show delivery chips per channel with skip reasons"
+   "Show delivery chips per channel with skip reasons",
+   "Declare what the action does when decided as its own apply(req) / reject(req), from the module's code (P107)"
   ],
   "dont": [
    "One-click approve links in email",
-   "Letting users turn off in-app"
+   "Letting users turn off in-app",
+   "Looking the subject up in another module's table inside the approvals engine (P108)"
   ]
  },
  "List card": {
@@ -2014,21 +2018,22 @@
    [
     "tab",
     "string",
-    "",
-    "The tab View full page opens"
+    "'overview'",
+    "The tab the record dialog opens on (P101, P111), and the one Open full page opens"
    ]
   ],
   "emits": [],
   "slots": [],
   "do": [
    "Use it for every value that points at another record: list cells, overview fields, child rows, activity lines (P85)",
+   "Let a plain click open the record's details page in the record dialog (P111); declare page in defineModule so it can",
    "Let a modifier or middle click open the full page in a new tab",
    "Show the reason when the person cannot open it"
   ],
   "dont": [
    "Show a related record as plain text or a raw id",
    "Keep a hand-made map of routes for links; register the module with defineModule",
-   "Open a summary that is not the module's own preview"
+   "Open a summary that is not the module's own page (or, for a module with no page, its own preview)"
   ]
  },
  "Job progress · Job page": {
@@ -2067,7 +2072,7 @@
     "report",
     "ReportDef",
     "",
-    "The definition: fields, views"
+    "The definition: fields, views, quick (the quick-tab field, or { key, values }) and sorts ([{ value, label, get }]); P109"
    ],
    [
     "view",
@@ -2102,12 +2107,14 @@
   "do": [
    "Keep the header row, pinned columns and totals row fixed while the table scrolls both ways",
    "Take totals of every filtered row from the server",
-   "Use Highcharts only, loaded on report pages, with the kit's chart colours"
+   "Use Highcharts only, loaded on report pages, with the kit's chart colours",
+   "Take the quick tabs and sorts from the report's definition (P109)"
   ],
   "dont": [
    "Total only the page and call it the total",
    "Build table exports in the browser",
-   "Add a second chart library"
+   "Add a second chart library",
+   "Name a report's field in the viewer (P109)"
   ]
  },
  "Help · How do I…": {

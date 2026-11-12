@@ -15,7 +15,7 @@
 | P decision | A platform decision, numbered P1 to P97, binding on every product. |
 | Permission | A name like `Tasks.create` that a role grants. The menu, the route, the endpoint and the button all check the same one. |
 | Prototype | The clickable copy of the product with fake data; the look every screen must match. |
-| RecordLink | The component that shows a related record as a link with a preview (P85). |
+| RecordLink | The component that shows a related record as a link; a click opens that record's details page in a dialog (P85, P111). |
 | Service | One class that does one operation of a module (`TasksCreateService`) (P83). |
 | Shell | Everything around a product's own screens: sign-in, sidebar, top bar, search, settings. |
 | Tracker | `docs/PROGRESS.md`: where each planned step stands. |

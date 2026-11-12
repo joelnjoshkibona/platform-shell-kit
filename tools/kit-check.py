@@ -12,6 +12,8 @@ Fails (exit 1) when:
     A row marked "Withdrawn:" on a number that was never decided (or was already withdrawn), and a note in another
     row about such a number in parentheses, need only a patch: nothing changes for products. Withdrawing a decided
     P still needs a minor bump.
+  - a decision's source check fails (below, "Source checks"): what a decision says the shared files must not
+    name, read from the prototype's source. Its browser checks are tools/prototype-shots/decisions.test.js.
 """
 import json, re, subprocess, sys, os
 
@@ -59,6 +61,38 @@ if '--base' in sys.argv and v:
         errors.append(f"files changed but kit_version is still {kit['kit_version']} (patch bump for fixes without a decision)")
     if not errors: print(f"base {bkit['kit_version']} -> {kit['kit_version']}; decisions changed: {decided or 'none'}")
 
+# ---- Source checks: what a decision says a shared file must not name (P107–P110)
+def src(name):
+    f = os.path.join(ROOT, 'prototype', 'src', name)
+    return open(f, encoding='utf-8').read() if os.path.exists(f) else ''
+def part(text, start, end):
+    i = text.find(start); j = text.find(end, i + 1) if i > -1 else -1
+    return text[i:j] if i > -1 and j > -1 else None
+checked = []
+def names_none(where, text, words):
+    checked.append(where.split(':')[0])
+    if text is None: errors.append(f'{where}: not found in the source (the check needs updating)'); return
+    hit = [w for w in words if re.search(w, text)]
+    if hit: errors.append(f"{where} names {', '.join(hit)}")
+appr = src('parts_appr.js')
+if appr:
+    names_none('P107: the approvals engine\'s decision code (decide … applyEffect)', part(appr, 'function decide(', 'function openReq('), [r'FORMS', r'Responses', r"'form'"])
+    names_none('P108: parts_appr.js', appr, [r'\bFORMS\b'])
+reports = src('parts_reports.js')
+if reports:
+    i = reports.find('const ReportsPage = {')
+    names_none('P109: the report page code (ReportsPage, ReportPage)', reports[i:] if i > -1 else None, [r'\bpay\b', r'RP_PAY'])
+shell = src('parts_shell.js')
+if shell:
+    reg = src('parts_product.js')
+    mods = sorted(set(re.findall(r"name: '(\w+)\.\w+'", reg)))   # the product's permission modules (Fomu: Forms, Responses, Templates)
+    words = [r"'%s\." % m for m in mods] or [r'(?!)']
+    names_none('P110: the shell\'s permission catalogue and roles (parts_shell.js)', part(shell, 'const PERMS = [', 'const DIRECT = '), words)
+    names_none('P110: the shell\'s route check and page titles (parts_shell.js)', (part(shell, 'const isShell = ', '\n') or '') + (part(shell, 'const titles = new Proxy', '\n') or '') if 'const isShell = ' in shell else None,
+               [r"r === '%s'" % d for d in re.findall(r"route: '([\w-]+)'", reg)] + words or [r'(?!)'])
+    asm = src('assemble.py')
+    if asm and not re.search(r"'const ShellMod = \(\(\) => \{\\n' \+ open\(SP \+ 'parts_product.js'\)", asm): errors.append('P110: assemble.py does not load parts_product.js first, inside the shell module')
+
 if errors:
     print('\n'.join('kit-check: ' + e for e in errors)); sys.exit(1)
-print(f"kit-check ok: {kit['kit_version']}, P1–P{max(now)} ({len(now)} rows)")
+print(f"kit-check ok: {kit['kit_version']}, P1–P{max(now)} ({len(now)} rows)" + (f"; source checks: {len(checked)} ({', '.join(sorted(set(checked)))})" if checked else ''))

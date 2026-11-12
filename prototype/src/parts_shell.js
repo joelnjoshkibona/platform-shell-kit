@@ -1,5 +1,9 @@
 /* ================================================================ SHELL MODULE: auth, sidebar, forms list, templates, members, workspace */
 const ShellMod = (() => {
+  /* P110: the product's registry (parts_product.js, put above this line by assemble.py). The shell names no product
+     permission, role default or route: they all come from here. With no registry, the shell runs with the core modules only. */
+  const REG = Object.assign({ permissions: [], roles: {}, detailRoutes: [] }, typeof PRODUCT_REGISTRY === 'undefined' ? {} : PRODUCT_REGISTRY);
+  const detailOf = (r) => REG.detailRoutes.find(d => d.route === r);   // a product page inside the shell: { route, title(G), parent? }
   const T = reactive({ toasts: [] });
   function toast(title, desc = '', icon = 'CircleCheck') { if (G.route === 'responses' && G.respToast) return G.respToast(title, desc, icon); const t = { id: ulid('t'), title, desc, icon }; T.toasts.push(t); setTimeout(() => { T.toasts = T.toasts.filter(x => x.id !== t.id) }, 3400); }
   G.toast = toast;
@@ -140,7 +144,7 @@ const ShellMod = (() => {
   }
   G.switchOrg = switchOrg; G.orgs = ORGS;
   G.locId = 'aru'; G.viewAs = null; G.viewAsPick = false; G.assignEdit = null; G.newLoc = false;
-  watchEffect(() => { G.navRoute = G.route === 'location' ? 'locations' : G.route === 'request' ? 'approvals' : G.route === 'role' ? 'roles' : G.route; });
+  watchEffect(() => { G.navRoute = G.route === 'location' ? 'locations' : G.route === 'request' ? 'approvals' : G.route === 'role' ? 'roles' : (detailOf(G.route) || {}).parent || G.route; });
   const sidebarNav = computed(() => [
     { id: 'forms', label: 'Forms', icon: 'ClipboardList', count: FORMS.filter(f => f.status !== 'archived').length },
     { id: 'templates', label: 'Templates', icon: 'LayoutTemplate' },
@@ -416,14 +420,12 @@ const ShellMod = (() => {
   const ALL_LEAVES = computed(() => MENU.flatMap(leaves));
   const findLeaf = (route) => ALL_LEAVES.value.find(l => l.route === route);
   const parentOf = (route) => MENU.find(m => m.groups && leaves(m).some(l => l.route === route));
-  const isShell = (r) => r === 'design' || r === 'location' || r === 'request' || r === 'role' || r === 'job' || r === 'my-jobs' || r === 'report' || r === 'help' || r === 'help-article' || r === 'form' || ALL_LEAVES.value.some(l => l.route === r);
+  const isShell = (r) => r === 'design' || r === 'location' || r === 'request' || r === 'role' || r === 'job' || r === 'my-jobs' || r === 'report' || r === 'help' || r === 'help-article' || r === 'form' || !!detailOf(r) || ALL_LEAVES.value.some(l => l.route === r);   // 'form': P100's form as a page
   G.isShell = isShell;
 
   /* ---------- Access: permission catalogue, roles, OR rule (spatie-style) */
   const PERMS = [
-    { name: 'Forms.list', label: 'See forms', module: 'Forms' }, { name: 'Forms.create', label: 'Create and edit forms', module: 'Forms' }, { name: 'Forms.publish', label: 'Publish and close forms', module: 'Forms' }, { name: 'Forms.delete', label: 'Archive and delete forms', module: 'Forms' },
-    { name: 'Templates.list', label: 'See templates', module: 'Forms' },
-    { name: 'Responses.list', label: 'See results', module: 'Results' }, { name: 'Responses.export', label: 'Export results', module: 'Results' }, { name: 'Responses.void', label: 'Void responses and reset people', module: 'Results' },
+    ...REG.permissions,   /* P110: the product's catalogue first, from its registry */
     { name: 'Users.list', label: 'See users', module: 'Users and access' }, { name: 'Users.invite', label: 'Invite and remove users', module: 'Users and access' }, { name: 'Roles.list', label: 'See roles', module: 'Users and access' }, { name: 'Roles.manage', label: 'Create and edit roles', module: 'Users and access' }, { name: 'Permissions.list', label: 'See permission catalogue', module: 'Users and access' }, { name: 'Users.impersonate', label: 'View as another person', module: 'Users and access' },
     { name: 'Locations.list', label: 'See locations', module: 'Locations' }, { name: 'Locations.manage', label: 'Create and edit locations', module: 'Locations' }, { name: 'Locations.assign', label: 'Assign people and location roles', module: 'Locations' }, { name: 'Countries.list', label: 'See countries', module: 'Locations' },
     { name: 'MobileReleases.list', label: 'See mobile releases', module: 'Mobile and reports' }, { name: 'MobileReleases.publish', label: 'Publish mobile releases', module: 'Mobile and reports' }, { name: 'Reports.list', label: 'See reports', module: 'Mobile and reports' },
@@ -434,15 +436,19 @@ const ShellMod = (() => {
   ];
   const P = (...names) => names;
   const ALLP = PERMS.map(p => p.name);
+  const roleReg = (id) => REG.roles[id] || {};
+  const withProduct = (id, core) => [...(roleReg(id).perms || []), ...core];   /* P110: the product's defaults for this role, then the core ones */
   const ROLES = reactive([
     { id: 'owner', name: 'Owner', desc: 'Everything, including billing and deleting the organisation.', system: true, locked: true, perms: [...ALLP] },
-    { id: 'admin', name: 'Admin', desc: 'Runs the workspace: users, roles, settings and system pages.', system: true, perms: ALLP.filter(n => !['Forms.delete'].includes(n)) },
-    { id: 'editor', name: 'Editor', desc: 'Builds forms and works with results.', system: true, perms: P('Forms.list', 'Forms.create', 'Forms.publish', 'Templates.list', 'Responses.list', 'Responses.export', 'Users.list', 'Locations.list', 'Countries.list', 'Reports.list', 'Media.list', 'Notifications.list', 'Requests.list', 'Requests.create', 'Delegations.list') },
-    { id: 'viewer', name: 'Viewer', desc: 'Reads results and reports only.', system: true, perms: P('Forms.list', 'Responses.list', 'Reports.list', 'Notifications.list', 'Requests.list') },
-    { id: 'supervisor', name: 'Branch supervisor', desc: 'Custom role for branch heads: results and their locations.', system: false, perms: P('Forms.list', 'Responses.list', 'Responses.export', 'Locations.list', 'Reports.list', 'Notifications.list', 'Requests.list', 'Requests.create', 'Delegations.list') },
-    { id: 'zone_manager', name: 'Zone manager', desc: 'Custom role: runs a zone, its branches and their forms.', system: false, perms: P('Forms.list', 'Forms.create', 'Forms.publish', 'Templates.list', 'Responses.list', 'Responses.export', 'Responses.void', 'Locations.list', 'Locations.assign', 'Users.list', 'Reports.list', 'Notifications.list', 'Requests.list', 'Requests.create', 'Delegations.list') },
-    { id: 'auditor', name: 'Branch auditor', desc: 'Custom role: reads results and exports them for audits.', system: false, perms: P('Forms.list', 'Responses.list', 'Responses.export', 'Reports.list') },
+    { id: 'admin', name: 'Admin', desc: 'Runs the workspace: users, roles, settings and system pages.', system: true, perms: ALLP.filter(n => !REG.permissions.some(x => x.name === n) || (roleReg('admin').perms || []).includes(n)) },
+    { id: 'editor', name: 'Editor', desc: roleReg('editor').desc || "Works with the product's records.", system: true, perms: withProduct('editor', P('Users.list', 'Locations.list', 'Countries.list', 'Reports.list', 'Media.list', 'Notifications.list', 'Requests.list', 'Requests.create', 'Delegations.list')) },
+    { id: 'viewer', name: 'Viewer', desc: roleReg('viewer').desc || 'Reads records and reports only.', system: true, perms: withProduct('viewer', P('Reports.list', 'Notifications.list', 'Requests.list')) },
+    { id: 'supervisor', name: 'Branch supervisor', desc: roleReg('supervisor').desc || 'Custom role for branch heads and their locations.', system: false, perms: withProduct('supervisor', P('Locations.list', 'Reports.list', 'Notifications.list', 'Requests.list', 'Requests.create', 'Delegations.list')) },
+    { id: 'zone_manager', name: 'Zone manager', desc: roleReg('zone_manager').desc || 'Custom role: runs a zone and its branches.', system: false, perms: withProduct('zone_manager', P('Locations.list', 'Locations.assign', 'Users.list', 'Reports.list', 'Notifications.list', 'Requests.list', 'Requests.create', 'Delegations.list')) },
+    { id: 'auditor', name: 'Branch auditor', desc: roleReg('auditor').desc || 'Custom role: reads reports for audits.', system: false, perms: withProduct('auditor', P('Reports.list')) },
   ]);
+  /* a role the registry names that the shell does not have is added: { name, desc, system?, perms } */
+  Object.entries(REG.roles).forEach(([id, r]) => { if (r.name && !ROLES.some(x => x.id === id)) ROLES.push({ id, name: r.name, desc: r.desc || '', system: r.system !== false, perms: [...(r.perms || [])] }); });
   const DIRECT = reactive({}); // email -> [perm]
   const roleById = (id) => ROLES.find(r => r.id === id);
   const permsOfSubject = (sub) => !sub ? [] : sub.kind === 'role' ? roleById(sub.id).perms : (() => { const m = MEMBERS.find(x => x.email + x.phone === sub.id); if (!m) return []; return [...new Set([...(roleById(m.role) || { perms: [] }).perms, ...(DIRECT[m.email + m.phone] || [])])]; })();
@@ -1228,8 +1234,8 @@ const ShellMod = (() => {
       demo: `<div class="grid gap-2 text-sm"><p class="text-muted-foreground">Open Reports › Sales lines for the live viewer and chart builder.</p><Button size="sm" variant="outline" class="justify-self-start" @click="nav(\'reports\')"><Icon name="ChartColumn" :size="14"/>Open Reports</Button></div>` },
     { name: 'Job progress · Job page', ui: 'JobProgress, JobPage, My exports and reports (P95)', tag: 'Feedback', specs: [['Start', 'the button starts a job; toast "Export started · We\'ll let you know"'], ['Progress', '8px bar with the percent; "You can leave this page"'], ['Done', 'file card (name, rows, size, days kept) + Download + the first rows'], ['Failed', 'plain-words summary, then one line per problem (Row 7 · …)'], ['Actions', 'Run again on done, failed, expired; Cancel while running']], variants: 'waiting · running · done · failed · expired · cancelled', used: 'My exports and reports, every export, report run and import',
       demo: `<div class="grid max-w-md gap-3"><JobProgress :value="64"/><div class="flex items-center gap-3 rounded-lg border p-3 text-sm"><Icon name="FileCheck2" :size="18" class="text-success"/><span class="flex-1">customer-feedback.xlsx<br><span class="text-xs text-muted-foreground">2,340 rows · 412 KB · kept 6 more days</span></span><Button size="sm"><Icon name="Download" :size="14"/>Download</Button></div></div>` },
-    { name: 'Record link', ui: 'RecordLink (P85): a related record as a link, from the module registry', tag: 'Navigation', specs: [['Look', 'primary text, PanelRightOpen 13px, underline on hover'], ['Click', 'plain: the module preview in the side sheet with View full page · modifier or middle: new tab'], ['Address', 'a real href #/{path}/{id}; View full page keeps ?tab= and stamps ?back='], ['No permission', 'plain text + lock, the reason in the tooltip'], ['Empty / deleted / missing', '– · label struck through + Deleted · No longer exists']], variants: 'link · no permission · deleted · missing · empty', used: 'Location parent, approval request location; every foreign key on every page',
-      demo: `<div class="grid gap-2 text-sm"><p>Location: <RecordLink module="Locations" id="aru"/></p><p>Role: <RecordLink module="Roles" id="admin"/></p><p class="text-muted-foreground">Empty: <RecordLink module="Locations" id=""/> · Missing: <RecordLink module="Locations" id="gone-01"/></p></div>` },
+    { name: 'Record link', ui: 'RecordLink (P85, P111): a related record as a link, from the module registry', tag: 'Navigation', specs: [['Look', 'primary text, PanelTop 13px ("Open …"; PanelRightOpen "Preview …" for the sheet), underline on hover'], ['Click', 'plain: the record\'s details page in a record dialog, on Overview or the link\'s tab (P111); a module with no page: its preview in the side sheet with View full page · modifier or middle: new tab'], ['Address', 'a real href #/{path}/{id}; View full page keeps ?tab= and stamps ?back='], ['No permission', 'plain text + lock, the reason in the tooltip'], ['Empty / deleted / missing', '– · label struck through + Deleted · No longer exists']], variants: 'link (dialog) · link (sheet, no page) · no permission · deleted · missing · empty', used: 'Location parent, approval request location; every foreign key on every page',
+      demo: `<div class="grid gap-2 text-sm"><p>Location: <RecordLink module="Locations" id="aru"/></p><p>Role: <RecordLink module="Roles" id="admin"/></p><p>Request (no details page, so a sheet): <RecordLink module="Requests" id="rq14"/></p><p class="text-muted-foreground">Empty: <RecordLink module="Locations" id=""/> · Missing: <RecordLink module="Locations" id="gone-01"/></p></div>` },
     { name: 'Core module page', ui: 'Details header, DetailsTabs, Overview cards, RecordLink, DeleteDialog', tag: 'Navigation', specs: [['Header', 'breadcrumb · icon tile 44px · title 24px · code + type + status'], ['Buttons', 'Refresh · Edit · primary action · More (⋮); delete lives in More'], ['Tabs', 'Overview first, History last; state in ?tab='], ['Overview', 'icon + label + value grids in cards; Timeline card with created/updated and by whom'], ['Related', 'link opens the target panel in a sheet with View full page'], ['Delete', 'dependency check, then type YES']], variants: 'full page · embedded preview', used: 'Locations (reference), every core module',
       demo: `<div class="grid gap-3 rounded-xl border bg-background p-3 text-sm"><p class="text-xs text-muted-foreground">Locations › Northern Zone › <span class="text-foreground">Arusha Branch</span></p><div class="flex flex-wrap items-center justify-between gap-2"><div class="flex items-center gap-3"><span class="grid h-11 w-11 place-items-center rounded-lg bg-primary/10 text-primary"><Icon name="Store" :size="20"/></span><div><p class="text-lg font-semibold leading-tight">Arusha Branch</p><p class="text-xs text-muted-foreground"><span class="font-mono">ARU-01</span> · Branch · Active</p></div></div><div class="flex gap-1.5"><Button variant="ghost" size="sm"><Icon name="RefreshCw" :size="15"/>Refresh</Button><Button variant="outline" size="sm"><Icon name="Pencil" :size="14"/>Edit</Button><Button variant="outline" size="icon-sm" aria-label="More"><Icon name="EllipsisVertical" :size="15"/></Button></div></div><Tabs model-value="o" :items="[{value:'o',label:'Overview'},{value:'d',label:'Details'},{value:'u',label:'Users',count:2},{value:'h',label:'History'}]"/><div class="flex flex-wrap gap-2"><Button size="sm" variant="outline" @click="G.locId='aru'; G.route='location'">Open the real page</Button><Button size="sm" variant="destructive" @click="s.del=true"><Icon name="Trash2" :size="14"/>Delete gate</Button></div><DeleteDialog v-model:open="s.del" name="Kibaha Shop" :deps="[{icon:'Users',label:'1 person assigned here (assignments are removed)'}]" @confirm="s.del=false; G.toast('Deleted (demo)','','Trash2')"/></div>` },
     { name: 'Top-bar search', ui: 'HeaderSearch (Combobox + portal)', tag: 'Navigation', specs: [['Box', 'max 384px, 36px, scope chip on the right (Forms, Users…)'], ['List mode', 'filters the list in place; strip shows the match count + Search everywhere'], ['Parent mode', 'details pages: top matches of the parent module'], ['Global', 'Dashboard: groups of 5 with See all'], ['Phone', 'icon → full-width bar; global results full screen'], ['Keys', '↑ ↓ Enter Esc, Ctrl/⌘K']], variants: 'list · parent · global · phone', used: 'Top bar on every searchable page',
@@ -1509,11 +1515,11 @@ const ShellMod = (() => {
       function onPhoneUser(it) { if (it.id === '__notifs') nav('notifications'); else if (it.id === '__viewas') G.viewAsPick = true; else if (it.id.startsWith('__theme-')) G.theme = it.id.slice(8); else onUser(it); }
       function onUser(it) { if (it.id === 'jobs') { nav('my-jobs'); return; } if (it.id === 'notifs') { G.myNotifs = true; return; } if (it.id === 'drafts') { G.myDrafts = true; return; } if (it.id === 'out') { G.route = 'login'; G.toast('Signed out', '', 'LogOut'); } else G.toast(it.label, 'Profile screens come later.', 'Info'); }
       function toggleMenu() { if (window.matchMedia('(min-width: 1024px)').matches) G.navCollapsed = !G.navCollapsed; else G.mobileNav = true; }
-      const titles = new Proxy({}, { get: (_, r) => r === 'design' ? 'Design system' : r === 'workspace' ? 'Settings' : r === 'members' ? 'Users' : r === 'location' ? ((locById(G.locId) || {}).name || 'Location') : r === 'request' ? ((reqById(G.reqId) || {}).no || 'Request') : r === 'role' ? ((roleById(G.roleId) || {}).name || 'Role') : r === 'approvals' ? 'Approvals' : r === 'my-jobs' ? 'My exports and reports' : r === 'report' ? ((REPORTS.find(x => x.id === G.reportId) || {}).name || 'Report') : r === 'help' ? 'Help and guides' : r === 'form' ? ((G.formPage && (G.formPage.ctx.title || ((FORM_DEFS || {})[G.formPage.module] || {}).title)) || 'Form') : r === 'help-article' ? ((helpById(G.helpId) || {}).title || 'Help') : r === 'job' ? ((jobById(G.jobId) || {}).no || 'Job') : (findLeaf(r) || {}).label || '' });
+      const titles = new Proxy({}, { get: (_, r) => r === 'design' ? 'Design system' : r === 'workspace' ? 'Settings' : r === 'members' ? 'Users' : r === 'location' ? ((locById(G.locId) || {}).name || 'Location') : r === 'request' ? ((reqById(G.reqId) || {}).no || 'Request') : r === 'role' ? ((roleById(G.roleId) || {}).name || 'Role') : r === 'approvals' ? 'Approvals' : r === 'my-jobs' ? 'My exports and reports' : r === 'report' ? ((REPORTS.find(x => x.id === G.reportId) || {}).name || 'Report') : r === 'help' ? 'Help and guides' : r === 'form' ? ((G.formPage && (G.formPage.ctx.title || ((FORM_DEFS || {})[G.formPage.module] || {}).title)) || 'Form') : r === 'help-article' ? ((helpById(G.helpId) || {}).title || 'Help') : r === 'job' ? ((jobById(G.jobId) || {}).no || 'Job') : detailOf(r) ? detailOf(r).title(G) : (findLeaf(r) || {}).label || '' });
       const onKey = (e) => { if (e.altKey && /^Digit[1-9]$/.test(e.code)) { const o = ORGS[+e.code.slice(5) - 1]; if (o) { e.preventDefault(); switchOrg(o.id); } } };
       onMounted(() => document.addEventListener('keydown', onKey));
       onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
-      const allowed = computed(() => { const l = findLeaf(G.view === 'location' ? 'locations' : G.view === 'request' ? 'approvals' : G.view === 'role' ? 'roles' : G.view === 'report' ? 'reports' : G.view); return !l || !l.perm || myPerms.value.includes(l.perm); });
+      const allowed = computed(() => { const l = findLeaf(G.view === 'location' ? 'locations' : G.view === 'request' ? 'approvals' : G.view === 'role' ? 'roles' : G.view === 'report' ? 'reports' : (detailOf(G.view) || {}).parent || G.view); return !l || !l.perm || myPerms.value.includes(l.perm); });
       return { allowed, G, T, notif, onNotif, unread, userItems, onUser, phoneItems, onPhoneUser, toggleMenu, titles, canViewAs, exitViewAs, SEARCH_SCOPE };
     },
     template: `
@@ -1584,7 +1590,7 @@ const ShellMod = (() => {
           <HelpPage v-else-if="G.view==='help'"/>
           <FormPage v-else-if="G.view==='form'"/>
           <HelpArticlePage v-else-if="G.view==='help-article'"/>
-          <ReportPage v-else-if="G.view==='report'"/>
+          <ReportPage v-else-if="G.view==='report'" :key="G.reportId"/>
           <JobPage v-else-if="G.view==='job'"/>
           <QueuePage v-else-if="G.view==='queue'"/>
           <ScheduledTasksPage v-else-if="G.view==='scheduled-tasks'"/>
@@ -1671,12 +1677,12 @@ const ShellMod = (() => {
         { id: 'open', label: f.status === 'draft' ? 'Edit' : 'Open', icon: 'Pencil' },
         ...(f.responses ? [{ id: 'res', label: 'Results', icon: 'ChartBarBig' }] : []),
         ...(f.status === 'live' ? [{ id: 'link', label: 'Copy link', icon: 'Link' }, { id: 'live', label: 'Open live form', icon: 'ExternalLink' }] : []),
-        ...(f.status === 'draft' && typeNeeded('Forms.publish', f) ? [{ id: 'reqpub', label: 'Request to publish', icon: 'Stamp' }] : []),
+        ...(f.status === 'draft' && G.approvalNeeded('Forms.publish', f.loc) ? [{ id: 'reqpub', label: 'Request to publish', icon: 'Stamp' }] : []),
         { id: 'dup', label: 'Duplicate', icon: 'Copy' }, { separator: true },
         { id: 'arch', label: f.status === 'archived' ? 'Restore' : 'Archive', icon: f.status === 'archived' ? 'ArchiveRestore' : 'Archive' },
       ];
       function onMenu(f, it) {
-        if (it.id === 'reqpub') newRequest({ type: typeNeeded('Forms.publish', f).id, form: f.id });
+        if (it.id === 'reqpub') newRequest({ type: typeNeeded('Forms.publish', f.loc).id, pickId: f.id });
         if (it.id === 'open') openForm(f);
         if (it.id === 'res') { nav('responses'); if (!f.sample) G.toast('Prototype opens the sample results', '', 'Info'); }
         if (it.id === 'live') nav('respondent');

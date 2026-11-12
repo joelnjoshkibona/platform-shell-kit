@@ -18,6 +18,7 @@
 | --- | --- |
 | `parts_helpers.js` | Vue imports and helpers (ulid, class names, dates) |
 | `parts_atoms.js` | Atoms mirroring shadcn-vue: Button, Input, Select, Checkbox, Switch, Badge, Card, Tabs, Tooltip, DropdownMenu, Dialog, Sheet, `usePopover`, Escape handling |
+| `parts_product.js` | The product registry (P110): its permissions, role defaults and detail pages, loaded first so the shell is built from them |
 | `parts_shell.js` | App shell: sign-in, org switcher, sidebar, menus/permissions model, Roles list/details, Design system page, Forms list, Templates, Users, Settings, ShellView |
 | `parts_list.js` | `useList`, ListToolbar, FiltersDialog, DatePicker, HeaderSearch (contextual/global), Dashboard |
 | `parts_comp.js` | ApiSelect (paging, labels, stale states), FilePicker, Media library, RichText, drafts, DeleteDialog, RelatedLink |
@@ -25,6 +26,7 @@
 | `parts_appr.js` | Approvals: workflows, routing, capacity rule, notifications, inbox, request page, editor, delegations, notification settings |
 | `parts_resp.js` | Results: summary charts, individual responses, filters, export, void/reset |
 | `parts_app.js` | Respondent: OTP, rules, timer, violations, gates, Prototype states panel |
+| `parts_fomu.js` | The example product's hooks into core parts: what its approvals do and where their records are picked from (P107, P108) |
 | `builder.html` | The builder (Questions + Settings), plus the base page: theme tokens, Tailwind config, fonts. The assembly starts from it |
 | `assemble.py` | Stitches everything into `index.html`, and holds the glue: the global store `G` (route, theme, org), `nav()`, the curtain, the Screens pill and app mounting. Its paths point to the original workspace |
 
