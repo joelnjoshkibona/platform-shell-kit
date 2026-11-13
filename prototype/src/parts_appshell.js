@@ -93,7 +93,7 @@
   const AppSplash = {
     setup() { return { APP, PRODUCT }; },
     template: `<Teleport to="body"><div v-if="APP.splash" class="fixed inset-0 z-[118] grid place-items-center" style="background:hsl(var(--curtain));color:hsl(var(--curtain-fg))" role="status" @click="APP.splash=false">
-      <div class="grid justify-items-center"><span class="grid h-16 w-16 place-items-center rounded-2xl" style="background:hsl(var(--curtain-fg) / .15)"><BrandMark :size="30"/></span>
+      <div class="grid justify-items-center"><ProductLoader v-if="PRODUCT.loader" kind="boot" :size="PRODUCT.loader.boot ? 170 : 64"/><span v-else class="grid h-16 w-16 place-items-center rounded-2xl" style="background:hsl(var(--curtain-fg) / .15)"><BrandMark :size="30"/></span>
       <p class="mt-4 text-sm font-medium">Loading {{ PRODUCT.name }}…</p></div></div></Teleport>`
   };
   const AppIcon = {

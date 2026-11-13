@@ -78,6 +78,7 @@ Every Fomu screen is built against these rules. Cobley's frontend code is discar
 - The curtain plays on first load and on every page change, sidebar included; not between sign-in steps or between tabs inside a page.
 - Loader text appears only after 300ms. Skipped under `prefers-reduced-motion`.
 - Curtain colours: bright teal in light mode, deep green in dark mode.
+- The product may replace the ring and mark with its own loader (P114, `PRODUCT.loader`): `page` on page changes, `boot` on the first load and the phone splash. One colour (`currentColor`, cut-outs in `var(--cut)`), motion as CSS inside the SVG, still under reduced motion. Never in buttons or inline saves.
 
 **View as (D24, D37)**
 

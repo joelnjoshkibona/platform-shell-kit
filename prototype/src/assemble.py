@@ -126,6 +126,10 @@ extra_css = '''
 .curtain[data-state=closed] .curtain-loader{opacity:1;transform:none;transition-delay:300ms}
 .boot-spin{position:absolute;inset:0;border-radius:9999px;border:2px solid hsl(var(--curtain-fg) / .25);border-top-color:hsl(var(--curtain-fg));animation:bootspin .8s linear infinite}
 @keyframes bootspin{to{transform:rotate(360deg)}}
+/* P114: a product's own loader: one colour (the curtain text), cut-outs in the curtain colour, its own CSS motion */
+.p-loader{display:grid;place-items:center;color:hsl(var(--curtain-fg));--cut:hsl(var(--curtain))}
+.p-loader svg{display:block;max-width:100%;height:auto}
+@media (prefers-reduced-motion:reduce){.p-loader *{animation:none!important}}
 @media (prefers-reduced-motion:reduce){#boot-curtain{display:none}}
 .anim-paused .kpi,.anim-paused .spark,.anim-paused .pop,.anim-paused .expand{animation-play-state:paused!important}
 @media (prefers-reduced-motion:reduce){.curtain{display:none}}
@@ -290,7 +294,8 @@ const Curtain = {
   template: `<div class="curtain pointer-events-none fixed inset-0 z-[120]" :data-state="G.curtain" aria-hidden="true" :class="G.curtain!=='idle' && 'pointer-events-auto'">
     <div class="half half-l"></div><div class="half half-r"></div>
     <div class="curtain-loader" role="status" :aria-hidden="G.curtain!=='closed'">
-      <div class="relative grid h-16 w-16 place-items-center">
+      <ProductLoader v-if="PRODUCT.loader" :kind="G.booting ? 'boot' : 'page'" :size="G.booting && PRODUCT.loader.boot ? 150 : 56"/>
+      <div v-else class="relative grid h-16 w-16 place-items-center">
         <span class="absolute inset-0 animate-spin rounded-full border-2" style="animation-duration:.8s;border-color:hsl(var(--curtain-fg) / .25);border-top-color:hsl(var(--curtain-fg))"></span>
         <span class="grid h-11 w-11 place-items-center rounded-xl" style="background:hsl(var(--curtain-fg) / .15);color:hsl(var(--curtain-fg))"><BrandMark :size="20"/></span>
       </div>
@@ -367,6 +372,8 @@ app.mount('#app');
 
 _logo = _re0.search(r"logo:\s*'(<svg[^']*)'", _prod)
 BOOT_MARK = _logo.group(1).replace('<svg', '<svg width="20" height="20" aria-hidden="true"', 1) if _logo else PNAME[0]   # P48: the product's mark, else its initial
+_ldr = _re0.search(r"boot:\s*'(<svg[^']*)'", _prod) or _re0.search(r"page:\s*'(<svg[^']*)'", _prod)   # P114: the product's first-load loader, else its page loader
+BOOT_LOADER = ('<div class="p-loader">' + _ldr.group(1).replace('<svg', '<svg width="150" aria-hidden="true"' if 'boot:' in _ldr.group(0) else '<svg width="56" height="56" aria-hidden="true"', 1) + '</div>') if _ldr else None
 BOOT = '''<div id="boot-curtain" class="curtain" data-state="closed" aria-hidden="true" style="position:fixed;inset:0;z-index:121">
   <div class="half half-l"></div><div class="half half-r"></div>
   <div class="curtain-loader" style="opacity:1;transform:none;transition:none">
@@ -376,6 +383,9 @@ BOOT = '''<div id="boot-curtain" class="curtain" data-state="closed" aria-hidden
     </div>
     <p style="margin-top:16px;font:500 14px/1.4 Geist,system-ui,sans-serif;color:hsl(var(--curtain-fg))">Loading ' + PNAME + '…</p>
   </div></div>'''.replace("' + BOOT_MARK + '", BOOT_MARK).replace("' + PNAME + '", PNAME)   # the boot curtain is plain HTML: fill the product's mark and name
+if BOOT_LOADER:   # P114: the product's loader in place of the ring and mark tile
+    BOOT = re.sub(r'<div style="position:relative;width:64px;height:64px[^\n]*\n\s*<span class="boot-spin"></span>\n\s*<span[^\n]*</span>\n\s*</div>', lambda m: BOOT_LOADER, BOOT, count=1)
+    assert BOOT_LOADER in BOOT, 'P114: boot loader not placed'
 BOOT_ACCENT = '<script>/* P46: last accent this browser saw, before anything paints */try{var __a=localStorage.getItem(' + repr(PKEY + '-accent') + ');if(__a){var __s=document.createElement("style");__s.id="org-accent";__s.textContent=__a;document.head.appendChild(__s)}}catch(e){}</script>\n'
 out = head + BOOT_ACCENT + BOOT + '<div id="app"></div>\n<script>\n' + helpers + shared + atoms + builder_mod + respondent_mod + responses_mod + shell + root
 open(os.path.join(KIT, 'prototype', 'index.html'), 'w').write(out)

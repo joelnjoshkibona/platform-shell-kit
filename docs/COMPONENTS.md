@@ -8,7 +8,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 - **Actions**: Button
 - **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Locked field, File picker · Media library, API select, Rich text, Date picker, Accent picker
-- **Display**: Badge · Status pill, Card · KPI tile, App icon and splash
+- **Display**: Badge · Status pill, Card · KPI tile, App icon and splash, Product loader
 - **Navigation**: Tabs, Sidebar item, Record link, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet, AppDialog · Record dialog
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, Job progress · Job page, View as banner
@@ -412,6 +412,30 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | Sizes | 512 store · 192 · 96 · 48 launcher |
 | Variants | icon, splash |
 | Used in | The phone app only (P55). The splash, the first frame and the web view's first paint are one picture. |
+
+### Product loader
+
+`src/components/app/ProductLoader.vue`
+
+| Spec | Value |
+| --- | --- |
+| Page change | PRODUCT.loader.page: an inline SVG on a square grid, at 56px in place of the ring and mark tile (P8) |
+| First load | PRODUCT.loader.boot (else page): the boot curtain and the phone splash (P55), up to 150px wide |
+| Colour | currentColor (the curtain text) and its opacities; cut-outs in var(--cut) (the curtain); nothing else, so P41/P46 contrast holds for any brand colour |
+| Motion | CSS inside the SVG only, since the boot curtain is plain HTML before the app runs; stopped under reduced motion |
+| Not for | buttons, Refresh and inline saves: they keep LoaderCircle |
+| Variants | page · boot · none set (the ring) |
+| Used in | Page curtain, boot curtain and phone splash (P114) |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `kind` | `'page' \| 'boot'` | `'page'` | page = page change; boot = first load and phone splash (falls back to page) |
+| `size` | `number` | `56` | Pixel width; a page loader is square |
+
+- Do: Put it only on the curtain colour: the boot curtain, the page curtain, the phone splash
+- Do: Draw in currentColor and cut details out with var(--cut); carry motion as CSS inside the SVG
+- Don't: Use it in buttons, Refresh or inline saves (they keep LoaderCircle)
+- Don't: Add colours, images or script to the SVG
 
 ## Navigation
 
