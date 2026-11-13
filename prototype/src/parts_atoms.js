@@ -191,7 +191,7 @@ const Tabs = {
   },
   template: `<div :class="full ? 'w-full' : 'flex min-w-0 max-w-full items-center gap-1'">
     <div :class="full ? '' : 'relative min-w-0'">
-      <div ref="scroller" role="tablist" @scroll="measure" @keydown="key" style="scrollbar-width:none"
+      <div ref="scroller" role="tablist" @scroll="measure" @keydown="key" class="tabs-scroll"
         :class="['h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground', full ? 'grid w-full' : 'inline-flex max-w-full overflow-x-auto']" :style="full ? 'grid-template-columns:repeat(' + items.length + ',minmax(0,1fr))' : ''">
         <button v-for="t in items" :key="t.value" type="button" role="tab" :aria-selected="modelValue===t.value" :tabindex="modelValue===t.value ? 0 : -1" @click="$emit('update:modelValue', t.value)"
           :class="['inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', modelValue===t.value ? 'bg-background text-foreground shadow' : 'hover:text-foreground']">
