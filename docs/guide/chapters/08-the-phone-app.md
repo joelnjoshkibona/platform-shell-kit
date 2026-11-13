@@ -36,6 +36,6 @@ The screens never know which one is on: they read and write through one data lay
 - **The keyboard.** On some phones the screen does not shrink when the keyboard opens; sheets lift by the keyboard's height (P71).
 - **The Back key** closes the top layer first (a sheet, a dialog, the menu), then goes back, then asks twice before leaving.
 - **Updates** come from a download page; the app checks, downloads, verifies and installs (P79).
-- **The app log** records what went wrong on a real phone so it can be followed up (P72).
+- **The app log** records what went wrong on a real phone so it can be followed up (P72). **Everything you build writes to it (P113):** a new feature's PHP uses `AppLog`, its page `useAppLog`, its plugin `AppLogBridge`; not `Log::` (that file is not exported) and not logcat alone. Log starts and ends with counts, every call out with its answer code, every failure with its reason, waits and give-ups; never content. List the lines in the feature's spec and test that the main one lands in the exported log.
 
 Read `docs/mobile/PHONE_MODEL.md` (what a phone is, how it moves) and draw the phone prototype before writing phone code.
