@@ -11,7 +11,7 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `prototype/index.html` | The runnable prototype (open in a browser). The visual source of truth for the shell |
 | `prototype/src/product.js` | **The one file a product edits for branding:** name, tagline, icon, domain, city, storage key |
 | `prototype/src/parts_*.js`, `builder.html`, `assemble.py` | The shell's source, by area. `python3 prototype/src/assemble.py` rebuilds `index.html` and `docs/COMPONENTS.md` |
-| `docs/PLATFORM_DECISIONS.md` | P1–P112: the locked decisions, each with the decision it came from (P38 withdrawn); P51–P79 are the phone app; P80–P90 the code structure; P91–P92 the build guide, plan and tracker; P107–P112 came from Max Yield's build |
+| `docs/PLATFORM_DECISIONS.md` | P1–P114: the locked decisions, each with the decision it came from (P38 withdrawn); P51–P79 are the phone app; P80–P90 the code structure; P91–P92 the build guide, plan and tracker; P107–P112 came from Max Yield's build |
 | `docs/architecture/MODULES.md` | How a product's code is laid out, found and wired (P80–P90): module folders, manifests, loading, services, actions, links, child tabs |
 | `docs/guide/index.html` | **The build guide**: how a product is built on this kit, from an empty folder, explained for a beginner (P91). Source: `docs/guide/chapters/*.md`, built by `python3 tools/guide/build.py` |
 | `docs/help/index.html` | **The user guide** for the people using a product: how to do each task, with marked pictures (P98). Source: `docs/help/articles/`, built by `node tools/help/build.js`. The kit's core articles; products add theirs. |
@@ -57,6 +57,7 @@ The kit is the design and the decisions; **[Bootbox](https://github.com/joelnjos
 | Records owned by a location | `parts_loc.js` → `formsAt`, `formVisible` | forms per location |
 | Actions behind approvals (P107, P108) | `parts_appr.js` → `ACTIONS` (label, icon, effect, `pick`) + `approvalGate(action, { kind, id, label, loc, note? })`; what a decided request does is the action's `apply(req)` / `reject(req)`, set from the module's own parts | publish, export, reset; their effects and form picker in `parts_fomu.js`, `loc: form.loc` |
 | Sign-in panel and mark (P48) | `product.js` → `signin`, `logo`; art component registered in `comps` | Fomu's headline, points and `FomuSignInArt` |
+| Curtain loader (P114) | `product.js` → `loader: { page, boot }` (inline SVGs, one colour, CSS motion); shown by `ProductLoader` on the page curtain, the boot curtain and the phone splash | none: Fomu keeps the ring |
 | Phone app states and movements (P51–P79) | `parts_appshell.js` → `appState`, `APP`, the phone components; Screens pill › Phone app and Phone movements | the states and movements with Fomu's name and mark |
 | Settings tabs (P42) | `parts_shell.js` → `SETTINGS_TABS` | Fomu's Results tab (chart defaults) |
 | Recent activity (P45) | `parts_loc.js` → `ACTIVITY` per organisation + `logActivity` | form, people and location events per demo organisation |

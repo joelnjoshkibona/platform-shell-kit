@@ -5,6 +5,8 @@ const PRODUCT = {
   tagline: 'Forms, results and approvals for every location',
   icon: 'ClipboardList',        // Lucide icon next to the name, used when there is no logo
   logo: null,                   // P48: optional inline 24×24 SVG in currentColor (sidebar, sign-in, curtain, favicon)
+  loader: null,                 // P114: optional { page, boot }: inline SVGs that replace the curtain's ring (page change; first load + phone splash).
+                                //   One colour (currentColor, its opacities; cut-outs in var(--cut)), motion as CSS inside the SVG, no script.
   domain: 'fomu.app',           // used in copied links
   city: 'Dar es Salaam',        // footer
   storageKey: 'fomu',           // prefix for localStorage keys (theme, list views, recent searches, last accent)

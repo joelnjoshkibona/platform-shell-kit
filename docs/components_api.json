@@ -2259,5 +2259,32 @@
    "Send thousands of ids",
    "Fail the whole batch for one row"
   ]
+ },
+ "Product loader": {
+  "file": "src/components/app/ProductLoader.vue",
+  "props": [
+   [
+    "kind",
+    "'page' | 'boot'",
+    "'page'",
+    "page = page change; boot = first load and phone splash (falls back to page)"
+   ],
+   [
+    "size",
+    "number",
+    "56",
+    "Pixel width; a page loader is square"
+   ]
+  ],
+  "emits": [],
+  "slots": [],
+  "do": [
+   "Put it only on the curtain colour: the boot curtain, the page curtain, the phone splash",
+   "Draw in currentColor and cut details out with var(--cut); carry motion as CSS inside the SVG"
+  ],
+  "dont": [
+   "Use it in buttons, Refresh or inline saves (they keep LoaderCircle)",
+   "Add colours, images or script to the SVG"
+  ]
  }
 }
