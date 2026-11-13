@@ -51,7 +51,7 @@
   function downloadJob(j) { if (j.download) j.download(); else toast('Downloading ' + (j.file || 'the file'), j.size ? j.size + ' · ' + (j.rows || 0) + ' rows' : '', 'Download'); }
 
   const JobProgress = { props: { value: Number },
-    template: `<div class="grid gap-1"><div class="flex justify-between text-xs"><span class="text-muted-foreground">Working on it</span><span class="tnum">{{ value }}%</span></div><div class="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" :aria-valuenow="value" aria-valuemin="0" aria-valuemax="100"><div class="h-full rounded-full bg-primary transition-[width] duration-500" :style="{ width: value + '%' }"></div></div></div>` };
+    template: `<div class="grid gap-1"><div class="flex justify-between text-xs"><span class="text-muted-foreground">Working on it</span><span class="tnum">{{ value }}%</span></div><div class="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" :aria-valuenow="value" aria-valuemin="0" aria-valuemax="100"><Meter :value="value" class="rounded-full bg-primary"/></div></div>` };
   const JobPreview = { props: { id: String },   /* what a RecordLink to a job opens (P85) */
     setup(p) { return { j: computed(() => jobById(p.id)), JOB_ST, JOB_KIND }; },
     template: `<div v-if="j" class="grid gap-3 text-sm"><div class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary"><Icon :name="JOB_KIND[j.kind][1]" :size="18"/></span><div class="min-w-0"><p class="font-mono text-xs text-muted-foreground">{{ j.no }}</p><h2 class="truncate font-semibold">{{ j.title }}</h2></div><span class="ml-auto"><Badge :variant="JOB_ST[j.status][1]">{{ JOB_ST[j.status][0] }}</Badge></span></div>
@@ -75,7 +75,7 @@
       <ListCard :list="LS" :tabs="tabs" v-model:quick="quick">
         <ListRows :list="LS" :rows="LS.rows.value" :columns="cols" :row-key="j => j.id" :base-meta="j => j.no + ' · ' + j.format" empty="Nothing yet. Exports, reports and imports you start show up here." @open="j => openJob(j.id)">
           <template #icon="{ row: j }"><span :class="['grid h-9 w-9 place-items-center rounded-lg', j.status==='failed' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary']"><Icon :name="JOB_KIND[j.kind][1]" :size="16"/></span></template>
-          <template #cell-status="{ row: j }"><span class="inline-flex items-center gap-2"><Badge :variant="JOB_ST[j.status][1]">{{ JOB_ST[j.status][0] }}</Badge><span v-if="j.status==='running'" class="hidden h-1.5 w-14 overflow-hidden rounded-full bg-muted sm:block"><span class="block h-full rounded-full bg-primary transition-[width] duration-500" :style="{ width: j.progress + '%' }"></span></span></span></template>
+          <template #cell-status="{ row: j }"><span class="inline-flex items-center gap-2"><Badge :variant="JOB_ST[j.status][1]">{{ JOB_ST[j.status][0] }}</Badge><span v-if="j.status==='running'" class="hidden h-1.5 w-14 overflow-hidden rounded-full bg-muted sm:block"><Meter :value="j.progress" class="rounded-full bg-primary"/></span></span></template>
           <template #actions="{ row: j }"><Tooltip v-if="j.status==='done'" content="Download"><Button variant="ghost" size="icon-sm" :aria-label="'Download ' + j.title" @click="downloadJob(j)"><Icon name="Download" :size="15"/></Button></Tooltip></template>
         </ListRows>
       </ListCard>

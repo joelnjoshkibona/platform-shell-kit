@@ -321,10 +321,10 @@ const App = {
           :class="['relative inline-flex items-center gap-1.5 overflow-hidden rounded-full border px-3 py-1.5 text-sm font-semibold tnum transition-colors',
             timerTone==='danger' ? 'border-destructive/50 bg-destructive/10 text-destructive animate-[pulse_1.6s_ease-in-out_infinite]' : timerTone==='warn' ? 'border-warning/40 bg-warning/10 text-warning' : 'bg-card']">
           <Icon name="Timer" :size="15"/>{{ fmt(R.secLeft) }}
-          <span class="absolute inset-x-0 bottom-0 h-0.5 bg-current opacity-40 transition-[width] duration-1000 ease-linear" :style="{ width: timerPct + '%' }"></span>
+          <Meter instant :value="timerPct" :duration="1000" ease="linear" class="absolute inset-x-0 bottom-0 !h-0.5 bg-current opacity-40"/>
         </div>
       </div>
-      <div class="h-1 bg-muted"><div class="h-full bg-fa transition-all duration-500" :style="{ width: progress + '%' }"></div></div>
+      <div class="h-1 bg-muted"><Meter :value="progress" class="bg-fa"/></div>
     </header>
 
     <main class="flex-1 px-3 py-6 sm:px-4 sm:py-10">

@@ -17,7 +17,20 @@
     ['Numbers', 'Totals, KPIs and counts run to their new value (400ms, ease-out, tabular figures). The first render does not count up.'],
     ['Skeleton and collapsibles', 'The skeleton fades out (100ms) and the content in (180ms); a collapsible section opens by height (180ms) and closes (135ms).'],
     ['Press', 'Buttons give to 98% while pressed (80ms); clickable rows to 99.5%.'],
+    ['Data draws in', 'Bars fill from 0 (600ms), columns grow from the baseline 40ms apart (at most 12), lines draw (700ms), donut segments sweep (700ms), numbers count up (700ms). Each draws once, when it first comes into view, and again only when its value really changes. Charts below the fold wait until they are scrolled to.'],
   ];
+
+  const DemoDonut = {
+    props: { parts: Array },
+    setup(p) {
+      const seen = useDrawIn(); const R = 38, C = 2 * Math.PI * R;
+      const segs = computed(() => { const t = p.parts.reduce((a, x) => a + x, 0) || 1; let acc = 0; return p.parts.map((v, i) => { const len = (v / t) * C; const s = { len: Math.max(0, len - 2), off: -acc, color: 'var(--c' + (i + 1) + ')' }; acc += len; return s; }); });
+      return { seen, R, C, segs };
+    },
+    template: `<svg viewBox="0 0 100 100" class="h-28 w-28 -rotate-90" aria-hidden="true" data-donut><circle cx="50" cy="50" :r="R" fill="none" stroke="hsl(var(--muted))" stroke-width="14"/>
+      <circle v-for="(g, i) in segs" :key="i" cx="50" cy="50" :r="R" fill="none" :stroke="g.color" stroke-width="14" :stroke-dasharray="(seen ? g.len : 0) + ' ' + C" :stroke-dashoffset="g.off"
+        :style="{ transition: 'stroke-dasharray 700ms var(--ease-standard) ' + (Math.min(i, 12) * 90) + 'ms' }"/></svg>`
+  };
   const MotionLab = {
     setup() {
       const S = reactive({ dlg: false, sheet: false, tab: 'a', dirty: false, saved: false, name: '', tried: false, n: 1284, total: 245600, loading: false, open: false, listKey: 0 });
@@ -36,7 +49,12 @@
       const reload = () => { S.loading = true; setTimeout(() => { S.loading = false; }, 900); };
       const money = (n) => Math.round(+n || 0).toLocaleString('en-US');
       const stacked = () => openDialog({ kind: 'info', title: 'A dialog from the stack', text: 'Close it to see it leave: 120ms, or sliding down on a phone.' });
-      return { S, ROWS, list, cols, toast, addRow, delRow, changeRow, replayList, save, submit, bump, reload, money, stacked, MOTION_TOKENS, MOTION_LIST };
+      const DATA = reactive({ k: 0, meter: 64, cols: [12, 30, 22, 41, 35, 52, 47], line: [4, 9, 6, 12, 10, 15, 13, 18], parts: [46, 28, 16, 10] });
+      const rnd = (n) => Math.round(5 + Math.random() * n);
+      const replayData = () => { DATA.k++; };
+      const newData = () => { DATA.meter = rnd(90); DATA.cols = DATA.cols.map(() => rnd(50)); DATA.line = DATA.line.map(() => rnd(14)); DATA.parts = DATA.parts.map(() => rnd(40)); };
+      const colMax = computed(() => Math.max(1, ...DATA.cols));
+      return { DATA, replayData, newData, colMax, S, ROWS, list, cols, toast, addRow, delRow, changeRow, replayList, save, submit, bump, reload, money, stacked, MOTION_TOKENS, MOTION_LIST };
     },
     template: `<div class="grid grid-cols-[minmax(0,1fr)] gap-4" data-motion-lab>
       <section class="kpi rounded-xl border bg-card p-4 shadow-sm sm:p-5">
@@ -82,8 +100,8 @@
         </section>
         <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="numbers">
           <h3 class="font-semibold">{{ MOTION_LIST[5][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[5][1] }}</p>
-          <div class="mt-3 grid grid-cols-2 gap-2"><div class="rounded-xl border bg-card p-3.5"><p class="text-xs font-medium text-muted-foreground">Responses</p><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="S.n"/></p></div>
-            <div class="rounded-xl border bg-card p-3.5"><p class="text-xs font-medium text-muted-foreground">Total</p><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="S.total" :format="money"/></p></div></div>
+          <div class="mt-3 grid grid-cols-2 gap-2"><div class="rounded-xl border bg-card p-3.5"><p class="text-xs font-medium text-muted-foreground">Responses</p><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="S.n"/></p></div>
+            <div class="rounded-xl border bg-card p-3.5"><p class="text-xs font-medium text-muted-foreground">Total</p><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="S.total" :format="money"/></p></div></div>
           <div class="mt-3"><Button size="sm" variant="outline" @click="bump" data-testid="m-bump"><Icon name="RotateCcw" :size="14"/>New values</Button></div>
         </section>
         <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="skeleton">
@@ -93,6 +111,18 @@
             <div v-else key="c" class="grid gap-1"><p class="text-sm font-semibold">Arusha Branch</p><p class="text-sm text-muted-foreground">12 people · 3 roles · updated today</p></div></Transition></div>
           <div class="flex flex-wrap gap-2"><Button size="sm" variant="outline" @click="reload" data-testid="m-reload"><Icon name="RotateCcw" :size="14"/>Load again</Button><Button size="sm" variant="outline" :aria-expanded="S.open" @click="S.open=!S.open" data-testid="m-collapse"><Icon :name="S.open ? 'ChevronUp' : 'ChevronDown'" :size="14"/>{{ S.open ? 'Fewer filters' : 'More filters' }}</Button></div>
           <Collapse><div v-if="S.open" class="mt-3 grid gap-2 rounded-lg border bg-muted/30 p-3 text-sm" data-testid="m-collapsible"><p>Created between…</p><p>Type is…</p><p>Location includes the ones under it</p></div></Collapse>
+        </section>
+        <section class="kpi rounded-xl border bg-card p-4 shadow-sm lg:col-span-2" data-demo="data">
+          <div class="flex flex-wrap items-start justify-between gap-2"><div class="min-w-0"><h3 class="font-semibold">{{ MOTION_LIST[8][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[8][1] }}</p></div>
+            <div class="flex flex-wrap gap-1.5"><Button size="sm" variant="outline" @click="replayData" data-testid="m-data-replay"><Icon name="RotateCcw" :size="14"/>Replay</Button><Button size="sm" variant="outline" @click="newData" data-testid="m-data-new"><Icon name="RefreshCw" :size="14"/>New values</Button></div></div>
+          <div :key="DATA.k" class="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
+            <div class="grid content-start gap-2 rounded-lg border p-3" data-demo-part="meter"><p class="text-xs font-medium text-muted-foreground">Meter</p><p class="text-xl font-semibold tnum"><Num count :value="DATA.meter"/>%</p>
+              <div class="h-2 overflow-hidden rounded-full bg-muted"><Meter :value="DATA.meter" class="rounded-full bg-c1"/></div></div>
+            <div class="grid content-start gap-2 rounded-lg border p-3" data-demo-part="columns"><p class="text-xs font-medium text-muted-foreground">Columns</p>
+              <div class="flex h-24 items-end gap-1.5"><div v-for="(v, i) in DATA.cols" :key="i" class="flex h-full flex-1 items-end"><Meter axis="y" :value="v / colMax * 100" :duration="700" :delay="Math.min(i, 12) * 40" class="rounded-t-[3px] bg-c1"/></div></div></div>
+            <div class="grid content-start gap-2 rounded-lg border p-3" data-demo-part="line"><p class="text-xs font-medium text-muted-foreground">Line</p><Spark :data="DATA.line" class="h-24 w-full"/></div>
+            <div class="grid content-start justify-items-center gap-2 rounded-lg border p-3" data-demo-part="donut"><p class="justify-self-start text-xs font-medium text-muted-foreground">Donut</p><DemoDonut :parts="DATA.parts"/></div>
+          </div>
         </section>
         <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="press">
           <h3 class="font-semibold">{{ MOTION_LIST[7][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[7][1] }}</p>

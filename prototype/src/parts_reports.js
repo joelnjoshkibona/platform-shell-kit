@@ -15,6 +15,7 @@
     const base = 'https://cdn.jsdelivr.net/npm/highcharts@' + HC_VER + '/';
     const files = ['highcharts.js', 'modules/exporting.js', 'modules/offline-exporting.js', 'modules/export-data.js', 'modules/accessibility.js'];
     hcPromise = files.reduce((p, f) => p.then(() => new Promise((ok, bad) => { const s = document.createElement('script'); s.src = base + f; s.onload = ok; s.onerror = () => bad(new Error('Could not load ' + f)); document.head.appendChild(s); })), Promise.resolve()).then(() => window.Highcharts);
+    hcPromise = hcPromise.then(() => { window.Highcharts.setOptions(chartMotion()); return window.Highcharts; });   // motion: one shared option set for every chart
     hcPromise.catch(() => { hcPromise = null; });
     return hcPromise;
   }
@@ -153,20 +154,27 @@
         const colors = ['--c1', '--c2', '--c3', '--c4', '--c5'].map(css).filter(Boolean);
         const { cats, series } = chartData(); const c = R.chart; const money = c.ys.some(y => F(y.key).type === 'money');
         const kpi = c.type === 'kpi';
-        const opts = { chart: { type: c.type === 'kpi' ? 'column' : c.type, backgroundColor: 'transparent', style: { fontFamily: 'inherit' }, height: 320, animation: false },
+        const opts = { chart: { type: c.type === 'kpi' ? 'column' : c.type, backgroundColor: 'transparent', style: { fontFamily: 'inherit' }, height: 320 },
           colors, title: { text: kpi ? null : (series[0] ? series[0].name : '') + ' by ' + F(c.x).label.toLowerCase() + (c.series ? ', split by ' + F(c.series).label.toLowerCase() : ''), style: { color: fg, fontSize: '13px', fontWeight: '600' } },
           credits: { enabled: false }, legend: { enabled: series.length > 1 || c.type === 'pie', itemStyle: { color: fg, fontWeight: '500' } },
           xAxis: { categories: cats, labels: { style: { color: muted } }, lineColor: grid, tickColor: grid },
           yAxis: { title: { text: null }, gridLineColor: grid, labels: { style: { color: muted }, formatter() { return money ? (this.value >= 1e6 ? (this.value / 1e6) + 'M' : this.value >= 1e3 ? (this.value / 1e3) + 'k' : this.value) : this.value; } } },
           tooltip: { valuePrefix: money ? 'TZS ' : '', valueDecimals: 0 },
-          plotOptions: { series: { animation: false, dataLabels: { enabled: !!c.labels, style: { color: fg, textOutline: 'none', fontWeight: '500' } }, stacking: c.series && ['column', 'bar', 'area'].includes(c.type) ? 'normal' : undefined }, pie: { dataLabels: { enabled: true, style: { color: fg, textOutline: 'none' } } } },
+          plotOptions: { series: { dataLabels: { enabled: !!c.labels, style: { color: fg, textOutline: 'none', fontWeight: '500' } }, stacking: c.series && ['column', 'bar', 'area'].includes(c.type) ? 'normal' : undefined }, pie: { dataLabels: { enabled: true, style: { color: fg, textOutline: 'none' } } } },
           series: c.type === 'pie' ? [{ name: series[0] ? series[0].name : '', data: cats.map((k, i) => ({ name: String(k), y: series[0] ? series[0].data[i] : 0 })) }] : c.type === 'scatter' ? series.map(s => ({ ...s, data: s.data.map((v, i) => [i, v]) })) : series,
           exporting: { enabled: false, fallbackToExportServer: false, filename: rep.value.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') }, accessibility: { enabled: true } };
         if (kpi) { R.kpi = series[0] ? series[0].data.reduce((s, v) => s + v, 0) : 0; if (chart) { chart.destroy(); chart = null; } return; }
-        if (chart) chart.destroy(); chart = H.chart(chartEl.value, opts);
+        /* motion: the same kind of chart with new numbers moves to them (update); a new kind draws in; a theme change redraws still */
+        const themeOnly = chart && lastDraw.theme !== G.theme && lastDraw.type === opts.chart.type;
+        if (chart && !themeOnly && lastDraw.type === opts.chart.type && lastDraw.stack === String(opts.plotOptions.series.stacking)) chart.update(opts, true, true);
+        else { if (chart) chart.destroy(); if (themeOnly) opts.plotOptions.series.animation = false; chart = H.chart(chartEl.value, opts); }
+        lastDraw = { type: opts.chart.type, theme: G.theme, stack: String(opts.plotOptions.series.stacking) };
       }
-      watch(() => [JSON.stringify(R.chart), filtered.value.length, G.theme], () => nextTick(draw));
-      onMounted(() => nextTick(draw)); onBeforeUnmount(() => { if (chart) { chart.destroy(); chart = null; } });
+      let lastDraw = {};
+      const chartSeen = useDrawIn(chartEl);   // motion: a chart below the fold draws when it is scrolled into view, once
+      watch(() => [JSON.stringify(R.chart), filtered.value.length, G.theme], () => { if (chartSeen.value) nextTick(draw); });
+      watch(chartSeen, (v) => { if (v) nextTick(draw); });
+      watch(chartEl, (el) => { if (el && chartSeen.value) nextTick(draw); });   // the chart area appears later (a tab, a layout switch) onBeforeUnmount(() => { if (chart) { chart.destroy(); chart = null; } });
       const chartItems = [{ id: 'png', label: 'Picture (PNG)', icon: 'Image' }, { id: 'svg', label: 'Vector (SVG)', icon: 'PenTool' }, { id: 'pdf', label: 'PDF', icon: 'FileDown' }, { separator: true }, { id: 'csv', label: 'The chart\'s data (CSV)', icon: 'FileText' }];
       const exportChart = (it) => { if (!chart) return; if (it.id === 'csv') chart.downloadCSV(); else chart.exportChartLocal({ type: { png: 'image/png', svg: 'image/svg+xml', pdf: 'application/pdf' }[it.id] }); toast('Chart downloaded', { png: 'PNG', svg: 'SVG', pdf: 'PDF', csv: 'CSV' }[it.id] + ', made in your browser.', 'Download'); };
       const addY = () => { const f = numFields.value.find(n => !R.chart.ys.some(y => y.key === n.key)) || numFields.value[0]; R.chart.ys.push({ key: f.key, agg: 'sum' }); R.chart.series = ''; };

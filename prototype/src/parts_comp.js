@@ -96,7 +96,7 @@
         <li v-for="it in F.items" :key="it.key" :class="['flex items-center gap-3 rounded-lg border p-2', it.state==='failed' && 'border-destructive/40 bg-destructive/5']">
           <MediaThumb :m="it" size="sm"/>
           <div class="min-w-0 flex-1"><p class="truncate text-sm font-medium">{{ it.name }}</p>
-            <div v-if="it.state==='uploading'" class="mt-1 flex items-center gap-2"><div class="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"><div class="h-full rounded-full bg-primary transition-[width] duration-150" :style="{ width: it.progress + '%' }"></div></div><span class="w-9 text-right text-[11px] tnum text-muted-foreground">{{ Math.round(it.progress) }}%</span></div>
+            <div v-if="it.state==='uploading'" class="mt-1 flex items-center gap-2"><div class="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"><Meter :value="it.progress" :duration="150" class="rounded-full bg-primary"/></div><span class="w-9 text-right text-[11px] tnum text-muted-foreground">{{ Math.round(it.progress) }}%</span></div>
             <p v-else class="text-xs text-destructive">{{ it.error }}</p></div>
           <Button v-if="it.state==='uploading'" variant="ghost" size="sm" class="h-7" @click="cancel(it)">Cancel</Button>
           <template v-else><Button v-if="!/Too large|Not an|Only/.test(it.error)" variant="ghost" size="sm" class="h-7" @click="retry(it)">Retry</Button><Button variant="ghost" size="icon-sm" aria-label="Dismiss" @click="cancel(it)"><Icon name="X" :size="14"/></Button></template>

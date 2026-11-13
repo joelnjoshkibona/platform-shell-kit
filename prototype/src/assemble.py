@@ -93,7 +93,7 @@ for t,cs in _tags.items():
         if a.get('do'): _md += [''] + ['- Do: '+d for d in a['do']]
         if a.get('dont'): _md += ['- Don\'t: '+d for d in a['dont']]
 open(os.path.join(KIT, 'docs', 'COMPONENTS.md'),'w').write('\n'.join(_md)+'\n')
-shell = shell.replace('  return { AuthView, ShellView, comps: {', loc + '\n  return { AuthView, ShellView, comps: { MotionLab, DocLines, DocFlow, DocTrail, FormPage, LocationForm, BatchBar, BatchResult, DialogStack, DialogLayer, RecordTabView, HelpPage, HelpArticlePage, HowDoI, ReportsPage, ReportPage, MyJobsPage, JobPage, JobProgress, JobPreview, LogsPage, QueuePage, ScheduledTasksPage, TrashPage, NotificationsPage, PermissionsPage, SysHead, SysKpi, RecordLink, LocationPreview, RolePreview, RequestPreview, ListCard, ListRows, ListShare, LockedField, BackButton, ConnectionNotice, AppUpdateBanner, AppUpdateRequired, AppNotifsAsk, AppNotifsRow, AppBackHint, AppSplash, AppIcon, PhoneMock, LockScreen, SessionExpired, PermissionCard, ActionSheet, ScanView, PrinterCard, StaleStamp, BottomBar, KeyboardSim, PhoneOverlays, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog,', 1)
+shell = shell.replace('  return { AuthView, ShellView, comps: {', loc + '\n  return { AuthView, ShellView, comps: { MotionLab, DemoDonut, DocLines, DocFlow, DocTrail, FormPage, LocationForm, BatchBar, BatchResult, DialogStack, DialogLayer, RecordTabView, HelpPage, HelpArticlePage, HowDoI, ReportsPage, ReportPage, MyJobsPage, JobPage, JobProgress, JobPreview, LogsPage, QueuePage, ScheduledTasksPage, TrashPage, NotificationsPage, PermissionsPage, SysHead, SysKpi, RecordLink, LocationPreview, RolePreview, RequestPreview, ListCard, ListRows, ListShare, LockedField, BackButton, ConnectionNotice, AppUpdateBanner, AppUpdateRequired, AppNotifsAsk, AppNotifsRow, AppBackHint, AppSplash, AppIcon, PhoneMock, LockScreen, SessionExpired, PermissionCard, ActionSheet, ScanView, PrinterCard, StaleStamp, BottomBar, KeyboardSim, PhoneOverlays, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog,', 1)
 
 def rep(s, a, b, count=1):
     assert s.count(a) >= 1, ('missing', a[:80])
@@ -110,7 +110,10 @@ extra_css = '''
 :root[data-theme="dark"]{ --c1:#1f9e89; --c2:#c97514; --c3:#4c82e8; --c4:#dc5577; --c5:#8f73e3; --c-other:#64748b }
 .kpi{animation:rise 420ms cubic-bezier(.2,.8,.2,1) both}
 @keyframes rise{from{opacity:.001;transform:translateY(6px)}to{opacity:1;transform:none}}
-.spark{stroke-dasharray:300;stroke-dashoffset:300;animation:draw 900ms 200ms ease-out forwards}
+.spark{stroke-dasharray:300;stroke-dashoffset:300;animation:draw 700ms 150ms var(--ease-standard,ease-out) forwards}
+.spark-wait{stroke-dasharray:300;stroke-dashoffset:300}
+.spark-area{animation:fadeIn 500ms 300ms linear both}
+@media (prefers-reduced-motion:reduce){.spark,.spark-wait{stroke-dashoffset:0}}
 @keyframes draw{to{stroke-dashoffset:0}}
 /* P46: anything drawn in an organisation's accent outside the primary tokens (org badge, swatches) */
 .acc-chip{background:hsl(var(--a-l));color:hsl(var(--a-lfg))}
@@ -421,7 +424,7 @@ app.config.globalProperties.ACCENTS = ACCENTS;
 app.config.globalProperties.RESP = ResponsesMod.RESP;
 app.config.globalProperties.PRODUCT = PRODUCT;
 Object.entries(Object.assign(
-  { Icon, Button, Input, Textarea, Label, Switch, Checkbox, RadioGroupItem, Badge, Card, Separator, Select, DropdownMenu, Tooltip, Dialog, Sheet, Tabs, Num, Collapse, TabPanel, ScreensPill, PhoneFrame, Curtain,
+  { Icon, Button, Input, Textarea, Label, Switch, Checkbox, RadioGroupItem, Badge, Card, Separator, Select, DropdownMenu, Tooltip, Dialog, Sheet, Tabs, Num, Collapse, TabPanel, Meter, ScreensPill, PhoneFrame, Curtain,
     BuilderView: BuilderMod.BuilderView, RespondentView: RespondentMod.RespondentView, ResponsesView: ResponsesMod.ResponsesView, AuthView: ShellMod.AuthView, ShellView: ShellMod.ShellView },
   BuilderMod.comps, RespondentMod.comps, ResponsesMod.comps, ShellMod.comps)).forEach(([n, c]) => app.component(n, c));
 app.mount('#app');
