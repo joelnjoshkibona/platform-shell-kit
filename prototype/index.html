@@ -9145,7 +9145,7 @@ const ScreensPill = {
     return { open, root, groups, go, G, phone, IN_PHONE, appItems, moveItems, app };
   },
   template: `<div ref="root" data-proto-only :class="['fixed z-[45]', G.route==='builder' ? 'bottom-20 lg:bottom-4' : 'bottom-4', G.isShell(G.route) ? (G.navCollapsed ? 'left-3 lg:left-[76px]' : 'left-3 lg:left-[252px]') : 'left-3']" style="margin-bottom:env(safe-area-inset-bottom,0px)">
-    <div v-if="open" class="pop absolute bottom-full left-0 mb-2 w-72 rounded-lg border bg-popover p-1.5 text-popover-foreground shadow-xl" role="menu">
+    <div v-if="open" class="pop absolute bottom-full left-0 mb-2 w-72 overflow-y-auto overscroll-contain rounded-lg border bg-popover p-1.5 text-popover-foreground shadow-xl" role="menu" :style="{ maxHeight: 'calc(100dvh - ' + (G.route==='builder' ? '10rem' : '5.5rem') + ' - env(safe-area-inset-bottom, 0px))' }">
       <div v-if="!IN_PHONE" class="hidden p-1 sm:block"><div class="grid grid-cols-2 gap-1 rounded-md bg-muted p-1" role="radiogroup" aria-label="View as">
         <button type="button" role="radio" :aria-checked="!G.phone" @click="phone(false)" :class="['flex h-7 items-center justify-center gap-1.5 rounded text-xs font-medium', !G.phone ? 'bg-background shadow' : 'text-muted-foreground']"><Icon name="Monitor" :size="13"/>Desktop</button>
         <button type="button" role="radio" :aria-checked="G.phone" @click="phone(true)" :class="['flex h-7 items-center justify-center gap-1.5 rounded text-xs font-medium', G.phone ? 'bg-background shadow' : 'text-muted-foreground']"><Icon name="Smartphone" :size="13"/>Phone</button></div></div>
