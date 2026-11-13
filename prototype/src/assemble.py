@@ -21,6 +21,7 @@ loc = open(SP + 'parts_loc.js').read()
 loc += open(SP + 'parts_list.js').read()
 loc += open(SP + 'parts_listcard.js').read()   # P39: ListCard, ListShare, LockedField, exportList
 loc += open(SP + 'parts_comp.js').read()
+loc += open(SP + 'parts_doclines.js').read()   # P115: DocLines, DocFlow, DocTrail (documents with lines)
 loc += open(SP + 'parts_appr.js').read()
 loc += open(SP + 'parts_jobs.js').read()
 loc += open(SP + 'parts_reports.js').read()  # P96: reports and the chart builder (Highcharts)     # P95: background work and its results
@@ -90,7 +91,7 @@ for t,cs in _tags.items():
         if a.get('do'): _md += [''] + ['- Do: '+d for d in a['do']]
         if a.get('dont'): _md += ['- Don\'t: '+d for d in a['dont']]
 open(os.path.join(KIT, 'docs', 'COMPONENTS.md'),'w').write('\n'.join(_md)+'\n')
-shell = shell.replace('  return { AuthView, ShellView, comps: {', loc + '\n  return { AuthView, ShellView, comps: { FormPage, LocationForm, BatchBar, BatchResult, DialogStack, DialogLayer, RecordTabView, HelpPage, HelpArticlePage, HowDoI, ReportsPage, ReportPage, MyJobsPage, JobPage, JobProgress, JobPreview, LogsPage, QueuePage, ScheduledTasksPage, TrashPage, NotificationsPage, PermissionsPage, SysHead, SysKpi, RecordLink, LocationPreview, RolePreview, RequestPreview, ListCard, ListRows, ListShare, LockedField, BackButton, ConnectionNotice, AppUpdateBanner, AppUpdateRequired, AppNotifsAsk, AppNotifsRow, AppBackHint, AppSplash, AppIcon, PhoneMock, LockScreen, SessionExpired, PermissionCard, ActionSheet, ScanView, PrinterCard, StaleStamp, BottomBar, KeyboardSim, PhoneOverlays, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog,', 1)
+shell = shell.replace('  return { AuthView, ShellView, comps: {', loc + '\n  return { AuthView, ShellView, comps: { DocLines, DocFlow, DocTrail, FormPage, LocationForm, BatchBar, BatchResult, DialogStack, DialogLayer, RecordTabView, HelpPage, HelpArticlePage, HowDoI, ReportsPage, ReportPage, MyJobsPage, JobPage, JobProgress, JobPreview, LogsPage, QueuePage, ScheduledTasksPage, TrashPage, NotificationsPage, PermissionsPage, SysHead, SysKpi, RecordLink, LocationPreview, RolePreview, RequestPreview, ListCard, ListRows, ListShare, LockedField, BackButton, ConnectionNotice, AppUpdateBanner, AppUpdateRequired, AppNotifsAsk, AppNotifsRow, AppBackHint, AppSplash, AppIcon, PhoneMock, LockScreen, SessionExpired, PermissionCard, ActionSheet, ScanView, PrinterCard, StaleStamp, BottomBar, KeyboardSim, PhoneOverlays, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog,', 1)
 
 def rep(s, a, b, count=1):
     assert s.count(a) >= 1, ('missing', a[:80])

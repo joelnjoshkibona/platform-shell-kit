@@ -7,12 +7,12 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 ## Index
 
 - **Actions**: Button
-- **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Locked field, File picker · Media library, API select, Rich text, Date picker, Accent picker
+- **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Document lines, Locked field, File picker · Media library, API select, Rich text, Date picker, Accent picker
 - **Display**: Badge · Status pill, Card · KPI tile, App icon and splash, Product loader
 - **Navigation**: Tabs, Sidebar item, Record link, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet, AppDialog · Record dialog
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, Job progress · Job page, View as banner
-- **Data**: List rows, Charts, List toolbar · Filters, List card, Batch mode, Report table · Chart builder, Approval steps
+- **Data**: List rows, Charts, List toolbar · Filters, Document flow · trail, List card, Batch mode, Report table · Chart builder, Approval steps
 - **Help**: Help · How do I…
 - **Phone**: Phone foundations, Lock screen, Session ended, Permission ask, Action sheet, Scan view, Printer picker, Freshness stamp, Bottom bar, No connection, App updates, Back key hint
 
@@ -152,6 +152,56 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: Paste fills all boxes
 - Do: inputmode=numeric
 - Don't: Store OTPs in drafts
+
+### Document lines
+
+`src/components/app/documents/DocLines.vue (+ useDocLines totals)`
+
+| Spec | Value |
+| --- | --- |
+| Kinds | sale (price, discount, VAT, total) · purchase (cost, VAT) · stock (quantities only) |
+| List | read-only rows: columns when it fits, a card per line when not (measured on the component); no inputs in the list |
+| Row actions | the row opens View; View, Edit and Delete buttons on each row (Edit and Delete hidden when read-only) |
+| Modal | View shows the line and its total, with Edit and Delete; Add and Edit share one form: item (ApiSelect: name, SKU or barcode; Add only), quantity, unit price, discount, VAT, live total; the same item again adds to its line |
+| Delete | a short confirm dialog; no YES gate, the line is an unsaved change of the document |
+| Price | from the product's price source (priceOf), overriding needs a permission; a changed price is marked |
+| Lots | lots: true puts lot picking in the line's form, filled oldest first (FIFO), changeable |
+| Totals | subtotal, discount, VAT, total under the list; currency prop for the label |
+| Variants | sale · purchase · stock · stock with lots · read-only |
+| Used in | Any document with lines: offers, orders, invoices, purchase orders, goods receipts, deliveries, stock transfers |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `modelValue` | `Line[]` | `[]` | v-model: { id, item, qty, price?, list?, disc?, vat?, lots?: { lot, qty }[] } |
+| `kind` | `'sale' \| 'purchase' \| 'stock'` | `'sale'` | Which columns and totals |
+| `readonly` | `boolean` | `false` | The list with View only: no Add, Edit or Delete (details pages, past draft) |
+| `itemModule` | `string` | `'items'` | ApiSelect module for the item picker in Add (the product registers its source) |
+| `itemOf` | `(id) => { name, sku, unit }` | – | Label for a line (the record carries it in the app) |
+| `priceOf` | `(id) => { price, list } \| null` | `null` | The product's price resolution (sale type, location, date) |
+| `canOverridePrice` | `boolean` | `true` | false locks the unit price (sale kind) |
+| `lots` | `boolean` | `false` | A Lots section in the line form, FIFO-filled (stock kind) |
+| `lotsOf` | `(itemId) => Lot[]` | `() => []` | Lots the line may take from: { id, code, qty, at } |
+| `limitOf` | `(line) => { max, label } \| null` | `null` | A hint under the item (e.g. ordered 4 · 1 delivered); qty over max is an error |
+| `errors` | `Record<lineId, string>` | `{}` | Field errors per line from the API (422) |
+| `error` | `string` | – | An error for the lines as a whole |
+| `totals` | `boolean` | `true` | Show the totals block |
+| `currency` | `string` | `''` | Label on the total and the price field (e.g. 'USD'); empty shows numbers only |
+| `emptyText` | `string` | – |  |
+| `addLabel` | `string` | `'Add a line'` | Label of the Add button and the line form's title |
+
+**Emits:** `update:modelValue` (Line[]), `open-item` (item id)
+
+- Do: Show the lines as a list: columns when it fits, a card per line when not (measure the component, not the screen)
+- Do: Give every row View, Edit and Delete; the row itself opens View
+- Do: Make every change in a modal: Add and Edit share one line form; Delete asks once
+- Do: Mark a price that differs from the resolved one
+- Do: Fill lots oldest first (FIFO) in the line form and let the person change them
+- Do: Show subtotal, discount, VAT and total under the list; stock kind shows lines and units
+- Do: Keep header and lines in one form with one draft and one save
+- Don't: Put inputs in the list rows
+- Don't: Use a <table> or native number spinners
+- Don't: Ask for YES to delete a line (it is an unsaved change of the document)
+- Don't: Let lines change after the document leaves draft
 
 ### Locked field
 
@@ -919,6 +969,30 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Don't: Export/Import buttons without backend routes
 - Don't: Pill or static select filters for locations, people or forms
 - Don't: A table/cards toggle: lists that show rows have one mode (P40)
+
+### Document flow · trail
+
+`src/components/app/documents/DocFlow.vue, DocTrail.vue`
+
+| Spec | Value |
+| --- | --- |
+| Flow | the main road of statuses as steps; done, now, next; a side exit (cancelled, rejected, expired) shows as its status pill |
+| Trail | the documents before and after this one, numbered, each a RecordLink; the current one is plain text |
+| Where | top of the Overview tab of every document |
+| Variants | in progress · ended early |
+| Used in | Every document details page |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `workflow` | `string` | – | DocFlow: the P47 workflow key |
+| `code` | `string` | – | DocFlow: the current status code |
+| `path` | `string[]` | – | DocFlow: the main road of codes |
+| `exits` | `string[]` | `[]` | DocFlow: codes that end it early |
+| `items` | `{ module, id, label, sub?, current? }[]` | – | DocTrail: the chain, in order |
+
+- Do: Read labels from the workflow lookup (P47), never hard-code them
+- Do: Make every trail entry but the current one a RecordLink (P85)
+- Don't: Make the flow clickable: actions live in the page header
 
 ### List card
 

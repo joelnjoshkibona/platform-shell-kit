@@ -2286,5 +2286,178 @@
    "Use it in buttons, Refresh or inline saves (they keep LoaderCircle)",
    "Add colours, images or script to the SVG"
   ]
+ },
+ "Document lines": {
+  "file": "src/components/app/documents/DocLines.vue (+ useDocLines totals)",
+  "props": [
+   [
+    "modelValue",
+    "Line[]",
+    "[]",
+    "v-model: { id, item, qty, price?, list?, disc?, vat?, lots?: { lot, qty }[] }"
+   ],
+   [
+    "kind",
+    "'sale' | 'purchase' | 'stock'",
+    "'sale'",
+    "Which columns and totals"
+   ],
+   [
+    "readonly",
+    "boolean",
+    "false",
+    "The list with View only: no Add, Edit or Delete (details pages, past draft)"
+   ],
+   [
+    "itemModule",
+    "string",
+    "'items'",
+    "ApiSelect module for the item picker in Add (the product registers its source)"
+   ],
+   [
+    "itemOf",
+    "(id) => { name, sku, unit }",
+    "",
+    "Label for a line (the record carries it in the app)"
+   ],
+   [
+    "priceOf",
+    "(id) => { price, list } | null",
+    "null",
+    "The product's price resolution (sale type, location, date)"
+   ],
+   [
+    "canOverridePrice",
+    "boolean",
+    "true",
+    "false locks the unit price (sale kind)"
+   ],
+   [
+    "lots",
+    "boolean",
+    "false",
+    "A Lots section in the line form, FIFO-filled (stock kind)"
+   ],
+   [
+    "lotsOf",
+    "(itemId) => Lot[]",
+    "() => []",
+    "Lots the line may take from: { id, code, qty, at }"
+   ],
+   [
+    "limitOf",
+    "(line) => { max, label } | null",
+    "null",
+    "A hint under the item (e.g. ordered 4 · 1 delivered); qty over max is an error"
+   ],
+   [
+    "errors",
+    "Record<lineId, string>",
+    "{}",
+    "Field errors per line from the API (422)"
+   ],
+   [
+    "error",
+    "string",
+    "",
+    "An error for the lines as a whole"
+   ],
+   [
+    "totals",
+    "boolean",
+    "true",
+    "Show the totals block"
+   ],
+   [
+    "currency",
+    "string",
+    "''",
+    "Label on the total and the price field (e.g. 'USD'); empty shows numbers only"
+   ],
+   [
+    "emptyText",
+    "string",
+    "",
+    ""
+   ],
+   [
+    "addLabel",
+    "string",
+    "'Add a line'",
+    "Label of the Add button and the line form's title"
+   ]
+  ],
+  "emits": [
+   [
+    "update:modelValue",
+    "Line[]",
+    ""
+   ],
+   [
+    "open-item",
+    "item id",
+    "Open item was chosen in a line's View (open its record)"
+   ]
+  ],
+  "slots": [],
+  "do": [
+   "Show the lines as a list: columns when it fits, a card per line when not (measure the component, not the screen)",
+   "Give every row View, Edit and Delete; the row itself opens View",
+   "Make every change in a modal: Add and Edit share one line form; Delete asks once",
+   "Mark a price that differs from the resolved one",
+   "Fill lots oldest first (FIFO) in the line form and let the person change them",
+   "Show subtotal, discount, VAT and total under the list; stock kind shows lines and units",
+   "Keep header and lines in one form with one draft and one save"
+  ],
+  "dont": [
+   "Put inputs in the list rows",
+   "Use a <table> or native number spinners",
+   "Ask for YES to delete a line (it is an unsaved change of the document)",
+   "Let lines change after the document leaves draft"
+  ]
+ },
+ "Document flow · trail": {
+  "file": "src/components/app/documents/DocFlow.vue, DocTrail.vue",
+  "props": [
+   [
+    "workflow",
+    "string",
+    "",
+    "DocFlow: the P47 workflow key"
+   ],
+   [
+    "code",
+    "string",
+    "",
+    "DocFlow: the current status code"
+   ],
+   [
+    "path",
+    "string[]",
+    "",
+    "DocFlow: the main road of codes"
+   ],
+   [
+    "exits",
+    "string[]",
+    "[]",
+    "DocFlow: codes that end it early"
+   ],
+   [
+    "items",
+    "{ module, id, label, sub?, current? }[]",
+    "",
+    "DocTrail: the chain, in order"
+   ]
+  ],
+  "emits": [],
+  "slots": [],
+  "do": [
+   "Read labels from the workflow lookup (P47), never hard-code them",
+   "Make every trail entry but the current one a RecordLink (P85)"
+  ],
+  "dont": [
+   "Make the flow clickable: actions live in the page header"
+  ]
  }
 }

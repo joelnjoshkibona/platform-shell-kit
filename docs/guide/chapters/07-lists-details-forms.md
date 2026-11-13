@@ -21,6 +21,12 @@ Every screen of a product is one of a few shapes. Each shape is decided once (th
 - Create and edit open as one dialog. Every form keeps a **draft** on the server as you type, and offers it back if you leave and return.
 - No browser-native pickers: dates, times, files and selects use the library's pickers. Required fields have an asterisk.
 
+## Documents with lines (P115)
+
+- An order, an invoice or a stock transfer is a header plus lines. The lines are `DocLines`: a list with **View, Edit and Delete** on every row, never inputs in the list.
+- Adding or changing a line opens the line form in a modal; deleting asks once (no YES: the line is part of the document's unsaved changes). Header and lines save together, with one draft.
+- Lots, when the document moves stock, are picked in the line form, oldest first. `DocFlow` shows where the document is in its workflow and `DocTrail` the documents before and after it.
+
 ## Opening a form with settings (P100)
 
 A form is often opened from somewhere that already knows part of the answer: "New location under Arusha" knows the parent. Instead of a new dialog for each place, every module registers its form once (`defineForm`) and any screen opens it with a context:
