@@ -1,6 +1,6 @@
 # P70 · Phone tests
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: New; Cobley's host-contract test, DevBiz harness.
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: New; an existing host-contract test and test harness.
 
 ## Decision
 
@@ -15,7 +15,7 @@ Every phone movement has a check, and the checks run on a real web view. A check
 
 ## Why
 
-No app has a mobile test run; only Cobley has a host-contract test, born from two real bugs.
+No app has a mobile test run; only one had a host-contract test, born from two real bugs.
 
 ## Where
 

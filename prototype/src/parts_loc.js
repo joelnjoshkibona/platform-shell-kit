@@ -1,5 +1,5 @@
 
-  /* ================================================================ LOCATIONS (Cobley core: locations tree + closure, user_locations with custom roles + JSON overrides) */
+  /* ================================================================ LOCATIONS (platform core: locations tree + closure, user_locations with custom roles + JSON overrides) */
   const LTYPES = { org: { label: 'Organisation', icon: 'Building2' }, zone: { label: 'Zone', icon: 'Map' }, branch: { label: 'Branch', icon: 'Store' }, warehouse: { label: 'Warehouse', icon: 'Warehouse' }, office: { label: 'Office', icon: 'Briefcase' } };
   const LSTAT = { active: { label: 'Active', cls: 'bg-c1/15 text-foreground', dot: 'bg-c1' }, inactive: { label: 'Inactive', cls: 'bg-muted text-muted-foreground', dot: 'bg-muted-foreground/60' } };
   const L = (id, name, code, type, parent, extra = {}) => ({ id, uuid: '9f' + id.padEnd(6, '0') + '-4c1e-8b2a-' + (id.length * 977).toString(16).padStart(4, '0') + 'e51d07a3', photo: '', notes: '', createdAt: '12 Mar 2025', createdBy: 'amina.juma@kilimaretail.co.tz', updatedAt: '2 Oct 2026', updatedBy: 'neema.kimaro@kilimaretail.co.tz', id, name, code, type, parent, status: 'active', country: 'Tanzania', sales: type === 'branch', hours: type === 'branch' ? 'Mon–Sat 08:00–20:00, Sun 10:00–16:00' : 'Mon–Fri 08:00–17:00', resp: 0, spark: null, ...extra });

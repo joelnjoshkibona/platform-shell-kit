@@ -1,0 +1,22 @@
+# Products built on the kit. The kit speaks in kit terms (README › Rules of the kit): no tracked file names a product,
+# and this is the only file allowed to hold these names. tools/kit-check.py fails on any of them.
+#
+# One name per line, matched case-insensitively at the start of a word (so `parts_x.js`, `x.app` and `XSignInArt`
+# all count). Add a product here when one is started on the kit.
+#
+# Allowed:
+#   - a line that carries the marker  kit-terms: allow  (say why next to it), for a word that is legitimate in context;
+#   - in Swahili locale files (a path with /sw/ or a file named sw.json), the names that are also Swahili words:
+#     "fomu" (form), "jumla" (total, wholesale) and "ongeza" (add; also kuongeza, kumwongeza, …).
+# Demo organisations and people (Kilima Retail, Pwani Agro Dealers, Amina, …) are demo data, not products.
+Fomu
+Cobley
+DevBiz
+Hodie
+Max Yield
+Pangisha
+Agrovet
+Jumla
+Shelui
+KilierERP
+Ongeza

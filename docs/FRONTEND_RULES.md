@@ -1,8 +1,8 @@
-# Fomu frontend rules
+# Frontend rules
 
-> Source of truth for every Fomu screen. In this repository this file is authoritative; the prototype's Rules tab is a snapshot of it. Change a rule only through a new decision (D#) in `docs/architecture/erd_data.py`, in the same PR. Decision numbers point to the ERD decision log.
+> Source of truth for every screen built on the kit. In this repository this file is authoritative; the prototype's Rules tab is a snapshot of it. Change a rule only through a new decision (D#) in `docs/architecture/erd_data.py`, in the same PR. Decision numbers point to the ERD decision log.
 
-Every Fomu screen is built against these rules. Cobley's frontend code is discarded; its backend and behaviour rules are kept. Where the two disagree on look, the Fomu prototype wins (D27).
+Every screen is built against these rules. Where code and the prototype disagree on look, the prototype wins (D27).
 
 ## How to use these rules
 
@@ -331,7 +331,7 @@ The phone app is the web shell inside a product's Android app (NativePHP web vie
 Guide: `docs/architecture/MODULES.md`.
 
 - **A module owns its files (P80)**: `api/app/Modules/{Tier}/{Group}/{Module}/`, `web/src/modules/{module}/` and, for the modules the phone shows, `mobile/resources/spa/src/modules/{module}/`. Each app's `src/` has `app/`, `components/`, `modules/`.
-- **The phone app is its own app (P93)**: crafted for a phone in Hodie's shape (`mobile/` with its own Laravel for the phone's work and its own interface in `resources/spa/`); it shares only `packages/shared` with the web app, never screens, components or layouts. Nothing about a module lives outside its folder; file names say what they do.
+- **The phone app is its own app (P93)**: crafted for a phone (`mobile/` with its own Laravel for the phone's work and its own interface in `resources/spa/`); it shares only `packages/shared` with the web app, never screens, components or layouts. Nothing about a module lives outside its folder; file names say what they do.
 - **One manifest, found by glob (P81, P82)**: `module.json` on the API, `defineModule()` in `module.ts` on web and phone. No central registry, menu file or picker trait. Adding a module is adding a folder.
 - **One service per operation, container instances (P83)**: `{Module}{Op}Service`, `execute → validateData → process`; models take only validated data plus server fields.
 - **Actions declared once (P84)**: service + route + `{Module}.{action}` + button placement + form type in one manifest entry.

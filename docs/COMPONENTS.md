@@ -1,4 +1,4 @@
-# Fomu component library
+# Bootbox component library
 
 > Generated from the prototype Design system page (specs) and components_api.json (API). Do not edit by hand; change the source and rebuild. Read with FRONTEND_RULES.md.
 
@@ -163,7 +163,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | Look | muted box, value + optional sub line, lock icon; not focusable, not editable |
 | Label | same label as the field it replaces |
 | Variants | with sub line · without |
-| Used in | Create from a details tab (DevBiz: New sale, Take payment, Receive stock, Move money) |
+| Used in | Create from a details tab (for example New sale, Take payment, Receive stock, Move money) |
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
@@ -818,7 +818,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: Audit every session: who, what was viewed, location, duration
 - Don't: Any write, email or OTP while viewing
 - Don't: Show the synthetic preview member in lists, counts, pickers or approvers
-- Don't: 'Act as' (signing in as someone with write access); not part of Fomu (D37)
+- Don't: 'Act as' (signing in as someone with write access); not part of the platform (D37)
 
 ## Data
 

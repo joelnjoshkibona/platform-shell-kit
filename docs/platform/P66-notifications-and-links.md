@@ -1,6 +1,6 @@
 # P66 · Notifications and links
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Cobley (registration), none for taps.
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: four phone apps compared (registration only, none for taps).
 
 ## Decision
 
@@ -15,7 +15,7 @@ After sign-in the app registers its push token; on a token change it registers a
 
 ## Why
 
-Cobley registers tokens but a tap only launches the app; Agrovet and Jumla have stubs.
+One app registered tokens but a tap only launched the app; two had stubs.
 
 ## Where
 

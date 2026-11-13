@@ -1,10 +1,10 @@
 # Core ERD (platform)
 
-> The tables every product inherits from the Cobley core, scoped by organization_id: identity and access, locations, approvals and notifications, plus the shared constraints, lifecycles and jobs. A product adds its own sections (02+) in its own ERD. Generated from the Fomu ERD; regenerate from architecture/erd_data.py when the core changes.
+> The tables every product inherits from the platform core (Bootbox), scoped by organization_id: identity and access, locations, approvals and notifications, plus the shared constraints, lifecycles and jobs. A product adds its own sections (02+) in its own ERD. Generated from the example ERD; regenerate from architecture/erd_data.py when the core changes.
 
 ## 01. Platform core: identity & access
 
-Shared kernel with Cobley (same table and column names) plus organization_id for tenancy. Users, statuses, roles with JSON permissions, menus. An organisation is the root of its location tree (P103). Builder URLs are path-based: /{org.slug}/forms.
+The shared kernel (the same table and column names in every product) plus organization_id for tenancy. Users, statuses, roles with JSON permissions, menus. An organisation is the root of its location tree (P103). Builder URLs are path-based: /{org.slug}/forms.
 
 ```mermaid
 erDiagram
@@ -31,12 +31,12 @@ erDiagram
         string email UK "sign-in identifier, nullable"
         string phone UK "E.164, sign-in identifier, nullable"
         string password "hashed"
-        timestamp password_set_at "Cobley core"
+        timestamp password_set_at "platform core"
         bigint status_id FK "statuses.id"
-        datetime last_logged_in_at "Cobley core"
-        text two_factor_secret "Fomu addition: encrypted TOTP secret"
-        text two_factor_recovery_codes "Fomu addition, encrypted"
-        timestamp two_factor_confirmed_at "Fomu addition; NULL = 2FA off"
+        datetime last_logged_in_at "platform core"
+        text two_factor_secret "Kit addition: encrypted TOTP secret"
+        text two_factor_recovery_codes "Kit addition, encrypted"
+        timestamp two_factor_confirmed_at "Kit addition; NULL = 2FA off"
         enum theme_preference "light | dark | system"
         bigint created_by_id FK "users.id"
         bigint updated_by_id FK "users.id, nullable"
@@ -57,9 +57,9 @@ erDiagram
         bigint organization_id FK "NULL = system role shared by all orgs"
         string name "UNIQUE(organization_id, name)"
         text description
-        string role_type "system (main roles) | custom (location roles); Cobley column"
+        string role_type "system (main roles) | custom (location roles); platform column"
         bigint status_id FK "statuses.id"
-        json permissions "array of permission names; Cobley core"
+        json permissions "array of permission names; platform core"
         bigint created_by_id FK "users.id"
         bigint updated_by_id FK "users.id, nullable"
         timestamp deleted_at "soft delete"
@@ -82,13 +82,13 @@ erDiagram
         string title
         string url "NULL for parents"
         string icon "lucide name"
-        json permission "Cobley core; children hold exactly one name (D8), parents NULL"
-        string module_route "Cobley core"
+        json permission "platform core; children hold exactly one name (D8), parents NULL"
+        string module_route "platform core"
         int position "sort order"
         boolean is_active "hidden for everyone when 0"
-        string group_label "Fomu addition: heading inside a panel"
-        enum display_mode "Fomu addition: dropdown | panel | section"
-        enum animation "Fomu addition: default | stagger | fade | slide | none"
+        string group_label "Kit addition: heading inside a panel"
+        enum display_mode "Kit addition: dropdown | panel | section"
+        enum animation "Kit addition: default | stagger | fade | slide | none"
         bigint created_by_id FK "users.id"
         bigint updated_by_id FK "users.id, nullable"
         timestamp deleted_at "soft delete"
@@ -120,19 +120,19 @@ erDiagram
     LOCATIONS |o--o{ IMPERSONATION_SESSIONS : "context of"
 ```
 
-- **STATUSES**: Cobley core. Master-data tables (users, organisations, locations, roles, request types) use status_id. Workflow states use one lookup table per workflow (P47, amends P16).
-- **WORKFLOW_STATUSES (pattern)**: P47. Every workflow people see and filter by (requests in the core; forms, attempts, responses, invitations in Fomu; a product's bookings, invoices, orders) has its own `<workflow>_statuses` table. Code, transitions, guards, posting rules, tests and reports use `code` only; labels, Swahili, tone and order are edited in Settings › Statuses and audited. Adding a code is a migration plus a transition in code, never an admin action. Records hold `<workflow>_status_id`; no denormalised code copy. Technical pipeline states nobody relabels (notification deliveries, device tokens, exports, webhook deliveries) stay enums.
-- **USERS**: Cobley users + Fomu 2FA columns. Global: one user can belong to several organisations. Related Cobley auth tables kept as-is: otps, user_invitations, force_password_resets, personal_access_tokens, user_device_tokens.
-- **USER_TRUSTED_DEVICES**: Fomu addition. Skips the 2FA step on a remembered device.
-- **ROLES**: Cobley roles + organization_id. System (main) roles are assigned on the member's primary user_locations row (role_id); custom roles only in user_locations.roles (never as a main role). Multi-valued index on permissions.
-- **PERMISSIONS**: Cobley core catalogue, seeded by the app (Cobley's Module.action naming). Global, not editable by tenants.
-- **MENUS**: Cobley menus + three display columns. Parent visible when ANY child is visible (OR).
-- **IMPERSONATION_SESSIONS**: Fomu addition: audit for 'View as'. Read-only mode; every write is refused while a session is open.
+- **STATUSES**: platform core. Master-data tables (users, organisations, locations, roles, request types) use status_id. Workflow states use one lookup table per workflow (P47, amends P16).
+- **WORKFLOW_STATUSES (pattern)**: P47. Every workflow people see and filter by (requests in the core; forms, attempts, responses, invitations in the example; a product's bookings, invoices, orders) has its own `<workflow>_statuses` table. Code, transitions, guards, posting rules, tests and reports use `code` only; labels, Swahili, tone and order are edited in Settings › Statuses and audited. Adding a code is a migration plus a transition in code, never an admin action. Records hold `<workflow>_status_id`; no denormalised code copy. Technical pipeline states nobody relabels (notification deliveries, device tokens, exports, webhook deliveries) stay enums.
+- **USERS**: Platform users + the kit's 2FA columns. Global: one user can belong to several organisations. Related auth tables kept as-is: otps, user_invitations, force_password_resets, personal_access_tokens, user_device_tokens.
+- **USER_TRUSTED_DEVICES**: Kit addition. Skips the 2FA step on a remembered device.
+- **ROLES**: Platform roles + organization_id. System (main) roles are assigned on the member's primary user_locations row (role_id); custom roles only in user_locations.roles (never as a main role). Multi-valued index on permissions.
+- **PERMISSIONS**: platform core catalogue, seeded by the app (Module.action naming). Global, not editable by tenants.
+- **MENUS**: Platform menus + three display columns. Parent visible when ANY child is visible (OR).
+- **IMPERSONATION_SESSIONS**: Kit addition: audit for 'View as'. Read-only mode; every write is refused while a session is open.
 
 
 ## 01B. Platform core: locations
 
-Cobley location tree (parent_id + closure table, typed by location_types) scoped per organisation. user_locations carries several custom roles per location plus JSON grants and denials. Reference lists: countries, wards.
+The location tree (parent_id + closure table, typed by location_types) scoped per organisation. user_locations carries several custom roles per location plus JSON grants and denials. Reference lists: countries, wards.
 
 ```mermaid
 erDiagram
@@ -155,9 +155,9 @@ erDiagram
         bigint location_type_id FK
         bigint parent_id FK "self; NULL = a root location, which is an organisation (P103)"
         string slug UK "only on a root location: the path segment /{org} (P103)"
-        boolean allow_sales "Cobley core (unused by Fomu)"
+        boolean allow_sales "platform core (unused by the example)"
         bigint status_id FK "statuses.id"
-        string address "Fomu addition"
+        string address "Kit addition"
         bigint ward_id FK "wards.id (Tanzanian ward, district, region)"
         bigint country_id FK "countries.id"
         string phone
@@ -218,17 +218,17 @@ erDiagram
     LOCATIONS ||--o{ USER_LOCATIONS : "staffed by"
 ```
 
-- **LOCATION_TYPES**: Cobley core + organization_id so tenants can add their own types.
-- **LOCATIONS**: Cobley location tree + organization_id and contact/geo columns. **A root location (parent_id NULL) is an organisation (P103)**: it carries the slug, its id is the organization_id of every row in its tree (itself included), and its own settings (branding, require_2fa, time zone, quiet hours) live in settings rows scoped to it. The manager is not stored here: it is whoever holds a Manager custom role in user_locations.
-- **LOCATION_CLOSURES**: Cobley core. Every ancestor/descendant pair, so 'this location and everything under it' is one indexed query. Maintained on create/move.
-- **USER_LOCATIONS**: Cobley core. Membership (P103): a person is a member of an organisation when they have a row anywhere in its tree; their one MAIN role is role_id on their primary row in that organisation (is_primary, one per organisation). Applies to the location and its descendants. UNIQUE(user_id, location_id). Multi-valued indexes on the three JSON arrays; changes written to the activity log.
-- **COUNTRIES**: Cobley reference list (global).
-- **WARDS**: Cobley reference list of Tanzanian wards (global).
+- **LOCATION_TYPES**: platform core + organization_id so tenants can add their own types.
+- **LOCATIONS**: The location tree + organization_id and contact/geo columns. **A root location (parent_id NULL) is an organisation (P103)**: it carries the slug, its id is the organization_id of every row in its tree (itself included), and its own settings (branding, require_2fa, time zone, quiet hours) live in settings rows scoped to it. The manager is not stored here: it is whoever holds a Manager custom role in user_locations.
+- **LOCATION_CLOSURES**: platform core. Every ancestor/descendant pair, so 'this location and everything under it' is one indexed query. Maintained on create/move.
+- **USER_LOCATIONS**: platform core. Membership (P103): a person is a member of an organisation when they have a row anywhere in its tree; their one MAIN role is role_id on their primary row in that organisation (is_primary, one per organisation). Applies to the location and its descendants. UNIQUE(user_id, location_id). Multi-valued indexes on the three JSON arrays; changes written to the activity log.
+- **COUNTRIES**: Reference list (global).
+- **WARDS**: Reference list of Tanzanian wards (global).
 
 
 ## 01C. Platform core: approvals
 
-Cobley approval workflow: request types with ordered steps (roles, permissions or users, OR/AND), requests per location, approval turns and delegations.
+The approval workflow: request types with ordered steps (roles, permissions or users, OR/AND), requests per location, approval turns and delegations.
 
 ```mermaid
 erDiagram
@@ -245,7 +245,7 @@ erDiagram
         string code "UNIQUE(organization_id, code)"
         text description
         boolean requires_approval "0 = auto-approve"
-        decimal threshold_amount "Cobley core; NULL for Fomu types"
+        decimal threshold_amount "platform core; NULL for the example's types"
         bigint status_id FK "statuses.id"
         json notify_settings "D43: {channels: [in_app, email, sms, push], events: {waiting, remind, escalate, decision}, remind_hours, remind_max}; in_app always on"
         bigint created_by_id FK "users.id"
@@ -370,13 +370,13 @@ erDiagram
     USERS ||--o{ USER_NOTIFICATION_PREFERENCES : "sets"
 ```
 
-- **REQUEST_TYPES**: Cobley core + organization_id. Cannot be activated or saved while a step fails the D40 capacity rule.
-- **REQUEST_TYPE_STEPS**: Cobley core. Approvers are resolved at the request's location (and its ancestors) using the effective-permission rule (D21).
-- **REQUESTS**: Cobley core + organization_id. Status is `request_status_id` into request_statuses (P47); the engine compares codes only. Request items (request_items) are kept for Cobley types and unused by Fomu.
-- **REQUEST_APPROVALS**: Cobley core.
+- **REQUEST_TYPES**: platform core + organization_id. Cannot be activated or saved while a step fails the D40 capacity rule.
+- **REQUEST_TYPE_STEPS**: platform core. Approvers are resolved at the request's location (and its ancestors) using the effective-permission rule (D21).
+- **REQUESTS**: platform core + organization_id. Status is `request_status_id` into request_statuses (P47); the engine compares codes only. Request items (request_items) are kept for request types that carry items, and unused by the example.
+- **REQUEST_APPROVALS**: platform core.
 - **NOTIFICATION_DELIVERIES**: D43. One row per recipient x channel x event; Laravel notification channels write it; reminders are a scheduled job that reads open requests.
 - **USER_NOTIFICATION_PREFERENCES**: D43. UNIQUE(organization_id, user_id, category, channel). Ignored when the step sets notify_required.
-- **APPROVAL_DELEGATIONS**: Cobley core + organization_id.
+- **APPROVAL_DELEGATIONS**: platform core + organization_id.
 
 
 ## 08. Constraints & indexes

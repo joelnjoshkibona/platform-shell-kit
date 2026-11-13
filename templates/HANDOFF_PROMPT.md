@@ -1,4 +1,4 @@
-<!-- TEMPLATE from the platform shell kit. Fomu's prompt is the worked example: keep the platform parts, replace the product parts, delete this line. -->
+<!-- TEMPLATE from the platform shell kit. The example's prompt is the worked example: keep the platform parts, replace the product parts, delete this line. -->
 
 # Handoff prompt
 
@@ -30,7 +30,7 @@ Rules you must follow:
   - A new behaviour needs a new decision (D46+) in `docs/architecture/erd_data.py`, then run `python3 build.py` in that folder.
 - **Build only from the component library.** If a screen needs a component that isn't there, add it to `COMPONENTS.md` / `components_api.json` first, in the same PR, with a reason.
 - **Backend:**
-  - build on the Cobley backend in `api/` and follow its module architecture and its list/select/drafts/media/approvals contracts;
+  - build on Bootbox's `api/` and follow its module architecture and its list/select/drafts/media/approvals contracts;
   - every tenant table has `organization_id` and every query is scoped by it;
   - permissions follow `Module.action`, and the menu, route, endpoint and buttons all agree;
   - write Pest tests.

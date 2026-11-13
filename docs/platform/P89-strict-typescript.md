@@ -1,6 +1,6 @@
 # P89 · Strict TypeScript for app code
 
-Status: **decided** (kit 1.12.0). Shelui Tasks D36. Extends P37 (the web app was already TypeScript).
+Status: **decided** (kit 1.12.0). From a product's build. Extends P37 (the web app was already TypeScript).
 
 ## Decision
 

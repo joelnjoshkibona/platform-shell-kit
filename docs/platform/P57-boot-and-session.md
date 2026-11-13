@@ -1,6 +1,6 @@
 # P57 · Boot and session
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Cobley, Agrovet, Jumla (all three), DevBiz.
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: four phone apps compared.
 
 ## Decision
 
@@ -12,12 +12,12 @@ The app keeps the stored session across restarts. On start it shows the curtain,
 - Validate with the server when there is a network; no network = stay signed in, read-only on last data.
 - 401 → Session ended (Sign in again), what was open is kept for the account. No network → never this screen.
 - Token in the secure store (Android Keystore), not localStorage; app backup excludes it.
-- Nothing secret in the web bundle: no shared API key (Agrovet and Jumla ship one); the user's own token only.
+- Nothing secret in the web bundle: no shared API key (two of the apps shipped one); the user's own token only.
 - Sign out wipes the cart, drafts and caches of this phone; the lock (P65) uses the same wipe.
 
 ## Why
 
-Cobley's initializeAuth clears the session on any /profile failure, so opening with no signal logged the cashier out; Agrovet and Jumla keep the user record in plain localStorage and ship a shared API key in the bundle, with allowBackup on; none wipes the last person's cart on sign out.
+One app's initializeAuth cleared the session on any /profile failure, so opening with no signal logged the cashier out; two kept the user record in plain localStorage and shipped a shared API key in the bundle, with allowBackup on; none wiped the last person's cart on sign out.
 
 ## Where
 

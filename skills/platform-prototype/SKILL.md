@@ -1,11 +1,11 @@
 ---
 name: "platform-prototype"
-description: "Use when starting, extending or handing off any admin product on the Cobley platform core (new product, new module, prototype, phone app, handoff): inherit the platform shell kit instead of re-deciding the shell, and keep the plan, tracker and build guide."
+description: "Use when starting, extending or handing off any admin product on the platform (new product, new module, prototype, phone app, handoff): inherit the platform shell kit instead of re-deciding the shell, and keep the plan, tracker and build guide."
 ---
 
 # Platform prototype
 
-Every admin product on the platform (Laravel API + Vue 3 + shadcn-vue + strict TypeScript, multi-tenant, locations, roles, approvals, an optional NativePHP phone app) inherits the **platform shell kit**: https://github.com/joelnjoshkibona/platform-shell-kit (public). The shell, the code structure and the deliverables are already decided. Fomu (joelnjoshkibona/fomu) is the first product on it and the worked example; Shelui Tasks is the first built on kit 1.12.
+Every admin product on the platform (Laravel API + Vue 3 + shadcn-vue + strict TypeScript, multi-tenant, locations, roles, approvals, an optional NativePHP phone app) inherits the **platform shell kit**: https://github.com/joelnjoshkibona/platform-shell-kit (public). The shell, the code structure and the deliverables are already decided. Its worked example is Bootbox: the example modules in the kit's prototype, and the Bootbox starter (joelnjoshkibona/bootbox).
 
 > This file lives in the kit at `skills/platform-prototype/SKILL.md`. When the kit changes, update it there and upload it to the claude.ai skills.
 
@@ -36,10 +36,10 @@ Do **not** ask about, propose alternatives for, or redesign any of these. They a
 - forms (drafts, pickers, rich text, date picker, save bar + leave guard)
 - core modules: Dashboard, Users, Roles, Permissions, Locations, Settings, Menu Management, Media, Approvals, notifications, and the system screens (P97: Logs, Queue, Scheduled tasks, Trash, Notifications, Permissions)
 - permissions named `Module.action`, menus gated by `Module.list`, server-side access matching the menu
-- the phone app's behaviour (P51–P79, P93): its own app crafted for a phone (Hodie's shape) and its own prototype, quiet header, session, lifecycle, connectivity, uncertain writes, Back, safe areas and keyboard, permissions, lock, push, updates, app log (P72; and P113: everything built writes to it, counts and codes only, with a test)
+- the phone app's behaviour (P51–P79, P93): its own app crafted for a phone and its own prototype, quiet header, session, lifecycle, connectivity, uncertain writes, Back, safe areas and keyboard, permissions, lock, push, updates, app log (P72; and P113: everything built writes to it, counts and codes only, with a test)
 - **code structure (P80–P90)**: a module owns its folder on every side; one manifest per module found by glob (`module.json`, `defineModule`); modules load themselves; one service per operation, container instances, validated data only; actions declared once; related records are `RecordLink`s from the module registry; child tabs are the child's scoped list; the generator's list contract; the API shape (`version`, 409, `errors`); strict TypeScript; a test per convention
 - **deliverables (P91, P92, P98)**: prototype, implementation plan, progress tracker, build guide and user guide (`docs/help/`, marked pictures from `tools/help`), updated with every change
-- monorepo `api/` + `web/` + `packages/shared/` (+ `mobile/`, the phone app as its own app in Hodie's shape, P93), each app's `src/` split into `app/`, `components/`, `modules/`, phased build with one PR per phase, visual parity proven with screenshots
+- monorepo `api/` + `web/` + `packages/shared/` (+ `mobile/`, the phone app as its own app, P93), each app's `src/` split into `app/`, `components/`, `modules/`, phased build with one PR per phase, visual parity proven with screenshots
 
 If the user asks for a change to one of these, say it is a platform decision, show the P number, and ask (with the Ask tool) whether they want to change the platform for every product. If yes, the change is a new P in the kit repo (decision + prototype + rules + components + the kit's guide updated together, `kit.json` bumped), not a product-only change.
 
@@ -49,7 +49,7 @@ Use the Ask tool for decisions. Ask only about the product: name, tagline, accen
 
 ## Step 4: build the product prototype from the kit
 
-- One artifact for the whole web prototype, assembled from the kit: `product.js` carries the branding (and, optionally, the product's own curtain loader, P114); `parts_product.js` is the product registry (P110: its permissions, role defaults and detail pages, loaded before the shell); the product's modules are new `parts_<module>.js` files. Register each record type with `defineModule({ key, route, path, label, plural, perm, get, set, linkId, find, preview, backParent })` and show every related record with `RecordLink`. Use the other extension points in the kit README (menu, permissions, roles, routes, search groups, dashboard, settings tabs, workflows). Remove Fomu's example modules unless the product is Fomu. Product patches to the shell go in `assemble.py` with `rep()`, never in the kit's parts.
+- One artifact for the whole web prototype, assembled from the kit: `product.js` carries the branding (and, optionally, the product's own curtain loader, P114); `parts_product.js` is the product registry (P110: its permissions, role defaults and detail pages, loaded before the shell); the product's modules are new `parts_<module>.js` files. Register each record type with `defineModule({ key, route, path, label, plural, perm, get, set, linkId, find, preview, backParent })` and show every related record with `RecordLink`. Use the other extension points in the kit README (menu, permissions, roles, routes, search groups, dashboard, settings tabs, workflows). Remove the example modules (Forms, Templates, Builder, Results, Respondent) unless the product keeps them. Product patches to the shell go in `assemble.py` with `rep()`, never in the kit's parts.
 - A phone app is drawn separately from the kit's `prototype-phone/` (phone-only, 360–430 wide).
 - Every new screen follows the kit patterns and is built only from the component library. A new component is added to the library (COMPONENTS.md + components_api.json) first.
 - Check every screen at 1280px light and 390px dark at least: no console errors, no horizontal scroll, works in both themes. Look at the screenshots, don't only trust the run.
@@ -87,3 +87,4 @@ Fill every `{{PRODUCT_NAME}}` / `{{product_slug}}`. Never commit secrets. Push o
 - The kit prototype decides the look; `FRONTEND_RULES.md` and the P-log decide behaviour; `MODULES.md` decides the code layout; the product's D-log decides product behaviour. If two disagree, ask.
 - Every change to the code also updates its plan step, its tracker row and its guide chapter, and rebuilds the guide (`tools/guide/check.sh` must pass).
 - Say which kit version you loaded at the start of the work.
+- **Speak in kit terms** when you change the kit: a P, rule, guide or template describes the need generically and never names a product; what a product found or decided stays in its own D-log. `tools/kit-check.py` fails on the names in `tools/product-names.txt`.

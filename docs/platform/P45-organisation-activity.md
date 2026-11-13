@@ -1,6 +1,6 @@
 # P45 · Recent activity belongs to one organisation
 
-Status: **decided when this note merges**, from SOMA (the kit's single activity list showed Kilima Retail entries in every organisation).
+Status: **decided when this note merges**, from a product's build (the kit's single activity list showed Kilima Retail entries in every organisation).
 Builds on P12 (shared core, `organization_id` everywhere), P23 (View as) and the activity log behind every History tab.
 
 ## Decision

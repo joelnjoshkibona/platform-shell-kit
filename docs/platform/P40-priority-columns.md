@@ -2,13 +2,13 @@
 
 Status: **decided 2026-10-15**, explored in the reference prototype `docs/platform/p40-priority-columns.html` (kit 1.1.0 → 1.2.0). Tight rows amended by **P50** and **P112** (kit 1.26.0).
 Supersedes the table/row-cards switch in P6, P24 and P39. Builds on P5 (row opens on click, actions above the link), P22 (contextual search), P24 (toolbar, filters, URL state), P25 (Refresh), P31 (filter controls), P39 (one card, scoped lists, links).
-Sources: the COBLEY row list (`FRONTEND/docs/module-patterns.md`, "avatar + primary line + meta line + right-aligned meta + chevron, no `<table>`") and the Fomu ListCard.
+Sources: an existing product's row list (its module patterns doc, "avatar + primary line + meta line + right-aligned meta + chevron, no `<table>`") and the kit's ListCard.
 
 ## Why
 
-The P39 ListCard switches between two components at 700px of card width: a table with every column above, row cards below. Just above the cliff a seven-column table is squashed into 720px; just below it the list becomes a different thing with no header, no alignment and no column sort. The pain on tablets and small laptops is not tables, it is a **fixed column count**. COBLEY's row list avoids the cliff by never being a table, and pays for it with no vertical scanning of numbers or dates; COBLEY itself fell back to a real table for Logs and Queue.
+The P39 ListCard switches between two components at 700px of card width: a table with every column above, row cards below. Just above the cliff a seven-column table is squashed into 720px; just below it the list becomes a different thing with no header, no alignment and no column sort. The pain on tablets and small laptops is not tables, it is a **fixed column count**. A row list avoids the cliff by never being a table, and pays for it with no vertical scanning of numbers or dates; that product itself fell back to a real table for Logs and Queue.
 
-P40 keeps one component at every width and lets the **columns** adapt: each column carries a priority, and as the card narrows the lowest-priority columns fold into the row instead of disappearing. The COBLEY row (avatar, title, badges, meta line, one number, chevron) is the fully folded state of the table, not a second layout.
+P40 keeps one component at every width and lets the **columns** adapt: each column carries a priority, and as the card narrows the lowest-priority columns fold into the row instead of disappearing. The row (avatar, title, badges, meta line, one number, chevron) is the fully folded state of the table, not a second layout.
 
 ## Decision
 
@@ -65,7 +65,7 @@ Which columns a list has, their `priority`, which one is the hero, the base meta
 1280  Name · SKU · Type · Category · Price · Status · Created        full table
  928  Name · SKU · Category · Price · Status  (Type, Created → meta)
  720  Name · SKU · Price · Status             (Category → meta)
- 390  [icon] Name  [SKU]            [Status]   COBLEY row; status over the price
+ 390  [icon] Name  [SKU]            [Status]   the row; status over the price
              per piece · Engine · +1 more     TZS 22,500  ›
 ```
 

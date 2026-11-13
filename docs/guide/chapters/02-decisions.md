@@ -14,7 +14,7 @@ Examples:
 - **P21**: permissions are named `Module.action` (`Tasks.create`, `Tickets.triage`).
 - **P49**: every record page starts with a Back button.
 - **P80**: a module owns its files.
-- **Shelui D8**: tasks nest without limit.
+- **D8** (a product's own): tasks nest without limit.
 
 ## The rules
 

@@ -1,6 +1,6 @@
 # The pieces of a product
 
-A product on the platform (Fomu, DevBiz, Shelui Tasks, …) is one repository with these parts.
+A product on the platform (the Bootbox example, or any product started from it) is one repository with these parts.
 
 | Part | Folder | What it is | Built with |
 | --- | --- | --- | --- |
@@ -25,6 +25,6 @@ A product on the platform (Fomu, DevBiz, Shelui Tasks, …) is one repository wi
 
 ## The core every product inherits
 
-Every product gets these modules from the platform without writing them: users, roles and permissions, organisations, locations (a tree of branches, zones and regions), settings, menus, media (files), drafts, approvals and notifications, statuses, the dashboard and global search, and the system screens (P97): logs of who did what and what went wrong, the queue of background work, scheduled tasks, the trash, notification rules and announcements, and who has which permission. A product adds **its own modules** (Fomu: forms and responses; Shelui Tasks: tasks, tickets, projects).
+Every product gets these modules from the platform without writing them: users, roles and permissions, organisations, locations (a tree of branches, zones and regions), settings, menus, media (files), drafts, approvals and notifications, statuses, the dashboard and global search, and the system screens (P97): logs of who did what and what went wrong, the queue of background work, scheduled tasks, the trash, notification rules and announcements, and who has which permission. A product adds **its own modules** (the example: forms and responses; a task tracker: tasks, tickets, projects).
 
 > **Why**: Writing the same users-and-roles screens for every product wastes months and makes every product behave a little differently. The core is written once and kept the same everywhere.

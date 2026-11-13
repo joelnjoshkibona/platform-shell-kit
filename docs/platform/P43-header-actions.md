@@ -1,6 +1,6 @@
 # P43 · Top-bar actions always sit at the right
 
-Status: **decided when this note merges**, from SOMA (found while checking the Settings and Timetable screens at 1280px).
+Status: **decided when this note merges**, from a product's build (found while checking the Settings and Timetable screens at 1280px).
 Builds on P2 (app shell: top bar) and P22 (contextual search).
 
 ## Decision

@@ -1,22 +1,22 @@
-# DevBiz Phone (prototype)
+# Bootbox Phone (prototype)
 
-DevBiz drawn for a phone only. One layout (360 to 430 wide), no breakpoints, its own shell, components and Design system.
+The kit's example phone app, a small shop, drawn for a phone only. One layout (360 to 430 wide), no breakpoints, its own shell, components and Design system.
 It shares the API, the money and stock rules, the brand tokens and the web app's sizes with the web kit, and no components or
 layouts. Open `index.html` in a browser. It loads Vue, Tailwind and Lucide from CDNs.
 
 ## Sizes
 
-The web app's, as the web prototype draws them (D102): buttons and fields h-9 (36), small buttons and chips h-8, header h-14,
+The web app's, as the web prototype draws them: buttons and fields h-9 (36), small buttons and chips h-8, header h-14,
 icon buttons h-9, switch h-5 w-9, avatars 36 (44 on a record), text-sm body, text-xs meta, 11px labels, text-xl titles,
 text-2xl figures, rounded-md controls, rounded-xl cards, rounded-md status chips at 11px. The only phone-only sizes are the
 bottom bar (56 + inset) and the round Sell button (48). The Design system screen lists them.
 
 ## Where it comes from
 
-- **Agrovet and Jumla** (read in full, see `../docs/mobile/AGROVET_JUMLA_BRIEF.md`): the drawer with a coloured profile panel,
+- **Earlier phone apps built on the platform**: the drawer with a coloured profile panel,
   the Refresh + filter-summary bar, the filter sheet, stacked detail cards, a sticky action footer, the big quantity box, the
   selected-customer card, expandable alerts, the wizard progress bar, confirm-with-a-difference, the printer and update states.
-- **Our components and data** (DevBiz prototype): product tile, customer avatar, age chip, balance, sale status, level badge,
+- **The example's components and data**: product tile, customer avatar, age chip, balance, sale status, level badge,
   cart line (± by the sell step), customer and account pickers; Water and Trident as they are sold (500 per 2), blue accent.
 - **Our phone rules** (P56 to P70): Back closes the top layer first, the cart is kept when you leave the till, the cashier's
   requests wait for the owner, Call / WhatsApp / SMS from a number, Bluetooth receipt printer, lock, offline and update states.
@@ -41,7 +41,7 @@ the list state, and to open any sheet. The menu is flat (grouped labels, no drop
 
 The picker's **Data mode (P102)** switches between connected (as drawn everywhere else), on the phone and sync. Sync adds the sync line on Home, the Sync page (waiting, couldn't be sent, what is kept), the no-signal bar that says to keep working, the conflict screen (mine and theirs), the first sync, and signing out with changes waiting. On the phone shows Data and backups. Drawn in `src/25_sync.js`.
 
-## Receipts (DevBiz D204-D208, Phase 12e)
+## Receipts
 
 Drawn here first, so the owner can approve the look before anything is built (`src/73_receipt.js`).
 
@@ -51,7 +51,7 @@ Drawn here first, so the owner can approve the look before anything is built (`s
 - **Share PDF** opens a stand-in for Android's own share list with the PDF named by its receipt number.
 - **Printer** (Profile and the receipt screen): paired printers, Test print, kept on this phone.
 - **Receipt settings** (owner only; drawer, Shop, Receipt; or Settings): live preview (Printer 58 mm and PDF), the logo with the black-and-white copy the printer prints, what shows (ten blocks, fixed order, items and total always), the owner's words (address, TIN, header 48, footer 96, fill-ins). A cashier sees "Only Amina can change the receipt".
-- The logo, the shop details and the sale lines in the paper are made up; the decisions are in the DevBiz repo (`docs/architecture/erd_data.py`, D204-D208).
+- The logo, the shop details and the sale lines in the paper are made up.
 
 ## Build
 

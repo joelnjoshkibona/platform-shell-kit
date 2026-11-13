@@ -7,7 +7,7 @@
                      ROLES before its core permissions); desc describes the role in the product's words. The Owner gets everything.
        detailRoutes  [{ route, title(G), parent? }]: the product's pages that live inside the shell (breadcrumb, Back). title is
                      the page title; parent is the menu route it belongs to (highlighted in the sidebar, its permission applies).
-     This is Fomu's, the kit's worked example. A product replaces it with its own. */
+     This is the kit's worked example's. A product replaces it with its own. */
   const PRODUCT_REGISTRY = {
     permissions: [
       { name: 'Forms.list', label: 'See forms', module: 'Forms' }, { name: 'Forms.create', label: 'Create and edit forms', module: 'Forms' }, { name: 'Forms.publish', label: 'Publish and close forms', module: 'Forms' }, { name: 'Forms.delete', label: 'Archive and delete forms', module: 'Forms' },
@@ -22,5 +22,5 @@
       zone_manager: { desc: 'Custom role: runs a zone, its branches and their forms.', perms: ['Forms.list', 'Forms.create', 'Forms.publish', 'Templates.list', 'Responses.list', 'Responses.export', 'Responses.void'] },
       auditor: { desc: 'Custom role: reads results and exports them for audits.', perms: ['Forms.list', 'Responses.list', 'Responses.export'] },
     },
-    detailRoutes: [],   /* Fomu's own pages (builder, results, respondent) are full-screen views outside the shell (assemble.py → App) */
+    detailRoutes: [],   /* The example's own pages (builder, results, respondent) are full-screen views outside the shell (assemble.py → App) */
   };

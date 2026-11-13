@@ -1,8 +1,8 @@
-<!-- TEMPLATE from the platform shell kit. Fomu's CLAUDE.md is the worked example: keep the platform parts, replace the product parts, delete this line. -->
+<!-- TEMPLATE from the platform shell kit. The example's CLAUDE.md is the worked example: keep the platform parts, replace the product parts, delete this line. -->
 
 # {{PRODUCT_NAME}}: agent guide
 
-{{PRODUCT_NAME}} (placeholder name) is a multi-tenant, Google Forms-like form builder: organisations build choice-only forms, share them publicly or privately, run timed attempts with integrity rules, verify respondents by email OTP, and read results. It runs on the Cobley platform core (users, locations, roles, menus, approvals), scoped per organisation.
+{{PRODUCT_NAME}} (placeholder name) is a multi-tenant, Google Forms-like form builder: organisations build choice-only forms, share them publicly or privately, run timed attempts with integrity rules, verify respondents by email OTP, and read results. It runs on the platform core from Bootbox (users, locations, roles, menus, approvals), scoped per organisation.
 
 Everything here was designed and agreed before code. **Your job is to build it exactly as designed, not to redesign it.**
 
@@ -21,11 +21,11 @@ Everything here was designed and agreed before code. **Your job is to build it e
 
 | Question | Answer lives in | Wins over |
 | --- | --- | --- |
-| How does it look (layout, spacing, colour, motion, copy)? | Prototype + `docs/design/screenshots/` | Everything else, including Cobley's old frontend |
+| How does it look (layout, spacing, colour, motion, copy)? | Prototype + `docs/design/screenshots/` | Everything else, including any older frontend |
 | How does it behave? | `FRONTEND_RULES.md`, then the decision log | Your own preferences |
-| What data exists and how is it constrained? | `ERD.md` (generated from `docs/architecture/erd_data.py`) | Cobley's schema where they differ |
-| How is the code laid out and wired (modules, manifests, services, actions, links)? | `docs/architecture/MODULES.md` (kit P80–P90) | The Cobley backend's older layout |
-| How does the backend work (lists, selects, drafts, media, approvals)? | `api/` (Cobley backend) + `docs/reference/cobley-docs/` | — |
+| What data exists and how is it constrained? | `ERD.md` (generated from `docs/architecture/erd_data.py`) | Any older schema where they differ |
+| How is the code laid out and wired (modules, manifests, services, actions, links)? | `docs/architecture/MODULES.md` (kit P80–P90) | Any older code layout |
+| How does the backend work (lists, selects, drafts, media, approvals)? | `api/` (from Bootbox) + its guide in `docs/bootbox/` | — |
 | How was it built, step by step? | `docs/guide/` (chapters → `index.html`), `docs/IMPLEMENTATION_PLAN.md`, `docs/PROGRESS.md` | — |
 
 If two sources disagree, stop and ask in the PR (or as an issue). Don't pick one quietly. A new behaviour needs a new decision (`D46`, `D47`, …) added to `erd_data.py`, then regenerate with `cd docs/architecture && python3 build.py`.
@@ -33,7 +33,7 @@ If two sources disagree, stop and ask in the PR (or as an issue). Don't pick one
 ## Repository layout
 
 ```
-api/     Laravel (laravel/framework ^13) — the Cobley backend, the base we build on (D45)
+api/     Laravel (laravel/framework ^13) — from Bootbox, the base we build on (D45)
   app/Modules/{Kernel|Core|Custom}/{Group}/{Module}/   one folder per module (P80): module.json, controller, model, routes, migrations, seeders, services, actions, tests
 web/     Vue 3 + Vite + strict TypeScript + Tailwind + shadcn-vue SPA (created in Phase 0)
   src/modules/{module}/   module.ts (defineModule), routes, pages, components, composables, locales, tests

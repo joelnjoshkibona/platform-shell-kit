@@ -1,7 +1,7 @@
 /* ============================================================ P102: the phone app's data modes (connected · on the phone · sync)
    One app, the same screens; only the data layer changes (list / view / save / delete / action), so no screen knows the mode.
    connected  the API is the truth; no signal = read-only on the last data (P57, P59); a write is never repeated (P60).
-   phone      the phone's own Laravel and SQLite are the backend (Hodie): no server, no sign-in; backups to a file.
+   phone      the phone's own Laravel and SQLite are the backend: no server, no sign-in; backups to a file.
    sync       a working copy on the phone + a queue of changes waiting; each change carries a key the server remembers, so a
               repeat does nothing (P60 amended for this mode only); GET /sync/changes?since= brings the server's changes back;
               a changed-on-both-sides record answers 409 with the server's copy: mine and theirs side by side. */
@@ -38,7 +38,7 @@ const SyncPage = { components: { Header, Icon, Btn },
   setup() {
     const retry = (f) => { const i = SYNCS.failed.indexOf(f); SYNCS.failed.splice(i, 1); toast('Sent again. The server still says no: it is in the list again.'); setTimeout(() => SYNCS.failed.splice(i, 0, f), 900); };
     const drop = (f) => { S.dialog = { title: 'Throw this change away?', text: f.what + ' was never saved on the server. It will be gone.', action: 'Throw it away', tone: 'destructive', cancel: 'Keep it', ok: () => { SYNCS.failed.splice(SYNCS.failed.indexOf(f), 1); toast('Thrown away'); } }; };
-    const backup = () => { SYNCS.backup = 'just now'; toast('Backup saved to Downloads/devbiz-backup.zip'); };
+    const backup = () => { SYNCS.backup = 'just now'; toast('Backup saved to Downloads/bootbox-backup.zip'); };
     return { S, SYNCS, MODE_LABEL, syncNow, retry, drop, backup, toast };
   },
   template: `<div class="flex min-h-0 flex-1 flex-col"><Header :title="SYNCS.mode === 'phone' ? 'Data and backups' : 'Sync'" pushed hide-search/>

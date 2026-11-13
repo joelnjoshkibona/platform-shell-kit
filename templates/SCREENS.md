@@ -1,4 +1,4 @@
-<!-- TEMPLATE from the platform shell kit. Fomu's screen map is the worked example: keep the platform parts, replace the product parts, delete this line. -->
+<!-- TEMPLATE from the platform shell kit. The example's screen map is the worked example: keep the platform parts, replace the product parts, delete this line. -->
 
 # Screens
 
@@ -197,7 +197,7 @@ Email + OTP in one card, rules screen, timed sections, violation overlays, edge 
 
 ## In the menu but not designed
 
-These menu items exist (with permissions) but the prototype shows a placeholder. Build them in Phase 7 with the standard list + details pattern from `FRONTEND_RULES.md`, using Cobley's backend behaviour for the module. Raise a question in the PR if a screen needs more than the pattern gives.
+These menu items exist (with permissions) but the prototype shows a placeholder. Build them in Phase 7 with the standard list + details pattern from `FRONTEND_RULES.md`, using Bootbox's backend behaviour for the module. Raise a question in the PR if a screen needs more than the pattern gives.
 
 | Menu | Permission |
 | --- | --- |

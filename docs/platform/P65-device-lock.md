@@ -1,6 +1,6 @@
 # P65 · Device lock
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: New; Cobley, Agrovet, Jumla (none locks).
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: New; four phone apps compared (none locks).
 
 ## Decision
 

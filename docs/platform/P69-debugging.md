@@ -1,6 +1,6 @@
 # P69 · Debugging
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Agrovet, Cobley, Jumla; DevBiz.
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: four phone apps compared.
 
 ## Decision
 

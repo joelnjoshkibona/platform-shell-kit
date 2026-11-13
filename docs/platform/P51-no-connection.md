@@ -1,6 +1,6 @@
 # P51 · No connection
 
-Status: **decided** (kit 1.7.0). Proposed by DevBiz (D194) after the phone app test, built and tested there first.
+Status: **decided** (kit 1.7.0). Proposed after a product's phone app test, built and tested there first.
 
 ## Why
 
@@ -30,12 +30,12 @@ cashier believes it.
 
 `ConnectionNotice` (`variant`: `page` | `banner`), state from `lib/connection.ts` (`connection.lost`,
 `connection.pageFailed`, `connection.reloads`, `check()`), wired once by `installConnection(router)` and the API
-client's `onNetwork` hook. Full-screen pages outside the shell (the DevBiz till) place the same two variants
+client's `onNetwork` hook. Full-screen pages outside the shell (a till, for example) place the same two variants
 themselves.
 
 ## Kit work
 
 - Prototype: the two states on a module list page (phone and desktop), with a Prototype states toggle.
-- Screenshots: `connection--page`, `connection--banner` (and each product's own full-screen pages, like DevBiz's
+- Screenshots: `connection--page`, `connection--banner` (and each product's own full-screen pages, like a till
   `till--no-connection`).
 - FRONTEND_RULES: the rule above; COMPONENTS: `ConnectionNotice`.

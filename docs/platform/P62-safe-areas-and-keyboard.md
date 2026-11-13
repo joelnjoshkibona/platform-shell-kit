@@ -1,6 +1,6 @@
 # P62 · Safe areas and keyboard
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: DevBiz D192; Cobley, Agrovet, Jumla (all four hit it).
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: four phone apps compared (all four hit it).
 
 ## Decision
 
@@ -16,7 +16,7 @@ One contract. --sa-top / -bottom / -left / -right are the inset NativePHP inject
 
 ## Why
 
-All four apps hit the doubled header; Cobley still has a safe-area-sheet class defined nowhere and one field 7px under the keyboard.
+All four apps hit the doubled header; one still had a safe-area-sheet class defined nowhere and one field 7px under the keyboard.
 
 ## Where
 

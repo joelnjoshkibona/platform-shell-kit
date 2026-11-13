@@ -1,6 +1,6 @@
 # P64 · Phone actions
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Cobley, Agrovet, Jumla (none has call, share, WhatsApp).
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: four phone apps compared (none has call, share, WhatsApp).
 
 ## Decision
 
@@ -15,7 +15,7 @@ The things a phone does that a desktop does not. Call, SMS and WhatsApp open the
 
 ## Why
 
-None of the three apps has call, SMS, WhatsApp or share; Agrovet's printer takes the first bonded device with no choice.
+None of the three apps has call, SMS, WhatsApp or share; one app's printer took the first bonded device with no choice.
 
 ## Where
 

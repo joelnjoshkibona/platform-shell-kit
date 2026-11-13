@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
  * P93: the phone app's interface is its own Vite project (resources/spa), built into public/spa by scripts/build-web.sh.
- * Every path that is not /api returns its index.html and the interface takes it from there (as Hodie does).
+ * Every path that is not /api returns its index.html and the interface takes it from there.
  * The phone's own work (/api/native/*, /api/drafts, /api/cache) is in routes/api.php; the product's data is on the remote API.
  */
 Route::get('/{any?}', function () {

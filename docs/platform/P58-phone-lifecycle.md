@@ -1,6 +1,6 @@
 # P58 · Phone lifecycle
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Cobley, Agrovet, Jumla (none handles it); DevBiz.
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: four phone apps compared (none handles it).
 
 ## Decision
 

@@ -64,8 +64,8 @@ const COUNTS = [
   { id: 'CNT-0007', day: '7 Oct 2026', by: 'Amina', gaps: 'Water 1 short (approved)', st: 'ok' }
 ];
 const USERS = [
-  { id: 'u1', name: 'Amina Mushi', email: 'amina@devbiz.app', role: 'Owner', ini: 'AM', c: 'var(--c3)', seen: 'Active now', st: 'ok' },
-  { id: 'u2', name: 'Rehema Kileo', email: 'rehema@devbiz.app', role: 'Cashier', ini: 'RK', c: 'var(--c1)', seen: 'Active 10 min ago', st: 'ok' },
+  { id: 'u1', name: 'Amina Mushi', email: 'amina@bootbox.app', role: 'Owner', ini: 'AM', c: 'var(--c3)', seen: 'Active now', st: 'ok' },
+  { id: 'u2', name: 'Rehema Kileo', email: 'rehema@bootbox.app', role: 'Cashier', ini: 'RK', c: 'var(--c1)', seen: 'Active 10 min ago', st: 'ok' },
   { id: 'u3', name: 'Joyce Mrema', email: 'joyce@example.com', role: 'Cashier', ini: 'JM', c: 'var(--c4)', seen: 'Invited 2 days ago', st: 'invited' }
 ];
 Object.assign(S, { recSrc: null, print: 'idle', printFail: null, printer: 'RPP02N', net: 'online', update: null, tabP: 'overview', pid: 'p1', prodQ: '', prodTab: 'overview', moveType: 'all', delId: 'DEL-0009', delTab: 'all', supId: 's1', supTab: 'overview', payId: 'P-0090',

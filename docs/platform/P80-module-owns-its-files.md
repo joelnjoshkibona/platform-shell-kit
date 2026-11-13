@@ -1,6 +1,6 @@
 # P80 · A module owns its files
 
-Status: **decided** (kit 1.12.0). From PROJECT_GENERATOR (`PHP/PROJECT_GENERATOR_PROJECT/PROJECT_GENERATOR`, SYSTEM_SHELL), adopted for every product with Shelui Tasks D33. Extends P37.
+Status: **decided** (kit 1.12.0). From PROJECT_GENERATOR (`PHP/PROJECT_GENERATOR_PROJECT/PROJECT_GENERATOR`, SYSTEM_SHELL), adopted for every product after a product's build. Extends P37.
 
 ## Decision
 

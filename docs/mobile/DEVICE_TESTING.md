@@ -44,7 +44,7 @@ Run the phone movements checklist (`PHONE_MODEL.md`) on the emulator and on one 
 - Emulator camera: `-camera-back virtualscene`; a seeded gallery needs `adb push` and a media-scanner broadcast; headless
   emulators cannot draw the camera preview or permission dialogs: use a real phone.
 
-## Learned on a real phone (Hodie, 2026-11-05)
+## Learned on a real phone (2026-11-05)
 
 - **A release build cannot be debugged and its web view console is not in `logcat`.** The app's own log (P72) is how you see what happened. For facts the log does not hold, `adb backup -f x.ab -noapk <app id>` works on Android 10 (tap "Back up my data" on the phone): the `.ab` is a zlib stream after a 4 line header, a tar inside has `shared_prefs/` and the SQLite database.
 - **`am crash <app id>` kills the web view's renderer, which the Java crash handler never sees**, and the process dies. It tests the "died while open" marker, not the handler. `adb shell am kill` does nothing while a foreground service runs or while the app is on screen: stop the service and put another app on top first.
@@ -56,7 +56,7 @@ Run the phone movements checklist (`PHONE_MODEL.md`) on the emulator and on one 
 - **Same version, same bundle (P68):** every test install gets a new version code. `native:package` writes the manifest first and then bumps `NATIVEPHP_APP_VERSION_CODE` in the bundled `.env`, so the code the app reads is one more than the one Android knows.
 - **A phone in use:** taps sent with `adb input` land on whatever is on screen. Take a screenshot before and after every step, and never tap blind after an install (the app needs about 15 seconds to be ready).
 
-## Learned on a real phone (Hodie, 2026-11-06)
+## Learned on a real phone (2026-11-06)
 
 - **A POS terminal (Telpo M1K, Android 12) is a good test of the safe areas and a poor test of location.** It has a real 96 px navigation bar whose first inset answer was 0 (P62), and no position source indoors: the network provider is off and the fused provider gives nothing, so it cannot make a trail. Use it for layout, use a phone that is carried for the walk (P77).
 - **It sleeps although `stay_on_while_plugged_in` is set**: wake it and swipe up before every screenshot. **A shared test phone** can have another session start a different app: read `dumpsys window | grep mCurrentFocus` before every tap, and take a screenshot after.

@@ -1,6 +1,6 @@
 # P59 · Connectivity
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Amends P51; Cobley, Agrovet, Jumla (none has it).
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Amends P51; four phone apps compared (none has it).
 
 ## Decision
 
@@ -15,7 +15,7 @@ The app knows the network from the phone (Network status and the online/offline 
 
 ## Why
 
-No app uses the Network API; axios has no timeout in Agrovet and Jumla; retry is manual only.
+No app uses the Network API; axios had no timeout in two of the apps; retry is manual only.
 
 ## Where
 

@@ -1,16 +1,16 @@
 # P107 · Approval actions carry their own effects
 
-Status: **decided** (kit 1.26.0). Proposed by Max Yield, the first product built on kit 1.25.0, which tested it in its own copy of `parts_appr.js` and ported it here with P108–P112.
+Status: **decided** (kit 1.26.0). Proposed by the first product built on kit 1.25.0, which tested it in its own copy of `parts_appr.js` and ported it here with P108–P112.
 
 ## Why
 
-The README lists "Actions behind approvals: `parts_appr.js` → `ACTIONS` + `approvalGate`" as an extension point, but an `ACTIONS` entry only carried a label, an icon and the effect as **text**. What actually happened when a request was decided was written inside the shared approvals engine, for Fomu's records:
+The README lists "Actions behind approvals: `parts_appr.js` → `ACTIONS` + `approvalGate`" as an extension point, but an `ACTIONS` entry only carried a label, an icon and the effect as **text**. What actually happened when a request was decided was written inside the shared approvals engine, for the example's records:
 
 - approved `Forms.publish` → the form goes live;
 - approved `Responses.void` → the respondent is reset;
 - approved `Responses.export` → an export toast.
 
-A product therefore had to edit the engine to say what its own approval does. Max Yield needed "an approved discount is written into the proforma's lines and the proforma can be sent", and "a rejected discount leaves the proforma unchanged and sendable without it".
+A product therefore had to edit the engine to say what its own approval does. A product needed "an approved discount is written into the proforma's lines and the proforma can be sent", and "a rejected discount leaves the proforma unchanged and sendable without it".
 
 ## Decision
 
@@ -27,9 +27,9 @@ A product therefore had to edit the engine to say what its own approval does. Ma
 
 `ACTIONS` in `parts_appr.js` (label, icon, effect); `ACTIONS[action].apply` / `.reject` set from the product's own parts (prototype). In the app, the module's approval handler registered from its folder (P80–P82).
 
-## Fomu
+## The example
 
-Fomu's three effects moved out of the engine into `ACTIONS['Forms.publish'].apply`, `ACTIONS['Responses.void'].apply` and `ACTIONS['Responses.export'].apply`, set in Fomu's own `parts_fomu.js` (loaded after the core parts, like any product module). Fomu behaves the same.
+The example's three effects moved out of the engine into `ACTIONS['Forms.publish'].apply`, `ACTIONS['Responses.void'].apply` and `ACTIONS['Responses.export'].apply`, set in the example's own `parts_example.js` (loaded after the core parts, like any product module). The example behaves the same.
 
 ## Tests (kit check)
 

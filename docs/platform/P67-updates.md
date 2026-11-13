@@ -1,6 +1,6 @@
 # P67 · Updates
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Amends P53; Cobley, Agrovet, Jumla.
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Amends P53; four phone apps compared.
 
 ## Decision
 
@@ -16,7 +16,7 @@ The app sends its installed integer version code (read from the package, not a b
 
 ## Why
 
-Every copy of the updater was rebuilt by hand; DevBiz 1.0.1 never saw 1.0.2 because the web view reused the first answer.
+Every copy of the updater was rebuilt by hand; one app at 1.0.1 never saw 1.0.2 because the web view reused the first answer.
 
 ## Where
 

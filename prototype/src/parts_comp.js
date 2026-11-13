@@ -371,7 +371,7 @@
     </div>`
   };
 
-  /* ---------- Drafts (Cobley useFormDraft behaviour; server store simulated) */
+  /* ---------- Drafts (the platform's useFormDraft behaviour; server store simulated) */
   const DRAFTS = reactive([
     { id: 'd1', module: 'Locations', form: 'create', key: 'k-loc-1', title: 'New location: Dodoma Branch', org: 'k', payload: { name: 'Dodoma Branch', code: 'DOD-01', type: 'branch', parent: 'cz' }, at: Date.now() - 3 * 3600e3 },
     { id: 'd2', module: 'Locations', form: 'edit', key: 'aru', title: 'Arusha Branch: details', org: 'k', payload: { hours: 'Mon–Sat 07:30–21:00, Sun 10:00–16:00', phone: '+255 27 254 1120' }, at: Date.now() - 2 * 3600e3 },

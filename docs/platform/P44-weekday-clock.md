@@ -1,6 +1,6 @@
 # P44 · The demo clock is a weekday
 
-Status: **decided when this note merges**, from SOMA (attendance and timetables had nothing to show on the kit's Saturday).
+Status: **decided when this note merges**, from a product's build (attendance and timetables had nothing to show on the kit's Saturday).
 
 ## Decision
 

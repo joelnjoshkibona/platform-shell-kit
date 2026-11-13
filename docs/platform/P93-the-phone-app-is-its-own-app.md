@@ -1,11 +1,11 @@
 # P93 · The phone app is its own app
 
-Status: **decided** (kit 1.13.0). The owner, 2026-11-07: "make sure the mobile is carefully crafted to be a mobile and not a phone build. Hodie is our perfect example." Replaces the 1.12.1 wording of P80 (phone screens inside the web modules, built by a phone-only entry) and the "web shell inside the app" of `templates/mobile` up to 1.12.1. Returns to the mobile brief's own rule (`docs/mobile/AGROVET_JUMLA_BRIEF.md` §0).
+Status: **decided** (kit 1.13.0). The owner, 2026-11-07: "make sure the mobile is carefully crafted to be a mobile and not a phone build. [an existing phone-first app] is our perfect example." Replaces the 1.12.1 wording of P80 (phone screens inside the web modules, built by a phone-only entry) and the "web shell inside the app" of `templates/mobile` up to 1.12.1. Returns to the mobile kit's own rule: a phone app is crafted for a phone.
 
 ## Decision
 
 - A product's phone app is crafted for a phone: its own shell, screens, components and design (the kit's `prototype-phone/`), never the web app narrowed or rebuilt.
-- `mobile/` is a complete NativePHP 4 app in Hodie's shape (`NATIVE-PHP/hodie`):
+- `mobile/` is a complete NativePHP 4 app in the template's shape (`templates/mobile/`):
 
 ```
 mobile/
@@ -32,8 +32,8 @@ packages/shared/                 used by web/ and mobile/: the API client and ty
 
 ## Why
 
-A narrowed web app behaves like a web page on a phone. Hodie, built for the phone from the first line, is what people experience as an app: the keyboard never covers what you type, Back does what Android users expect, work survives Android closing the app, it opens with no signal. Sharing only the API client, types and rules keeps the two apps agreeing on data without tying the phone to desktop layouts.
+A narrowed web app behaves like a web page on a phone. An app built for the phone from the first line is what people experience as an app: the keyboard never covers what you type, Back does what Android users expect, work survives Android closing the app, it opens with no signal. Sharing only the API client, types and rules keeps the two apps agreeing on data without tying the phone to desktop layouts.
 
 ## Extension point
 
-`templates/mobile/` (the app) and `templates/shared/` (the shared package and the workspace). DevBiz moves to this shape the next time its phone app is worked on.
+`templates/mobile/` (the app) and `templates/shared/` (the shared package and the workspace). An existing phone app moves to this shape the next time it is worked on.

@@ -1,6 +1,6 @@
 # P42 · Settings is one page of tabs
 
-Status: **decided when this note merges**, from SOMA D14 (built and tested in the SOMA prototype: 11 tabs, organisation defaults with per-stage overrides, checked at 1280px light and 390px dark).
+Status: **decided when this note merges**, from a product's settings (built and tested in its prototype: 11 tabs, organisation defaults with per-stage overrides, checked at 1280px light and 390px dark).
 Builds on P11 (core modules: Settings), P26 (details tabs in `?tab=`) and P39 (every view has an address).
 
 ## Decision
@@ -18,14 +18,14 @@ Builds on P11 (core modules: Settings), P26 (details tabs in `?tab=`) and P39 (e
 
 ## Why
 
-Every product adds its own rules (SOMA: grading, attendance, fees, admission numbers, SMS templates, nine groups in all). One long page buried the core settings under product ones, needed scrolling to find anything, and could not be linked to. Tabs keep the core settings in the same two places in every product and give each product group its own page and address.
+Every product adds its own rules (a school product: grading, attendance, fees, admission numbers, SMS templates, nine groups in all). One long page buried the core settings under product ones, needed scrolling to find anything, and could not be linked to. Tabs keep the core settings in the same two places in every product and give each product group its own page and address.
 
 ## Contract
 
-- **Prototype:** `parts_shell.js` → `SETTINGS_TABS` (array of `{ value, label, icon, comp, perm?, wide? }`) and `WorkspacePage` (renders the tabs). The kit ships Fomu's *Results* tab (`ResultChartSettings`, result chart defaults) as the worked example; a product replaces the array.
+- **Prototype:** `parts_shell.js` → `SETTINGS_TABS` (array of `{ value, label, icon, comp, perm?, wide? }`) and `WorkspacePage` (renders the tabs). The kit ships the example's *Results* tab (`ResultChartSettings`, result chart defaults) as the worked example; a product replaces the array.
 - **Web:** `pages/settings/index.vue` with `<Tabs>` bound to the route query; one component per tab under `pages/settings/tabs/`; the product registers its tabs in one file (`settings/tabs.ts`).
 - **API:** unchanged. Product settings stay in `organizations.settings.<group>` (JSON) with the product's own validation per group.
 
 ## Amends
 
-- **P11 (core modules):** Settings is the tabbed page above; the chart defaults card moves to Fomu's own *Results* tab.
+- **P11 (core modules):** Settings is the tabbed page above; the chart defaults card moves to the example's own *Results* tab.
