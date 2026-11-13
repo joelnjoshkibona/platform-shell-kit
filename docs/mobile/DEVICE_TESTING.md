@@ -31,6 +31,7 @@ Run the phone movements checklist (`PHONE_MODEL.md`) on the emulator and on one 
 - [ ] camera asked, allowed, denied, denied for good; scan; type the code; print; call, WhatsApp, SMS from a number
 - [ ] keyboard open on the longest form and on every sheet (the field and the action in view; on an Android 10 phone too, P71); Back at every layer and on forced screens
 - [ ] the log: Settings, Logs shows the run; Export and share saves a file and opens the share list; a forced crash is offered for export at the next start (P72)
+- [ ] each new feature's lines are in the exported log after it was tried: its start and end with counts, a forced failure (signal off, server down) with its reason, and no personal content (P113)
 - [ ] the map: a real outdoor walk shows a path and the stops, tiles load with a network and say so without one, Delete the trail asks first (P77); Phone status shows the live reading and a history that grows, with the app closed too (P76); the log shows no `db` reset warnings (P78)
 - [ ] location recording: a real outdoor walk, indoors gives no fix (P73); a reminder rings with the app closed (P74); a photo taken, the app killed, the photo back in the form (P75)
 - [ ] update banner and required screen; install over the old version keeps the session
