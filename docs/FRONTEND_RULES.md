@@ -394,6 +394,16 @@ Guide: `docs/architecture/MODULES.md`.
 - Destructive actions (delete a job, delete for good, empty trash) use the delete check and the YES gate.
 - Announcements live in Notifications (no separate Broadcasts module).
 
+## Locked: documents with lines (P115)
+
+- Header and lines are one form, one draft, one save (P26). Lines are editable only while the document is a draft; after that the Lines tab is read-only (View only) and says why.
+- `DocLines` shows the lines as a list that never holds inputs: a row per line (columns when it fits, a card per line when not; measured on the component, P40). The row opens View; each row has View, Edit and Delete.
+- Every change happens in a modal: Add a line and Edit share one line form (item on Add, quantity, unit price, discount, VAT, live line total); field errors show in the form. The same item added again adds to its line, and the form says so first.
+- Delete asks once in a small dialog naming the line (Keep it / Delete line). No YES gate: the line is an unsaved change of the document.
+- Unit price comes from the product's price resolution; overriding needs a permission and the line shows it changed. Totals sit under the list; the server recomputes on save and wins (409 on a difference, P88).
+- Lots (`lots: true`) are picked in the line form, oldest first (FIFO), changeable; the list shows "n of m picked"; stock actions refuse lines not fully picked.
+- Document forms open as AppDialog `xl` when priced, `lg` for quantities only (P100). `DocFlow` and `DocTrail` sit at the top of the Overview.
+
 ## Constrained-creative and Free
 
 **Constrained-creative** (pick an existing shape):
