@@ -127,6 +127,8 @@ extra_css = '''
 .curtain[data-state=closed] .curtain-loader{opacity:1;transform:none;transition-delay:300ms}
 .boot-spin{position:absolute;inset:0;border-radius:9999px;border:2px solid hsl(var(--curtain-fg) / .25);border-top-color:hsl(var(--curtain-fg));animation:bootspin .8s linear infinite}
 @keyframes bootspin{to{transform:rotate(360deg)}}
+/* P101 tab strip: no scrollbar on any engine (scrollbar-width alone is ignored by older Chrome and Android web views, which then draw a bar inside the strip and push the tabs up) */
+.tabs-scroll{scrollbar-width:none;-ms-overflow-style:none}.tabs-scroll::-webkit-scrollbar{display:none;width:0;height:0}
 /* P114: a product's own loader: one colour (the curtain text), cut-outs in the curtain colour, its own CSS motion */
 .p-loader{display:grid;place-items:center;color:hsl(var(--curtain-fg));--cut:hsl(var(--curtain))}
 .p-loader svg{display:block;max-width:100%;height:auto}

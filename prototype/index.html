@@ -132,6 +132,8 @@ body{font-family:Geist,ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial,sans-seri
 .curtain[data-state=closed] .curtain-loader{opacity:1;transform:none;transition-delay:300ms}
 .boot-spin{position:absolute;inset:0;border-radius:9999px;border:2px solid hsl(var(--curtain-fg) / .25);border-top-color:hsl(var(--curtain-fg));animation:bootspin .8s linear infinite}
 @keyframes bootspin{to{transform:rotate(360deg)}}
+/* P101 tab strip: no scrollbar on any engine (scrollbar-width alone is ignored by older Chrome and Android web views, which then draw a bar inside the strip and push the tabs up) */
+.tabs-scroll{scrollbar-width:none;-ms-overflow-style:none}.tabs-scroll::-webkit-scrollbar{display:none;width:0;height:0}
 /* P114: a product's own loader: one colour (the curtain text), cut-outs in the curtain colour, its own CSS motion */
 .p-loader{display:grid;place-items:center;color:hsl(var(--curtain-fg));--cut:hsl(var(--curtain))}
 .p-loader svg{display:block;max-width:100%;height:auto}
@@ -574,7 +576,7 @@ const Tabs = {
   },
   template: `<div :class="full ? 'w-full' : 'flex min-w-0 max-w-full items-center gap-1'">
     <div :class="full ? '' : 'relative min-w-0'">
-      <div ref="scroller" role="tablist" @scroll="measure" @keydown="key" style="scrollbar-width:none"
+      <div ref="scroller" role="tablist" @scroll="measure" @keydown="key" class="tabs-scroll"
         :class="['h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground', full ? 'grid w-full' : 'inline-flex max-w-full overflow-x-auto']" :style="full ? 'grid-template-columns:repeat(' + items.length + ',minmax(0,1fr))' : ''">
         <button v-for="t in items" :key="t.value" type="button" role="tab" :aria-selected="modelValue===t.value" :tabindex="modelValue===t.value ? 0 : -1" @click="$emit('update:modelValue', t.value)"
           :class="['inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', modelValue===t.value ? 'bg-background text-foreground shadow' : 'hover:text-foreground']">
