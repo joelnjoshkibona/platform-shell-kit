@@ -1,6 +1,6 @@
 # P39 (proposed) · Scoped lists in details tabs, and linkable views
 
-Status: **tested in DevBiz**, to be ported to the platform shell kit as a pull request (kit 1.0.0 → 1.1.0).
+Status: **tested in a product**, to be ported to the platform shell kit as a pull request (kit 1.0.0 → 1.1.0).
 Builds on P22 (contextual search), P24 (list toolbar, filters/sort/page in the URL), P26 (details tabs in `?tab=`, related records open as a preview).
 
 ## Decision
@@ -62,9 +62,9 @@ A page whose tabs show records (e.g. End-of-day count → History / Waiting) use
 2. New components: `ListCard` (the one-card list: tabs, actions, search, filters, sort, chips, summary, rows), `ListShare` (Export, Copy link), `LockedField` (parent value in forms). List pages that show rows move from `Tabs` + `ListToolbar` + table card onto `ListCard`.
 3. URL sync: `registerUrlList(LS, q, active?)` per list (a stack: the last mounted list whose `active()` is true owns the address; a list hidden behind another tab passes `active`); page-level tabs (not only details tabs) go into `?tab=`; a tab change is a new history entry; route/record/tab/list state ↔ address (pushState on navigation, replaceState on filter changes); Copy link.
 4. List pages accept `scope` + `scopeName` props; page header and KPIs render only without a scope.
-5. Fomu: Form details → Responses tab and Location details → Users/Forms tabs move onto the scoped list.
+5. The example: Form details → Responses tab and Location details → Users/Forms tabs move onto the scoped list.
 6. Docs: PLATFORM_DECISIONS (P39), FRONTEND_RULES (checklist: "tabs that show records use the module list with a scope"), COMPONENTS + components_api, `kit.json` 1.1.0, screenshots.
 
-## Tested in DevBiz
+## Tested in a product
 
 Customer → Sales, Payments (and Statement export); Product → Batches, Movements; Money account → Transactions. Locked parents in the sale form, Take a payment and Move money. Pasted links restore tab + search + filters in a fresh window; browser Back returns to the filtered tab.

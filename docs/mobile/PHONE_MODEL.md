@@ -1,7 +1,7 @@
 # The phone model
 
 What a phone is, and how it moves. The mobile kit (P56–P79) is these two tables; every rule and every phone component answers one row.
-Evidence: the DevBiz app and the Cobley spare parts, Agrovet and Jumla apps (`PROPOSAL.md`).
+Evidence: four phone apps built on the platform, compared (`PROPOSAL.md`).
 
 ## What a phone is (device facts: asked once, never assumed)
 

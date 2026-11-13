@@ -1164,7 +1164,7 @@
   "dont": [
    "Any write, email or OTP while viewing",
    "Show the synthetic preview member in lists, counts, pickers or approvers",
-   "'Act as' (signing in as someone with write access); not part of Fomu (D37)"
+   "'Act as' (signing in as someone with write access); not part of the platform (D37)"
   ]
  },
  "Approval steps": {

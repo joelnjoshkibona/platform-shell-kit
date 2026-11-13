@@ -1,4 +1,4 @@
-<!-- TEMPLATE from the platform shell kit. Fomu's product brief (the Platform core and Look and feel sections are inherited) is the worked example: keep the platform parts, replace the product parts, delete this line. -->
+<!-- TEMPLATE from the platform shell kit. The example's product brief (the Platform core and Look and feel sections are inherited) is the worked example: keep the platform parts, replace the product parts, delete this line. -->
 
 # {{PRODUCT_NAME}}: product brief
 
@@ -12,7 +12,7 @@
 - collect responses under strict integrity rules;
 - read the results as summaries and as individual responses.
 
-It runs on the **Cobley platform core** (D18): users, locations, roles, menus, statuses, drafts, media and approvals, each scoped by `organization_id`.
+It runs on the **platform core from Bootbox** (D18): users, locations, roles, menus, statuses, drafts, media and approvals, each scoped by `organization_id`.
 
 ## Who uses it
 
@@ -70,7 +70,7 @@ It runs on the **Cobley platform core** (D18): users, locations, roles, menus, s
 
   Export and reset go through approval workflows when one is active (D41).
 
-## Platform core (from Cobley)
+## Platform core (from Bootbox)
 
 - **Sign-in (D7):** email, phone or username plus password, then TOTP 2FA. Optional 30-day trusted device; organisations can require 2FA.
 - **Users:** each has one **main role** (Owner, Admin, Editor, Viewer). Custom roles are given at locations. Direct grants and denies are kept as JSON overrides (D20). The effective permission is main role + custom roles at the location chain + granted − denied, and a deny wins (D21).
@@ -113,7 +113,7 @@ It runs on the **Cobley platform core** (D18): users, locations, roles, menus, s
   - has the page-transition curtain (bright teal in light, deep green in dark);
   - small, compact and polished cards, with tabular numbers;
   - charts that match the palette.
-- **The prototype is the visual source of truth (D17, D27).** Where Cobley's old frontend disagrees, the prototype wins.
+- **The prototype is the visual source of truth (D17, D27).** Where any older frontend disagrees, the prototype wins.
 
 ## Out of scope for v1
 

@@ -1,11 +1,11 @@
 # P47 · Workflow statuses as lookup tables
 
-Status: **decided when this note merges**, from KilierERP (built and tested in its prototype, 2026-10-16: eleven workflows, the booking spine among them, with a Settings › Statuses card).
+Status: **decided when this note merges**, from a product's build (built and tested in its prototype, 2026-10-16: eleven workflows, the booking spine among them, with a Settings › Statuses card).
 Amends **P16**: its first sentence stays (master-data status uses the `statuses` table); its second sentence ("workflow states that drive code stay ENUM columns") is replaced by this note.
 
 ## Why
 
-ENUM columns keep code honest (it can only see known values) but put the words people read in the code: renaming "In review" to "With the manager", adding Swahili, or recolouring a state needs a release. Products disagree on wording (KilierERP says "On tour" where the code says `in_delivery`), and the same label drives pills, filter options, quick tabs and lane order in several places, which drift apart. A lookup table keeps the guarantee ENUM gave (code compares a fixed code) and moves the words, colour and order to one place an admin can change.
+ENUM columns keep code honest (it can only see known values) but put the words people read in the code: renaming "In review" to "With the manager", adding Swahili, or recolouring a state needs a release. Products disagree on wording (one says "On tour" where the code says `in_delivery`), and the same label drives pills, filter options, quick tabs and lane order in several places, which drift apart. A lookup table keeps the guarantee ENUM gave (code compares a fixed code) and moves the words, colour and order to one place an admin can change.
 
 ## Decision
 
@@ -54,7 +54,7 @@ Records hold `<workflow>_status_id` (FK). No denormalised code copy beside it (R
 | Area | Change |
 |---|---|
 | `docs/PLATFORM_DECISIONS.md` | P47 row; P16 points to P47 for workflow states |
-| `docs/architecture/CORE_ERD.md`, `erd_data.py` | `WORKFLOW_STATUSES` pattern table; `REQUESTS.request_status_id` → `request_statuses`; Fomu's forms, invitations, attempts and responses get `*_status_id` (pipeline states stay enums) |
+| `docs/architecture/CORE_ERD.md`, `erd_data.py` | `WORKFLOW_STATUSES` pattern table; `REQUESTS.request_status_id` → `request_statuses`; the example's forms, invitations, attempts and responses get `*_status_id` (pipeline states stay enums) |
 | `docs/FRONTEND_RULES.md` | Visual rule for workflow status, review checklist item |
 | `docs/components_api.json`, `docs/COMPONENTS.md` | StatusPill takes `workflow` + `code` |
 | Prototype | `defineWorkflow()` / `statusOf()` / `WF_TONES` in `parts_shell.js`; form statuses (`STAT`) and approval request statuses (`RQ_STATUS`) are now lookups, so every existing pill, filter and tab reads the editable label; `StatusPill`; Settings › Statuses card; design-system demo |

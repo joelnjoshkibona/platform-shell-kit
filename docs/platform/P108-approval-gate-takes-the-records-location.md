@@ -1,16 +1,16 @@
 # P108 · The approval gate takes the record's location (and a note)
 
-Status: **decided** (kit 1.26.0). Proposed by Max Yield (kit 1.25.0), tested in its copy of `parts_appr.js` and ported here with P107.
+Status: **decided** (kit 1.26.0). Proposed by a product (kit 1.25.0), tested in its copy of `parts_appr.js` and ported here with P107.
 
 ## Why
 
-An approval route can be scoped to locations (P18: "Forms owned by a branch or zone are checked before they go live"), so the gate must know which location the record belongs to. `approvalGate(action, subject)` and `G.approvalNeeded(action, formId)` found that location by looking the subject up in **`FORMS`**, Fomu's table, and the New request dialog picked its record from Fomu's forms. Any other record (Max Yield's proforma, owned by its selling store) had no way to say where it belongs, so location-scoped routes could not apply to it.
+An approval route can be scoped to locations (P18: "Forms owned by a branch or zone are checked before they go live"), so the gate must know which location the record belongs to. `approvalGate(action, subject)` and `G.approvalNeeded(action, formId)` found that location by looking the subject up in **`FORMS`**, the example's table, and the New request dialog picked its record from the example's forms. Any other record (a product's proforma, owned by its selling store) had no way to say where it belongs, so location-scoped routes could not apply to it.
 
 ## Decision
 
 - **The subject brings its own location:** `approvalGate(action, { kind, id, label, meta?, loc, note? }, run)`.
   - `loc` is the record's owning location; the route is chosen with it (P18) and its approvers are resolved at it and above (P15).
-  - `note` (optional) prefills the request's note. Max Yield passes the discount's reason.
+  - `note` (optional) prefills the request's note. A product passes the discount's reason.
 - `G.approvalNeeded(action, loc)` takes the location, not a record id.
 - **New request** (the manual dialog in Approvals) asks the action where its record is picked from: `ACTIONS[action].pick = { module, kind, label, find(id) → { label, loc }, open?(id) }`. `module` is the record's select source (the `ApiSelect` module), `find` gives the chosen record's label and owning location, and `open` makes "About" on the request page a link.
 - **The approvals engine looks up no product table.**
@@ -20,9 +20,9 @@ An approval route can be scoped to locations (P18: "Forms owned by a branch or z
 
 `approvalGate` / `G.approvalNeeded` and `ACTIONS[action].pick` in `parts_appr.js` (prototype); the module's location resolver on the server (app).
 
-## Fomu
+## The example
 
-Fomu's calls pass the form's location (`loc: form.loc`, `G.approvalNeeded(action, form.loc)`); its three actions pick a form (`pick` set in `parts_fomu.js`). Fomu behaves the same.
+The example's calls pass the form's location (`loc: form.loc`, `G.approvalNeeded(action, form.loc)`); its three actions pick a form (`pick` set in `parts_example.js`). The example behaves the same.
 
 ## Tests (kit check)
 

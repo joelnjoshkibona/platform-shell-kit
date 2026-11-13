@@ -1,6 +1,6 @@
 # P61 · Back stack
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Amends P52; Cobley, Jumla.
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Amends P52; four phone apps compared.
 
 ## Decision
 
@@ -15,7 +15,7 @@ Back closes the top layer, in this order: scan view, lock-free sheets and dialog
 
 ## Why
 
-In Jumla and Cobley full-screen pickers, the sidebar and even the mandatory update dialog could be left with Back.
+In two of the apps full-screen pickers, the sidebar and even the mandatory update dialog could be left with Back.
 
 ## Where
 

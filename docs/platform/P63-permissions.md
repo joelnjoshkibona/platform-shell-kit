@@ -1,6 +1,6 @@
 # P63 · Permissions
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Amends P54; Cobley, Agrovet.
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Amends P54; four phone apps compared.
 
 ## Decision
 
@@ -15,7 +15,7 @@ A permission is asked at the moment of need, with the reason first and what stil
 
 ## Why
 
-Cobley and Agrovet request at start and race the bridge; Jumla's printer permission call only re-checks.
+Two apps requested at start and raced the bridge; a third app's printer permission call only re-checked.
 
 ## Where
 

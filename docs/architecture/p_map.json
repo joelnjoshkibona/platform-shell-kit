@@ -36,13 +36,13 @@
  "P35": "D43",
  "P36": "D44",
  "P37": "D45",
- "P39": "DevBiz D72, D73",
+ "P39": "a product's scoped lists",
  "P40": "kit exploration 2026-10-15",
- "P41": "DevBiz D92, D93, D95",
- "P42": "SOMA D14",
- "P43": "SOMA",
- "P44": "SOMA",
- "P45": "SOMA",
- "P46": "kit 2026-10-17 (Pangisha deep green); amends P41",
- "P47": "KilierERP prototype 2026-10-16; amends P16"
+ "P41": "a product's brand colour",
+ "P42": "a product's settings",
+ "P43": "a product's build",
+ "P44": "a product's build",
+ "P45": "a product's build",
+ "P46": "kit 2026-10-17 (a product's deep green); amends P41",
+ "P47": "a product's prototype 2026-10-16; amends P16"
 }

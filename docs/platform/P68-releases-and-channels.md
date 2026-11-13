@@ -1,6 +1,6 @@
 # P68 · Releases and channels
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Cobley, Agrovet, Jumla; DevBiz.
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: four phone apps compared.
 
 ## Decision
 
@@ -16,7 +16,7 @@ Release tooling is dev-only and the signing key lives outside the repo and the a
 
 ## Why
 
-Cobley's dead StatusBar plugin entry broke every login until a contract test was added; Agrovet's keystore password sits in a tracked script.
+One app's dead StatusBar plugin entry broke every login until a contract test was added; another's keystore password sat in a tracked script.
 
 ## Where
 

@@ -12,6 +12,8 @@ Fails (exit 1) when:
     A row marked "Withdrawn:" on a number that was never decided (or was already withdrawn), and a note in another
     row about such a number in parentheses, need only a patch: nothing changes for products. Withdrawing a decided
     P still needs a minor bump.
+  - a tracked text file names a product listed in tools/product-names.txt (README › Rules of the kit: speak in kit
+    terms; the list's header says what is allowed);
   - a decision's source check fails (below, "Source checks"): what a decision says the shared files must not
     name, read from the prototype's source. Its browser checks are tools/prototype-shots/decisions.test.js.
 """
@@ -85,13 +87,35 @@ if reports:
 shell = src('parts_shell.js')
 if shell:
     reg = src('parts_product.js')
-    mods = sorted(set(re.findall(r"name: '(\w+)\.\w+'", reg)))   # the product's permission modules (Fomu: Forms, Responses, Templates)
+    mods = sorted(set(re.findall(r"name: '(\w+)\.\w+'", reg)))   # the product's permission modules (the example: Forms, Responses, Templates)
     words = [r"'%s\." % m for m in mods] or [r'(?!)']
     names_none('P110: the shell\'s permission catalogue and roles (parts_shell.js)', part(shell, 'const PERMS = [', 'const DIRECT = '), words)
     names_none('P110: the shell\'s route check and page titles (parts_shell.js)', (part(shell, 'const isShell = ', '\n') or '') + (part(shell, 'const titles = new Proxy', '\n') or '') if 'const isShell = ' in shell else None,
                [r"r === '%s'" % d for d in re.findall(r"route: '([\w-]+)'", reg)] + words or [r'(?!)'])
     asm = src('assemble.py')
     if asm and not re.search(r"'const ShellMod = \(\(\) => \{\\n' \+ open\(SP \+ 'parts_product.js'\)", asm): errors.append('P110: assemble.py does not load parts_product.js first, inside the shell module')
+
+# ---- Speak in kit terms: no tracked text file names a product (tools/product-names.txt)
+NAMES_FILE = 'tools/product-names.txt'
+SWAHILI = {'fomu', 'jumla', 'ongeza'}   # kit-terms: allow (also Swahili words: form, total, add; allowed in Swahili locale files)
+names = [l.strip() for l in read(NAMES_FILE).splitlines() if l.strip() and not l.lstrip().startswith('#')]
+name_re = re.compile(r'(?i)(?<![a-z])(' + '|'.join(re.escape(n).replace(r'\ ', r'[\s_-]?') for n in names) + ')') if names else None
+skip = (NAMES_FILE,)
+named = []
+if name_re:
+    files = subprocess.run(['git', '-C', ROOT, 'ls-files', '-z'], capture_output=True, text=True).stdout.split('\0')
+    for f in files:
+        if not f or f in skip or f.endswith(('.lock', 'package-lock.json')) or '/screenshots/' in '/' + f: continue
+        try: text = open(os.path.join(ROOT, f), encoding='utf-8').read()
+        except (UnicodeDecodeError, FileNotFoundError, IsADirectoryError): continue
+        swahili = '/sw/' in '/' + f or f.endswith('sw.json')
+        for i, line in enumerate(text.splitlines(), 1):
+            if 'kit-terms: allow' in line: continue
+            for m in name_re.finditer(line):
+                if swahili and m.group(1).lower() in SWAHILI: continue
+                named.append(f'{f}:{i} ({m.group(1)})')
+    if named:
+        errors.append(f"{len(named)} line(s) name a product (speak in kit terms; tools/product-names.txt): " + ', '.join(named[:20]) + (' …' if len(named) > 20 else ''))
 
 if errors:
     print('\n'.join('kit-check: ' + e for e in errors)); sys.exit(1)

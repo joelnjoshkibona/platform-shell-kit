@@ -18,7 +18,7 @@
   const nowTick = ref(Date.now()); setInterval(() => { nowTick.value = Date.now(); }, 20000);
   const ago = (t) => { const s = Math.max(0, Math.round((nowTick.value - t) / 1000)); return s < 45 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : Math.round(s / 3600) + ' h ago'; };
 
-  /* ---------- operators (mirrors Cobley's lib/operators.ts) */
+  /* ---------- operators (mirrors the web app's lib/operators.ts) */
   const OPS = {
     text: ['contains', 'eq', 'neq', 'begins', 'ends', 'null', 'not_null'],
     number: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'between', 'null', 'not_null'],
@@ -46,7 +46,7 @@
     return true;
   }
 
-  /* ---------- useList: client-side stand-in for Cobley's useServerTable + useListFilters + useListSort */
+  /* ---------- useList: client-side stand-in for the web app's useServerTable + useListFilters + useListSort */
   function useList(o) {
     const S = reactive({ _defSort: { sort: o.sort || o.sorts[0].value, dir: o.dir || 'asc' }, filters: {}, sort: o.sort || o.sorts[0].value, dir: o.dir || 'asc', loading: false, first: true, updatedAt: Date.now(), open: false, mode: 'simple', draft: {} });
     setTimeout(() => { S.first = false; }, 0);
@@ -201,7 +201,7 @@
     <FiltersDialog :list="list"/>`
   };
 
-  /* ---------- Filters dialog: Simple / Advanced (mirrors Cobley's ListFiltersDialog) */
+  /* ---------- Filters dialog: Simple / Advanced (mirrors the web app's ListFiltersDialog) */
   const FiltersDialog = {
     props: { list: Object },
     setup() { return { OPS, opLabel, noValue, defaultOp }; },

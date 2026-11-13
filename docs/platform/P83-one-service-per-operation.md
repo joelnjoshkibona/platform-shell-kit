@@ -1,6 +1,6 @@
 # P83 · One service per operation, container instances
 
-Status: **decided** (kit 1.12.0). From PROJECT_GENERATOR (`PHP/PROJECT_GENERATOR_PROJECT/PROJECT_GENERATOR`, SYSTEM_SHELL); Shelui Tasks D37 (validated data only) and D38 (instances).
+Status: **decided** (kit 1.12.0). From PROJECT_GENERATOR (`PHP/PROJECT_GENERATOR_PROJECT/PROJECT_GENERATOR`, SYSTEM_SHELL); a product's build (validated data only; instances).
 
 ## Decision
 

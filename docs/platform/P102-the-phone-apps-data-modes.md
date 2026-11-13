@@ -8,8 +8,8 @@ Status: **decided** (kit 1.21.0); the phone's store amended by **P104** (kit 1.2
 
 | Mode | Where the truth is | Without signal | Example |
 | --- | --- | --- | --- |
-| **connected** | the API | read-only: the last data, with its age (P57, P59); a write is never repeated (P60) | Shelui Tasks, DevBiz |
-| **on the phone** | the phone's own Laravel and SQLite | everything works; there is no server | Hodie |
+| **connected** | the API | read-only: the last data, with its age (P57, P59); a write is never repeated (P60) | most products |
+| **on the phone** | the phone's own Laravel and SQLite | everything works; there is no server | a phone-only app |
 | **sync** | the API, with a working copy on the phone | everything works; changes wait in a queue and are sent when the signal returns | field data, stock counts |
 
 ### One data layer
@@ -40,7 +40,7 @@ All three speak the list contract (P87). Screens and modules never know which mo
 
 ### On the phone
 
-- ~~Hodie's way: the phone's Laravel holds the modules' own tables and services (P83), with the same list contract (P87).~~ **Amended by P104**: one generic store for every module, with a way out per module (its own rules, or its own table, as Hodie does).
+- ~~A phone-only app's way: the phone's Laravel holds the modules' own tables and services (P83), with the same list contract (P87).~~ **Amended by P104**: one generic store for every module, with a way out per module (its own rules, or its own table).
 - There is no server and no sign-in. **Data and backups** has Back up now (to a file), Restore from a file, and the date of the last backup. There is no signal bar, because nothing depends on one.
 - Updates follow P67 and P79.
 

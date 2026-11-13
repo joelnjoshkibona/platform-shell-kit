@@ -1,6 +1,6 @@
 # Platform shell kit
 
-The admin-app shell every product on the Cobley core inherits: tokens, components, sidebar, navbar, search, page curtain, lists, details pages, forms and pickers, drafts, Users, Roles, Locations, Settings, Menus, Media, Dashboard, approvals and notifications. All of it is already decided (`docs/PLATFORM_DECISIONS.md`, P1–P48) and already built as a clickable prototype.
+The admin-app shell every product on the platform inherits: tokens, components, sidebar, navbar, search, page curtain, lists, details pages, forms and pickers, drafts, Users, Roles, Locations, Settings, Menus, Media, Dashboard, approvals and notifications. All of it is already decided (`docs/PLATFORM_DECISIONS.md`, P1–P48) and already built as a clickable prototype.
 
 A new product **starts from this kit and adds only its own modules.** It never re-decides the shell.
 
@@ -11,7 +11,7 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `prototype/index.html` | The runnable prototype (open in a browser). The visual source of truth for the shell |
 | `prototype/src/product.js` | **The one file a product edits for branding:** name, tagline, icon, domain, city, storage key |
 | `prototype/src/parts_*.js`, `builder.html`, `assemble.py` | The shell's source, by area. `python3 prototype/src/assemble.py` rebuilds `index.html` and `docs/COMPONENTS.md` |
-| `docs/PLATFORM_DECISIONS.md` | P1–P114: the locked decisions, each with the decision it came from (P38 withdrawn); P51–P79 are the phone app; P80–P90 the code structure; P91–P92 the build guide, plan and tracker; P107–P112 came from Max Yield's build |
+| `docs/PLATFORM_DECISIONS.md` | P1–P114: the locked decisions, each with its source (P38 withdrawn); P51–P79 are the phone app; P80–P90 the code structure; P91–P92 the build guide, plan and tracker; P107–P112 came from building a product on 1.25.0 |
 | `docs/architecture/MODULES.md` | How a product's code is laid out, found and wired (P80–P90): module folders, manifests, loading, services, actions, links, child tabs |
 | `docs/guide/index.html` | **The build guide**: how a product is built on this kit, from an empty folder, explained for a beginner (P91). Source: `docs/guide/chapters/*.md`, built by `python3 tools/guide/build.py` |
 | `docs/help/index.html` | **The user guide** for the people using a product: how to do each task, with marked pictures (P98). Source: `docs/help/articles/`, built by `node tools/help/build.js`. The kit's core articles; products add theirs. |
@@ -21,13 +21,13 @@ A new product **starts from this kit and adds only its own modules.** It never r
 | `docs/architecture/CORE_ERD.md` | Core tables (identity, locations, approvals, notifications), constraints, lifecycles, jobs |
 | `screenshots/` | Baseline screenshots of every core screen: desktop/phone × light/dark, plus key states |
 | `docs/mobile/` | The mobile kit: `PHONE_MODEL.md` (what a phone is, how it moves), `DEVICE_TESTING.md`, `PLUGINS.md` (the shared Android plugins on v4), `PROPOSAL.md` (the evidence from four apps) |
-| `templates/mobile/` | The product's phone app, its own app in Hodie's shape (P93): its small Laravel for the phone's work, the interface project in `resources/spa/`, build, icon and splash, signed release, tests |
+| `templates/mobile/` | The product's phone app, its own app (P93): its small Laravel for the phone's work, the interface project in `resources/spa/`, build, icon and splash, signed release, tests |
 | `templates/shared/` | `packages/shared` (what the web and phone apps share) and the root npm workspace |
 | `templates/` | CLAUDE.md, BUILD_PLAN.md, IMPLEMENTATION_PLAN.md, PROGRESS.md, HANDOFF_PROMPT.md, PRODUCT.md, SCREENS.md and `guide/` (the product's build guide chapters) for a product's repo, with `{{PRODUCT_NAME}}` placeholders |
 | `skills/platform-prototype/SKILL.md` | The Claude skill that starts, extends and hands off products on the kit. Upload it to the claude.ai skills when it changes |
 | `tools/prototype-shots/` | Regenerates screenshots; builds a side-by-side compare page against a real app |
 
-The prototype still carries **Fomu's modules (Forms, Templates, Builder, Results, Respondent) as a worked example** of a product module. They show how a module plugs into the shell; a product replaces them with its own.
+The prototype carries **example modules (Forms, Templates, Builder, Results, Respondent), under the Bootbox name, as a worked example** of a product module. They show how a module plugs into the shell; a product replaces them with its own.
 
 ## The starter: Bootbox
 
@@ -35,31 +35,31 @@ The kit is the design and the decisions; **[Bootbox](https://github.com/joelnjos
 
 ## How a product uses the kit
 
-1. **Prototype:** copy `prototype/` into the product's design folder. Edit `product.js`. Replace `parts_product.js` (the product registry, P110: permissions, role defaults, detail routes) with the product's. Add the product's modules as new `parts_<module>.js` files, register them in `assemble.py` where the example modules are (`parts_fomu.js`), and remove the example modules. Rebuild. The shell, the core screens and the components stay as they are.
+1. **Prototype:** copy `prototype/` into the product's design folder. Edit `product.js`. Replace `parts_product.js` (the product registry, P110: permissions, role defaults, detail routes) with the product's. Add the product's modules as new `parts_<module>.js` files, register them in `assemble.py` where the example modules are (`parts_example.js`), and remove the example modules. Rebuild. The shell, the core screens and the components stay as they are.
 2. **Decisions:** the product keeps its own log `D1, D2, …` for product decisions. It references P-numbers for anything the shell already decided. If the shell itself must change, that is a new P in this kit, not a D in the product.
 3. **Build guide, plan and tracker (P91, P92):** every product keeps `docs/guide/` (its build guide, an HTML page built from chapters), `docs/IMPLEMENTATION_PLAN.md` and `docs/PROGRESS.md`, and every change to the code updates them, so anyone can follow the guide and build the product again.
 4. **User guide (P98):** every product keeps `docs/help/` (the kit's core articles plus its own). Articles are Markdown with shot specs; `node tools/help/build.js` makes the marked pictures, `docs/help/index.html` and the in-app Help. A pull request that changes a screen changes its articles.
-5. **Handoff:** fill the templates in `templates/` and put them with the prototype, screenshots, rules, components and the product's ERD into the product repo, the way `joelnjoshkibona/fomu` is laid out.
+5. **Handoff:** fill the templates in `templates/` and put them with the prototype, screenshots, rules, components and the product's ERD into the product repo, in the layout the platform-prototype skill describes (Step 5).
 
 ## Where a module plugs in
 
-| Extension point | File | What the example (Fomu) does there |
+| Extension point | File | What the example does there |
 | --- | --- | --- |
 | Sidebar menu items + permissions | `parts_shell.js` → `MENU` | Forms, Templates (+ core items) |
 | Permission catalogue (P110) | `parts_product.js` → `permissions` (the product registry, loaded before the shell; merged into the shell's `PERMS`) | `Forms.*`, `Responses.*`, `Templates.*` |
 | Role defaults (P110) | `parts_product.js` → `roles` (merged into the shell's `ROLES`) | which of its permissions each role gets, and how its roles are described |
 | Pages per route | `parts_shell.js` → `ShellView` template | `FormsList`, `TemplatesPage` |
-| Detail pages inside the shell (P110) | `parts_product.js` → `detailRoutes` (`[{ route, title(G), parent? }]`): the route check, page titles and sidebar highlight | none (Fomu's own views are full-screen) |
+| Detail pages inside the shell (P110) | `parts_product.js` → `detailRoutes` (`[{ route, title(G), parent? }]`): the route check, page titles and sidebar highlight | none (the example's own views are full-screen) |
 | Routes outside the shell (full-screen views) | `assemble.py` → `App` | `BuilderView`, `ResponsesView`, `RespondentView` |
 | Global search groups | `parts_list.js` → `GROUPS` | forms, responses, templates |
 | Dashboard KPIs and charts | `parts_list.js` → `DashboardPage` | forms and responses |
 | Demo data per organisation | `parts_shell.js` → `ORGS` / `FORMS` | the three demo organisations |
 | Records owned by a location | `parts_loc.js` → `formsAt`, `formVisible` | forms per location |
-| Actions behind approvals (P107, P108) | `parts_appr.js` → `ACTIONS` (label, icon, effect, `pick`) + `approvalGate(action, { kind, id, label, loc, note? })`; what a decided request does is the action's `apply(req)` / `reject(req)`, set from the module's own parts | publish, export, reset; their effects and form picker in `parts_fomu.js`, `loc: form.loc` |
-| Sign-in panel and mark (P48) | `product.js` → `signin`, `logo`; art component registered in `comps` | Fomu's headline, points and `FomuSignInArt` |
+| Actions behind approvals (P107, P108) | `parts_appr.js` → `ACTIONS` (label, icon, effect, `pick`) + `approvalGate(action, { kind, id, label, loc, note? })`; what a decided request does is the action's `apply(req)` / `reject(req)`, set from the module's own parts | publish, export, reset; their effects and form picker in `parts_example.js`, `loc: form.loc` |
+| Sign-in panel and mark (P48) | `product.js` → `signin`, `logo`; art component registered in `comps` | the example's headline, points and `ExampleSignInArt` |
 | Curtain loader (P114) | `product.js` → `loader: { page, boot }` (inline SVGs, one colour, CSS motion); shown by `ProductLoader` on the page curtain, the boot curtain and the phone splash | none: the example keeps the ring |
-| Phone app states and movements (P51–P79) | `parts_appshell.js` → `appState`, `APP`, the phone components; Screens pill › Phone app and Phone movements | the states and movements with Fomu's name and mark |
-| Settings tabs (P42) | `parts_shell.js` → `SETTINGS_TABS` | Fomu's Results tab (chart defaults) |
+| Phone app states and movements (P51–P79) | `parts_appshell.js` → `appState`, `APP`, the phone components; Screens pill › Phone app and Phone movements | the states and movements with the example's name and mark |
+| Settings tabs (P42) | `parts_shell.js` → `SETTINGS_TABS` | the example's Results tab (chart defaults) |
 | Recent activity (P45) | `parts_loc.js` → `ACTIVITY` per organisation + `logActivity` | form, people and location events per demo organisation |
 | Screens pill (prototype-only) | `assemble.py` → `ScreensPill` | lists the product's screens |
 | Modules: links, previews, deep links, Back (P39, P49, P81, P85) | `parts_links.js` → `defineModule({ key, route, path, label, plural, perm, get, set, linkId, find, preview, backParent })`; the preview component next to the module | Roles, Locations, Requests (`RolePreview`, `LocationPreview`, `RequestPreview`); `RecordLink module id` anywhere a related record shows; a plain click opens the record's `page` in the record dialog (P111), the preview sheet only without one. `LINK_DETAIL` and `BACK_PARENT` still accept direct entries from older products |
@@ -77,6 +77,7 @@ The kit is the design and the decisions; **[Bootbox](https://github.com/joelnjos
 - A kit change also updates the kit's build guide (`docs/guide/chapters/`, rebuilt with `python3 tools/guide/build.py`) wherever it changes how a product is built (P91).
 - Products **pull** kit changes; nothing flows the other way without a P. A product may test a proposed P first (spec in its `docs/platform/P<nn>-*.md`), then port it here as one pull request.
 - No secrets, no product data beyond demo seeds. The repo is public.
+- **Speak in kit terms.** Decisions, rules, guides, specs, templates and tools describe a need generically ("a product wanted its own picture of its work on the curtain"); they never name a product built on the kit. What a product found, asked for or decided stays in that product's own D-log. The worked example is Bootbox. `tools/product-names.txt` lists the names that must not appear, and `tools/kit-check.py` fails on them.
 
 ## Versioning
 

@@ -1,6 +1,6 @@
 # P52 · The phone's Back key
 
-Status: **decided** (kit 1.7.0). The DevBiz owner chose "press twice to leave".
+Status: **decided** (kit 1.7.0). The owner chose "press twice to leave".
 
 ## Decision
 

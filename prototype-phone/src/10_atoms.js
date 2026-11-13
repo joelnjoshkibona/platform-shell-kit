@@ -75,7 +75,7 @@ const S = reactive({
   notifTab: 'unread', expanded: null, lock: true, lockAfter: '5 min', checking: false, upToDate: false, search: false, searchQ: '', recent: ['Water', 'Neema', 'S-1290'],
   waitingDone: []
 });
-const ME = computed(() => S.role === 'owner' ? { name: 'Amina', full: 'Amina Mushi', ini: 'AM', role: 'Owner', email: 'amina@devbiz.app' } : { name: 'Rehema', full: 'Rehema Kileo', ini: 'RK', role: 'Cashier', email: 'rehema@devbiz.app' });
+const ME = computed(() => S.role === 'owner' ? { name: 'Amina', full: 'Amina Mushi', ini: 'AM', role: 'Owner', email: 'amina@bootbox.app' } : { name: 'Rehema', full: 'Rehema Kileo', ini: 'RK', role: 'Cashier', email: 'rehema@bootbox.app' });
 const unread = computed(() => NOTIFS.filter(n => n.unread).length);
 const waitingN = computed(() => WAITING.length - S.waitingDone.length);
 

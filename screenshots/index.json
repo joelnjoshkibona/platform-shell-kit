@@ -448,6 +448,342 @@
     "file": "workspace__phone-dark.png"
   },
   {
+    "name": "logs",
+    "route": "logs",
+    "title": "Logs (activity, sign-ins, errors, requests)",
+    "combo": "desktop-light",
+    "file": "logs__desktop-light.png"
+  },
+  {
+    "name": "logs",
+    "route": "logs",
+    "title": "Logs (activity, sign-ins, errors, requests)",
+    "combo": "desktop-dark",
+    "file": "logs__desktop-dark.png"
+  },
+  {
+    "name": "logs",
+    "route": "logs",
+    "title": "Logs (activity, sign-ins, errors, requests)",
+    "combo": "phone-light",
+    "file": "logs__phone-light.png"
+  },
+  {
+    "name": "logs",
+    "route": "logs",
+    "title": "Logs (activity, sign-ins, errors, requests)",
+    "combo": "phone-dark",
+    "file": "logs__phone-dark.png"
+  },
+  {
+    "name": "queue",
+    "route": "queue",
+    "title": "Queue",
+    "combo": "desktop-light",
+    "file": "queue__desktop-light.png"
+  },
+  {
+    "name": "queue",
+    "route": "queue",
+    "title": "Queue",
+    "combo": "desktop-dark",
+    "file": "queue__desktop-dark.png"
+  },
+  {
+    "name": "queue",
+    "route": "queue",
+    "title": "Queue",
+    "combo": "phone-light",
+    "file": "queue__phone-light.png"
+  },
+  {
+    "name": "queue",
+    "route": "queue",
+    "title": "Queue",
+    "combo": "phone-dark",
+    "file": "queue__phone-dark.png"
+  },
+  {
+    "name": "scheduled-tasks",
+    "route": "scheduled-tasks",
+    "title": "Scheduled tasks",
+    "combo": "desktop-light",
+    "file": "scheduled-tasks__desktop-light.png"
+  },
+  {
+    "name": "scheduled-tasks",
+    "route": "scheduled-tasks",
+    "title": "Scheduled tasks",
+    "combo": "desktop-dark",
+    "file": "scheduled-tasks__desktop-dark.png"
+  },
+  {
+    "name": "scheduled-tasks",
+    "route": "scheduled-tasks",
+    "title": "Scheduled tasks",
+    "combo": "phone-light",
+    "file": "scheduled-tasks__phone-light.png"
+  },
+  {
+    "name": "scheduled-tasks",
+    "route": "scheduled-tasks",
+    "title": "Scheduled tasks",
+    "combo": "phone-dark",
+    "file": "scheduled-tasks__phone-dark.png"
+  },
+  {
+    "name": "trash",
+    "route": "trash",
+    "title": "Trash",
+    "combo": "desktop-light",
+    "file": "trash__desktop-light.png"
+  },
+  {
+    "name": "trash",
+    "route": "trash",
+    "title": "Trash",
+    "combo": "desktop-dark",
+    "file": "trash__desktop-dark.png"
+  },
+  {
+    "name": "trash",
+    "route": "trash",
+    "title": "Trash",
+    "combo": "phone-light",
+    "file": "trash__phone-light.png"
+  },
+  {
+    "name": "trash",
+    "route": "trash",
+    "title": "Trash",
+    "combo": "phone-dark",
+    "file": "trash__phone-dark.png"
+  },
+  {
+    "name": "notifications",
+    "route": "notifications",
+    "title": "Notifications (inbox, settings, rules, announcements)",
+    "combo": "desktop-light",
+    "file": "notifications__desktop-light.png"
+  },
+  {
+    "name": "notifications",
+    "route": "notifications",
+    "title": "Notifications (inbox, settings, rules, announcements)",
+    "combo": "desktop-dark",
+    "file": "notifications__desktop-dark.png"
+  },
+  {
+    "name": "notifications",
+    "route": "notifications",
+    "title": "Notifications (inbox, settings, rules, announcements)",
+    "combo": "phone-light",
+    "file": "notifications__phone-light.png"
+  },
+  {
+    "name": "notifications",
+    "route": "notifications",
+    "title": "Notifications (inbox, settings, rules, announcements)",
+    "combo": "phone-dark",
+    "file": "notifications__phone-dark.png"
+  },
+  {
+    "name": "permissions",
+    "route": "permissions",
+    "title": "Permissions",
+    "combo": "desktop-light",
+    "file": "permissions__desktop-light.png"
+  },
+  {
+    "name": "permissions",
+    "route": "permissions",
+    "title": "Permissions",
+    "combo": "desktop-dark",
+    "file": "permissions__desktop-dark.png"
+  },
+  {
+    "name": "permissions",
+    "route": "permissions",
+    "title": "Permissions",
+    "combo": "phone-light",
+    "file": "permissions__phone-light.png"
+  },
+  {
+    "name": "permissions",
+    "route": "permissions",
+    "title": "Permissions",
+    "combo": "phone-dark",
+    "file": "permissions__phone-dark.png"
+  },
+  {
+    "name": "help",
+    "route": "help",
+    "title": "Help and guides",
+    "combo": "desktop-light",
+    "file": "help__desktop-light.png"
+  },
+  {
+    "name": "help",
+    "route": "help",
+    "title": "Help and guides",
+    "combo": "desktop-dark",
+    "file": "help__desktop-dark.png"
+  },
+  {
+    "name": "help",
+    "route": "help",
+    "title": "Help and guides",
+    "combo": "phone-light",
+    "file": "help__phone-light.png"
+  },
+  {
+    "name": "help",
+    "route": "help",
+    "title": "Help and guides",
+    "combo": "phone-dark",
+    "file": "help__phone-dark.png"
+  },
+  {
+    "name": "help-article",
+    "route": "help-article",
+    "title": "Help: an article with marked pictures",
+    "combo": "desktop-light",
+    "file": "help-article__desktop-light.png"
+  },
+  {
+    "name": "help-article",
+    "route": "help-article",
+    "title": "Help: an article with marked pictures",
+    "combo": "desktop-dark",
+    "file": "help-article__desktop-dark.png"
+  },
+  {
+    "name": "help-article",
+    "route": "help-article",
+    "title": "Help: an article with marked pictures",
+    "combo": "phone-light",
+    "file": "help-article__phone-light.png"
+  },
+  {
+    "name": "help-article",
+    "route": "help-article",
+    "title": "Help: an article with marked pictures",
+    "combo": "phone-dark",
+    "file": "help-article__phone-dark.png"
+  },
+  {
+    "name": "reports",
+    "route": "reports",
+    "title": "Reports",
+    "combo": "desktop-light",
+    "file": "reports__desktop-light.png"
+  },
+  {
+    "name": "reports",
+    "route": "reports",
+    "title": "Reports",
+    "combo": "desktop-dark",
+    "file": "reports__desktop-dark.png"
+  },
+  {
+    "name": "reports",
+    "route": "reports",
+    "title": "Reports",
+    "combo": "phone-light",
+    "file": "reports__phone-light.png"
+  },
+  {
+    "name": "reports",
+    "route": "reports",
+    "title": "Reports",
+    "combo": "phone-dark",
+    "file": "reports__phone-dark.png"
+  },
+  {
+    "name": "report",
+    "route": "report",
+    "title": "Report: Sales lines (table and chart)",
+    "combo": "desktop-light",
+    "file": "report__desktop-light.png"
+  },
+  {
+    "name": "report",
+    "route": "report",
+    "title": "Report: Sales lines (table and chart)",
+    "combo": "desktop-dark",
+    "file": "report__desktop-dark.png"
+  },
+  {
+    "name": "report",
+    "route": "report",
+    "title": "Report: Sales lines (table and chart)",
+    "combo": "phone-light",
+    "file": "report__phone-light.png"
+  },
+  {
+    "name": "report",
+    "route": "report",
+    "title": "Report: Sales lines (table and chart)",
+    "combo": "phone-dark",
+    "file": "report__phone-dark.png"
+  },
+  {
+    "name": "my-jobs",
+    "route": "my-jobs",
+    "title": "My exports and reports",
+    "combo": "desktop-light",
+    "file": "my-jobs__desktop-light.png"
+  },
+  {
+    "name": "my-jobs",
+    "route": "my-jobs",
+    "title": "My exports and reports",
+    "combo": "desktop-dark",
+    "file": "my-jobs__desktop-dark.png"
+  },
+  {
+    "name": "my-jobs",
+    "route": "my-jobs",
+    "title": "My exports and reports",
+    "combo": "phone-light",
+    "file": "my-jobs__phone-light.png"
+  },
+  {
+    "name": "my-jobs",
+    "route": "my-jobs",
+    "title": "My exports and reports",
+    "combo": "phone-dark",
+    "file": "my-jobs__phone-dark.png"
+  },
+  {
+    "name": "job",
+    "route": "job",
+    "title": "Job page (a ready export)",
+    "combo": "desktop-light",
+    "file": "job__desktop-light.png"
+  },
+  {
+    "name": "job",
+    "route": "job",
+    "title": "Job page (a ready export)",
+    "combo": "desktop-dark",
+    "file": "job__desktop-dark.png"
+  },
+  {
+    "name": "job",
+    "route": "job",
+    "title": "Job page (a ready export)",
+    "combo": "phone-light",
+    "file": "job__phone-light.png"
+  },
+  {
+    "name": "job",
+    "route": "job",
+    "title": "Job page (a ready export)",
+    "combo": "phone-dark",
+    "file": "job__phone-dark.png"
+  },
+  {
     "name": "menus",
     "route": "menus",
     "title": "Menu management",

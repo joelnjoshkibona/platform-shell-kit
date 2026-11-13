@@ -32,7 +32,7 @@ def overview_mermaid():
 
 # ---------------- Markdown
 md = ["# Form Builder — System ERD", "",
-      "> Laravel 13 (Cobley backend) · MySQL 8 · multi-tenant (path-based `/{org}`) · hybrid storage (versioned JSON definitions + one row per answer).",
+      "> Laravel 13 (Bootbox) · MySQL 8 · multi-tenant (path-based `/{org}`) · hybrid storage (versioned JSON definitions + one row per answer).",
       "> Generated from `erd_data.py`. Edit the data file, not this file.", "",
       "## 00. Overview", "", "```mermaid", overview_mermaid(), "```", ""]
 for num, title, desc in SECTIONS:
@@ -130,7 +130,7 @@ page = f'''<title>Form Builder ERD</title>
 <header class="top">
   <div class="eyebrow">System ERD · v0.2 · decisions applied</div>
   <h1>Form Builder</h1>
-  <p class="sub">Multi-tenant form builder on Laravel 13 (Cobley backend) and MySQL 8. Choice-only questions, email-OTP respondents, timed attempts with tab, fullscreen and copy/paste integrity rules.</p>
+  <p class="sub">Multi-tenant form builder on Laravel 13 (Bootbox) and MySQL 8. Choice-only questions, email-OTP respondents, timed attempts with tab, fullscreen and copy/paste integrity rules.</p>
   <div class="stats"><div><b>{len(E)}</b><span>tables</span></div><div><b>{len(R)}</b><span>relationships</span></div><div><b>{len(SECTIONS)}</b><span>domains</span></div><div><b>{len(OPEN_DECISIONS)}</b><span>decisions locked</span></div></div>
 </header>
 <div class="grid">

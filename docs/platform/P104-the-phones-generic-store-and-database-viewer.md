@@ -20,7 +20,7 @@ A module made by the generators therefore works on the phone in all three data m
 A module that needs more on the phone adds one class under the module's key (Bootbox: `mobile/app/Local/Modules/{Key}.php`):
 
 - **rules** (`LocalModule`): validation of a save, and a `saving()` hook (a default, a total). The phone generator writes it with the API's starting rules. In sync mode the server checks every change again when it arrives.
-- **its own table** (`LocalModuleStore`): the module keeps its own table, with its own migration, and the store hands it list, view, save and delete. This is for phone-only logic or heavy relational queries offline (Hodie's case).
+- **its own table** (`LocalModuleStore`): the module keeps its own table, with its own migration, and the store hands it list, view, save and delete. This is for phone-only logic or heavy relational queries offline.
 
 ### Sync mode details (completing P102)
 

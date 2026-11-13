@@ -1,6 +1,6 @@
 # P60 · Uncertain writes
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: Cobley (the rule), Agrovet, Jumla (gap); DevBiz.
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: four phone apps compared (one had the rule, two a gap).
 
 ## Decision
 
@@ -15,7 +15,7 @@ A write that may or may not have reached the server is never repeated by the app
 
 ## Why
 
-Cobley wrote the right rule; Agrovet and Jumla have only a submitting flag and no timeout, so a timed-out sale could be sent twice.
+One app wrote the right rule; two had only a submitting flag and no timeout, so a timed-out sale could be sent twice.
 
 ## Where
 

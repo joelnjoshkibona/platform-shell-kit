@@ -1,5 +1,5 @@
 
-  /* ================================================================ APPROVALS (Cobley core, D25): request types + steps, requests, approvals, delegations */
+  /* ================================================================ APPROVALS (platform core, P18): request types + steps, requests, approvals, delegations */
   /* P47: approval request statuses are a workflow lookup (codes fixed, labels/tone/order editable in Settings › Statuses) */
   const RQ_STATUS = defineWorkflow('request', 'Approval requests', [['draft', 'Draft', 'muted', 'Rasimu'], ['submitted', 'Submitted', 'info', 'Imetumwa'], ['in_review', 'In review', 'wait', 'Inakaguliwa'], ['approved', 'Approved', 'ok', 'Imeidhinishwa', true], ['rejected', 'Rejected', 'bad', 'Imekataliwa', true], ['cancelled', 'Cancelled', 'off', 'Imeghairiwa', true]]);
   const OPEN_RQ = ['submitted', 'in_review'];
@@ -7,7 +7,7 @@
     pick: { module: 'locations', kind: 'location', label: 'Location', find: (id) => { const l = locById(id); return l && { label: l.name, loc: l.id }; } } } };
   /* EXTENSION POINT (P107): a product's gated actions. ACTIONS[action] = { label, icon, effect, apply?(req), reject?(req) }.
      effect is the sentence on the request page; apply runs once when the last step approves, reject once when any step rejects
-     (neither for a cancelled request). A product sets apply / reject from its own code, next to its records (Fomu: parts_fomu.js);
+     (neither for a cancelled request). A product sets apply / reject from its own code, next to its records (the example: parts_example.js);
      the engine names no product record. In the app the effect is the module's server-side approval handler.
      pick = { module, kind, label, find(id) → { label, loc }, open?(id) } (P108): where New request picks the record from (an
      ApiSelect source) and how it finds the record's label and owning location; open(id) makes "About" on the request a link. */

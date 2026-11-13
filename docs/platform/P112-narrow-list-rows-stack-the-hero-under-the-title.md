@@ -1,6 +1,6 @@
 # P112 · On a narrow list, the status and hero sit under the title
 
-Status: **decided** (kit 1.26.0). Amends P40. The owner's review of Max Yield's prototype on a phone, 2026-11-11 ("this display looks worse"). Tested in Max Yield's copy of `parts_listcard.js` (`ListRows`) and ported here with P107–P111.
+Status: **decided** (kit 1.26.0). Amends P40. The owner's review of a product's prototype on a phone, 2026-11-11 ("this display looks worse"). Tested in a product's copy of `parts_listcard.js` (`ListRows`) and ported here with P107–P111.
 
 ## Why
 

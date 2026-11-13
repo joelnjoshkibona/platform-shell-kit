@@ -1,6 +1,6 @@
 # The phone app
 
-A product's phone app is its own app, crafted for a phone only (360 to 430 pixels wide), the way Hodie is (P93). It is not the web app squeezed or rebuilt. It talks to the same API and follows the same rules for data, permissions and modules; it has its own shell, components and screens, and its own small Laravel inside the app for the phone's own work.
+A product's phone app is its own app, crafted for a phone only (360 to 430 pixels wide) (P93). It is not the web app squeezed or rebuilt. It talks to the same API and follows the same rules for data, permissions and modules; it has its own shell, components and screens, and its own small Laravel inside the app for the phone's own work.
 
 ```
 mobile/
@@ -16,7 +16,7 @@ mobile/
 ## What is the same as the web
 
 - The modules: `mobile/resources/spa/src/modules/{module}/`, under the same names as the API and web modules, only for the modules the phone shows.
-- Shared code: only `packages/shared` (talking to the API and its types, permission names, statuses, formatting). Never the web app's screens or components. A phone usually shows fewer modules (Shelui Tasks: my work, tasks, tickets, alerts).
+- Shared code: only `packages/shared` (talking to the API and its types, permission names, statuses, formatting). Never the web app's screens or components. A phone usually shows fewer modules (a task tracker: my work, tasks, tickets, alerts).
 - Links: a `RecordLink` on the phone opens a bottom sheet.
 - Strict TypeScript, the convention tests, the plan, tracker and guide.
 
@@ -25,7 +25,7 @@ mobile/
 The phone app works in one of three ways, chosen when the product is made:
 
 - **connected**: the server's API is the truth. Without signal, the app shows the last data and saves nothing.
-- **on the phone**: there is no server; the phone's own Laravel and database are the backend, like Hodie, with backups to a file.
+- **on the phone**: there is no server; the phone's own Laravel and database are the backend, with backups to a file.
 - **sync**: the phone keeps a working copy and a queue of changes. People keep working without signal; the changes go to the server when it is back, each with a key so nothing is applied twice. If someone else changed the same record, the app shows both versions side by side and the person chooses.
 
 The screens never know which one is on: they read and write through one data layer (`src/app/data.ts`), so a module is written once.

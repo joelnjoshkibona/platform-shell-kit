@@ -1,6 +1,6 @@
 # P109 · A report declares its quick tabs and sorts
 
-Status: **decided** (kit 1.26.0). Amends P96. Proposed by Max Yield (kit 1.25.0), tested in its copy of `parts_reports.js` and ported here with P107–P112.
+Status: **decided** (kit 1.26.0). Amends P96. Proposed by a product (kit 1.25.0), tested in its copy of `parts_reports.js` and ported here with P107–P112.
 
 ## Why
 
@@ -9,7 +9,7 @@ P96 makes `REPORTS` the extension point: a product adds its reports there. But t
 - its **quick tabs** read the demo's `pay` field (Cash, M-Pesa, Card, Credit, from the demo's `RP_PAY` list);
 - its **sorts** were fixed to `date`, `total` and `qty`.
 
-Once a product removes the demo reports (as it should), the quick tabs break, and a report whose rows have no `total` or `qty` offers sorts that do nothing. Max Yield's reports group by status, officer and key account type.
+Once a product removes the demo reports (as it should), the quick tabs break, and a report whose rows have no `total` or `qty` offers sorts that do nothing. A product's reports group by status, officer and key account type.
 
 ## Decision
 

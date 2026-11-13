@@ -1,12 +1,12 @@
 # P41 · The organisation's accent recolours primary and the curtain
 
-Status: **decided when this note merges**, from DevBiz D92, D93 and D95 (built and tested in DevBiz Phase 2: unit tests for every accent and theme, visual tests in light and dark).
+Status: **decided when this note merges**, from a product's build (built and tested there: unit tests for every accent and theme, visual tests in light and dark).
 **Amended by P46:** any colour is allowed, derived and contrast-checked; the six below stay as presets. See `P46-any-accent.md`.
 Builds on P8 (page transitions: the curtain) and the organisation's branding setting (the accent chosen when the organisation is created, today shown only on its badge in the switcher and the picker).
 
 ## Decision
 
-- Every organisation has one **accent**, one of the six kit accents: teal, blue, violet, rose, amber, slate. The product sets the default (DevBiz: blue, D13).
+- Every organisation has one **accent**, one of the six kit accents: teal, blue, violet, rose, amber, slate. The product sets the default (blue, for example).
 - The accent drives three things, in light and dark:
   - `--primary` and `--ring`, plus `--primary-foreground` where the accent needs a different one for contrast;
   - the page-change **curtain**: `--curtain` and `--curtain-fg`. Each accent has its own curtain pair, so the curtain always matches the primary colour (this settles the P8 curtain colour per product instead of hard-coding teal).

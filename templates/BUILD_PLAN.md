@@ -1,4 +1,4 @@
-<!-- TEMPLATE from the platform shell kit. Fomu's build plan (phases 3–5 are Fomu modules; phases 0–2 and 6–7 are platform) is the worked example: keep the platform parts, replace the product parts, delete this line. -->
+<!-- TEMPLATE from the platform shell kit. The example's build plan (phases 3–5 are the example modules; phases 0–2 and 6–7 are platform) is the worked example: keep the platform parts, replace the product parts, delete this line. -->
 
 # Build plan
 
@@ -11,29 +11,17 @@ Screens and their screenshot names are in `docs/design/SCREENS.md`. Behaviour ru
 ## Phase 0: Foundation (no product screens yet)
 
 **Backend (`api/`)**
-- Make the Cobley backend {{PRODUCT_NAME}}'s.
-  - Rename the app (`APP_NAME={{PRODUCT_NAME}}`) and update the README to describe {{PRODUCT_NAME}}, not SYSTEM_SHELL/Cobley.
+- Start from Bootbox: `python3 tools/new-product/new_product.py` (name, slug, accent, phone app id and data mode, optional modules) writes `api/`, `web/`, `mobile/` and `packages/shared` under {{PRODUCT_NAME}}'s name, with `product.json` and `kit.json`.
   - Keep `laravel/framework ^13` (D45).
-- Remove modules {{PRODUCT_NAME}} does not use. Delete their migrations, seeders, routes, menu rows, permissions, registry entries and tests:
-  - `System/Inventory`, `System/Payments`, `System/Purchasing`, `System/Sales`, `System/Stock`;
-  - `app/Project/_Src/SaleType.php` and anything that references sale types;
-  - `packages/laravel-totalvfd` and its composer entry (the TRA EFD integration);
-  - anything that only those modules use.
-- Keep these modules:
-  - `Core/*`: Access, Drafts, Locations, Media, Menus, Notifications, Statuses, Trash, Users, MobileReleases, Reports;
-  - `System/Approvals`, `System/Analytics`, `Dev/Translations`.
-
-  The Mobile Releases and Reports menus are in the {{PRODUCT_NAME}} sidebar. If you are unsure about one, ask in the PR before deleting it.
-- Add `organizations` and organisation membership as in the ERD (section 01).
-  - Add `organization_id` to every tenant table.
-  - Add a global scope plus a middleware that resolves `/{org}` and checks membership.
-  - Pest tests prove one organisation can't read another's rows.
+  - Switch off the optional modules {{PRODUCT_NAME}} does not use (approvals, reports, announcements, phone releases) with the tool's switches. Never edit or delete a Kernel or Core module: Bootbox's later changes must keep applying (Bootbox guide, chapter 9).
+  - If you are unsure about one, ask in the PR before switching it off.
+- Organisations, membership and `organization_id` scoping come with Bootbox (P103), with tests that prove one organisation can't read another's rows. Keep them green.
 - Seeders reproduce the prototype's demo data, so local screens match the screenshots:
   - organisations Kilima Retail, Kilima Wholesale and Pwani Agro Dealers;
   - their users and roles, the location tree, and the approval requests.
 - CI (GitHub Actions) runs Pint and Pest for the API, and type-check, lint, unit tests and visual tests for the web app.
 
-**Modules and deliverables (P80–P92)**
+**Modules and deliverables (P80–P92)**: Bootbox provides the code below; Phase 0 checks it is there and passing, and adds the product's own documents.
 - The module loaders: the API's module provider (finds every `module.json`, loads migrations, routes with their permissions, providers, policies; the system seeder upserts each module's permissions and menu row) and `php artisan modules:check`; the web's `defineModule` and `import.meta.glob('./modules/*/module.ts')` loader with a typed `ModuleKey`.
 - `BaseService` (execute → validateData → process in a transaction; only validated keys reach the model; services resolved from the container), the list contract (`ListService`: operators, allowlists, default filters, bulk, export, grouped counts), the P88 response shape (`code` equals the status, `errors`, `version` and 409).
 - `RecordLink` and its registry; the child-tab routes (`/{parent}/{uuid}/{child}/...`).
@@ -107,7 +95,7 @@ Screens and their screenshot names are in `docs/design/SCREENS.md`. Behaviour ru
 - Media library + FilePicker; Settings, including quiet hours (D44) and chart view defaults (D6); Menu Management (D16).
 - List toolbar everywhere (D31), Refresh everywhere (D32); filters, sort, page and tab in the URL.
 
-**API:** Cobley's list/select/drafts/media/delete-check contracts (FRONTEND_RULES → Backend contract), the effective permission rule (D21) as a tested service, menu visibility, roles CRUD with holders, and location assignments.
+**API:** Bootbox's list/select/drafts/media/delete-check contracts (FRONTEND_RULES → Backend contract), the effective permission rule (D21) as a tested service, menu visibility, roles CRUD with holders, and location assignments.
 
 ---
 

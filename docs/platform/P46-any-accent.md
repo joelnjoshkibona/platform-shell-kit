@@ -1,6 +1,6 @@
 # P46 · Any brand colour, with contrast enforced
 
-Status: **decided when this note merges** (kit, 2026-10-17, from the Pangisha build: its deep green is not one of the six P41 accents).
+Status: **decided when this note merges** (kit, 2026-10-17, from a product's build: its deep green is not one of the six P41 accents).
 Builds on P41 (the organisation's accent recolours primary and the curtain) and P8 (the page curtain). **Amends P41:** the accent is no longer limited to six keys.
 
 ## Decision
@@ -17,11 +17,11 @@ Builds on P41 (the organisation's accent recolours primary and the curtain) and 
   | Curtain text on the curtain | 6:1 | yes (P41) |
 
 - **Failing colours are adjusted, not refused.** If the picked colour fails in light mode, its lightness is lowered until it passes, and the picker says so: *Adjusted for readability*, with before → after chips. The dark shade is always derived. A bright yellow `#FFD400` becomes `#877100` in light mode, for example.
-- **What follows the accent:** primary buttons, links, focus rings, active controls, the organisation badge, sign-in, and the page curtain. **What never does:** backgrounds, borders, status colours (success, warning, destructive and the product's status tones), chart colours c1–c5 and form accents (Fomu). Their meaning can't change with a brand.
+- **What follows the accent:** primary buttons, links, focus rings, active controls, the organisation badge, sign-in, and the page curtain. **What never does:** backgrounds, borders, status colours (success, warning, destructive and the product's status tones), chart colours c1–c5 and form accents (the example's). Their meaning can't change with a brand.
 - **Sign-in and first paint.**
   - The server HTML carries the product default tokens. A small inline script swaps in the **last accent this browser saw**, before anything paints, so the boot curtain and sign-in are already in the right colour.
   - Sign-in itself doesn't know the organisation yet, so it keeps that last accent. It never shows another organisation's colour on purpose.
-  - A product served on a **per-organisation domain** (one instance per customer, e.g. Pangisha D1) inlines that organisation's tokens in the server HTML, so even a first visit is in its colour.
+  - A product served on a **per-organisation domain** (one instance per customer) inlines that organisation's tokens in the server HTML, so even a first visit is in its colour.
 - **When it applies:** on sign-in, on organisation switch and on first load. For the owner who changes it, it applies at once (live preview). For everyone else, it applies from their next page.
 
 ## Derivation
@@ -64,7 +64,7 @@ The reference implementation is `deriveAccent` and `accentChecks` in `prototype/
 
 ## Why
 
-P41 gave each organisation its own colour, but only six. Real brands, starting with Pangisha's deep green, are rarely one of six. Contrast was the reason P41 refused a free picker, and contrast can be computed. With every derived value checked against fixed minimums, a free choice can't produce an unreadable button, an invisible focus ring or a curtain without legible text.
+P41 gave each organisation its own colour, but only six. Real brands, starting with a deep green, are rarely one of six. Contrast was the reason P41 refused a free picker, and contrast can be computed. With every derived value checked against fixed minimums, a free choice can't produce an unreadable button, an invisible focus ring or a curtain without legible text.
 
 Keeping the choice at the organisation level, with personal choice limited to Light, Dark or System, keeps one look per organisation for support, docs and visual tests.
 

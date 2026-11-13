@@ -3,7 +3,7 @@
 No dependencies. Copy this file into a product as tools/guide/build.py.
 
   python3 tools/guide/build.py                       # the options in tools/guide/build.args, else the kit defaults
-  python3 tools/guide/build.py --title "Shelui Tasks: build guide" \
+  python3 tools/guide/build.py --title "Task tracker: build guide" \
       --chapters docs/guide/chapters --page "Implementation plan=docs/IMPLEMENTATION_PLAN.md" \
       --page "Progress=docs/PROGRESS.md" --out docs/guide/index.html
 

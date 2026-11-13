@@ -12,7 +12,7 @@ Status: **decided** (kit 1.22.0). Amends P13 (where the main role is stored) and
 
 ## Why
 
-It is how the platform core already works (Cobley, then DevBiz), and every flow is tested on it: sign-in, the organisation picker, isolation between organisations, effective permissions, View as and menus. Separate tables would add no capability, only a second place to keep membership in step.
+It is how the platform core already works (in every product built on it so far), and every flow is tested on it: sign-in, the organisation picker, isolation between organisations, effective permissions, View as and menus. Separate tables would add no capability, only a second place to keep membership in step.
 
 ## What changes
 

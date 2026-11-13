@@ -1,6 +1,6 @@
 # P48 · The sign-in panel and the brand mark are product content
 
-Status: **decided when this note merges** (kit, 2026-10-17, from Pangisha: its sign-in page still showed Fomu's headline, quiz illustration and clipboard icon).
+Status: **decided when this note merges** (kit, 2026-10-17, from a product whose sign-in page still showed the example's headline, quiz illustration and clipboard icon).
 Builds on P1 (sign-in), P8 (page curtain) and P46 (brand colour).
 
 ## Decision
@@ -16,15 +16,15 @@ Builds on P1 (sign-in), P8 (page curtain) and P46 (brand colour).
   - Without one, the kit uses `PRODUCT.icon` (Lucide). In the boot curtain and the favicon, it falls back to the product's initial.
 - `BrandMark :size` draws the mark (or the icon fallback) wherever the product identifies itself: the sidebar header (desktop and phone), the sign-in panel and phone header, the page curtain, the boot curtain in the server HTML, and the favicon.
 - **The favicon** is the mark on a rounded tile in the organisation's light primary, redrawn by `applyAccent` (P46), so it follows the brand colour.
-- Nothing else in the shell carries product identity. Fomu's example content moves to `product.js` (`signin`) and `FomuSignInArt`.
+- Nothing else in the shell carries product identity. The example's content moves to `product.js` (`signin`) and `ExampleSignInArt`.
 
 ## Why
 
-The panel was markup inside the shell, so every product inherited Fomu's "Assessments and surveys…" page and timer illustration, and the curtain showed Fomu's clipboard whatever the product. Branding then needed a patch to the locked shell.
+The panel was markup inside the shell, so every product inherited the example's "Assessments and surveys…" page and timer illustration, and the curtain showed the example's clipboard whatever the product. Branding then needed a patch to the locked shell.
 
 ## Contract
 
 - **`product.js`:** `logo` (string or `null`) and `signin: { headline, points: [[icon, text] × 3], art }`.
-- **Prototype:** `BrandMark` and `FomuSignInArt` in `parts_shell.js`. `assemble.py` inlines the logo into the boot curtain (`BOOT_MARK`). `setFavicon(t)` lives in `parts_helpers.js`.
+- **Prototype:** `BrandMark` and `ExampleSignInArt` in `parts_shell.js`. `assemble.py` inlines the logo into the boot curtain (`BOOT_MARK`). `setFavicon(t)` lives in `parts_helpers.js`.
 - **Web:** `BrandMark.vue` reads the product config. `SignInBrandPanel.vue` takes the product's art as a slot. The favicon SVG is generated at build time for the product default and swapped at runtime by the accent.
 - **Review:** no product name, icon or illustration appears anywhere outside `product.js` and the product's own art component.

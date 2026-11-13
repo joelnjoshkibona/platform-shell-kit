@@ -1,7 +1,7 @@
 # src/app
 
 Everything in the phone app that is not a module, as files (no sub-folders by job). Written in the first product's phone app, then
-lifted here. Hodie (`NATIVE-PHP/hodie/resources/spa/src/parts`) is the working example of each piece.
+lifted here. Bootbox's `mobile/` is the working example of each piece.
 
 | File | What | P |
 | --- | --- | --- |

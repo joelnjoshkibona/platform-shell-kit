@@ -1,12 +1,12 @@
 # P110 · A product registry, loaded before the shell
 
-Status: **decided** (kit 1.26.0). Proposed by Max Yield (kit 1.25.0), tested in its copy of the prototype (its access registry, `assemble.py` and `parts_shell.js`) and ported here with P107–P112.
+Status: **decided** (kit 1.26.0). Proposed by a product (kit 1.25.0), tested in its copy of the prototype (its access registry, `assemble.py` and `parts_shell.js`) and ported here with P107–P112.
 
 ## Why
 
 Two things a product must give the shell could only be given by editing the shell's own file:
 
-1. **Its detail pages.** The shell decides which routes are its own pages (rendered inside the shell, with a breadcrumb and Back) and what each page's title is, from **hard-coded lists in `parts_shell.js`**. Max Yield's key account, proforma, order and payment pages had to be added to those lists.
+1. **Its detail pages.** The shell decides which routes are its own pages (rendered inside the shell, with a breadcrumb and Back) and what each page's title is, from **hard-coded lists in `parts_shell.js`**. A product's key account, proforma, order and payment pages had to be added to those lists.
 2. **Its permissions and role defaults.** The README's extension points were the `PERMS` and `ROLES` arrays *inside* `parts_shell.js`, and the shell builds its menus and role lists from them as it starts. A product that edits them there loses its edits, or has to re-apply them, on every kit update (products pull kit changes, P94).
 
 ## Decision
@@ -23,11 +23,11 @@ Two things a product must give the shell could only be given by editing the shel
 
 `parts_product.js` (prototype; `assemble.py` puts it first, inside the shell module) / `web/src/product/registry.ts` (app).
 
-## Fomu
+## The example
 
-Fomu's permissions (`Forms.*`, `Templates.list`, `Responses.*`) and its role defaults (and the words its roles are described with) moved from `parts_shell.js` into Fomu's `parts_product.js`. Fomu has no detail page inside the shell (its builder, results and respondent views are full-screen, outside it), so its `detailRoutes` is empty. Fomu behaves the same: the permission catalogue, the roles and each role's permissions are unchanged.
+The example's permissions (`Forms.*`, `Templates.list`, `Responses.*`) and its role defaults (and the words its roles are described with) moved from `parts_shell.js` into the example's `parts_product.js`. The example has no detail page inside the shell (its builder, results and respondent views are full-screen, outside it), so its `detailRoutes` is empty. The example behaves the same: the permission catalogue, the roles and each role's permissions are unchanged.
 
-Still in `parts_shell.js`, as before P110 and outside its scope: Fomu's `MENU` items and its Forms list and Templates pages (README: "Sidebar menu items", "Pages per route").
+Still in `parts_shell.js`, as before P110 and outside its scope: the example's `MENU` items and its Forms list and Templates pages (README: "Sidebar menu items", "Pages per route").
 
 ## Tests (kit check)
 

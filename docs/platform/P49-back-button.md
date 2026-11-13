@@ -1,6 +1,6 @@
 # P49 · Back on every record page
 
-Status: **decided** (kit 1.5.0). From DevBiz, whose shop pages had `BackButton` while the platform's own record pages
+Status: **decided** (kit 1.5.0). From a product whose shop pages had `BackButton` while the platform's own record pages
 (role, location, approval request) had only a breadcrumb.
 
 ## Decision
@@ -21,4 +21,4 @@ no browser back button at all.
 ## Extension point
 
 `BACK_PARENT` in `parts_links.js`: record route → its list. A product adds its own records. A product with its own
-trail rule (DevBiz: `?back=` on links into a record) keeps the same button, look and place.
+trail rule (for example `?back=` on links into a record) keeps the same button, look and place.

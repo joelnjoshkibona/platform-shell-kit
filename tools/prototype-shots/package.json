@@ -1,5 +1,5 @@
 {
-  "name": "fomu-prototype-shots",
+  "name": "kit-prototype-shots",
   "private": true,
   "description": "Screenshots of the design prototype (docs/design/prototype/index.html) and side-by-side comparison with the real app.",
   "scripts": {

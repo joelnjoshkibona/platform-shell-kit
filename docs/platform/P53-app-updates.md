@@ -1,6 +1,6 @@
 # P53 · App updates
 
-Status: **decided** (kit 1.7.0). The DevBiz owner chose "ask, but force when needed".
+Status: **decided** (kit 1.7.0). The owner chose "ask, but force when needed".
 
 ## Decision
 

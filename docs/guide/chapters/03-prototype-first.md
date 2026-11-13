@@ -7,8 +7,8 @@ Before any server or app code, a product is drawn as a **clickable prototype**: 
 1. Copy the kit's `prototype/` into the product's `docs/design/prototype/`.
 2. Edit `src/product.js`: the product's name, icon, domain and accent colour, and optionally its own curtain loader (`loader`, P114).
 3. Replace `src/parts_product.js`, the **product registry** (P110), with the product's: its permissions, what each role gets of them, and its detail pages that live inside the shell. The shell is built from it, so the kit's own files stay as they are and the next kit update applies cleanly.
-4. Add the product's modules as new files, `src/parts_<module>.js` (Shelui Tasks: `parts_tasks.js`), listed in `assemble.py` where the example's `parts_fomu.js` is. Register their menu items, routes and links at the kit's extension points (the table in the kit `README.md`), and register each record type with `defineModule` so links and Back work.
-5. Remove the example product's modules (Fomu's forms, templates, builder, results).
+4. Add the product's modules as new files, `src/parts_<module>.js` (a task tracker: `parts_tasks.js`), listed in `assemble.py` where the example's `parts_example.js` is. Register their menu items, routes and links at the kit's extension points (the table in the kit `README.md`), and register each record type with `defineModule` so links and Back work.
+5. Remove the example product's modules (forms, templates, builder, results).
 6. Run `python3 src/assemble.py`. It joins the parts into `index.html`.
 7. Open `index.html` in a browser. The **Screens** button at the bottom left jumps to every screen.
 

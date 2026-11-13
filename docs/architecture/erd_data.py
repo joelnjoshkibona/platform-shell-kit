@@ -2,9 +2,9 @@
 # Generates system_erd.md (Mermaid) and erd.html (review page).
 
 SECTIONS = [
-    ("01", "Platform core: identity & access", "Shared kernel with Cobley (same table and column names) plus organization_id for tenancy. Users, statuses, organisations, roles with JSON permissions, menus. Builder URLs are path-based: /{org.slug}/forms."),
-    ("01B", "Platform core: locations", "Cobley location tree (parent_id + closure table, typed by location_types) scoped per organisation. user_locations carries several custom roles per location plus JSON grants and denials. Reference lists: countries, wards."),
-    ("01C", "Platform core: approvals", "Cobley approval workflow: request types with ordered steps (roles, permissions or users, OR/AND), requests per location, approval turns and delegations."),
+    ("01", "Platform core: identity & access", "The shared kernel (the same table and column names in every product) plus organization_id for tenancy. Users, statuses, organisations, roles with JSON permissions, menus. Builder URLs are path-based: /{org.slug}/forms."),
+    ("01B", "Platform core: locations", "The location tree (parent_id + closure table, typed by location_types) scoped per organisation. user_locations carries several custom roles per location plus JSON grants and denials. Reference lists: countries, wards."),
+    ("01C", "Platform core: approvals", "The approval workflow: request types with ordered steps (roles, permissions or users, OR/AND), requests per location, approval turns and delegations."),
     ("02", "Forms & Versions", "The form record holds settings and the autosaved draft. Publishing freezes the draft into an immutable version. A form can belong to a location."),
     ("03", "Distribution & Respondents", "Private-form invitations, global respondent identities, and email OTP verification."),
     ("04", "Attempts & Integrity", "A respondent session: server-owned timers, single-tab heartbeat, fullscreen and copy/paste violation log."),
@@ -19,13 +19,13 @@ def ent(sec, name, fields, notes=""):
 
 STD = [("bigint", "created_by_id", "FK", "users.id"), ("bigint", "updated_by_id", "FK", "users.id, nullable"), ("timestamp", "deleted_at", "", "soft delete"), ("char", "uuid", "UK", "uuid()")]
 
-# ---------- 01 Platform core: identity & access (shared with Cobley)
+# ---------- 01 Platform core: identity & access (the shared kernel)
 ent("01", "STATUSES", [
     ("bigint", "id", "PK", ""),
     ("string", "name", "UK", "Active, Pending, Inactive, Suspended..."),
     ("string", "color", "", "default #6b7280"),
     ("text", "description", "", ""),
-], "Cobley core. Master-data tables (users, organisations, locations, roles, request types) use status_id. Workflow states use one lookup table per workflow (P47, amends P16).")
+], "Platform core. Master-data tables (users, organisations, locations, roles, request types) use status_id. Workflow states use one lookup table per workflow (P47, amends P16).")
 ent("01", "WORKFLOW_STATUSES (pattern)", [
     ("bigint", "id", "PK", "one table per workflow, e.g. request_statuses (P47)"),
     ("bigint", "organization_id", "FK", "tenant; seeded per organisation"),
@@ -44,14 +44,14 @@ ent("01", "USERS", [
     ("string", "email", "UK", "sign-in identifier, nullable"),
     ("string", "phone", "UK", "E.164, sign-in identifier, nullable"),
     ("string", "password", "", "hashed"),
-    ("timestamp", "password_set_at", "", "Cobley core"),
+    ("timestamp", "password_set_at", "", "Platform core"),
     ("bigint", "status_id", "FK", "statuses.id"),
-    ("datetime", "last_logged_in_at", "", "Cobley core"),
-    ("text", "two_factor_secret", "", "Fomu addition: encrypted TOTP secret"),
-    ("text", "two_factor_recovery_codes", "", "Fomu addition, encrypted"),
-    ("timestamp", "two_factor_confirmed_at", "", "Fomu addition; NULL = 2FA off"),
+    ("datetime", "last_logged_in_at", "", "Platform core"),
+    ("text", "two_factor_secret", "", "Kit addition: encrypted TOTP secret"),
+    ("text", "two_factor_recovery_codes", "", "Kit addition, encrypted"),
+    ("timestamp", "two_factor_confirmed_at", "", "Kit addition; NULL = 2FA off"),
     ("enum", "theme_preference", "", "light | dark | system"),
-] + STD, "Cobley users + Fomu 2FA columns. Global: one user can belong to several organisations. Related Cobley auth tables kept as-is: otps, user_invitations, force_password_resets, personal_access_tokens, user_device_tokens.")
+] + STD, "Platform users + the kit's 2FA columns. Global: one user can belong to several organisations. Related auth tables kept as-is: otps, user_invitations, force_password_resets, personal_access_tokens, user_device_tokens.")
 
 ent("01", "USER_TRUSTED_DEVICES", [
     ("bigint", "id", "PK", ""),
@@ -61,17 +61,17 @@ ent("01", "USER_TRUSTED_DEVICES", [
     ("string", "ip", "", ""),
     ("timestamp", "last_used_at", "", ""),
     ("timestamp", "expires_at", "", "30 days"),
-], "Fomu addition. Skips the 2FA step on a remembered device.")
+], "Kit addition. Skips the 2FA step on a remembered device.")
 
 ent("01", "ROLES", [
     ("bigint", "id", "PK", ""),
     ("bigint", "organization_id", "FK", "NULL = system role shared by all orgs"),
     ("string", "name", "", "UNIQUE(organization_id, name)"),
     ("text", "description", "", ""),
-    ("string", "role_type", "", "system (main roles) | custom (location roles); Cobley column"),
+    ("string", "role_type", "", "system (main roles) | custom (location roles); platform column"),
     ("bigint", "status_id", "FK", "statuses.id"),
-    ("json", "permissions", "", "array of permission names; Cobley core"),
-] + STD, "Cobley roles + organization_id. System (main) roles are assigned on the member's primary user_locations row; custom roles only on user_locations (never as a main role). Multi-valued index on permissions.")
+    ("json", "permissions", "", "array of permission names; platform core"),
+] + STD, "Platform roles + organization_id. System (main) roles are assigned on the member's primary user_locations row; custom roles only on user_locations (never as a main role). Multi-valued index on permissions.")
 
 ent("01", "PERMISSIONS", [
     ("bigint", "id", "PK", ""),
@@ -79,7 +79,7 @@ ent("01", "PERMISSIONS", [
     ("string", "title", "", "human name shown in Roles"),
     ("string", "module", "", "grouping in the Roles checklist"),
     ("text", "description", "", ""),
-] + STD, "Cobley core catalogue, seeded by the app (Cobley's Module.action naming). Global, not editable by tenants.")
+] + STD, "Platform core catalogue, seeded by the app (Module.action naming). Global, not editable by tenants.")
 
 ent("01", "MENUS", [
     ("bigint", "id", "PK", ""),
@@ -87,14 +87,14 @@ ent("01", "MENUS", [
     ("string", "title", "", ""),
     ("string", "url", "", "NULL for parents"),
     ("string", "icon", "", "lucide name"),
-    ("json", "permission", "", "Cobley core; children hold exactly one name (D8), parents NULL"),
-    ("string", "module_route", "", "Cobley core"),
+    ("json", "permission", "", "Platform core; children hold exactly one name (D8), parents NULL"),
+    ("string", "module_route", "", "Platform core"),
     ("int", "position", "", "sort order"),
     ("boolean", "is_active", "", "hidden for everyone when 0"),
-    ("string", "group_label", "", "Fomu addition: heading inside a panel"),
-    ("enum", "display_mode", "", "Fomu addition: dropdown | panel | section"),
-    ("enum", "animation", "", "Fomu addition: default | stagger | fade | slide | none"),
-] + STD, "Cobley menus + three display columns. Parent visible when ANY child is visible (OR).")
+    ("string", "group_label", "", "Kit addition: heading inside a panel"),
+    ("enum", "display_mode", "", "Kit addition: dropdown | panel | section"),
+    ("enum", "animation", "", "Kit addition: default | stagger | fade | slide | none"),
+] + STD, "Platform menus + three display columns. Parent visible when ANY child is visible (OR).")
 
 ent("01", "IMPERSONATION_SESSIONS", [
     ("bigint", "id", "PK", ""),
@@ -109,16 +109,16 @@ ent("01", "IMPERSONATION_SESSIONS", [
     ("string", "ip", "", ""),
     ("timestamp", "started_at", "", ""),
     ("timestamp", "ended_at", "", ""),
-], "Fomu addition: audit for 'View as'. Read-only mode; every write is refused while a session is open.")
+], "Kit addition: audit for 'View as'. Read-only mode; every write is refused while a session is open.")
 
-# ---------- 01B Platform core: locations (shared with Cobley)
+# ---------- 01B Platform core: locations (the shared kernel)
 ent("01B", "LOCATION_TYPES", [
     ("bigint", "id", "PK", ""),
     ("bigint", "organization_id", "FK", "NULL = system type"),
     ("string", "name", "", "organization, company, zone, cluster, branch, shop, warehouse"),
     ("string", "code", "", "UNIQUE(organization_id, code)"),
     ("string", "color", "", "badge colour"),
-] + STD, "Cobley core + organization_id so tenants can add their own types.")
+] + STD, "Platform core + organization_id so tenants can add their own types.")
 
 ent("01B", "LOCATIONS", [
     ("bigint", "id", "PK", ""),
@@ -128,9 +128,9 @@ ent("01B", "LOCATIONS", [
     ("bigint", "location_type_id", "FK", ""),
     ("bigint", "parent_id", "FK", "self; NULL = a root location, which is an organisation (P103)"),
     ("string", "slug", "UK", "only on a root location: the path segment /{org} (P103)"),
-    ("boolean", "allow_sales", "", "Cobley core (unused by Fomu)"),
+    ("boolean", "allow_sales", "", "platform core (unused by the example)"),
     ("bigint", "status_id", "FK", "statuses.id"),
-    ("string", "address", "", "Fomu addition"),
+    ("string", "address", "", "Kit addition"),
     ("bigint", "ward_id", "FK", "wards.id (Tanzanian ward, district, region)"),
     ("bigint", "country_id", "FK", "countries.id"),
     ("string", "phone", "", ""),
@@ -138,13 +138,13 @@ ent("01B", "LOCATIONS", [
     ("decimal", "latitude", "", ""),
     ("decimal", "longitude", "", ""),
     ("json", "opening_hours", "", "{mon: ['08:00','18:00'], ...}"),
-] + STD, "Cobley location tree + organization_id and contact/geo columns. The manager is not stored here: it is whoever holds a Manager custom role in user_locations.")
+] + STD, "The location tree + organization_id and contact/geo columns. The manager is not stored here: it is whoever holds a Manager custom role in user_locations.")
 
 ent("01B", "LOCATION_CLOSURES", [
     ("bigint", "ancestor_id", "PK, FK", "locations.id"),
     ("bigint", "descendant_id", "PK, FK", "locations.id"),
     ("int", "depth", "", "0 = self"),
-], "Cobley core. Every ancestor/descendant pair, so 'this location and everything under it' is one indexed query. Maintained on create/move.")
+], "Platform core. Every ancestor/descendant pair, so 'this location and everything under it' is one indexed query. Maintained on create/move.")
 
 ent("01B", "USER_LOCATIONS", [
     ("char", "id", "PK", "uuid()"),
@@ -155,7 +155,7 @@ ent("01B", "USER_LOCATIONS", [
     ("json", "roles", "", "several CUSTOM role ids (role_type = custom)"),
     ("json", "granted_permissions", "", "extra permission names at this location"),
     ("json", "denied_permissions", "", "removed here; deny always wins"),
-] + STD, "Cobley core. Membership (P103): a row anywhere in the organisation's tree; the main role is role_id on the primary row. Applies to the location and its descendants. UNIQUE(user_id, location_id). Multi-valued indexes on the three JSON arrays; changes written to the activity log.")
+] + STD, "Platform core. Membership (P103): a row anywhere in the organisation's tree; the main role is role_id on the primary row. Applies to the location and its descendants. UNIQUE(user_id, location_id). Multi-valued indexes on the three JSON arrays; changes written to the activity log.")
 
 ent("01B", "COUNTRIES", [
     ("bigint", "id", "PK", ""),
@@ -163,7 +163,7 @@ ent("01B", "COUNTRIES", [
     ("string", "name", "UK", ""),
     ("string", "iso3", "", ""),
     ("string", "phonecode", "", ""),
-], "Cobley reference list (global).")
+], "Reference list (global).")
 
 ent("01B", "WARDS", [
     ("bigint", "id", "PK", ""),
@@ -173,9 +173,9 @@ ent("01B", "WARDS", [
     ("bigint", "district_id", "", ""),
     ("string", "region", "", ""),
     ("bigint", "region_id", "", ""),
-], "Cobley reference list of Tanzanian wards (global).")
+], "Reference list of Tanzanian wards (global).")
 
-# ---------- 01C Platform core: approvals (shared with Cobley)
+# ---------- 01C Platform core: approvals (the shared kernel)
 ent("01C", "REQUEST_TYPES", [
     ("bigint", "id", "PK", ""),
     ("bigint", "organization_id", "FK", "tenant"),
@@ -183,10 +183,10 @@ ent("01C", "REQUEST_TYPES", [
     ("string", "code", "", "UNIQUE(organization_id, code)"),
     ("text", "description", "", ""),
     ("boolean", "requires_approval", "", "0 = auto-approve"),
-    ("decimal", "threshold_amount", "", "Cobley core; NULL for Fomu types"),
+    ("decimal", "threshold_amount", "", "platform core; NULL for the example's types"),
     ("bigint", "status_id", "FK", "statuses.id"),
     ("json", "notify_settings", "", "D43: {channels: [in_app, email, sms, push], events: {waiting, remind, escalate, decision}, remind_hours, remind_max}; in_app always on"),
-] + STD, "Cobley core + organization_id. Cannot be activated or saved while a step fails the D40 capacity rule.")
+] + STD, "Platform core + organization_id. Cannot be activated or saved while a step fails the D40 capacity rule.")
 
 ent("01C", "REQUEST_TYPE_STEPS", [
     ("bigint", "id", "PK", ""),
@@ -199,7 +199,7 @@ ent("01C", "REQUEST_TYPE_STEPS", [
     ("int", "required_approvals", "", "default 1; D40: eligible approvers must be >= required + 1 when required > 1"),
     ("json", "notify_channels", "", "D43: NULL = workflow default; else the step's own channels"),
     ("boolean", "notify_required", "", "D43: send even to people who opted out of those channels"),
-] + STD, "Cobley core. Approvers are resolved at the request's location (and its ancestors) using the effective-permission rule (D21).")
+] + STD, "Platform core. Approvers are resolved at the request's location (and its ancestors) using the effective-permission rule (D21).")
 
 ent("01C", "REQUESTS", [
     ("bigint", "id", "PK", ""),
@@ -215,7 +215,7 @@ ent("01C", "REQUESTS", [
     ("text", "reason", "", ""),
     ("bigint", "request_status_id", "FK", "request_statuses (P47): draft | submitted | in_review | approved | rejected | cancelled"),
     ("int", "current_step", "", ""),
-] + STD, "Cobley core + organization_id. Request items (request_items) are kept for Cobley types and unused by Fomu.")
+] + STD, "Platform core + organization_id. Request items (request_items) are kept for request types that carry items, and unused by the example.")
 
 ent("01C", "REQUEST_APPROVALS", [
     ("bigint", "id", "PK", ""),
@@ -228,7 +228,7 @@ ent("01C", "REQUEST_APPROVALS", [
     ("text", "comment", "", ""),
     ("datetime", "acted_at", "", ""),
     ("boolean", "is_owner_override", "", "D40: Owner completed a short step"),
-] + STD, "Cobley core.")
+] + STD, "Platform core.")
 
 ent("01C", "NOTIFICATION_DELIVERIES", [
     ("bigint", "id", "PK", ""),
@@ -267,7 +267,7 @@ ent("01C", "APPROVAL_DELEGATIONS", [
     ("date", "valid_to", "", ""),
     ("text", "reason", "", ""),
     ("enum", "status", "", "active | expired | revoked"),
-] + STD, "Cobley core + organization_id.")
+] + STD, "Platform core + organization_id.")
 
 # ---------- 02 Forms & Versions
 ent("02", "FORMS", [
@@ -696,36 +696,36 @@ OPEN_DECISIONS = [
     ("D4", "ID strategy", "ULID for forms, attempts, responses; bigint for internal tables."),
     ("D5", "Respondent identity scope", "Global respondents table."),
     ("D6", "Summary chart views", "Three levels: built-in default per type, organisation default per type (the organisation's summary_view_defaults setting), per-question override (forms.summary_views)."),
-    ("D8", "Roles and menu access", "Cobley-style JSON roles (spatie removed). roles.permissions is a JSON array of permission names in Module.action form (Forms.list, Forms.create, Responses.export; see D28). One permission per child menu; parent visible if any child is (OR); empty parents hidden. Missing permissions go to a role first, to a single user (granted_permissions on user_locations) only as an exception."),
+    ("D8", "Roles and menu access", "JSON roles (spatie removed). roles.permissions is a JSON array of permission names in Module.action form (Forms.list, Forms.create, Responses.export; see D28). One permission per child menu; parent visible if any child is (OR); empty parents hidden. Missing permissions go to a role first, to a single user (granted_permissions on user_locations) only as an exception."),
     ("D9", "Menus, selects and popovers never clip", "Always use shadcn-vue *Content components (DropdownMenuContent, SelectContent, PopoverContent, TooltipContent) with their portal on and collisionPadding 8. Never position a menu with absolute inside a scrolling or overflow-hidden container (tables, card lists, dialog bodies)."),
     ("D10", "Clickable cards with actions", "A card that opens on click uses a stretched link; its action buttons (menus, toggles) sit above it with relative z-10 so they stay tappable."),
     ("D11", "Tables on phones", "Below 640px every data table switches to a compact card list (forms list, responses, members). The table/cards toggle only applies from 640px up."),
     ("D12", "Server-side access matches the menu", "Every route and API endpoint behind a menu checks the same permission (Laravel middleware can:<permission>). Hidden menu = 403 on direct visit, shown as a 'No access' page with a request button."),
     ("D13", "Page transitions", "Curtain plays on first app load (starts closed with 'Loading…', opens once the app is ready; the closed curtain is in the server HTML so nothing flashes) and on every page change, sidebar navigation included (revised 10 Oct). Not between sign-in steps or between tabs inside a page. Loader appears only if the next page takes longer than 300ms. Skipped with prefers-reduced-motion and switchable off in the prototype. Curtain colour has its own tokens: bright teal (--curtain 170 62% 46%, dark text) in light mode, deep green (166 58% 13%, light text) in dark mode."),
     ("D14", "Sidebar menu animation", "Animation follows the display mode by default (dropdown: expand + stagger, panel: slide, rail flyout: fade); per-menu override in Menu Management. Dropdowns are always accordion. Forms and Configuration cannot be hidden."),
-    ("D15", "Product name", "'Fomu' is a placeholder until the product is named; keep it in one config value (APP_NAME) so it can change everywhere at once."),
+    ("D15", "Product name", "The example is named 'Bootbox'; a product keeps its name in one config value (APP_NAME) so it can change everywhere at once."),
     ("D16", "Menu Management layout", "The page is information only: parent/child rows (drag to reorder, drag a child onto another parent to move it) showing type, permission, who sees it and status. All editing happens in a gear popup: name, icon, parent, position, group heading, display mode, animation, permission and visibility. Parents stay top level."),
     ("D17", "Design system reference", "The prototype's Design system page is the source of truth for tokens (colour, type, spacing, radius, shadow, motion, z-index, breakpoints), the component inventory with sizes and variants, and layout rules. The build copies its values into tailwind.config and the shadcn-vue theme CSS; any change is made there first."),
-    ("D18", "Shared platform core", "Identity, organisations, roles, permissions, menus, statuses, locations, wards and approvals reuse the Cobley Platform core. Every tenant-owned core table gets organization_id; system rows (roles, location types, statuses) keep it NULL and are shared."),
+    ("D18", "Shared platform core", "Identity, organisations, roles, permissions, menus, statuses, locations, wards and approvals reuse the platform core (Bootbox). Every tenant-owned core table gets organization_id; system rows (roles, location types, statuses) keep it NULL and are shared."),
     ("D19", "Main role vs location roles", "One MAIN role per organisation member (user_locations.role_id on the member's primary row in the organisation, role_type = system: owner, admin, editor, viewer; P103). Several CUSTOM roles per location in user_locations.roles (JSON array of role ids, role_type = custom). A main role can never be stored as a location role; validated on save."),
     ("D20", "Overrides stay JSON", "granted_permissions / denied_permissions / roles stay JSON on user_locations. Mitigations: MySQL 8 multi-valued indexes (CAST(... AS CHAR(80) ARRAY)) for 'who has X' queries, a FormRequest rule that every value exists in permissions.name, every change written to the activity log with before/after, and a migration that renames values when a permission is renamed."),
     ("D21", "Effective permission rule", "At a location: main role permissions UNION custom-role permissions at that location and every ancestor (via location_closures) UNION granted_permissions, MINUS denied_permissions. Deny always wins. Result cached per user + location, busted when any input changes."),
     ("D22", "Statuses", "Master-data status (users, organisations, locations, roles, request types) uses the statuses table (status_id). Workflow states that drive code (forms, attempts, responses, requests) stay ENUM columns."),
     ("D23", "Forms owned by locations", "forms.location_id (NULL = organisation-wide) with include_descendants. Private forms are open only to users assigned at that location (or its descendants when included) and to invitees; public forms to anyone with the link. form_responses.location_id snapshots where the response belongs so reports survive form moves. Managers see only forms and results of their locations."),
     ("D24", "View as", "Admins with Users.impersonate can preview the app as another user or as a role (D37): read-only, a banner shows who is being viewed, no writes, no OTP or emails. Each session is recorded in impersonation_sessions (who, whom, location, started, ended)."),
-    ("D25", "Approvals are core", "The Cobley approval engine (request_types, steps with role/permission/user approvers and or/and combinators, requests, request_approvals, delegations) is part of the core. First request types: Publish form, Export responses, Reset respondent. Approvers are resolved at the request's location and its ancestors."),
+    ("D25", "Approvals are core", "The platform's approval engine (request_types, steps with role/permission/user approvers and or/and combinators, requests, request_approvals, delegations) is part of the core. First request types: Publish form, Export responses, Reset respondent. Approvers are resolved at the request's location and its ancestors."),
     ("D26", "Locations screens", "List is a tree table (expand/collapse, search keeps matching rows with their ancestors) that becomes an indented card list on phones. Detail has Overview, Details, Users and Forms tabs. Users shows direct assignments plus people inherited from above (one row per person, sources listed); roles and JSON overrides are edited in a side sheet with a live effective-permission preview. View as starts from a user row or the top bar and opens on the Forms list."),
-    ("D27", "Frontend rules source", "Cobley's frontend code is discarded; its backend and its behaviour rules are kept. Where Cobley and the prototype disagree on look (list shape, fonts, theme), the prototype wins. Rules live in three places kept in sync: the Fomu frontend rules doc, FRONTEND_RULES.md in the repo (read by CLAUDE.md), and the Rules tab on the prototype's Design system page."),
-    ("D28", "Permission action names", "Module.action with Cobley's verbs: list (was view), view (one record), create, edit, delete, plus module-specific actions (Forms.publish, Responses.export, Users.impersonate). Menus are gated by Module.list."),
+    ("D27", "Frontend rules source", "The original shell's frontend code was discarded; its backend and behaviour rules were kept. Where they and the prototype disagree on look (list shape, fonts, theme), the prototype wins. Rules live in three places kept in sync: the frontend rules doc, FRONTEND_RULES.md in the repo (read by CLAUDE.md), and the Rules tab on the prototype's Design system page."),
+    ("D28", "Permission action names", "Module.action with the platform's verbs: list (was view), view (one record), create, edit, delete, plus module-specific actions (Forms.publish, Responses.export, Users.impersonate). Menus are gated by Module.list."),
     ("D29", "Contextual search", "The top-bar search box follows the page. Inside a module it searches that module only and filters the list in place through the module's own search filter (kept in the URL); a last line offers 'Search everywhere for ...'. On a details page it searches the parent module and shows a small dropdown. On pages with nothing to search the box is hidden. Every module declares a search filter field."),
     ("D30", "Global search and Dashboard", "A Dashboard is the new home page. Its search is global: GET /search?q= runs each searchable module's existing select search and returns the top 5 per module, permission- and location-scoped, grouped with 'See all in X' links that open the filtered list. On phones a search icon expands into a full-width bar; on the Dashboard results open full screen with recent searches."),
     ("D31", "List toolbar", "Order: Refresh, Filters (n), Clear, Sort, then the cards/table toggle and the primary New button on the right; Export/Import only when the backend has them. Filters dialog has Simple (natural operator per field) and Advanced (operator per field) modes; one request on Apply; filters, sort and page live in the URL. Status tabs stay as quick filters and stay in sync with the dialog. On phones the toolbar shows icons with counts and the dialog opens as a bottom sheet."),
     ("D32", "Refresh everywhere", "Every viewable page (lists, details, results, dashboard) has a Refresh button with an 'Updated x ago' hint. Refreshing keeps the current content on screen, dimmed, until new data arrives; only a first load with nothing on screen shows a spinner."),
-    ("D33", "Shared form behaviour from Cobley", "Server-side drafts on every create/edit form (autosave 4s; create keeps several drafts with a picker; edit keeps one with a restore banner; never files or secrets; never in action wizards). No native pickers (select, file, date, time). Deletes need 'type YES'. Required fields use a CSS asterisk. Modals open through one modal host. Details tabs live in ?tab=. Related records open as a preview of the target's own details panel."),
+    ("D33", "Shared form behaviour", "Server-side drafts on every create/edit form (autosave 4s; create keeps several drafts with a picker; edit keeps one with a restore banner; never files or secrets; never in action wizards). No native pickers (select, file, date, time). Deletes need 'type YES'. Required fields use a CSS asterisk. Modals open through one modal host. Details tabs live in ?tab=. Related records open as a preview of the target's own details panel."),
     ("D34", "Approvals screens", "Approvals menu: Inbox (Waiting for me / My requests / All or My locations) and Delegations; Configuration › Approval workflows. Request page shows the step timeline with resolved approvers and why, approve/reject (reason required), delegation labels and terminal banners. Actions behind an active workflow offer 'Request to …'. Nobody qualifying at the location chain escalates to owners and admins."),
     ("D35", "Component library", "COMPONENTS.md is generated from the prototype's component inventory (specs) and components_api.json (props, emits, slots, do/don't). Screens are built only from it; a missing control is added to the library first. Contracts used by another module are extended, never changed."),
     ("D36", "API select paging and labels", "Mixed paging per module: page= for small tables, opaque after= cursor for big or busy ones; has_more instead of totals; next page loads when an end marker scrolls into view. Selected labels: view endpoints return foreign keys as { id, label, sub } (selected-options), then one batched ids[] lookup per module per tick, then a shared label store. Current choices pinned on page 1. Archived, restricted and deleted values stay, flagged, with a warning; never cleared silently. 60-second cache with background refresh."),
-    ("D37", "View as: person or role", "View as has two read-only modes: a real person, or a role preview built from a main role plus an optional custom role at a location (no real person; a synthetic member that is never listed). Roles page offers 'Preview this role'. Full 'Act as' impersonation with write access is not part of Fomu. impersonation_sessions records role previews with viewed_user_id NULL and the role + location viewed."),
+    ("D37", "View as: person or role", "View as has two read-only modes: a real person, or a role preview built from a main role plus an optional custom role at a location (no real person; a synthetic member that is never listed). Roles page offers 'Preview this role'. Full 'Act as' impersonation with write access is not part of the platform. impersonation_sessions records role previews with viewed_user_id NULL and the role + location viewed."),
     ("D38", "Filter controls by data size", "List filterFields declare select (short fixed sets, 10 or fewer, shown as pills) or select_paginated (anything that grows: locations, people, forms, wards), which renders a multi API select for its module. Location filters include descendants by default via location_closures, with a switch; the chip reads 'and below'. The list endpoint receives filters[loc][operator]=in&filters[loc][value][]=…&filters[loc][below]=1."),
     ("D39", "Roles as list + details", "Roles follow the core-module shape. /roles is a list (KPIs, All/Main/Custom tabs, toolbar with refresh, filters for type, people and permission count, sort; rows show permission coverage, visible menus and holders). /roles/{id} is a details page: Overview (KPIs, permissions by module, about + timeline, holders), Permissions, Menus, People, History; tab in ?tab=. Header promotes Preview this role next to Edit (the role's defining action, like Add child on a location); Copy permissions from, Duplicate and Delete sit in More. Main role names are fixed; only custom roles can be created, renamed or deleted, and delete is blocked while anyone holds the role at a location (role_user_location rows). Permission ticks save immediately and apply on the next request. GET /roles returns perms_count, holders_count, menus_visible; GET /roles/{id}/holders returns main-role users or custom-role holders with their locations."),
     ("D40", "Short approver steps", "A step needing 2+ approvals must have at least required + 1 people who can approve anywhere in the org, because the requester never approves their own request; single-approval steps need 1 (escalation to owners and admins covers the rest). The workflow editor shows the count, blocks Save and blocks switching it on. Existing workflows that fail are flagged “Can’t be met”; at runtime a short step adds the Owner, needs only as many approvals as people can give, and an Owner can complete a step that already has every approval it can get (logged as is_owner_override)."),
@@ -733,7 +733,7 @@ OPEN_DECISIONS = [
     ("D42", "Staged role edits", "Permission and menu ticks on a role are staged. A sticky bar shows +added / −removed and how many people it affects, with Discard and Save. Copy permissions from stages too. Leaving with unsaved changes (any nav, breadcrumb, sidebar, search, or closing the tab) asks Stay / Discard and leave / Save and leave. Save is one PUT /roles/{id}/permissions with the full set and is audited as one change."),
     ("D43", "Approval notifications", "Channels: in-app (always), email, SMS via NJIWA, push (NativePHP). Workflow sets default channels and events: step waiting (approvers), reminder every N hours up to M times (approvers who have not acted), escalation or short step (Owner), decision (requester). A step may override channels and mark them required. People opt out of email/SMS/push in Notification settings; required steps ignore that. Every send is a notification_deliveries row (sent or skipped with reason) shown on the request’s Notifications tab; requesters and admins can send a reminder now. Email carries a link to the request, never one-click approve."),
     ("D44", "Approval email and quiet hours", "Approval emails carry a link to the request only; approvers sign in (with 2FA) to decide. No signed one-click links. Organisations set quiet hours (default 20:00–07:00 EAT, on): SMS and push raised inside the window are held (notification_deliveries.status = held) and sent when it ends; in-app and email go at once; steps marked notify_required ignore quiet hours. Stored in organizations.settings.quiet_hours {on, from, to}."),
-    ("D45", "Repository and stack", "Monorepo joelnjoshkibona/fomu: api/ = Laravel (laravel/framework ^13, inherited from the Cobley backend, which is the base; Cobley modules Fomu does not need are removed in Phase 0), web/ = Vue 3 + Vite + TypeScript + Tailwind + shadcn-vue SPA. docs/ holds the runnable prototype (the visual source of truth), screenshots, decisions, ERD, frontend rules and component specs. Work is delivered in phases, one PR each, with screenshots compared against the prototype."),
+    ("D45", "Repository and stack", "One monorepo per product: api/ = Laravel (laravel/framework ^13, from Bootbox, the base; optional modules the product does not need are switched off in Phase 0), web/ = Vue 3 + Vite + TypeScript + Tailwind + shadcn-vue SPA. docs/ holds the runnable prototype (the visual source of truth), screenshots, decisions, ERD, frontend rules and component specs. Work is delivered in phases, one PR each, with screenshots compared against the prototype."),
     ("D7", "Admin sign-in", "Email, phone or username + password, then TOTP 2FA (Fortify). Optional 30-day trusted device; org can require 2FA."),
 ]
 OPEN_DECISIONS.sort(key=lambda d: int(d[0][1:]))

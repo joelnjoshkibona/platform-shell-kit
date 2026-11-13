@@ -19,15 +19,15 @@ root (without it the app logs "FirebaseApp initialization unsuccessful" and push
 The FCM package should declare `project_files` and `gradle_plugins.apply_to` for it (v4's `LegacyFirebaseConfig` covers
 older plugins only while no plugin claims them).
 
-## What DevBiz found building receipts (2026-10-18, Phase 12e)
+## Found building receipts (2026-10-18)
 
 - **v4's core has no `Share`.** `Native\Mobile\Share::file()` still calls the bridge function `Share.File`, which v4 no
-  longer registers (the app logs "Function 'Share.File' not found" and nothing opens). A plugin has to answer it: DevBiz's
+  longer registers (the app logs "Function 'Share.File' not found" and nothing opens). A plugin has to answer it:
   `blutrixx/share-file` registers `Share.File` and `Share.Url` and shares through the app's own `FileProvider` (its
   `file_paths.xml` serves the cache folder, so the plugin copies the file there first).
 - **The shared `escpos-printer` plugin is not enough for a shop.** It connects to the *first* paired Bluetooth device that
   accepts, whichever it is, bundles one company's logos in the app and reads receipts as the DantSu text markup (so a
-  product named `[C]` is a printer command). DevBiz's own copy writes plain ESC/POS to the printer this phone chose, takes the
+  product named `[C]` is a printer command). A product's own copy writes plain ESC/POS to the printer this phone chose, takes the
   server's job and logo, and keeps the choice on the phone. The shared package should be changed the same way before another
   app prints (the choice by address, no bundled logos, plain text).
 - **A plugin's functions are callable from the web view** with `POST /_native/api/call {method, params}` (the answer is
@@ -36,7 +36,7 @@ older plugins only while no plugin claims them).
 - **Same version, same bundle.** Reinstalling with the same `NATIVEPHP_APP_VERSION` keeps the old unpacked web bundle and
   PHP; the Kotlin is new. Bump the version for every build you test.
 
-## What Hodie found (2026-11-05, three own plugins in one app)
+## Found building a phone app with three own plugins (2026-11-05)
 
 | Package | What it does now | Notes for a product |
 | --- | --- | --- |
@@ -48,7 +48,7 @@ older plugins only while no plugin claims them).
 - **A plugin can start work with the process.** Declare a content provider in `nativephp.json` (`android.providers`, fully qualified `name`, `authorities` with `${applicationId}`, `exported: false`); its `onCreate` runs before anything else of the app, which is where the app log and its crash handler start.
 - **Every plugin logs its own work (P113).** Through the app log by reflection (`AppLogBridge` → `com.blutrixx.device.utils.AppLog.write(level, tag, message)`), with the plugin's name as the tag: service start and stop, each call to a server and its answer code, each failure with its class or code, waits and give-ups, interruptions (audio focus, headphones, permission revoked), and what it did in the end (counts). `Log.w` to logcat is for the desk only: a real phone's logcat often shows nothing of the app. Throttle repeats; never content or titles. The plugin's own Pest test checks that no `AppLogBridge.w` line writes a title or text.
 - **Plugins can use each other without depending on each other:** `Class.forName("com.blutrixx.device.utils.AppLog").getMethod("write", ...)` and do nothing when it is not there.
-- **Share without a `FileProvider`:** copy the file into Downloads/<app> through `MediaStore` (no permission) and hand its `content://` URI to `ACTION_SEND` with `FLAG_GRANT_READ_URI_PERMISSION` (this is how the log export shares). DevBiz's `share-file` plugin does it through the app's own `FileProvider` instead; either works.
+- **Share without a `FileProvider`:** copy the file into Downloads/<app> through `MediaStore` (no permission) and hand its `content://` URI to `ACTION_SEND` with `FLAG_GRANT_READ_URI_PERMISSION` (this is how the log export shares). The `share-file` plugin does it through the app's own `FileProvider` instead; either works.
 - **The plugin's PHP keeps working off the phone** when its class falls back (the app log writes a file under `storage/app/applog` when there is no bridge), so a development server and the tests run the same screens.
 - **Test a plugin by its dex:** after `native:package`, `cat classes*.dex | grep -ac "<function name>"` shows the Kotlin really went into the build (a cached build does not prove it).
 - **Reading the phone's state needs two normal permissions** (`ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`; no prompt). Wi-Fi signal: `WifiManager.calculateSignalLevel(rssi, 5)`; mobile signal: `TelephonyManager.signalStrength.level` (API 28+); the sticky battery broadcast gives level and charging without a receiver. The mobile generation needs a phone-state permission from Android 11, so it is left out there rather than asked for. Wi-Fi names, numbers and SIM identifiers are not read (P76).

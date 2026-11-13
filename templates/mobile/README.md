@@ -1,15 +1,15 @@
 # Mobile app template (P93)
 
-The phone app of a product on this kit: **its own app, crafted for a phone**, in the shape of Hodie (`NATIVE-PHP/hodie`), never a
+The phone app of a product on this kit: **its own app, crafted for a phone**, in the shape of Bootbox's `mobile/`, never a
 build of the web app. Copy this folder to `<product>/mobile/`, replace the placeholders, and follow the steps below.
 Read `docs/platform/P93-the-phone-app-is-its-own-app.md`, `docs/mobile/PHONE_MODEL.md` and the product's phone prototype first.
 
 | Placeholder | Example |
 | --- | --- |
-| `{{PRODUCT_NAME}}` | Shelui Tasks |
-| `{{PRODUCT_SLUG}}` / `{{product_slug}}` / `{{PRODUCT_SLUG_UPPER}}` | shelui-tasks / shelui-tasks / SHELUI_TASKS |
-| `{{APP_ID}}` | com.blutrixx.shelui |
-| `{{DOMAIN}}` | tasks.shelui.co.tz |
+| `{{PRODUCT_NAME}}` | Task Tracker |
+| `{{PRODUCT_SLUG}}` / `{{product_slug}}` / `{{PRODUCT_SLUG_UPPER}}` | task-tracker / task-tracker / TASK_TRACKER |
+| `{{APP_ID}}` | com.example.tasks |
+| `{{DOMAIN}}` | tasks.example.com |
 
 ## What is here
 
@@ -17,7 +17,7 @@ Read `docs/platform/P93-the-phone-app-is-its-own-app.md`, `docs/mobile/PHONE_MOD
 mobile/
   routes/web.php                 every path that is not /api returns public/spa/index.html (the interface)
   routes/api.php                 the phone's own work: /api/native/*, /api/drafts, /api/cache, /api/log (the list is in the file)
-  app/Http/Controllers/Native/   (you add) the controllers for routes/api.php; Hodie's are the working example
+  app/Http/Controllers/Native/   (you add) the controllers for routes/api.php; Bootbox's `mobile/` has the working example
   resources/spa/                 the interface: its own Vite project, Vue 3, strict TypeScript, Tailwind, everything bundled
     src/main.ts                  start-up
     src/app/                     not a module: start-up, loader, session, the phone's behaviour (P57–P79), the frame
@@ -52,5 +52,5 @@ Screens use `src/app/data.ts` only, so they work the same in every mode.
 2. `cp .env.example .env`, `php artisan key:generate`, `php artisan native:install android`.
 3. In the repo root, add `mobile/resources/spa` to the npm workspace (`templates/shared/package.json`) and `npm install`.
 4. `./scripts/build-web.sh`, then `php artisan native:run android <serial>`.
-5. Build `src/app/` from its README (Hodie's parts are the working example), then the modules, screen by screen against the phone prototype.
+5. Build `src/app/` from its README (Bootbox's `mobile/` is the working example), then the modules, screen by screen against the phone prototype.
 6. First release: create the key outside the repo (see `scripts/release.sh`), `./scripts/release.sh "First release"`.

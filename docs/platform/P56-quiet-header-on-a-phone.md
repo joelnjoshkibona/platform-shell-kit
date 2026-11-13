@@ -1,6 +1,6 @@
 # P56 · Quiet header on a phone
 
-Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: DevBiz D203 (first real-phone test).
+Status: **proposed** (kit 1.8.0, the mobile kit; docs/mobile/PROPOSAL.md). Source: a first real-phone test.
 
 ## Decision
 

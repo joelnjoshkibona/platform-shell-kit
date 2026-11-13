@@ -34,7 +34,7 @@ web/src/modules/tasks/
 web/src/app/  web/src/components/   the web app's own parts: app/ is everything that is not a module
                                   (start-up, loader, languages, session, the frame); components/ the library
 
-mobile/                           the phone app, its own app (P93, Hodie's shape)
+mobile/                           the phone app, its own app (P93)
   app/Http/Controllers/Native/    the phone's own work: insets, keyboard, Back, files, camera, voice, alarms,
                                   the update feed, drafts, the app log, the last-data cache
   routes/web.php  routes/api.php  the interface for every path · /api/native/*, /api/drafts, /api/cache

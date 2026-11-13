@@ -50,7 +50,7 @@ const TESTS = {
     let fx = await p.evaluate(() => ({ ...__fx }));
     ok(fx.apply === 1 && fx.reject === 0, `P107: approving the last step ran apply ${fx.apply}×, reject ${fx.reject}× (want 1, 0)`);
     await go(p, () => nav('forms'));
-    ok((await p.locator('main').innerText()).includes('No close date'), 'P107: the approved form did not go live (Fomu\'s apply)');
+    ok((await p.locator('main').innerText()).includes('No close date'), 'P107: the approved form did not go live (the example\'s apply)');
     await decide(p, 'rq13', 'reject');    // Export responses, step 1
     fx = await p.evaluate(() => ({ ...__fx }));
     ok(fx.apply === 1 && fx.reject === 1, `P107: rejecting ran apply ${fx.apply}×, reject ${fx.reject}× in all (want 1, 1)`);
@@ -111,11 +111,11 @@ const TESTS = {
     await go(s.p, () => nav('dashboard'));
     ok(!(await s.p.locator('aside').first().innerText()).includes('Forms'), 'P110: with an empty registry the product\'s menu still shows (no role gets Forms.list)');
     await s.done('P110 empty registry');
-    // Fomu's registry: its catalogue and role defaults
+    // the example's registry: its catalogue and role defaults
     s = await open(b, 'roles');
     t = await s.p.locator('main').innerText();
     ok(t.includes('Reads results and reports only.'), 'P110: the registry\'s role description is not used');
-    await s.done('P110 Fomu');
+    await s.done('P110 example');
     // a detail route: inside the shell with its title and its parent's menu item; one not listed is not
     s = await open(b, 'members', { html: registry("{ permissions: [], roles: {}, detailRoutes: [{ route: 'thing', title: () => 'Thing T-1', parent: 'members' }] }") });
     const r = await s.p.evaluate(() => [G.isShell('thing'), G.isShell('nothing')]);

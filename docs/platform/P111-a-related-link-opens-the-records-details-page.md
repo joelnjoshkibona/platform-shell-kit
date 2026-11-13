@@ -1,6 +1,6 @@
 # P111 · A related link opens the record's details page in a dialog
 
-Status: **decided** (kit 1.26.0). Amends P85. The owner's decision while reviewing Max Yield's prototype on kit 1.25.0, 2026-11-11: "we should open a modal that pulls the details page of the selected record". Tested in Max Yield's copy of `parts_comp.js` (`RecordLink`) and ported here with P107–P112.
+Status: **decided** (kit 1.26.0). Amends P85. The owner's decision while reviewing a product's prototype on kit 1.25.0, 2026-11-11: "we should open a modal that pulls the details page of the selected record". Tested in a product's copy of `parts_comp.js` (`RecordLink`) and ported here with P107–P112.
 
 ## Why
 
@@ -20,7 +20,7 @@ None new: `defineModule({ page, tabs })` (P81, P101).
 
 ## In the kit
 
-Locations and Roles declare `page`, so their links (a request's location, a location's parent, a role) open the dialog. Approval requests have no dialog page, so a link to one still opens its preview sheet. Fomu has no module of its own behind a `RecordLink`.
+Locations and Roles declare `page`, so their links (a request's location, a location's parent, a role) open the dialog. Approval requests have no dialog page, so a link to one still opens its preview sheet. The example has no module of its own behind a `RecordLink`.
 
 ## Tests (kit check)
 
