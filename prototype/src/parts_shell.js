@@ -171,8 +171,9 @@ const ShellMod = (() => {
       const idIcon = computed(() => A.id.includes('@') ? 'Mail' : /^[+\d][\d\s]*$/.test(A.id.trim()) && A.id.trim() ? 'Phone' : 'User');
       const idKind = computed(() => ({ Mail: 'email', Phone: 'phone number', User: 'username' })[idIcon.value]);
       function signIn() {
-        if (!A.id.trim()) { A.err = 'Enter your email, phone number or username.'; return; }
-        if (A.pw.length < 6) { A.err = `That ${idKind.value} and password do not match. 4 tries left before a 15-minute lock.`; return; }
+        const refuse = (id) => nextTick(() => { const el = document.getElementById(id); if (el) { el.focus(); motionShake(el.closest('.grid') || el); } });   // motion: the field that was refused shakes once
+        if (!A.id.trim()) { A.err = 'Enter your email, phone number or username.'; refuse('li-id'); return; }
+        if (A.pw.length < 6) { A.err = `That ${idKind.value} and password do not match. 4 tries left before a 15-minute lock.`; refuse('li-pw'); return; }
         A.err = ''; A.busy = true; setTimeout(() => { A.busy = false; G.route = 'twofa'; }, 800);
       }
       const refs = ref([]);
@@ -184,7 +185,7 @@ const ShellMod = (() => {
         setTimeout(() => {
           A.busy = false;
           const ok = A.recovery ? /^[a-z0-9]{4}-?[a-z0-9]{4}$/i.test(A.rec.trim()) : A.code.join('') === '123456';
-          if (!ok) { A.codeErr = A.recovery ? 'That recovery code is not valid or was already used.' : 'That code is not right. Codes change every 30 seconds.'; A.code = ['', '', '', '', '', '']; focus(0); return; }
+          if (!ok) { A.codeErr = A.recovery ? 'That recovery code is not valid or was already used.' : 'That code is not right. Codes change every 30 seconds.'; motionShake(A.recovery ? document.getElementById('rc') : refs.value[0] && refs.value[0].parentElement); A.code = ['', '', '', '', '', '']; focus(0); return; }
           G.route = 'orgpick';
         }, 700);
       }
@@ -897,10 +898,10 @@ const ShellMod = (() => {
     template: `<div class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">
       <div><h2 class="text-xl font-semibold tracking-tight sm:text-2xl">Roles</h2><p class="text-sm text-muted-foreground">Bundles of permissions. Everyone has one main role; custom roles are given at a location and add to it.</p></div>
       <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Roles</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Shield" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.total }}</p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.total - kpi.custom }} main · {{ kpi.custom }} custom</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.people }}</p><p class="mt-1 text-[11px] text-muted-foreground">Each holds one main role</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">With a custom role</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.located }}</p><p class="mt-1 text-[11px] text-muted-foreground">Given at one or more locations</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Direct grants</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="UserRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.direct }}</p><p class="mt-1 text-[11px] text-muted-foreground">People with exceptions outside a role</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Roles</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Shield" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.total"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.total - kpi.custom }} main · {{ kpi.custom }} custom</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">Each holds one main role</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">With a custom role</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.located"/></p><p class="mt-1 text-[11px] text-muted-foreground">Given at one or more locations</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Direct grants</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="UserRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.direct"/></p><p class="mt-1 text-[11px] text-muted-foreground">People with exceptions outside a role</p></div>
       </div>
       <ListCard :list="LS" :tabs="typeTabs" v-model:quick="quick">
         <template #actions><Button v-if="canEditRole()" size="sm" @click="newRole"><Icon name="Plus" :size="15"/>New<span class="hidden sm:inline"> role</span></Button></template>
@@ -929,7 +930,7 @@ const ShellMod = (() => {
     emits: ['tabs', 'update:embedTab'],
     setup(props, { emit }) {
       const curId = computed(() => props.embedId || G.roleId);
-      const R2 = reactive({ draft: [], leave: null, tab: props.embedId ? (props.embedTab || 'overview') : (G.pendingTab || 'overview'), filter: 'all', q: '', loading: false, updatedAt: Date.now(), edit: false, name: '', desc: '', copy: false, from: '', del: false, shown: 6, hLoading: false });
+      const R2 = reactive({ saved: false, draft: [], leave: null, tab: props.embedId ? (props.embedTab || 'overview') : (G.pendingTab || 'overview'), filter: 'all', q: '', loading: false, updatedAt: Date.now(), edit: false, name: '', desc: '', copy: false, from: '', del: false, shown: 6, hLoading: false });
       const role = computed(() => roleById(curId.value));
       /* D42: ticks are staged in a draft; a save bar shows the diff and who it affects */
       const reseed = () => { R2.draft = role.value ? [...role.value.perms] : []; };
@@ -938,7 +939,9 @@ const ShellMod = (() => {
       watch(curId, () => { reseed(); R2.tab = 'overview'; R2.filter = 'all'; R2.q = ''; if (!props.embedId) window.scrollTo({ top: 0 }); }, { flush: 'sync' });
       const diff = computed(() => { if (!role.value) return { add: [], remove: [] }; const saved = role.value.perms; return { add: R2.draft.filter(p => !saved.includes(p)), remove: saved.filter(p => !R2.draft.includes(p)) }; });
       const dirty = computed(() => diff.value.add.length + diff.value.remove.length > 0);
-      function saveDraft() { const n = holders.value.length; role.value.perms.splice(0, role.value.perms.length, ...R2.draft); Object.assign(role.value, { updatedAt: 'Today', updatedBy: ME.name }); G.toast('Role saved', n ? 'Applies to ' + n + (n === 1 ? ' person' : ' people') + ' on their next request.' : 'Nobody holds it yet.', 'Shield'); }
+      /* motion: Save shows a short Saved state in the bar before it slides away */
+      let savedT = null;
+      function saveDraft() { R2.saved = true; clearTimeout(savedT); savedT = setTimeout(() => { R2.saved = false; }, 900); const n = holders.value.length; role.value.perms.splice(0, role.value.perms.length, ...R2.draft); Object.assign(role.value, { updatedAt: 'Today', updatedBy: ME.name }); G.toast('Role saved', n ? 'Applies to ' + n + (n === 1 ? ' person' : ' people') + ' on their next request.' : 'Nobody holds it yet.', 'Shield'); }
       function discardDraft() { reseed(); }
       /* leaving with unsaved changes asks first (sidebar, breadcrumb, search, anything that uses nav) */
       G.leaveGuard = (route, sub, then) => { if (!dirty.value) return false; R2.leave = { route, sub, then }; return true; };   // then: a caller's own step (Back, P49) instead of nav
@@ -1022,15 +1025,15 @@ const ShellMod = (() => {
           <DropdownMenu :items="moreItems" @select="onMore"><template #trigger><Button variant="outline" size="icon" aria-label="More actions"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu></div>
       </div>
       <div v-if="!embedId" class="max-w-full overflow-x-auto"><Tabs v-model="R2.tab" :items="tabs"/></div>
-      <div :class="['grid grid-cols-[minmax(0,1fr)] gap-4 transition-opacity', R2.loading && 'pointer-events-none opacity-60']">
+      <TabPanel :name="R2.tab" :cls="'grid grid-cols-[minmax(0,1fr)] gap-4 transition-opacity' + (R2.loading ? ' pointer-events-none opacity-60' : '')">
 
       <!-- OVERVIEW -->
       <template v-if="R2.tab==='overview'">
         <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
           <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Permissions</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="KeyRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ applied }}<span class="text-sm font-normal text-muted-foreground">/{{ PERMS.length }}</span></p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full rounded-full bg-c1 transition-[width] duration-700" :style="{ width: kpi.pct + '%' }"></div></div></div>
           <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Menus visible</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="ListTree" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.menus }}<span class="text-sm font-normal text-muted-foreground">/{{ MENU.length }}</span></p><p class="mt-1 text-[11px] text-muted-foreground">Top-level menus in the sidebar</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.people }}</p><p class="mt-1 text-[11px] text-muted-foreground">{{ role.system ? 'As their main role' : 'At ' + kpi.locs + ' location' + (kpi.locs===1 ? '' : 's') }}</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">With direct grants</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="UserRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.direct }}</p><p class="mt-1 text-[11px] text-muted-foreground">Holders with exceptions</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ role.system ? 'As their main role' : 'At ' + kpi.locs + ' location' + (kpi.locs===1 ? '' : 's') }}</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">With direct grants</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="UserRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.direct"/></p><p class="mt-1 text-[11px] text-muted-foreground">Holders with exceptions</p></div>
         </div>
         <div class="grid grid-cols-1 gap-3 lg:grid-cols-3 [&>*]:min-w-0">
           <Card class="kpi lg:col-span-2" style="animation-delay:200ms"><div class="p-4">
@@ -1124,7 +1127,7 @@ const ShellMod = (() => {
         <ol class="grid gap-4"><li v-for="(e, i) in HIST.slice(0, R2.shown)" :key="i" class="flex gap-3"><span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"><Icon :name="e.icon" :size="14"/></span><div class="min-w-0 text-sm"><p><span class="font-medium">{{ e.who }}</span> {{ e.what }}</p><p v-if="e.detail" class="text-xs text-muted-foreground">{{ e.detail }}</p><p class="text-xs text-muted-foreground tnum">{{ e.when }}</p></div></li></ol>
         <div v-if="R2.shown < HIST.length" class="mt-4 flex justify-center"><Button variant="outline" size="sm" :disabled="R2.hLoading" @click="moreHist"><Icon v-if="R2.hLoading" name="LoaderCircle" :size="14" class="animate-spin"/>Load more</Button></div>
       </div></Card>
-      </div>
+      </TabPanel>
 
       <Dialog v-model:open="R2.edit">
         <div class="grid gap-1.5 pr-6"><h2 class="text-lg font-semibold leading-none">Edit role</h2><p class="text-sm text-muted-foreground">{{ role.system ? 'Main role names are fixed. You can change the description.' : 'Renaming keeps every assignment.' }}</p></div>
@@ -1138,13 +1141,16 @@ const ShellMod = (() => {
         <div v-if="copyDiff" class="flex flex-wrap gap-2 text-xs"><span class="inline-flex items-center gap-1 rounded-md bg-c1/15 px-2 py-1 font-medium tnum"><Icon name="Plus" :size="12"/>{{ copyDiff.add }} added</span><span class="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-1 font-medium text-destructive tnum"><Icon name="Minus" :size="12"/>{{ copyDiff.remove }} removed</span></div>
         <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button variant="outline" @click="R2.copy=false">Cancel</Button><Button :disabled="!R2.from" @click="doCopy"><Icon name="CopyPlus" :size="14"/>Stage changes</Button></div>
       </Dialog>
-      <Transition name="fade"><div v-if="dirty" class="sticky bottom-3 z-30 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border bg-popover p-2.5 pl-3.5 text-sm shadow-lg" role="region" aria-label="Unsaved changes">
+      <Transition name="savebar"><div v-if="dirty || R2.saved" class="sticky bottom-3 z-30 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border bg-popover p-2.5 pl-3.5 text-sm shadow-lg" role="region" :aria-label="dirty ? 'Unsaved changes' : 'Saved'" data-testid="savebar">
+        <template v-if="!dirty"><span class="grid h-5 w-5 place-items-center rounded-full bg-c1/15 text-c1"><Icon name="Check" :size="13"/></span><span class="font-medium" role="status">Saved</span><span class="min-h-8"></span></template>
+        <template v-else>
         <span class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-warning"></span>
         <span class="font-medium">Unsaved changes</span>
         <span class="inline-flex items-center gap-1 rounded-md bg-c1/15 px-1.5 py-0.5 text-xs font-medium tnum" :title="diff.add.join(', ')"><Icon name="Plus" :size="11"/>{{ diff.add.length }}</span>
         <span class="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-1.5 py-0.5 text-xs font-medium tnum text-destructive" :title="diff.remove.join(', ')"><Icon name="Minus" :size="11"/>{{ diff.remove.length }}</span>
         <span class="hidden text-xs text-muted-foreground sm:inline">Affects {{ holders.length }} {{ holders.length===1 ? 'person' : 'people' }}</span>
         <span class="flex flex-1 justify-end gap-2"><Button variant="ghost" size="sm" @click="discardDraft">Discard</Button><Button size="sm" @click="saveDraft"><Icon name="Check" :size="14"/>Save changes</Button></span>
+        </template>
       </div></Transition>
       <Dialog :open="!!R2.leave" @update:open="v => { if (!v) R2.leave = null }">
         <div class="grid gap-1.5 pr-6"><h2 class="text-lg font-semibold leading-none">Leave without saving?</h2><p class="text-sm text-muted-foreground">{{ role.name }} has {{ diff.add.length }} added and {{ diff.remove.length }} removed permissions that are not saved.</p></div>
@@ -1178,7 +1184,7 @@ const ShellMod = (() => {
   const DS_SHADOW = [['shadow-sm', 'Cards at rest, inputs, buttons'], ['shadow-md', 'Hovered or active card'], ['shadow-lg', 'Menus, toasts, sheets'], ['shadow-xl', 'Dialogs, flyouts, phone frame']];
   const DS_MOTION = [
     ['Popover / menu open', 120, 'ease-out', 'pop'], ['Card activate', 160, 'ease-out', 'expand'], ['List reorder (FLIP)', 180, 'cubic-bezier(.2,.8,.2,1)', 'move'],
-    ['Sheet slide', 220, 'cubic-bezier(.2,.8,.2,1)', 'sheet'], ['Dropdown expand', 240, 'cubic-bezier(.2,.8,.2,1)', 'expand'], ['Sidebar panel push', 280, 'cubic-bezier(.2,.8,.2,1)', 'push'],
+    ['Sheet slide (in · out 200 ease-exit)', 280, 'cubic-bezier(.2,.8,.2,1)', 'sheet'], ['Dialog in (out 120 ease-exit)', 160, 'cubic-bezier(.2,.8,.2,1)', 'dialog'], ['Dropdown expand', 240, 'cubic-bezier(.2,.8,.2,1)', 'expand'], ['Sidebar panel push', 280, 'cubic-bezier(.2,.8,.2,1)', 'push'],
     ['Card rise-in (stagger 40–60ms)', 420, 'cubic-bezier(.2,.8,.2,1)', 'rise'], ['Bars / meters grow', 700, 'cubic-bezier(.2,.8,.2,1)', 'grow'], ['Curtain close / open', '440 / 600', 'cubic-bezier(.7,0,.3,1)', 'curtain'],
   ];
   const DS_BP = [['Base', '< 640', 'Phone: one column, bottom action bars, tables become card lists, tabs full width on their own row, menu in a slide-out sheet'], ['sm', '≥ 640', 'Two-column card grids, table/card toggle appears, header shows more icons'], ['md', '≥ 768', 'Tables replace card lists in Responses, Members and Menu Management'], ['lg', '≥ 1024', 'Persistent sidebar (240px, 64px collapsed), builder tool rail, tabs centred in header'], ['xl', '≥ 1280', 'Three-column form cards, 2-column chart grid, 5 KPI tiles']];
@@ -1322,7 +1328,7 @@ const ShellMod = (() => {
     template: `<div class="mx-auto grid max-w-[1120px] grid-cols-[minmax(0,1fr)] gap-4">
       <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 class="text-xl font-semibold tracking-tight">Design system</h2><p class="text-sm text-muted-foreground">Tokens, type, spacing and components behind every screen. Values match shadcn-vue + Tailwind.</p></div>
         <div class="flex items-center gap-2 rounded-md border bg-card px-3 py-1.5 text-xs text-muted-foreground"><Icon :name="isDark ? 'Moon' : 'Sun'" :size="13"/>Showing {{ isDark ? 'dark' : 'light' }} theme values<Button variant="ghost" size="sm" class="h-7" @click="G.theme = isDark ? 'light' : 'dark'">Switch</Button></div></div>
-      <div class="-mx-1 overflow-x-auto px-1"><Tabs v-model="D.tab" :items="[{value:'foundations',label:'Foundations'},{value:'components',label:'Components',count:comps.length},{value:'layout',label:'Layout rules'},{value:'rules',label:'Rules',count:RULES.length}]"/></div>
+      <div class="-mx-1 overflow-x-auto px-1"><Tabs v-model="D.tab" :items="[{value:'foundations',label:'Foundations'},{value:'components',label:'Components',count:comps.length},{value:'motion',label:'Motion'},{value:'layout',label:'Layout rules'},{value:'rules',label:'Rules',count:RULES.length}]"/></div>
 
       <!-- FOUNDATIONS -->
       <template v-if="D.tab==='foundations'">
@@ -1428,6 +1434,7 @@ const ShellMod = (() => {
       </template>
 
       <!-- LAYOUT RULES -->
+      <MotionLab v-else-if="D.tab==='motion'"/>
       <template v-else-if="D.tab==='layout'">
         <section class="kpi rounded-xl border bg-card p-4 shadow-sm sm:p-5">
           <h3 class="font-semibold">Page layout</h3>
@@ -1581,12 +1588,14 @@ const ShellMod = (() => {
           <AppUpdateBanner/><ConnectionNotice v-if="G.app.conn==='banner'" variant="banner"/>
           <StaleStamp v-if="G.app.stale && G.view==='dashboard'" class="mx-auto mb-3 max-w-[1200px]" :offline="G.app.stale==='offline'" :ago="G.app.stale==='offline' ? '3 min ago' : 'just now'" @refresh="G.app.stale = 'fresh'"/>
           <ConnectionNotice v-if="G.app.conn==='page'" variant="page"/>
-          <div v-else-if="G.switching" class="mx-auto grid max-w-[1200px] gap-4" aria-busy="true" aria-label="Loading organisation">
+          <Transition v-else name="xfade" mode="out-in">   <!-- motion: the skeleton fades out, the page fades in -->
+          <div v-if="G.switching" key="sk" class="mx-auto grid max-w-[1200px] gap-4" aria-busy="true" aria-label="Loading organisation">
             <div class="flex items-center gap-3"><div class="h-10 w-10 animate-pulse rounded-md bg-muted"></div><div class="grid gap-2"><div class="h-3 w-24 animate-pulse rounded bg-muted"></div><div class="h-5 w-56 animate-pulse rounded bg-muted"></div></div></div>
             <div class="grid grid-cols-2 gap-2 lg:grid-cols-4"><div v-for="n in 4" :key="n" class="h-24 animate-pulse rounded-xl bg-muted/70"></div></div>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"><div v-for="n in 6" :key="n" class="h-40 animate-pulse rounded-xl bg-muted/70"></div></div>
           </div>
-          <NoAccessPage v-else-if="!allowed"/>
+          <div v-else key="page">
+          <NoAccessPage v-if="!allowed"/>
           <DashboardPage v-else-if="G.view==='dashboard'"/>
           <MediaPage v-else-if="G.view==='media'"/>
           <ApprovalsPage v-else-if="G.view==='approvals'"/>
@@ -1617,6 +1626,8 @@ const ShellMod = (() => {
           <NotificationsPage v-else-if="G.view==='notifications'"/>
           <PermissionsPage v-else-if="G.view==='permissions'"/>
           <PlaceholderPage v-else/>
+          </div>
+          </Transition>
         </main>
       </div>
       <NewOrgDialog/>
@@ -1723,10 +1734,10 @@ const ShellMod = (() => {
 
       <!-- overview strip -->
       <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Live forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Radio" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ live.length }}</p><p class="mt-1 text-[11px] text-muted-foreground">{{ FORMS.filter(f=>f.status==='draft').length }} drafts waiting</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Live forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Radio" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="live.length"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ FORMS.filter(f=>f.status==='draft').length }} drafts waiting</p></div>
         <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Responses this week</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Inbox" :size="13"/></span></div><div class="mt-1.5 flex items-end justify-between gap-2"><p class="text-2xl font-semibold tnum">{{ week.reduce((a,b)=>a+b,0) }}</p><Spark v-if="week.some(Boolean)" :data="week" class="h-7 w-20"/></div><p class="mt-1 text-[11px] text-muted-foreground">Across live forms</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Completed normally</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="CircleCheck" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ FORMS.some(f=>f.responses) ? '93.4%' : '–' }}</p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full rounded-full bg-c1 transition-[width] duration-700" :style="{ width: FORMS.some(f=>f.responses) ? '93.4%' : '0%' }"></div></div></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">To review</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="TriangleAlert" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ flagged }}</p><p class="mt-1 text-[11px] text-muted-foreground">Responses with violations</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Completed normally</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="CircleCheck" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="FORMS.some(f=>f.responses) ? '93.4%' : '–'"/></p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full rounded-full bg-c1 transition-[width] duration-700" :style="{ width: FORMS.some(f=>f.responses) ? '93.4%' : '0%' }"></div></div></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">To review</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="TriangleAlert" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="flagged"/></p><p class="mt-1 text-[11px] text-muted-foreground">Responses with violations</p></div>
       </div>
 
       <!-- quick filters + toolbar (D31) -->

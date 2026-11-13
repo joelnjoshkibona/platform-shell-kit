@@ -86,7 +86,7 @@
   }
   const SysHead = { props: { title: String, sub: String }, template: `<div><h2 class="text-xl font-semibold tracking-tight sm:text-2xl">{{ title }}</h2><p class="text-sm text-muted-foreground">{{ sub }}</p></div>` };
   const SysKpi = { props: { label: String, value: [String, Number], icon: String, tone: String, sub: String },
-    template: `<div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between gap-2"><p class="truncate text-xs font-medium text-muted-foreground">{{ label }}</p><span :class="['grid h-6 w-6 place-items-center rounded-md', tone === 'bad' ? 'bg-destructive/10 text-destructive' : tone === 'warn' ? 'bg-warning/15 text-warning' : 'bg-primary/10 text-primary']"><Icon :name="icon" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ value }}</p><p v-if="sub" class="mt-0.5 truncate text-[11px] text-muted-foreground">{{ sub }}</p></div>` };
+    template: `<div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between gap-2"><p class="truncate text-xs font-medium text-muted-foreground">{{ label }}</p><span :class="['grid h-6 w-6 place-items-center rounded-md', tone === 'bad' ? 'bg-destructive/10 text-destructive' : tone === 'warn' ? 'bg-warning/15 text-warning' : 'bg-primary/10 text-primary']"><Icon :name="icon" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="value"/></p><p v-if="sub" class="mt-0.5 truncate text-[11px] text-muted-foreground">{{ sub }}</p></div>` };
 
   /* ---------------------------------------------------------------- Logs */
   const LogsPage = {

@@ -20,12 +20,15 @@
     const k = DLG_KINDS[o.kind || 'form'] || DLG_KINDS.form;
     const d = reactive({ closeLabel: k.closeLabel || 'Close', actions: [], status: '', ...o, id: ++dlgSeq, kind: o.kind || 'form', size: o.size || k.size,
       canFull: o.fullscreen != null ? o.fullscreen : k.fullscreen, prefKey: o.prefKey || (o.kind || 'form') + ':' + (o.module || o.title || ''), component: o.component ? markRaw(o.component) : null,
-      full: false, typed: '', busy: false, tabs: null, tab: o.tab || null, sub: o.sub || '' });
+      full: false, typed: '', busy: false, leaving: false, tabs: null, tab: o.tab || null, sub: o.sub || '' });
     d.full = !!(d.canFull && dlgPrefs[d.prefKey]);
     DIALOGS.push(d); return d;
   }
   async function closeDialog(d, force) {
+    if (d.leaving) return true;
     if (!force && d.beforeClose) { try { if ((await d.beforeClose(d)) === false) return false; } catch (e) { return false; } }
+    /* motion: the dialog plays its way out (120ms; 200ms sliding down on a phone) before it leaves the stack */
+    const out = motionMs(window.innerWidth < 640 ? 200 : 120); if (out) { d.leaving = true; await wait(out); }
     const i = DIALOGS.indexOf(d); if (i > -1) DIALOGS.splice(i, 1); return true;
   }
   async function closeDialogsAbove(j) { while (DIALOGS.length - 1 > j) { if (!(await closeDialog(DIALOGS[DIALOGS.length - 1]))) return false; } return true; }
@@ -59,7 +62,7 @@
       const locked = (a) => a.primary && p.d.confirmText && p.d.typed.trim().toUpperCase() !== p.d.confirmText.toUpperCase();
       async function run(a) {
         if (p.d.busy || locked(a)) return; p.d.busy = true;
-        try { const r = await a.run(p.d); if (r !== false && !a.keepOpen) await closeDialog(p.d, true); } finally { p.d.busy = false; }
+        try { const r = await a.run(p.d); if (r === false) motionInvalid(root.value); else if (!a.keepOpen) await closeDialog(p.d, true); } finally { p.d.busy = false; }
       }
       async function full() { const go = p.d.fullPage; const d = p.d; d.goingFull = true; if (!(await closeDialogsAbove(-1))) { d.goingFull = false; return; } go(d); }
       function toggleFull() { p.d.full = !p.d.full; dlgPrefs[p.d.prefKey] = p.d.full; try { localStorage.setItem('kit.dialogFull', JSON.stringify(dlgPrefs)); } catch (e) {} }
@@ -71,9 +74,9 @@
       return { below, isTop, labelOf, shown, extra, locked, run, full, toggleFull, root, closeDialog, closeDialogsAbove, DLG_W };
     },
     template: `<Teleport to="body"><div class="fixed inset-0 flex items-end justify-center sm:items-center sm:p-4" :style="{ zIndex: 50 + i }">
-      <div :class="['absolute inset-0', i === 0 ? 'bg-black/70' : 'bg-black/45']" aria-hidden="true"></div>
+      <div :class="['dlg-ov absolute inset-0', i === 0 ? 'bg-black/70' : 'bg-black/45', d.leaving && 'dlg-out']" aria-hidden="true"></div>
       <div ref="root" role="dialog" aria-modal="true" :aria-label="labelOf(d)" data-testid="app-dialog" :data-kind="d.kind" :data-size="d.full ? 'full' : d.size"
-        :class="['pop relative flex w-full flex-col overflow-hidden border bg-background shadow-2xl', d.full ? 'h-[100dvh] sm:h-[calc(100dvh-2rem)] sm:max-w-[calc(100vw-2rem)] sm:rounded-xl' : 'h-[100dvh] sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:rounded-xl ' + DLG_W[d.size]]" style="padding-top:env(safe-area-inset-top,0px)">
+        :class="['dlg-panel relative flex w-full flex-col overflow-hidden border bg-background shadow-2xl', d.leaving && 'dlg-out', d.full ? 'h-[100dvh] sm:h-[calc(100dvh-2rem)] sm:max-w-[calc(100vw-2rem)] sm:rounded-xl' : 'h-[100dvh] sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:rounded-xl ' + DLG_W[d.size]]" style="padding-top:env(safe-area-inset-top,0px)">
         <header class="shrink-0 border-b px-4 pt-3 sm:px-5" :class="d.tabs ? 'pb-2' : 'pb-3'">
           <button v-if="below.length" type="button" class="mb-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground sm:hidden" @click="closeDialog(d)"><Icon name="ArrowLeft" :size="13"/>{{ labelOf(below[below.length - 1]) }}</button>
           <nav v-if="below.length" class="mb-1 hidden min-w-0 flex-wrap items-center gap-1 text-xs text-muted-foreground sm:flex" aria-label="Open dialogs" data-testid="dialog-trail">
@@ -154,7 +157,7 @@
     setup() {
       const host = reactive({ kind: 'form', status: '', actions: [], busy: false });
       const f = computed(() => G.formPage && (FORM_DEFS || {})[G.formPage.module]);
-      const run = async (a) => { if (host.busy) return; host.busy = true; try { const r = await a.run(host); if (r !== false && !a.keepOpen) goBack(); } finally { host.busy = false; } };
+      const run = async (a) => { if (host.busy) return; host.busy = true; try { const r = await a.run(host); if (r === false) motionInvalid('main'); else if (!a.keepOpen) goBack(); } finally { host.busy = false; } };
       const sorted = computed(() => { const a = [...host.actions]; return [...a.filter(x => !x.primary), ...a.filter(x => x.primary)]; });
       onBeforeUnmount(() => { if (host.beforeClose) host.beforeClose(host); });
       return { G, host, f, run, sorted, goBack };
