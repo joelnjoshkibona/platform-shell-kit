@@ -100,7 +100,7 @@ function tip(e, title, lines) { S.tip = { x: e.clientX, y: e.clientY, title, lin
 function untip() { S.tip = null; }
 
 /* ---------------------------------------------------------------- chart atoms */
-const useGrow = () => { const ready = ref(false); onMounted(() => requestAnimationFrame(() => requestAnimationFrame(() => ready.value = true))); return ready; };
+const useGrow = () => useDrawIn();   // motion: chart atoms draw when they first come into view (parts_motion.js)
 
 const BarsView = {
   props: { rows: Array, denom: Number, unit: { default: 'respondents' } },
@@ -110,7 +110,7 @@ const BarsView = {
     <div v-for="(r, i) in rows" :key="r.key" class="group grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)_4.5rem] items-center gap-3 text-sm sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_5rem]"
       @mousemove="tip($event, r.label, [r.count + ' ' + unit, r.pct + '% of ' + denom])" @mouseleave="untip">
       <span class="truncate text-muted-foreground group-hover:text-foreground" :title="r.label">{{ r.label }}</span>
-      <span class="relative h-5 rounded-r bg-muted/50"><span class="absolute inset-y-0 left-0 rounded-r-[4px] bg-c1 transition-[width] duration-700 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:brightness-110" :style="{ width: (ready ? (r.pct / max) * 100 : 0) + '%', transitionDelay: (i * 40) + 'ms' }"></span></span>
+      <span class="relative h-5 rounded-r bg-muted/50"><Meter :value="(r.pct / max) * 100" :duration="700" :delay="Math.min(i, 12) * 40" class="absolute inset-y-0 left-0 rounded-r-[4px] bg-c1 group-hover:brightness-110"/></span>
       <span class="text-right tnum"><span class="font-medium">{{ r.pct }}%</span> <span class="text-xs text-muted-foreground">{{ r.count }}</span></span>
     </div></div>`
 };
@@ -133,7 +133,7 @@ const DonutView = {
       <circle cx="50" cy="50" :r="R" fill="none" stroke="hsl(var(--muted))" stroke-width="14"/>
       <circle v-for="(s, i) in segs" :key="s.key" cx="50" cy="50" :r="R" fill="none" :stroke="s.color" stroke-width="14"
         :stroke-dasharray="(ready ? s.len : 0) + ' ' + C" :stroke-dashoffset="s.off" class="cursor-pointer transition-[stroke-dasharray] duration-700 ease-out hover:opacity-80"
-        :style="{ transitionDelay: (i * 90) + 'ms' }" @mousemove="tip($event, s.label, [s.count + ' respondents', s.pct + '%'])" @mouseleave="untip"/>
+        :style="{ transitionDelay: (Math.min(i, 12) * 90) + 'ms' }" @mousemove="tip($event, s.label, [s.count + ' respondents', s.pct + '%'])" @mouseleave="untip"/>
       <text x="50" y="50" transform="rotate(90 50 50)" text-anchor="middle" dominant-baseline="central" class="fill-foreground text-[15px] font-semibold tnum">{{ denom }}</text>
     </svg>
     <ul class="grid w-full gap-1.5 text-sm">
@@ -149,7 +149,7 @@ const ColumnsView = {
     <div class="relative flex h-36 items-end gap-1.5 border-b px-1 sm:gap-2">
       <div v-for="(r, i) in rows" :key="r.key" class="group relative flex h-full flex-1 flex-col items-center justify-end" @mousemove="tip($event, 'Score ' + r.label, [r.count + ' respondents', r.pct + '%'])" @mouseleave="untip">
         <span class="mb-1 text-[11px] font-medium tnum text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" :class="r.count===max && 'opacity-100 text-foreground'">{{ r.pct }}%</span>
-        <span class="w-full max-w-6 rounded-t-[4px] bg-c1 transition-[height] duration-700 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:brightness-110" :style="{ height: (ready ? (r.count / max) * 82 : 0) + '%', transitionDelay: (i * 50) + 'ms' }"></span>
+        <Meter axis="y" :value="(r.count / max) * 82" :duration="700" :delay="Math.min(i, 12) * 40" class="max-w-6 rounded-t-[4px] bg-c1 group-hover:brightness-110"/>
       </div>
     </div>
     <div class="flex gap-1.5 px-1 pt-1.5 sm:gap-2"><span v-for="r in rows" :key="r.key" class="flex-1 text-center text-xs text-muted-foreground tnum">{{ r.label }}</span></div>
@@ -170,7 +170,7 @@ const RatingSummary = {
     <div class="grid flex-1 gap-1.5">
       <div v-for="(r, i) in rev" :key="r.key" class="group grid grid-cols-[1.5rem_minmax(0,1fr)_3rem] items-center gap-2 text-xs" @mousemove="tip($event, r.label + ' stars', [r.count + ' ratings', r.pct + '%'])" @mouseleave="untip">
         <span class="flex items-center gap-0.5 text-muted-foreground tnum">{{ r.label }}<Icon name="Star" :size="10"/></span>
-        <span class="relative h-2.5 rounded-full bg-muted/70"><span class="absolute inset-y-0 left-0 rounded-full bg-c1 transition-[width] duration-700 ease-out" :style="{ width: (ready ? (r.count / max) * 100 : 0) + '%', transitionDelay: (i * 50) + 'ms' }"></span></span>
+        <span class="relative h-2.5 rounded-full bg-muted/70"><Meter :value="(r.count / max) * 100" :duration="700" :delay="Math.min(i, 12) * 40" class="absolute inset-y-0 left-0 rounded-full bg-c1"/></span>
         <span class="text-right tnum text-muted-foreground">{{ r.pct }}%</span>
       </div></div></div>`
 };
@@ -221,12 +221,13 @@ const KpiCard = {
   props: { label: String, value: Number, decimals: { default: 0 }, suffix: { default: '' }, format: Function, sub: String, icon: String, tone: { default: 'default' }, spark: Array, meter: Number, delay: { default: 0 } },
   setup(p) {
     const shown = ref(0); let raf = null;
-    function animate(to) { cancelAnimationFrame(raf); const from = shown.value, t0 = performance.now(), d = 700;
+    function animate(to) { cancelAnimationFrame(raf); if (reducedMotion()) { shown.value = to; return; } const from = shown.value, t0 = performance.now(), d = 700;
       const step = (t) => { const k = Math.min(1, (t - t0) / d), e = 1 - Math.pow(1 - k, 3); shown.value = from + (to - from) * e; if (k < 1) raf = requestAnimationFrame(step); }; raf = requestAnimationFrame(step); }
-    onMounted(() => setTimeout(() => animate(p.value), p.delay)); watch(() => p.value, animate);
+    const ready = useGrow();   // motion: counts up and draws when the tile first comes into view
+    watch(ready, (v) => { if (v) setTimeout(() => animate(p.value), reducedMotion() ? 0 : p.delay); }, { immediate: true }); watch(() => p.value, animate);
     const text = computed(() => p.format ? p.format(shown.value) : shown.value.toFixed(p.decimals) + p.suffix);
     const path = computed(() => { if (!p.spark) return null; const m = Math.max(1, ...p.spark), n = p.spark.length; const pts = p.spark.map((v, i) => [(i / (n - 1)) * 100, 28 - (v / m) * 24]); return { line: 'M' + pts.map(x => x.join(',')).join(' L'), area: 'M0,30 L' + pts.map(x => x.join(',')).join(' L') + ' L100,30 Z', end: pts[n - 1] }; });
-    return { text, path, ready: useGrow() };
+    return { text, path, ready };
   },
   template: `<div class="kpi rounded-xl border bg-card p-3.5 shadow-sm transition-shadow hover:shadow-md" :style="{ animationDelay: delay + 'ms' }">
     <div class="flex items-center justify-between gap-2"><p class="truncate text-xs font-medium text-muted-foreground">{{ label }}</p>
@@ -235,9 +236,9 @@ const KpiCard = {
     <div class="mt-1 flex min-h-[28px] items-end justify-between gap-2">
       <p class="text-[11px] leading-tight text-muted-foreground">{{ sub }}</p>
       <svg v-if="path" viewBox="0 0 100 30" class="h-7 w-20 shrink-0 overflow-visible" preserveAspectRatio="none" aria-hidden="true">
-        <path :d="path.area" fill="var(--c1)" opacity=".12"/><path :d="path.line" fill="none" stroke="var(--c1)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" class="spark"/>
+        <path :d="path.area" fill="var(--c1)" opacity=".12" :class="ready ? 'spark-area' : 'opacity-0'"/><path :key="path.line" :d="path.line" fill="none" stroke="var(--c1)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" :class="ready ? 'spark' : 'spark-wait'"/>
       </svg>
-      <span v-else-if="meter != null" class="mb-1 h-1.5 w-20 shrink-0 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><span class="block h-full rounded-full bg-c1 transition-[width] duration-700 ease-out" :style="{ width: (ready ? meter : 0) + '%' }"></span></span>
+      <span v-else-if="meter != null" class="mb-1 h-1.5 w-20 shrink-0 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><Meter :value="meter" class="rounded-full bg-c1"/></span>
     </div></div>`
 };
 

@@ -9,7 +9,12 @@
      <Num :value :format>  a number that tweens to its new value (400ms, ease-out, tabular figures); first render does not count up
      <Collapse>            wraps one v-if child: height + fade in (180ms) and out (135ms)
      <TabPanel :name>      a tab's content: a 120ms fade when the tab changes (not on first render)
-     useListMotion(...)    ListRows: first-load rise stagger, new-row highlight, changed-row flash, deleted-row collapse */
+     useListMotion(...)    ListRows: first-load rise stagger, new-row highlight, changed-row flash, deleted-row collapse
+   Data draws in (charts, bars, sparks): once, when it first comes into view, and again only when its value really changes.
+     useDrawIn(el?)        a ref that turns true the first time the element (default: the component's root) is in view
+     <Meter :value>        every percentage bar's fill: 0 → value on first view (600ms), old → new on change; axis="y" for columns
+     <Num count>           counts up from 0 on first view (700ms), then tweens on change
+     chartMotion()         the one Highcharts option set: series draw 700ms, update 500ms; off under reduced motion */
 const reducedMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 const motionMs = (ms) => (reducedMotion() ? 0 : ms);
 const EASE_STD = 'cubic-bezier(.2,.8,.2,1)', EASE_EXIT = 'cubic-bezier(.4,0,1,1)';
@@ -32,20 +37,25 @@ function motionInvalid(root) {
 }
 
 const Num = {
-  props: { value: [Number, String], format: { type: Function, default: null } },
+  props: { value: [Number, String], format: { type: Function, default: null }, count: Boolean },   // count: from 0 on first view (KPI tiles)
   setup(p) {
-    const shown = ref(p.value); let raf = 0;
     const isNum = (v) => typeof v === 'number' && isFinite(v);
-    watch(() => p.value, (to, from) => {
+    const counting = p.count && isNum(p.value) && !reducedMotion();
+    const shown = ref(counting ? 0 : p.value); let raf = 0;
+    const tween = (from, to, d) => {
       cancelAnimationFrame(raf);
-      if (!isNum(to) || !isNum(from) || to === from || reducedMotion()) { shown.value = to; return; }
-      const t0 = performance.now(), d = 400, whole = Number.isInteger(to) && Number.isInteger(from);
+      const t0 = performance.now(), whole = Number.isInteger(to) && Number.isInteger(from);
       const step = (now) => {
         const k = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - k, 3), v = from + (to - from) * e;
         shown.value = k < 1 ? (whole ? Math.round(v) : Math.round(v * 100) / 100) : to;
         if (k < 1) raf = requestAnimationFrame(step);
       };
       raf = requestAnimationFrame(step);
+    };
+    if (counting) { const seen = useDrawIn(); watch(seen, (v) => { if (v) tween(0, isNum(p.value) ? p.value : 0, 700); }); }
+    watch(() => p.value, (to, from) => {
+      if (!isNum(to) || !isNum(from) || to === from || reducedMotion()) { cancelAnimationFrame(raf); shown.value = to; return; }
+      tween(from, to, 400);
     });
     onBeforeUnmount(() => cancelAnimationFrame(raf));
     const text = computed(() => (p.format ? p.format(shown.value) : shown.value));
@@ -113,4 +123,42 @@ function useListMotion(rows, keyOf, sigOf) {
   const itemStyle = (i) => (M.first && i < 8 ? { animationDelay: i * 30 + 'ms' } : null);
   const leave = (el, done) => (M.live ? collapseOut(el, done, 180) : done());
   return { M, itemClass, itemStyle, leave, mark };
+}
+
+/* ---- data draws in */
+function useDrawIn(target) {
+  const seen = ref(reducedMotion()); let io = null;
+  const inst = Vue.getCurrentInstance();
+  /* two frames, so the empty state paints first; and never behind the page curtain: wait until it starts to open */
+  const shown = () => typeof G === 'undefined' || !G.curtain || G.curtain === 'idle' || G.curtain === 'opening';
+  const go = () => {
+    if (!shown()) { const stop = watch(() => G.curtain, () => { if (shown()) { stop(); go(); } }); return; }
+    requestAnimationFrame(() => requestAnimationFrame(() => { seen.value = true; }));
+  };
+  onMounted(() => {
+    if (seen.value) return;
+    const el = (target && target.value) || (inst && inst.proxy && inst.proxy.$el);
+    if (!el || el.nodeType !== 1 || !window.IntersectionObserver) { go(); return; }
+    io = new IntersectionObserver((es) => { if (es.some(e => e.isIntersecting)) { io.disconnect(); io = null; go(); } }, { threshold: 0.1 });
+    io.observe(el);
+  });
+  onBeforeUnmount(() => { if (io) io.disconnect(); });
+  return seen;
+}
+const Meter = {
+  props: { value: { type: Number, default: 0 }, axis: { type: String, default: 'x' }, duration: { type: Number, default: 600 }, delay: { type: Number, default: 0 },
+    ease: { type: String, default: 'var(--ease-standard)' }, instant: Boolean },   // instant: live meters (a countdown) start at their value
+  setup(p) {
+    const seen = p.instant ? ref(true) : useDrawIn(); const first = ref(!p.instant);
+    watch(seen, (v) => { if (v) setTimeout(() => { first.value = false; }, p.duration + p.delay + 50); }, { immediate: true });
+    const style = computed(() => { const v = (seen.value ? Math.max(0, Math.min(100, +p.value || 0)) : 0) + '%', prop = p.axis === 'y' ? 'height' : 'width';
+      return { [prop]: v, transition: prop + ' ' + p.duration + 'ms ' + p.ease + (first.value && p.delay ? ' ' + p.delay + 'ms' : '') }; });
+    return { style };
+  },
+  template: `<span :class="['bar-fill block', axis === 'y' ? 'w-full' : 'h-full']" :style="style" data-meter></span>`
+};
+function chartMotion() {
+  if (reducedMotion()) return { chart: { animation: false }, plotOptions: { series: { animation: false } } };
+  const ease = (t) => 1 - Math.pow(1 - t, 3);
+  return { chart: { animation: { duration: 500, easing: ease } }, plotOptions: { series: { animation: { duration: 700, easing: ease } } } };
 }

@@ -113,7 +113,10 @@ body{font-family:Geist,ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial,sans-seri
 :root[data-theme="dark"]{ --c1:#1f9e89; --c2:#c97514; --c3:#4c82e8; --c4:#dc5577; --c5:#8f73e3; --c-other:#64748b }
 .kpi{animation:rise 420ms cubic-bezier(.2,.8,.2,1) both}
 @keyframes rise{from{opacity:.001;transform:translateY(6px)}to{opacity:1;transform:none}}
-.spark{stroke-dasharray:300;stroke-dashoffset:300;animation:draw 900ms 200ms ease-out forwards}
+.spark{stroke-dasharray:300;stroke-dashoffset:300;animation:draw 700ms 150ms var(--ease-standard,ease-out) forwards}
+.spark-wait{stroke-dasharray:300;stroke-dashoffset:300}
+.spark-area{animation:fadeIn 500ms 300ms linear both}
+@media (prefers-reduced-motion:reduce){.spark,.spark-wait{stroke-dashoffset:0}}
 @keyframes draw{to{stroke-dashoffset:0}}
 /* P46: anything drawn in an organisation's accent outside the primary tokens (org badge, swatches) */
 .acc-chip{background:hsl(var(--a-l));color:hsl(var(--a-lfg))}
@@ -660,7 +663,12 @@ const Tabs = {
      <Num :value :format>  a number that tweens to its new value (400ms, ease-out, tabular figures); first render does not count up
      <Collapse>            wraps one v-if child: height + fade in (180ms) and out (135ms)
      <TabPanel :name>      a tab's content: a 120ms fade when the tab changes (not on first render)
-     useListMotion(...)    ListRows: first-load rise stagger, new-row highlight, changed-row flash, deleted-row collapse */
+     useListMotion(...)    ListRows: first-load rise stagger, new-row highlight, changed-row flash, deleted-row collapse
+   Data draws in (charts, bars, sparks): once, when it first comes into view, and again only when its value really changes.
+     useDrawIn(el?)        a ref that turns true the first time the element (default: the component's root) is in view
+     <Meter :value>        every percentage bar's fill: 0 → value on first view (600ms), old → new on change; axis="y" for columns
+     <Num count>           counts up from 0 on first view (700ms), then tweens on change
+     chartMotion()         the one Highcharts option set: series draw 700ms, update 500ms; off under reduced motion */
 const reducedMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 const motionMs = (ms) => (reducedMotion() ? 0 : ms);
 const EASE_STD = 'cubic-bezier(.2,.8,.2,1)', EASE_EXIT = 'cubic-bezier(.4,0,1,1)';
@@ -683,20 +691,25 @@ function motionInvalid(root) {
 }
 
 const Num = {
-  props: { value: [Number, String], format: { type: Function, default: null } },
+  props: { value: [Number, String], format: { type: Function, default: null }, count: Boolean },   // count: from 0 on first view (KPI tiles)
   setup(p) {
-    const shown = ref(p.value); let raf = 0;
     const isNum = (v) => typeof v === 'number' && isFinite(v);
-    watch(() => p.value, (to, from) => {
+    const counting = p.count && isNum(p.value) && !reducedMotion();
+    const shown = ref(counting ? 0 : p.value); let raf = 0;
+    const tween = (from, to, d) => {
       cancelAnimationFrame(raf);
-      if (!isNum(to) || !isNum(from) || to === from || reducedMotion()) { shown.value = to; return; }
-      const t0 = performance.now(), d = 400, whole = Number.isInteger(to) && Number.isInteger(from);
+      const t0 = performance.now(), whole = Number.isInteger(to) && Number.isInteger(from);
       const step = (now) => {
         const k = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - k, 3), v = from + (to - from) * e;
         shown.value = k < 1 ? (whole ? Math.round(v) : Math.round(v * 100) / 100) : to;
         if (k < 1) raf = requestAnimationFrame(step);
       };
       raf = requestAnimationFrame(step);
+    };
+    if (counting) { const seen = useDrawIn(); watch(seen, (v) => { if (v) tween(0, isNum(p.value) ? p.value : 0, 700); }); }
+    watch(() => p.value, (to, from) => {
+      if (!isNum(to) || !isNum(from) || to === from || reducedMotion()) { cancelAnimationFrame(raf); shown.value = to; return; }
+      tween(from, to, 400);
     });
     onBeforeUnmount(() => cancelAnimationFrame(raf));
     const text = computed(() => (p.format ? p.format(shown.value) : shown.value));
@@ -764,6 +777,44 @@ function useListMotion(rows, keyOf, sigOf) {
   const itemStyle = (i) => (M.first && i < 8 ? { animationDelay: i * 30 + 'ms' } : null);
   const leave = (el, done) => (M.live ? collapseOut(el, done, 180) : done());
   return { M, itemClass, itemStyle, leave, mark };
+}
+
+/* ---- data draws in */
+function useDrawIn(target) {
+  const seen = ref(reducedMotion()); let io = null;
+  const inst = Vue.getCurrentInstance();
+  /* two frames, so the empty state paints first; and never behind the page curtain: wait until it starts to open */
+  const shown = () => typeof G === 'undefined' || !G.curtain || G.curtain === 'idle' || G.curtain === 'opening';
+  const go = () => {
+    if (!shown()) { const stop = watch(() => G.curtain, () => { if (shown()) { stop(); go(); } }); return; }
+    requestAnimationFrame(() => requestAnimationFrame(() => { seen.value = true; }));
+  };
+  onMounted(() => {
+    if (seen.value) return;
+    const el = (target && target.value) || (inst && inst.proxy && inst.proxy.$el);
+    if (!el || el.nodeType !== 1 || !window.IntersectionObserver) { go(); return; }
+    io = new IntersectionObserver((es) => { if (es.some(e => e.isIntersecting)) { io.disconnect(); io = null; go(); } }, { threshold: 0.1 });
+    io.observe(el);
+  });
+  onBeforeUnmount(() => { if (io) io.disconnect(); });
+  return seen;
+}
+const Meter = {
+  props: { value: { type: Number, default: 0 }, axis: { type: String, default: 'x' }, duration: { type: Number, default: 600 }, delay: { type: Number, default: 0 },
+    ease: { type: String, default: 'var(--ease-standard)' }, instant: Boolean },   // instant: live meters (a countdown) start at their value
+  setup(p) {
+    const seen = p.instant ? ref(true) : useDrawIn(); const first = ref(!p.instant);
+    watch(seen, (v) => { if (v) setTimeout(() => { first.value = false; }, p.duration + p.delay + 50); }, { immediate: true });
+    const style = computed(() => { const v = (seen.value ? Math.max(0, Math.min(100, +p.value || 0)) : 0) + '%', prop = p.axis === 'y' ? 'height' : 'width';
+      return { [prop]: v, transition: prop + ' ' + p.duration + 'ms ' + p.ease + (first.value && p.delay ? ' ' + p.delay + 'ms' : '') }; });
+    return { style };
+  },
+  template: `<span :class="['bar-fill block', axis === 'y' ? 'w-full' : 'h-full']" :style="style" data-meter></span>`
+};
+function chartMotion() {
+  if (reducedMotion()) return { chart: { animation: false }, plotOptions: { series: { animation: false } } };
+  const ease = (t) => 1 - Math.pow(1 - t, 3);
+  return { chart: { animation: { duration: 500, easing: ease } }, plotOptions: { series: { animation: { duration: 700, easing: ease } } } };
 }
 /* ================================================================ BUILDER MODULE (iteration 1) */
 const BuilderMod = (() => {
@@ -1361,7 +1412,7 @@ const FormRenderer = {
             <span class="tnum">Section {{ st.si+1 }} of {{ sections.length }}</span>
             <span v-if="S.settings.timer_mode!=='off'" :class="['inline-flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1 font-medium tnum', st.secLeft < 60 ? 'border-destructive/40 text-destructive' : 'text-foreground']"><Icon name="Timer" :size="13"/>{{ clock }}</span>
           </div>
-          <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div class="h-full rounded-full bg-fa transition-all duration-300" :style="{ width: progress + '%' }"></div></div>
+          <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><Meter :value="progress" class="rounded-full bg-fa"/></div>
         </div>
         <div class="overflow-hidden rounded-xl border bg-card shadow-sm">
           <div class="h-1.5 bg-fa"></div>
@@ -2147,10 +2198,10 @@ const RespondentView = {
           :class="['relative inline-flex items-center gap-1.5 overflow-hidden rounded-full border px-3 py-1.5 text-sm font-semibold tnum transition-colors',
             timerTone==='danger' ? 'border-destructive/50 bg-destructive/10 text-destructive animate-[pulse_1.6s_ease-in-out_infinite]' : timerTone==='warn' ? 'border-warning/40 bg-warning/10 text-warning' : 'bg-card']">
           <Icon name="Timer" :size="15"/>{{ fmt(R.secLeft) }}
-          <span class="absolute inset-x-0 bottom-0 h-0.5 bg-current opacity-40 transition-[width] duration-1000 ease-linear" :style="{ width: timerPct + '%' }"></span>
+          <Meter instant :value="timerPct" :duration="1000" ease="linear" class="absolute inset-x-0 bottom-0 !h-0.5 bg-current opacity-40"/>
         </div>
       </div>
-      <div class="h-1 bg-muted"><div class="h-full bg-fa transition-all duration-500" :style="{ width: progress + '%' }"></div></div>
+      <div class="h-1 bg-muted"><Meter :value="progress" class="bg-fa"/></div>
     </header>
 
     <main class="flex-1 px-3 py-6 sm:px-4 sm:py-10">
@@ -2462,7 +2513,7 @@ function tip(e, title, lines) { S.tip = { x: e.clientX, y: e.clientY, title, lin
 function untip() { S.tip = null; }
 
 /* ---------------------------------------------------------------- chart atoms */
-const useGrow = () => { const ready = ref(false); onMounted(() => requestAnimationFrame(() => requestAnimationFrame(() => ready.value = true))); return ready; };
+const useGrow = () => useDrawIn();   // motion: chart atoms draw when they first come into view (parts_motion.js)
 
 const BarsView = {
   props: { rows: Array, denom: Number, unit: { default: 'respondents' } },
@@ -2472,7 +2523,7 @@ const BarsView = {
     <div v-for="(r, i) in rows" :key="r.key" class="group grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)_4.5rem] items-center gap-3 text-sm sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_5rem]"
       @mousemove="tip($event, r.label, [r.count + ' ' + unit, r.pct + '% of ' + denom])" @mouseleave="untip">
       <span class="truncate text-muted-foreground group-hover:text-foreground" :title="r.label">{{ r.label }}</span>
-      <span class="relative h-5 rounded-r bg-muted/50"><span class="absolute inset-y-0 left-0 rounded-r-[4px] bg-c1 transition-[width] duration-700 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:brightness-110" :style="{ width: (ready ? (r.pct / max) * 100 : 0) + '%', transitionDelay: (i * 40) + 'ms' }"></span></span>
+      <span class="relative h-5 rounded-r bg-muted/50"><Meter :value="(r.pct / max) * 100" :duration="700" :delay="Math.min(i, 12) * 40" class="absolute inset-y-0 left-0 rounded-r-[4px] bg-c1 group-hover:brightness-110"/></span>
       <span class="text-right tnum"><span class="font-medium">{{ r.pct }}%</span> <span class="text-xs text-muted-foreground">{{ r.count }}</span></span>
     </div></div>`
 };
@@ -2495,7 +2546,7 @@ const DonutView = {
       <circle cx="50" cy="50" :r="R" fill="none" stroke="hsl(var(--muted))" stroke-width="14"/>
       <circle v-for="(s, i) in segs" :key="s.key" cx="50" cy="50" :r="R" fill="none" :stroke="s.color" stroke-width="14"
         :stroke-dasharray="(ready ? s.len : 0) + ' ' + C" :stroke-dashoffset="s.off" class="cursor-pointer transition-[stroke-dasharray] duration-700 ease-out hover:opacity-80"
-        :style="{ transitionDelay: (i * 90) + 'ms' }" @mousemove="tip($event, s.label, [s.count + ' respondents', s.pct + '%'])" @mouseleave="untip"/>
+        :style="{ transitionDelay: (Math.min(i, 12) * 90) + 'ms' }" @mousemove="tip($event, s.label, [s.count + ' respondents', s.pct + '%'])" @mouseleave="untip"/>
       <text x="50" y="50" transform="rotate(90 50 50)" text-anchor="middle" dominant-baseline="central" class="fill-foreground text-[15px] font-semibold tnum">{{ denom }}</text>
     </svg>
     <ul class="grid w-full gap-1.5 text-sm">
@@ -2511,7 +2562,7 @@ const ColumnsView = {
     <div class="relative flex h-36 items-end gap-1.5 border-b px-1 sm:gap-2">
       <div v-for="(r, i) in rows" :key="r.key" class="group relative flex h-full flex-1 flex-col items-center justify-end" @mousemove="tip($event, 'Score ' + r.label, [r.count + ' respondents', r.pct + '%'])" @mouseleave="untip">
         <span class="mb-1 text-[11px] font-medium tnum text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" :class="r.count===max && 'opacity-100 text-foreground'">{{ r.pct }}%</span>
-        <span class="w-full max-w-6 rounded-t-[4px] bg-c1 transition-[height] duration-700 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:brightness-110" :style="{ height: (ready ? (r.count / max) * 82 : 0) + '%', transitionDelay: (i * 50) + 'ms' }"></span>
+        <Meter axis="y" :value="(r.count / max) * 82" :duration="700" :delay="Math.min(i, 12) * 40" class="max-w-6 rounded-t-[4px] bg-c1 group-hover:brightness-110"/>
       </div>
     </div>
     <div class="flex gap-1.5 px-1 pt-1.5 sm:gap-2"><span v-for="r in rows" :key="r.key" class="flex-1 text-center text-xs text-muted-foreground tnum">{{ r.label }}</span></div>
@@ -2532,7 +2583,7 @@ const RatingSummary = {
     <div class="grid flex-1 gap-1.5">
       <div v-for="(r, i) in rev" :key="r.key" class="group grid grid-cols-[1.5rem_minmax(0,1fr)_3rem] items-center gap-2 text-xs" @mousemove="tip($event, r.label + ' stars', [r.count + ' ratings', r.pct + '%'])" @mouseleave="untip">
         <span class="flex items-center gap-0.5 text-muted-foreground tnum">{{ r.label }}<Icon name="Star" :size="10"/></span>
-        <span class="relative h-2.5 rounded-full bg-muted/70"><span class="absolute inset-y-0 left-0 rounded-full bg-c1 transition-[width] duration-700 ease-out" :style="{ width: (ready ? (r.count / max) * 100 : 0) + '%', transitionDelay: (i * 50) + 'ms' }"></span></span>
+        <span class="relative h-2.5 rounded-full bg-muted/70"><Meter :value="(r.count / max) * 100" :duration="700" :delay="Math.min(i, 12) * 40" class="absolute inset-y-0 left-0 rounded-full bg-c1"/></span>
         <span class="text-right tnum text-muted-foreground">{{ r.pct }}%</span>
       </div></div></div>`
 };
@@ -2583,12 +2634,13 @@ const KpiCard = {
   props: { label: String, value: Number, decimals: { default: 0 }, suffix: { default: '' }, format: Function, sub: String, icon: String, tone: { default: 'default' }, spark: Array, meter: Number, delay: { default: 0 } },
   setup(p) {
     const shown = ref(0); let raf = null;
-    function animate(to) { cancelAnimationFrame(raf); const from = shown.value, t0 = performance.now(), d = 700;
+    function animate(to) { cancelAnimationFrame(raf); if (reducedMotion()) { shown.value = to; return; } const from = shown.value, t0 = performance.now(), d = 700;
       const step = (t) => { const k = Math.min(1, (t - t0) / d), e = 1 - Math.pow(1 - k, 3); shown.value = from + (to - from) * e; if (k < 1) raf = requestAnimationFrame(step); }; raf = requestAnimationFrame(step); }
-    onMounted(() => setTimeout(() => animate(p.value), p.delay)); watch(() => p.value, animate);
+    const ready = useGrow();   // motion: counts up and draws when the tile first comes into view
+    watch(ready, (v) => { if (v) setTimeout(() => animate(p.value), reducedMotion() ? 0 : p.delay); }, { immediate: true }); watch(() => p.value, animate);
     const text = computed(() => p.format ? p.format(shown.value) : shown.value.toFixed(p.decimals) + p.suffix);
     const path = computed(() => { if (!p.spark) return null; const m = Math.max(1, ...p.spark), n = p.spark.length; const pts = p.spark.map((v, i) => [(i / (n - 1)) * 100, 28 - (v / m) * 24]); return { line: 'M' + pts.map(x => x.join(',')).join(' L'), area: 'M0,30 L' + pts.map(x => x.join(',')).join(' L') + ' L100,30 Z', end: pts[n - 1] }; });
-    return { text, path, ready: useGrow() };
+    return { text, path, ready };
   },
   template: `<div class="kpi rounded-xl border bg-card p-3.5 shadow-sm transition-shadow hover:shadow-md" :style="{ animationDelay: delay + 'ms' }">
     <div class="flex items-center justify-between gap-2"><p class="truncate text-xs font-medium text-muted-foreground">{{ label }}</p>
@@ -2597,9 +2649,9 @@ const KpiCard = {
     <div class="mt-1 flex min-h-[28px] items-end justify-between gap-2">
       <p class="text-[11px] leading-tight text-muted-foreground">{{ sub }}</p>
       <svg v-if="path" viewBox="0 0 100 30" class="h-7 w-20 shrink-0 overflow-visible" preserveAspectRatio="none" aria-hidden="true">
-        <path :d="path.area" fill="var(--c1)" opacity=".12"/><path :d="path.line" fill="none" stroke="var(--c1)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" class="spark"/>
+        <path :d="path.area" fill="var(--c1)" opacity=".12" :class="ready ? 'spark-area' : 'opacity-0'"/><path :key="path.line" :d="path.line" fill="none" stroke="var(--c1)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" :class="ready ? 'spark' : 'spark-wait'"/>
       </svg>
-      <span v-else-if="meter != null" class="mb-1 h-1.5 w-20 shrink-0 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><span class="block h-full rounded-full bg-c1 transition-[width] duration-700 ease-out" :style="{ width: (ready ? meter : 0) + '%' }"></span></span>
+      <span v-else-if="meter != null" class="mb-1 h-1.5 w-20 shrink-0 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><Meter :value="meter" class="rounded-full bg-c1"/></span>
     </div></div>`
 };
 
@@ -3100,10 +3152,15 @@ const ShellMod = (() => {
   }
 
   /* ---------- Spark (shared mini line) */
+  /* motion: the line draws when it first comes into view, and again only when its data really changes (keyed by the data) */
   const Spark = {
     props: { data: Array, color: { default: 'var(--c1)' } },
-    computed: { p() { const m = Math.max(1, ...this.data), n = this.data.length; const pts = this.data.map((v, i) => [(i / (n - 1)) * 100, 28 - (v / m) * 24]); return { line: 'M' + pts.map(x => x.join(',')).join(' L'), area: 'M0,30 L' + pts.map(x => x.join(',')).join(' L') + ' L100,30 Z' }; } },
-    template: `<svg viewBox="0 0 100 30" preserveAspectRatio="none" class="overflow-visible" aria-hidden="true"><path :d="p.area" :fill="color" opacity=".12"/><path :d="p.line" fill="none" :stroke="color" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" class="spark"/></svg>`
+    setup(props) {
+      const seen = useDrawIn();
+      const p = computed(() => { const m = Math.max(1, ...props.data), n = props.data.length; const pts = props.data.map((v, i) => [(i / (n - 1)) * 100, 28 - (v / m) * 24]); return { line: 'M' + pts.map(x => x.join(',')).join(' L'), area: 'M0,30 L' + pts.map(x => x.join(',')).join(' L') + ' L100,30 Z', key: props.data.join(',') }; });
+      return { p, seen };
+    },
+    template: `<svg viewBox="0 0 100 30" preserveAspectRatio="none" class="overflow-visible" aria-hidden="true"><path :d="p.area" :fill="color" :class="seen ? 'spark-area' : 'opacity-0'" opacity=".12"/><path :key="p.key" :d="p.line" fill="none" :stroke="color" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" :class="seen ? 'spark' : 'spark-wait'"/></svg>`
   };
 
   /* ---------- Auth */
@@ -3840,17 +3897,17 @@ const ShellMod = (() => {
     template: `<div class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">
       <div><h2 class="text-xl font-semibold tracking-tight sm:text-2xl">Roles</h2><p class="text-sm text-muted-foreground">Bundles of permissions. Everyone has one main role; custom roles are given at a location and add to it.</p></div>
       <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Roles</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Shield" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.total"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.total - kpi.custom }} main · {{ kpi.custom }} custom</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">Each holds one main role</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">With a custom role</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.located"/></p><p class="mt-1 text-[11px] text-muted-foreground">Given at one or more locations</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Direct grants</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="UserRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.direct"/></p><p class="mt-1 text-[11px] text-muted-foreground">People with exceptions outside a role</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Roles</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Shield" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="kpi.total"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.total - kpi.custom }} main · {{ kpi.custom }} custom</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">Each holds one main role</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">With a custom role</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="kpi.located"/></p><p class="mt-1 text-[11px] text-muted-foreground">Given at one or more locations</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Direct grants</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="UserRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="kpi.direct"/></p><p class="mt-1 text-[11px] text-muted-foreground">People with exceptions outside a role</p></div>
       </div>
       <ListCard :list="LS" :tabs="typeTabs" v-model:quick="quick">
         <template #actions><Button v-if="canEditRole()" size="sm" @click="newRole"><Icon name="Plus" :size="15"/>New<span class="hidden sm:inline"> role</span></Button></template>
         <ListRows v-if="LS.rows.value.length" :list="LS" :rows="LS.rows.value" :columns="cols" :row-key="r => r.id" :base-meta="r => r.desc" @open="r => openRole(r.id)">
           <template #icon="{ row: r }"><span :class="['grid h-10 w-10 place-items-center rounded-lg', r.locked ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary']"><Icon :name="roleIcon(r)" :size="17"/></span></template>
           <template #cell-name="{ row: r }"><span class="inline-flex items-center gap-1.5">{{ r.name }}<Icon v-if="r.locked" name="Lock" :size="11" class="text-muted-foreground" aria-label="Locked"/></span></template>
-          <template #cell-perms="{ row: r }"><div class="flex items-center gap-2"><div class="h-1.5 flex-1 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full rounded-full bg-c1 transition-[width] duration-500" :style="{ width: (r.perms.length / PERMS.length * 100) + '%' }"></div></div><span class="w-12 shrink-0 text-right text-xs tnum text-muted-foreground">{{ r.perms.length }}/{{ PERMS.length }}</span></div></template>
+          <template #cell-perms="{ row: r }"><div class="flex items-center gap-2"><div class="h-1.5 flex-1 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><Meter :value="r.perms.length / PERMS.length * 100" class="rounded-full bg-c1"/></div><span class="w-12 shrink-0 text-right text-xs tnum text-muted-foreground">{{ r.perms.length }}/{{ PERMS.length }}</span></div></template>
           <template #cell-people="{ row: r }"><div v-if="roleHolders(r.id).length" class="flex items-center"><span v-for="h in roleHolders(r.id).slice(0, 3)" :key="h.key" class="-ml-1.5 grid h-6 w-6 place-items-center rounded-full bg-muted text-[9px] font-semibold uppercase ring-2 ring-card first:ml-0" :title="h.m.name">{{ initials(h.m.name) }}</span><span class="ml-1.5 text-xs tnum text-muted-foreground">{{ roleHolders(r.id).length }}</span></div><span v-else class="text-muted-foreground">–</span></template>
           <template #actions="{ row: r }"><DropdownMenu :items="menu(r)" @select="it => onMenu(r, it)"><template #trigger><Button variant="ghost" size="icon-sm" :aria-label="'Actions for ' + r.name"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu></template>
         </ListRows>
@@ -3972,10 +4029,10 @@ const ShellMod = (() => {
       <!-- OVERVIEW -->
       <template v-if="R2.tab==='overview'">
         <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Permissions</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="KeyRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ applied }}<span class="text-sm font-normal text-muted-foreground">/{{ PERMS.length }}</span></p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full rounded-full bg-c1 transition-[width] duration-700" :style="{ width: kpi.pct + '%' }"></div></div></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Permissions</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="KeyRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ applied }}<span class="text-sm font-normal text-muted-foreground">/{{ PERMS.length }}</span></p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><Meter :value="kpi.pct" class="rounded-full bg-c1"/></div></div>
           <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Menus visible</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="ListTree" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.menus }}<span class="text-sm font-normal text-muted-foreground">/{{ MENU.length }}</span></p><p class="mt-1 text-[11px] text-muted-foreground">Top-level menus in the sidebar</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ role.system ? 'As their main role' : 'At ' + kpi.locs + ' location' + (kpi.locs===1 ? '' : 's') }}</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">With direct grants</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="UserRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.direct"/></p><p class="mt-1 text-[11px] text-muted-foreground">Holders with exceptions</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ role.system ? 'As their main role' : 'At ' + kpi.locs + ' location' + (kpi.locs===1 ? '' : 's') }}</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">With direct grants</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="UserRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="kpi.direct"/></p><p class="mt-1 text-[11px] text-muted-foreground">Holders with exceptions</p></div>
         </div>
         <div class="grid grid-cols-1 gap-3 lg:grid-cols-3 [&>*]:min-w-0">
           <Card class="kpi lg:col-span-2" style="animation-delay:200ms"><div class="p-4">
@@ -3983,7 +4040,7 @@ const ShellMod = (() => {
             <div class="mt-3 grid gap-2.5">
               <div v-for="(b, i) in byModule" :key="b.mod" role="link" tabindex="0" @click="goModule(b.mod)" @keydown.enter="goModule(b.mod)" class="group grid cursor-pointer gap-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 <div class="flex items-center justify-between gap-3 text-xs"><span class="truncate font-medium group-hover:underline">{{ b.mod }}</span><span class="tnum text-muted-foreground">{{ b.n }}/{{ b.total }}</span></div>
-                <div class="h-2 overflow-hidden rounded-full bg-muted"><div class="bar-grow h-full rounded-full" :style="{ width: b.pct + '%', background: b.color, animationDelay: (i*70)+'ms' }"></div></div></div></div></div></Card>
+                <div class="h-2 overflow-hidden rounded-full bg-muted"><Meter :value="b.pct" :delay="Math.min(i, 12) * 40" class="rounded-full" :style="{ background: b.color }"/></div></div></div></div></Card>
           <Card class="kpi" style="animation-delay:260ms"><div class="p-4">
             <h3 class="text-sm font-semibold">About this role</h3>
             <p class="mt-2 text-sm">{{ role.desc }}</p>
@@ -4159,7 +4216,7 @@ const ShellMod = (() => {
     { name: 'List rows', ui: 'ListRows inside ListCard (P40)', tag: 'Data', specs: [['Grid', 'one CSS grid per row; identity minmax(40% of card, 1fr), other columns at their min, 16px gaps, chevron column 16px'], ['Header', '12px / 500 muted, 36px tall, bottom border; unfolded columns only; sortable headers clickable'], ['Row', '16px x · 8px y, min 56px, hover accent/60, whole row clickable; identity cell = 40px icon tile + title line + meta line'], ['Numbers', 'hero right-aligned, 600, tabular; one-word sub-label when not tight'], ['Folding', 'by the card\'s own width (ResizeObserver), highest priority number first: status → badge over the hero; identity badges → title line; meta → meta line (two lines) then +N more'], ['Tight', 'identity minmax(0,1fr), hero max-content, row actions under the meta line, title wraps, identity cell top-aligned, toolbar icon-only']], variants: 'full table, partly folded, folded row, expanded (+N more strip), empty state', used: 'Every list that shows rows: Users, Roles, Locations, Approvals, product modules. Not Logs or Queue (report tables).',
       demo: `<div class="overflow-hidden rounded-xl border bg-card"><ListRows :list="s.list" :rows="s.list.rows.value" :columns="s.cols" :row-key="r => r.n" :base-meta="r => 'Sample ' + r.k.toUpperCase()"><template #icon="{ row: r }"><span class="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary"><Icon name="Box" :size="17"/></span></template></ListRows></div><p class="text-xs text-muted-foreground">Resize the window: columns fold into the row by priority. Reference: docs/platform/p40-priority-columns.html.</p>` },
     { name: 'Charts', ui: 'Chart card (app pattern, SVG/HTML)', tag: 'Data', specs: [['Bars', '≤ 20px thick, 4px rounded end, square at baseline, 700ms grow, 40ms stagger'], ['Palette', 'c1 teal, c2 amber, c3 blue, c4 rose, c5 violet; max 5 then grey "Other" (validated)'], ['Text', 'labels and values in text tokens, never series colour'], ['Hover', 'tooltip on every mark; table view always available']], variants: 'bars, donut, columns, 100% stacked, heatmap, rating summary, table', used: 'Results summary, sparklines in KPI tiles and form cards.',
-      demo: `<div class="grid max-w-md gap-2"><div v-for="(r, i) in [['M-Pesa',93],['Cash',99],['Bank card',65],['Cheque',10]]" :key="r[0]" class="grid grid-cols-[6rem_minmax(0,1fr)_3rem] items-center gap-3 text-sm"><span class="truncate text-muted-foreground">{{ r[0] }}</span><span class="relative h-5 rounded-r bg-muted/50"><span class="absolute inset-y-0 left-0 rounded-r-[4px] bg-c1 transition-[width] duration-700" :style="{ width: (s.grow ? r[1] : 0) + '%', transitionDelay: (i*40)+'ms' }"></span></span><span class="text-right tabular-nums">{{ r[1] }}%</span></div><Button size="sm" variant="ghost" class="justify-self-start" @click="s.grow=false; setTimeout(()=>s.grow=true, 60)"><Icon name="RotateCcw" :size="13"/>Replay</Button></div>` },
+      demo: `<div class="grid max-w-md gap-2"><div v-for="(r, i) in [['M-Pesa',93],['Cash',99],['Bank card',65],['Cheque',10]]" :key="r[0]" class="grid grid-cols-[6rem_minmax(0,1fr)_3rem] items-center gap-3 text-sm"><span class="truncate text-muted-foreground">{{ r[0] }}</span><span class="relative h-5 rounded-r bg-muted/50"><Meter :value="s.grow ? r[1] : 0" :delay="Math.min(i, 12) * 40" class="absolute inset-y-0 left-0 rounded-r-[4px] bg-c1"/></span><span class="text-right tabular-nums">{{ r[1] }}%</span></div><Button size="sm" variant="ghost" class="justify-self-start" @click="s.grow=false; setTimeout(()=>s.grow=true, 60)"><Icon name="RotateCcw" :size="13"/>Replay</Button></div>` },
     { name: 'Sidebar item', ui: 'Sidebar, SidebarMenuButton, SidebarMenuSub', tag: 'Navigation', specs: [['Width', '240px expanded, 64px rail'], ['Item', '36px tall, 10px x, 10px icon gap, icon 16px; sub-item 32px'], ['Active', 'accent fill + 500 weight'], ['Group label', '11px / 600 uppercase, 16px above']], variants: 'link, dropdown (accordion), panel (push), section, rail + flyout', used: 'Main navigation, configured in Menu Management.',
       demo: `<div class="w-60 rounded-xl border bg-background p-2"><button class="flex h-9 w-full items-center gap-2.5 rounded-md bg-accent px-2.5 text-sm font-medium"><Icon name="ClipboardList" :size="16"/>Forms<span class="ml-auto text-xs text-muted-foreground">8</span></button><button class="flex h-9 w-full items-center gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground hover:bg-accent"><Icon name="ShieldCheck" :size="16"/>Users and access<Icon name="ChevronDown" :size="15" class="ml-auto rotate-180"/></button><div class="ml-[18px] border-l pl-2"><button class="mt-0.5 flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground hover:bg-accent"><Icon name="Users" :size="15"/>Users</button><button class="mt-0.5 flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground hover:bg-accent"><Icon name="Shield" :size="15"/>Roles</button></div><button class="flex h-9 w-full items-center gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground hover:bg-accent"><Icon name="Server" :size="16"/>System<Icon name="ChevronRight" :size="15" class="ml-auto"/></button></div>` },
     { name: 'Pin input (OTP)', ui: 'PinInput', tag: 'Forms', specs: [['Box', '48×48 (44 wide on phones), 18px / 600 tabular, rounded-md'], ['Focus', 'accent border + 2px ring at 30%'], ['Behaviour', 'auto-advance, backspace goes back, paste fills all, submit on 6th digit']], variants: 'respondent email code (form accent), admin 2FA (primary)', used: 'Respondent verification, two-step sign-in.',
@@ -4676,10 +4733,10 @@ const ShellMod = (() => {
 
       <!-- overview strip -->
       <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Live forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Radio" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="live.length"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ FORMS.filter(f=>f.status==='draft').length }} drafts waiting</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Live forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Radio" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="live.length"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ FORMS.filter(f=>f.status==='draft').length }} drafts waiting</p></div>
         <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Responses this week</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Inbox" :size="13"/></span></div><div class="mt-1.5 flex items-end justify-between gap-2"><p class="text-2xl font-semibold tnum">{{ week.reduce((a,b)=>a+b,0) }}</p><Spark v-if="week.some(Boolean)" :data="week" class="h-7 w-20"/></div><p class="mt-1 text-[11px] text-muted-foreground">Across live forms</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Completed normally</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="CircleCheck" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="FORMS.some(f=>f.responses) ? '93.4%' : '–'"/></p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full rounded-full bg-c1 transition-[width] duration-700" :style="{ width: FORMS.some(f=>f.responses) ? '93.4%' : '0%' }"></div></div></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">To review</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="TriangleAlert" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="flagged"/></p><p class="mt-1 text-[11px] text-muted-foreground">Responses with violations</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Completed normally</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="CircleCheck" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="FORMS.some(f=>f.responses) ? '93.4%' : '–'"/></p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full rounded-full bg-c1 transition-[width] duration-700" :style="{ width: FORMS.some(f=>f.responses) ? '93.4%' : '0%' }"></div></div></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">To review</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="TriangleAlert" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="flagged"/></p><p class="mt-1 text-[11px] text-muted-foreground">Responses with violations</p></div>
       </div>
 
       <!-- quick filters + toolbar (D31) -->
@@ -5156,10 +5213,10 @@ const ShellMod = (() => {
         <div><h2 class="text-xl font-semibold tracking-tight sm:text-2xl">Locations</h2><p class="text-sm text-muted-foreground">{{ G.viewAs ? 'Only the locations ' + G.viewAs.name.split(' ')[0] + ' is assigned to, and everything under them.' : 'Every place in ' + G.org.name + ', from the organisation down to warehouses.' }}</p></div>
       </div>
       <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Locations</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.total"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.active }} active · {{ kpi.branches }} branches</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People assigned</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">Across all locations shown</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Location forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="ClipboardList" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.forms"/></p><p class="mt-1 text-[11px] text-muted-foreground">Owned by a location</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Responses, 30 days</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Inbox" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.resp"/></p><p class="mt-1 text-[11px] text-muted-foreground">Snapshotted per location</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Locations</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="kpi.total"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.active }} active · {{ kpi.branches }} branches</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People assigned</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">Across all locations shown</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Location forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="ClipboardList" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="kpi.forms"/></p><p class="mt-1 text-[11px] text-muted-foreground">Owned by a location</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Responses, 30 days</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Inbox" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="kpi.resp"/></p><p class="mt-1 text-[11px] text-muted-foreground">Snapshotted per location</p></div>
       </div>
       <ListCard :list="LS" :tabs="statusTabs" v-model:quick="quick">
         <template #actions><Tooltip :content="allOpen ? 'Collapse all' : 'Expand all'" side="left"><Button variant="ghost" size="sm" class="w-8 px-0" :disabled="filtering" @click="expandAll(!allOpen)" :aria-label="allOpen ? 'Collapse all' : 'Expand all'"><Icon :name="allOpen ? 'ChevronsDownUp' : 'ChevronsUpDown'" :size="15"/></Button></Tooltip>
@@ -5397,9 +5454,9 @@ const ShellMod = (() => {
       <template v-if="T.tab==='overview'">
         <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
           <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Responses, 30 days</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Inbox" :size="13"/></span></div><div class="mt-1.5 flex items-end justify-between gap-2"><p class="text-2xl font-semibold tnum">{{ kpi.resp }}</p><Spark v-if="kpi.resp" :data="kpi.spark" class="h-7 w-20"/></div><p class="mt-1 text-[11px] text-muted-foreground">Here and below</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="ClipboardList" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.forms"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.live }} live now</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ direct.length }} assigned here</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Completed normally</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="CircleCheck" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.completion ? kpi.completion + '%' : '–'"/></p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full rounded-full bg-c1 transition-[width] duration-700" :style="{ width: (kpi.completion || 0) + '%' }"></div></div></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="ClipboardList" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="kpi.forms"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.live }} live now</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ direct.length }} assigned here</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Completed normally</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="CircleCheck" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="kpi.completion ? kpi.completion + '%' : '–'"/></p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><Meter :value="kpi.completion || 0" class="rounded-full bg-c1"/></div></div>
         </div>
         <div class="grid grid-cols-1 gap-3 lg:grid-cols-3 [&>*]:min-w-0">
           <Card class="kpi lg:col-span-2" style="animation-delay:200ms"><div class="p-4">
@@ -5407,7 +5464,7 @@ const ShellMod = (() => {
             <div v-if="bars.length" class="mt-3 grid gap-2.5">
               <div v-for="(b, i) in bars" :key="b.label" :role="b.id ? 'link' : null" :tabindex="b.id ? 0 : null" @click="b.id && openLoc(b.id)" @keydown.enter="b.id && openLoc(b.id)" :class="['grid gap-1 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', b.id ? 'group cursor-pointer' : '']">
                 <div class="flex items-center justify-between gap-3 text-xs"><span class="truncate font-medium group-hover:underline">{{ b.label }}</span><span class="tnum text-muted-foreground">{{ b.v }}</span></div>
-                <div class="h-2 overflow-hidden rounded-full bg-muted"><div class="bar-grow h-full rounded-full" :style="{ width: b.pct + '%', background: b.color, animationDelay: (i*70)+'ms' }"></div></div></div></div>
+                <div class="h-2 overflow-hidden rounded-full bg-muted"><Meter :value="b.pct" :delay="Math.min(i, 12) * 40" class="rounded-full" :style="{ background: b.color }"/></div></div></div>
             <p v-else class="mt-6 pb-4 text-center text-sm text-muted-foreground">No responses here yet.</p></div></Card>
           <Card class="kpi" style="animation-delay:260ms"><div class="p-4">
             <div class="flex items-center justify-between"><h3 class="text-sm font-semibold">Team here</h3><Button variant="ghost" size="sm" class="-mr-2 h-7" @click="T.tab='users'">All<Icon name="ChevronRight" :size="13"/></Button></div>
@@ -5916,10 +5973,10 @@ const ShellMod = (() => {
       </div>
       <div :class="['grid gap-4 transition-opacity', R.loading && 'pointer-events-none opacity-60']">
         <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Live forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Radio" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="live.length"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ VF.filter(f=>f.status==='draft').length }} drafts waiting</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Live forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Radio" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="live.length"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ VF.filter(f=>f.status==='draft').length }} drafts waiting</p></div>
           <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Responses this week</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Inbox" :size="13"/></span></div><div class="mt-1.5 flex items-end justify-between gap-2"><p class="text-2xl font-semibold tnum">{{ week.reduce((a,b)=>a+b,0) }}</p><Spark v-if="week.some(Boolean)" :data="week" class="h-7 w-20"/></div><p class="mt-1 text-[11px] text-muted-foreground">Across live forms</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Locations</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="byLoc.length"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ G.viewAs ? 'In their scope' : 'Reporting to ' + (root ? root.name : 'you') }}</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="peopleCount"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ G.viewAs ? 'Assigned in their scope' : 'Members of ' + G.org.name }}</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Locations</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="byLoc.length"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ G.viewAs ? 'In their scope' : 'Reporting to ' + (root ? root.name : 'you') }}</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="peopleCount"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ G.viewAs ? 'Assigned in their scope' : 'Members of ' + G.org.name }}</p></div>
         </div>
         <div class="grid grid-cols-1 gap-3 lg:grid-cols-3 [&>*]:min-w-0">
           <Card class="kpi lg:col-span-2" style="animation-delay:200ms"><div class="p-4">
@@ -5927,7 +5984,7 @@ const ShellMod = (() => {
             <div v-if="byLoc.length" class="mt-3 grid gap-2.5">
               <div v-for="(b, i) in byLoc" :key="b.id" role="link" tabindex="0" @click="openLoc(b.id)" @keydown.enter="openLoc(b.id)" class="group grid cursor-pointer gap-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 <div class="flex items-center justify-between gap-3 text-xs"><span class="truncate font-medium group-hover:underline">{{ b.label }}</span><span class="tnum text-muted-foreground">{{ b.v }}</span></div>
-                <div class="h-2 overflow-hidden rounded-full bg-muted"><div class="bar-grow h-full rounded-full" :style="{ width: b.pct + '%', background: b.color, animationDelay: (i*70)+'ms' }"></div></div></div></div>
+                <div class="h-2 overflow-hidden rounded-full bg-muted"><Meter :value="b.pct" :delay="200 + Math.min(i, 12) * 40" class="rounded-full" :style="{ background: b.color }"/></div></div></div>
             <p v-else class="mt-6 pb-4 text-center text-sm text-muted-foreground">No locations yet.</p></div></Card>
           <Card class="kpi" style="animation-delay:260ms"><div class="p-4"><h3 class="text-sm font-semibold">Needs attention</h3>
             <ul v-if="attention.length" class="mt-2 grid gap-1"><li v-for="a in attention" :key="a.text"><button type="button" @click="a.go()" class="flex w-full items-center gap-2.5 rounded-md p-2 text-left text-sm hover:bg-accent"><span :class="['grid h-7 w-7 shrink-0 place-items-center rounded-md', a.tone==='warning' ? 'bg-warning/15 text-warning' : 'bg-muted text-muted-foreground']"><Icon :name="a.icon" :size="14"/></span><span class="min-w-0 flex-1">{{ a.text }}</span><Icon name="ChevronRight" :size="14" class="text-muted-foreground"/></button></li></ul>
@@ -6328,7 +6385,7 @@ const ShellMod = (() => {
         <li v-for="it in F.items" :key="it.key" :class="['flex items-center gap-3 rounded-lg border p-2', it.state==='failed' && 'border-destructive/40 bg-destructive/5']">
           <MediaThumb :m="it" size="sm"/>
           <div class="min-w-0 flex-1"><p class="truncate text-sm font-medium">{{ it.name }}</p>
-            <div v-if="it.state==='uploading'" class="mt-1 flex items-center gap-2"><div class="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"><div class="h-full rounded-full bg-primary transition-[width] duration-150" :style="{ width: it.progress + '%' }"></div></div><span class="w-9 text-right text-[11px] tnum text-muted-foreground">{{ Math.round(it.progress) }}%</span></div>
+            <div v-if="it.state==='uploading'" class="mt-1 flex items-center gap-2"><div class="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"><Meter :value="it.progress" :duration="150" class="rounded-full bg-primary"/></div><span class="w-9 text-right text-[11px] tnum text-muted-foreground">{{ Math.round(it.progress) }}%</span></div>
             <p v-else class="text-xs text-destructive">{{ it.error }}</p></div>
           <Button v-if="it.state==='uploading'" variant="ghost" size="sm" class="h-7" @click="cancel(it)">Cancel</Button>
           <template v-else><Button v-if="!/Too large|Not an|Only/.test(it.error)" variant="ghost" size="sm" class="h-7" @click="retry(it)">Retry</Button><Button variant="ghost" size="icon-sm" aria-label="Dismiss" @click="cancel(it)"><Icon name="X" :size="14"/></Button></template>
@@ -7595,7 +7652,7 @@ const ShellMod = (() => {
   function downloadJob(j) { if (j.download) j.download(); else toast('Downloading ' + (j.file || 'the file'), j.size ? j.size + ' · ' + (j.rows || 0) + ' rows' : '', 'Download'); }
 
   const JobProgress = { props: { value: Number },
-    template: `<div class="grid gap-1"><div class="flex justify-between text-xs"><span class="text-muted-foreground">Working on it</span><span class="tnum">{{ value }}%</span></div><div class="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" :aria-valuenow="value" aria-valuemin="0" aria-valuemax="100"><div class="h-full rounded-full bg-primary transition-[width] duration-500" :style="{ width: value + '%' }"></div></div></div>` };
+    template: `<div class="grid gap-1"><div class="flex justify-between text-xs"><span class="text-muted-foreground">Working on it</span><span class="tnum">{{ value }}%</span></div><div class="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" :aria-valuenow="value" aria-valuemin="0" aria-valuemax="100"><Meter :value="value" class="rounded-full bg-primary"/></div></div>` };
   const JobPreview = { props: { id: String },   /* what a RecordLink to a job opens (P85) */
     setup(p) { return { j: computed(() => jobById(p.id)), JOB_ST, JOB_KIND }; },
     template: `<div v-if="j" class="grid gap-3 text-sm"><div class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary"><Icon :name="JOB_KIND[j.kind][1]" :size="18"/></span><div class="min-w-0"><p class="font-mono text-xs text-muted-foreground">{{ j.no }}</p><h2 class="truncate font-semibold">{{ j.title }}</h2></div><span class="ml-auto"><Badge :variant="JOB_ST[j.status][1]">{{ JOB_ST[j.status][0] }}</Badge></span></div>
@@ -7619,7 +7676,7 @@ const ShellMod = (() => {
       <ListCard :list="LS" :tabs="tabs" v-model:quick="quick">
         <ListRows :list="LS" :rows="LS.rows.value" :columns="cols" :row-key="j => j.id" :base-meta="j => j.no + ' · ' + j.format" empty="Nothing yet. Exports, reports and imports you start show up here." @open="j => openJob(j.id)">
           <template #icon="{ row: j }"><span :class="['grid h-9 w-9 place-items-center rounded-lg', j.status==='failed' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary']"><Icon :name="JOB_KIND[j.kind][1]" :size="16"/></span></template>
-          <template #cell-status="{ row: j }"><span class="inline-flex items-center gap-2"><Badge :variant="JOB_ST[j.status][1]">{{ JOB_ST[j.status][0] }}</Badge><span v-if="j.status==='running'" class="hidden h-1.5 w-14 overflow-hidden rounded-full bg-muted sm:block"><span class="block h-full rounded-full bg-primary transition-[width] duration-500" :style="{ width: j.progress + '%' }"></span></span></span></template>
+          <template #cell-status="{ row: j }"><span class="inline-flex items-center gap-2"><Badge :variant="JOB_ST[j.status][1]">{{ JOB_ST[j.status][0] }}</Badge><span v-if="j.status==='running'" class="hidden h-1.5 w-14 overflow-hidden rounded-full bg-muted sm:block"><Meter :value="j.progress" class="rounded-full bg-primary"/></span></span></template>
           <template #actions="{ row: j }"><Tooltip v-if="j.status==='done'" content="Download"><Button variant="ghost" size="icon-sm" :aria-label="'Download ' + j.title" @click="downloadJob(j)"><Icon name="Download" :size="15"/></Button></Tooltip></template>
         </ListRows>
       </ListCard>
@@ -7668,6 +7725,7 @@ const ShellMod = (() => {
     const base = 'https://cdn.jsdelivr.net/npm/highcharts@' + HC_VER + '/';
     const files = ['highcharts.js', 'modules/exporting.js', 'modules/offline-exporting.js', 'modules/export-data.js', 'modules/accessibility.js'];
     hcPromise = files.reduce((p, f) => p.then(() => new Promise((ok, bad) => { const s = document.createElement('script'); s.src = base + f; s.onload = ok; s.onerror = () => bad(new Error('Could not load ' + f)); document.head.appendChild(s); })), Promise.resolve()).then(() => window.Highcharts);
+    hcPromise = hcPromise.then(() => { window.Highcharts.setOptions(chartMotion()); return window.Highcharts; });   // motion: one shared option set for every chart
     hcPromise.catch(() => { hcPromise = null; });
     return hcPromise;
   }
@@ -7806,20 +7864,27 @@ const ShellMod = (() => {
         const colors = ['--c1', '--c2', '--c3', '--c4', '--c5'].map(css).filter(Boolean);
         const { cats, series } = chartData(); const c = R.chart; const money = c.ys.some(y => F(y.key).type === 'money');
         const kpi = c.type === 'kpi';
-        const opts = { chart: { type: c.type === 'kpi' ? 'column' : c.type, backgroundColor: 'transparent', style: { fontFamily: 'inherit' }, height: 320, animation: false },
+        const opts = { chart: { type: c.type === 'kpi' ? 'column' : c.type, backgroundColor: 'transparent', style: { fontFamily: 'inherit' }, height: 320 },
           colors, title: { text: kpi ? null : (series[0] ? series[0].name : '') + ' by ' + F(c.x).label.toLowerCase() + (c.series ? ', split by ' + F(c.series).label.toLowerCase() : ''), style: { color: fg, fontSize: '13px', fontWeight: '600' } },
           credits: { enabled: false }, legend: { enabled: series.length > 1 || c.type === 'pie', itemStyle: { color: fg, fontWeight: '500' } },
           xAxis: { categories: cats, labels: { style: { color: muted } }, lineColor: grid, tickColor: grid },
           yAxis: { title: { text: null }, gridLineColor: grid, labels: { style: { color: muted }, formatter() { return money ? (this.value >= 1e6 ? (this.value / 1e6) + 'M' : this.value >= 1e3 ? (this.value / 1e3) + 'k' : this.value) : this.value; } } },
           tooltip: { valuePrefix: money ? 'TZS ' : '', valueDecimals: 0 },
-          plotOptions: { series: { animation: false, dataLabels: { enabled: !!c.labels, style: { color: fg, textOutline: 'none', fontWeight: '500' } }, stacking: c.series && ['column', 'bar', 'area'].includes(c.type) ? 'normal' : undefined }, pie: { dataLabels: { enabled: true, style: { color: fg, textOutline: 'none' } } } },
+          plotOptions: { series: { dataLabels: { enabled: !!c.labels, style: { color: fg, textOutline: 'none', fontWeight: '500' } }, stacking: c.series && ['column', 'bar', 'area'].includes(c.type) ? 'normal' : undefined }, pie: { dataLabels: { enabled: true, style: { color: fg, textOutline: 'none' } } } },
           series: c.type === 'pie' ? [{ name: series[0] ? series[0].name : '', data: cats.map((k, i) => ({ name: String(k), y: series[0] ? series[0].data[i] : 0 })) }] : c.type === 'scatter' ? series.map(s => ({ ...s, data: s.data.map((v, i) => [i, v]) })) : series,
           exporting: { enabled: false, fallbackToExportServer: false, filename: rep.value.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') }, accessibility: { enabled: true } };
         if (kpi) { R.kpi = series[0] ? series[0].data.reduce((s, v) => s + v, 0) : 0; if (chart) { chart.destroy(); chart = null; } return; }
-        if (chart) chart.destroy(); chart = H.chart(chartEl.value, opts);
+        /* motion: the same kind of chart with new numbers moves to them (update); a new kind draws in; a theme change redraws still */
+        const themeOnly = chart && lastDraw.theme !== G.theme && lastDraw.type === opts.chart.type;
+        if (chart && !themeOnly && lastDraw.type === opts.chart.type && lastDraw.stack === String(opts.plotOptions.series.stacking)) chart.update(opts, true, true);
+        else { if (chart) chart.destroy(); if (themeOnly) opts.plotOptions.series.animation = false; chart = H.chart(chartEl.value, opts); }
+        lastDraw = { type: opts.chart.type, theme: G.theme, stack: String(opts.plotOptions.series.stacking) };
       }
-      watch(() => [JSON.stringify(R.chart), filtered.value.length, G.theme], () => nextTick(draw));
-      onMounted(() => nextTick(draw)); onBeforeUnmount(() => { if (chart) { chart.destroy(); chart = null; } });
+      let lastDraw = {};
+      const chartSeen = useDrawIn(chartEl);   // motion: a chart below the fold draws when it is scrolled into view, once
+      watch(() => [JSON.stringify(R.chart), filtered.value.length, G.theme], () => { if (chartSeen.value) nextTick(draw); });
+      watch(chartSeen, (v) => { if (v) nextTick(draw); });
+      watch(chartEl, (el) => { if (el && chartSeen.value) nextTick(draw); });   // the chart area appears later (a tab, a layout switch) onBeforeUnmount(() => { if (chart) { chart.destroy(); chart = null; } });
       const chartItems = [{ id: 'png', label: 'Picture (PNG)', icon: 'Image' }, { id: 'svg', label: 'Vector (SVG)', icon: 'PenTool' }, { id: 'pdf', label: 'PDF', icon: 'FileDown' }, { separator: true }, { id: 'csv', label: 'The chart\'s data (CSV)', icon: 'FileText' }];
       const exportChart = (it) => { if (!chart) return; if (it.id === 'csv') chart.downloadCSV(); else chart.exportChartLocal({ type: { png: 'image/png', svg: 'image/svg+xml', pdf: 'application/pdf' }[it.id] }); toast('Chart downloaded', { png: 'PNG', svg: 'SVG', pdf: 'PDF', csv: 'CSV' }[it.id] + ', made in your browser.', 'Download'); };
       const addY = () => { const f = numFields.value.find(n => !R.chart.ys.some(y => y.key === n.key)) || numFields.value[0]; R.chart.ys.push({ key: f.key, agg: 'sum' }); R.chart.series = ''; };
@@ -7988,7 +8053,7 @@ const ShellMod = (() => {
   }
   const SysHead = { props: { title: String, sub: String }, template: `<div><h2 class="text-xl font-semibold tracking-tight sm:text-2xl">{{ title }}</h2><p class="text-sm text-muted-foreground">{{ sub }}</p></div>` };
   const SysKpi = { props: { label: String, value: [String, Number], icon: String, tone: String, sub: String },
-    template: `<div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between gap-2"><p class="truncate text-xs font-medium text-muted-foreground">{{ label }}</p><span :class="['grid h-6 w-6 place-items-center rounded-md', tone === 'bad' ? 'bg-destructive/10 text-destructive' : tone === 'warn' ? 'bg-warning/15 text-warning' : 'bg-primary/10 text-primary']"><Icon :name="icon" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="value"/></p><p v-if="sub" class="mt-0.5 truncate text-[11px] text-muted-foreground">{{ sub }}</p></div>` };
+    template: `<div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between gap-2"><p class="truncate text-xs font-medium text-muted-foreground">{{ label }}</p><span :class="['grid h-6 w-6 place-items-center rounded-md', tone === 'bad' ? 'bg-destructive/10 text-destructive' : tone === 'warn' ? 'bg-warning/15 text-warning' : 'bg-primary/10 text-primary']"><Icon :name="icon" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="value"/></p><p v-if="sub" class="mt-0.5 truncate text-[11px] text-muted-foreground">{{ sub }}</p></div>` };
 
   /* ---------------------------------------------------------------- Logs */
   const LogsPage = {
@@ -8064,7 +8129,7 @@ const ShellMod = (() => {
         <template #actions><Button v-if="can() && kpi.failed" size="sm" variant="outline" @click="retryAll"><Icon name="RotateCw" :size="15"/>Retry failed</Button></template>
         <ListRows :list="LS" :rows="LS.rows.value" :columns="cols" :row-key="j => j.id" :base-meta="j => j.detail" empty="No jobs here." @open="j => open = j">
           <template #icon="{ row: j }"><span :class="['grid h-9 w-9 place-items-center rounded-lg', j.status==='failed' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground']"><Icon :name="j.status==='running' ? 'Loader' : j.status==='failed' ? 'CircleAlert' : j.status==='done' ? 'CircleCheck' : 'Hourglass'" :size="16"/></span></template>
-          <template #cell-status="{ row: j }"><span class="inline-flex items-center gap-2"><Badge :variant="SYS_JOB[j.status][1]">{{ SYS_JOB[j.status][0] }}</Badge><span v-if="j.status==='running'" class="hidden h-1.5 w-16 overflow-hidden rounded-full bg-muted sm:block"><span class="block h-full rounded-full bg-primary" :style="{ width: j.progress + '%' }"></span></span></span></template>
+          <template #cell-status="{ row: j }"><span class="inline-flex items-center gap-2"><Badge :variant="SYS_JOB[j.status][1]">{{ SYS_JOB[j.status][0] }}</Badge><span v-if="j.status==='running'" class="hidden h-1.5 w-16 overflow-hidden rounded-full bg-muted sm:block"><Meter :value="j.progress" class="rounded-full bg-primary"/></span></span></template>
           <template #actions="{ row: j }"><DropdownMenu :items="menu(j)" @select="it => onMenu(j, it)"><template #trigger><Button variant="ghost" size="icon-sm" :aria-label="'Actions for ' + j.name"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu></template>
         </ListRows>
       </ListCard>
@@ -8072,7 +8137,7 @@ const ShellMod = (() => {
         <div class="border-b p-4 pr-12"><p class="font-mono text-xs text-muted-foreground">{{ open.queue }}</p><h2 class="mt-0.5 font-semibold">{{ open.name }}</h2><p class="text-sm text-muted-foreground">{{ open.detail }}</p>
           <div class="mt-3 flex flex-wrap gap-2"><Badge :variant="SYS_JOB[open.status][1]">{{ SYS_JOB[open.status][0] }}</Badge><Button v-if="can() && open.status==='failed'" size="sm" @click="retry(open)"><Icon name="RotateCw" :size="14"/>Retry</Button><Button v-if="can() && ['waiting','running'].includes(open.status)" size="sm" variant="outline" @click="cancel(open)"><Icon name="CircleX" :size="14"/>Cancel</Button><Button v-if="open.run" size="sm" variant="outline" @click="openJob(open.run)"><Icon name="ArrowUpRight" :size="14"/>Open its page</Button></div></div>
         <div class="grid gap-3 overflow-y-auto p-4 text-sm">
-          <div v-if="open.status==='running'"><div class="flex justify-between text-xs"><span class="text-muted-foreground">Progress</span><span class="tnum">{{ open.progress }}%</span></div><div class="mt-1 h-2 overflow-hidden rounded-full bg-muted"><div class="h-full rounded-full bg-primary" :style="{ width: open.progress + '%' }"></div></div></div>
+          <div v-if="open.status==='running'"><div class="flex justify-between text-xs"><span class="text-muted-foreground">Progress</span><span class="tnum">{{ open.progress }}%</span></div><div class="mt-1 h-2 overflow-hidden rounded-full bg-muted"><Meter :value="open.progress" class="rounded-full bg-primary"/></div></div>
           <p v-if="open.error" class="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-destructive">{{ open.error }}</p>
           <dl class="grid grid-cols-[7rem_minmax(0,1fr)] gap-x-3 gap-y-2"><dt class="text-muted-foreground">Started by</dt><dd>{{ open.by }}</dd><dt class="text-muted-foreground">When</dt><dd>{{ open.when }}</dd><dt class="text-muted-foreground">Tries</dt><dd class="tnum">{{ open.tries }} of 3</dd><template v-if="open.took"><dt class="text-muted-foreground">Took</dt><dd>{{ open.took }}</dd></template></dl></div></div></Sheet>
     </div>`
@@ -8319,7 +8384,20 @@ const ShellMod = (() => {
     ['Numbers', 'Totals, KPIs and counts run to their new value (400ms, ease-out, tabular figures). The first render does not count up.'],
     ['Skeleton and collapsibles', 'The skeleton fades out (100ms) and the content in (180ms); a collapsible section opens by height (180ms) and closes (135ms).'],
     ['Press', 'Buttons give to 98% while pressed (80ms); clickable rows to 99.5%.'],
+    ['Data draws in', 'Bars fill from 0 (600ms), columns grow from the baseline 40ms apart (at most 12), lines draw (700ms), donut segments sweep (700ms), numbers count up (700ms). Each draws once, when it first comes into view, and again only when its value really changes. Charts below the fold wait until they are scrolled to.'],
   ];
+
+  const DemoDonut = {
+    props: { parts: Array },
+    setup(p) {
+      const seen = useDrawIn(); const R = 38, C = 2 * Math.PI * R;
+      const segs = computed(() => { const t = p.parts.reduce((a, x) => a + x, 0) || 1; let acc = 0; return p.parts.map((v, i) => { const len = (v / t) * C; const s = { len: Math.max(0, len - 2), off: -acc, color: 'var(--c' + (i + 1) + ')' }; acc += len; return s; }); });
+      return { seen, R, C, segs };
+    },
+    template: `<svg viewBox="0 0 100 100" class="h-28 w-28 -rotate-90" aria-hidden="true" data-donut><circle cx="50" cy="50" :r="R" fill="none" stroke="hsl(var(--muted))" stroke-width="14"/>
+      <circle v-for="(g, i) in segs" :key="i" cx="50" cy="50" :r="R" fill="none" :stroke="g.color" stroke-width="14" :stroke-dasharray="(seen ? g.len : 0) + ' ' + C" :stroke-dashoffset="g.off"
+        :style="{ transition: 'stroke-dasharray 700ms var(--ease-standard) ' + (Math.min(i, 12) * 90) + 'ms' }"/></svg>`
+  };
   const MotionLab = {
     setup() {
       const S = reactive({ dlg: false, sheet: false, tab: 'a', dirty: false, saved: false, name: '', tried: false, n: 1284, total: 245600, loading: false, open: false, listKey: 0 });
@@ -8338,7 +8416,12 @@ const ShellMod = (() => {
       const reload = () => { S.loading = true; setTimeout(() => { S.loading = false; }, 900); };
       const money = (n) => Math.round(+n || 0).toLocaleString('en-US');
       const stacked = () => openDialog({ kind: 'info', title: 'A dialog from the stack', text: 'Close it to see it leave: 120ms, or sliding down on a phone.' });
-      return { S, ROWS, list, cols, toast, addRow, delRow, changeRow, replayList, save, submit, bump, reload, money, stacked, MOTION_TOKENS, MOTION_LIST };
+      const DATA = reactive({ k: 0, meter: 64, cols: [12, 30, 22, 41, 35, 52, 47], line: [4, 9, 6, 12, 10, 15, 13, 18], parts: [46, 28, 16, 10] });
+      const rnd = (n) => Math.round(5 + Math.random() * n);
+      const replayData = () => { DATA.k++; };
+      const newData = () => { DATA.meter = rnd(90); DATA.cols = DATA.cols.map(() => rnd(50)); DATA.line = DATA.line.map(() => rnd(14)); DATA.parts = DATA.parts.map(() => rnd(40)); };
+      const colMax = computed(() => Math.max(1, ...DATA.cols));
+      return { DATA, replayData, newData, colMax, S, ROWS, list, cols, toast, addRow, delRow, changeRow, replayList, save, submit, bump, reload, money, stacked, MOTION_TOKENS, MOTION_LIST };
     },
     template: `<div class="grid grid-cols-[minmax(0,1fr)] gap-4" data-motion-lab>
       <section class="kpi rounded-xl border bg-card p-4 shadow-sm sm:p-5">
@@ -8384,8 +8467,8 @@ const ShellMod = (() => {
         </section>
         <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="numbers">
           <h3 class="font-semibold">{{ MOTION_LIST[5][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[5][1] }}</p>
-          <div class="mt-3 grid grid-cols-2 gap-2"><div class="rounded-xl border bg-card p-3.5"><p class="text-xs font-medium text-muted-foreground">Responses</p><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="S.n"/></p></div>
-            <div class="rounded-xl border bg-card p-3.5"><p class="text-xs font-medium text-muted-foreground">Total</p><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="S.total" :format="money"/></p></div></div>
+          <div class="mt-3 grid grid-cols-2 gap-2"><div class="rounded-xl border bg-card p-3.5"><p class="text-xs font-medium text-muted-foreground">Responses</p><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="S.n"/></p></div>
+            <div class="rounded-xl border bg-card p-3.5"><p class="text-xs font-medium text-muted-foreground">Total</p><p class="mt-1.5 text-2xl font-semibold tnum"><Num count :value="S.total" :format="money"/></p></div></div>
           <div class="mt-3"><Button size="sm" variant="outline" @click="bump" data-testid="m-bump"><Icon name="RotateCcw" :size="14"/>New values</Button></div>
         </section>
         <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="skeleton">
@@ -8395,6 +8478,18 @@ const ShellMod = (() => {
             <div v-else key="c" class="grid gap-1"><p class="text-sm font-semibold">Arusha Branch</p><p class="text-sm text-muted-foreground">12 people · 3 roles · updated today</p></div></Transition></div>
           <div class="flex flex-wrap gap-2"><Button size="sm" variant="outline" @click="reload" data-testid="m-reload"><Icon name="RotateCcw" :size="14"/>Load again</Button><Button size="sm" variant="outline" :aria-expanded="S.open" @click="S.open=!S.open" data-testid="m-collapse"><Icon :name="S.open ? 'ChevronUp' : 'ChevronDown'" :size="14"/>{{ S.open ? 'Fewer filters' : 'More filters' }}</Button></div>
           <Collapse><div v-if="S.open" class="mt-3 grid gap-2 rounded-lg border bg-muted/30 p-3 text-sm" data-testid="m-collapsible"><p>Created between…</p><p>Type is…</p><p>Location includes the ones under it</p></div></Collapse>
+        </section>
+        <section class="kpi rounded-xl border bg-card p-4 shadow-sm lg:col-span-2" data-demo="data">
+          <div class="flex flex-wrap items-start justify-between gap-2"><div class="min-w-0"><h3 class="font-semibold">{{ MOTION_LIST[8][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[8][1] }}</p></div>
+            <div class="flex flex-wrap gap-1.5"><Button size="sm" variant="outline" @click="replayData" data-testid="m-data-replay"><Icon name="RotateCcw" :size="14"/>Replay</Button><Button size="sm" variant="outline" @click="newData" data-testid="m-data-new"><Icon name="RefreshCw" :size="14"/>New values</Button></div></div>
+          <div :key="DATA.k" class="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
+            <div class="grid content-start gap-2 rounded-lg border p-3" data-demo-part="meter"><p class="text-xs font-medium text-muted-foreground">Meter</p><p class="text-xl font-semibold tnum"><Num count :value="DATA.meter"/>%</p>
+              <div class="h-2 overflow-hidden rounded-full bg-muted"><Meter :value="DATA.meter" class="rounded-full bg-c1"/></div></div>
+            <div class="grid content-start gap-2 rounded-lg border p-3" data-demo-part="columns"><p class="text-xs font-medium text-muted-foreground">Columns</p>
+              <div class="flex h-24 items-end gap-1.5"><div v-for="(v, i) in DATA.cols" :key="i" class="flex h-full flex-1 items-end"><Meter axis="y" :value="v / colMax * 100" :duration="700" :delay="Math.min(i, 12) * 40" class="rounded-t-[3px] bg-c1"/></div></div></div>
+            <div class="grid content-start gap-2 rounded-lg border p-3" data-demo-part="line"><p class="text-xs font-medium text-muted-foreground">Line</p><Spark :data="DATA.line" class="h-24 w-full"/></div>
+            <div class="grid content-start justify-items-center gap-2 rounded-lg border p-3" data-demo-part="donut"><p class="justify-self-start text-xs font-medium text-muted-foreground">Donut</p><DemoDonut :parts="DATA.parts"/></div>
+          </div>
         </section>
         <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="press">
           <h3 class="font-semibold">{{ MOTION_LIST[7][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[7][1] }}</p>
@@ -9029,7 +9124,7 @@ const ShellMod = (() => {
   }
   G.appState = appState;
 
-  return { AuthView, ShellView, comps: { MotionLab, DocLines, DocFlow, DocTrail, FormPage, LocationForm, BatchBar, BatchResult, DialogStack, DialogLayer, RecordTabView, HelpPage, HelpArticlePage, HowDoI, ReportsPage, ReportPage, MyJobsPage, JobPage, JobProgress, JobPreview, LogsPage, QueuePage, ScheduledTasksPage, TrashPage, NotificationsPage, PermissionsPage, SysHead, SysKpi, RecordLink, LocationPreview, RolePreview, RequestPreview, ListCard, ListRows, ListShare, LockedField, BackButton, ConnectionNotice, AppUpdateBanner, AppUpdateRequired, AppNotifsAsk, AppNotifsRow, AppBackHint, AppSplash, AppIcon, PhoneMock, LockScreen, SessionExpired, PermissionCard, ActionSheet, ScanView, PrinterCard, StaleStamp, BottomBar, KeyboardSim, PhoneOverlays, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog, BrandMark, ProductLoader, ExampleSignInArt, StatusPill, StatusesCard, NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, ResultChartSettings, Spark, OrgAvatar, AccentPicker, OrgSwitcher, NewOrgDialog } };
+  return { AuthView, ShellView, comps: { MotionLab, DemoDonut, DocLines, DocFlow, DocTrail, FormPage, LocationForm, BatchBar, BatchResult, DialogStack, DialogLayer, RecordTabView, HelpPage, HelpArticlePage, HowDoI, ReportsPage, ReportPage, MyJobsPage, JobPage, JobProgress, JobPreview, LogsPage, QueuePage, ScheduledTasksPage, TrashPage, NotificationsPage, PermissionsPage, SysHead, SysKpi, RecordLink, LocationPreview, RolePreview, RequestPreview, ListCard, ListRows, ListShare, LockedField, BackButton, ConnectionNotice, AppUpdateBanner, AppUpdateRequired, AppNotifsAsk, AppNotifsRow, AppBackHint, AppSplash, AppIcon, PhoneMock, LockScreen, SessionExpired, PermissionCard, ActionSheet, ScanView, PrinterCard, StaleStamp, BottomBar, KeyboardSim, PhoneOverlays, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog, BrandMark, ProductLoader, ExampleSignInArt, StatusPill, StatusesCard, NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, ResultChartSettings, Spark, OrgAvatar, AccentPicker, OrgSwitcher, NewOrgDialog } };
 })();
 
 /* ================================================================ ROOT */
@@ -9143,7 +9238,7 @@ app.config.globalProperties.ACCENTS = ACCENTS;
 app.config.globalProperties.RESP = ResponsesMod.RESP;
 app.config.globalProperties.PRODUCT = PRODUCT;
 Object.entries(Object.assign(
-  { Icon, Button, Input, Textarea, Label, Switch, Checkbox, RadioGroupItem, Badge, Card, Separator, Select, DropdownMenu, Tooltip, Dialog, Sheet, Tabs, Num, Collapse, TabPanel, ScreensPill, PhoneFrame, Curtain,
+  { Icon, Button, Input, Textarea, Label, Switch, Checkbox, RadioGroupItem, Badge, Card, Separator, Select, DropdownMenu, Tooltip, Dialog, Sheet, Tabs, Num, Collapse, TabPanel, Meter, ScreensPill, PhoneFrame, Curtain,
     BuilderView: BuilderMod.BuilderView, RespondentView: RespondentMod.RespondentView, ResponsesView: ResponsesMod.ResponsesView, AuthView: ShellMod.AuthView, ShellView: ShellMod.ShellView },
   BuilderMod.comps, RespondentMod.comps, ResponsesMod.comps, ShellMod.comps)).forEach(([n, c]) => app.component(n, c));
 app.mount('#app');

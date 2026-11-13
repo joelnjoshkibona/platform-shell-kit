@@ -1428,6 +1428,20 @@
     "file": "shell--phone-menu__phone-dark.png"
   },
   {
+    "name": "design--motion",
+    "route": "design",
+    "title": "Design system › Motion (prototype)",
+    "combo": "desktop-light",
+    "file": "design--motion__desktop-light.png"
+  },
+  {
+    "name": "design--motion",
+    "route": "design",
+    "title": "Design system › Motion (prototype)",
+    "combo": "phone-dark",
+    "file": "design--motion__phone-dark.png"
+  },
+  {
     "name": "design--phone",
     "route": "design",
     "title": "Design system › Components › Phone (P51–P70)",
