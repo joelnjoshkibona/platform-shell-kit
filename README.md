@@ -57,7 +57,7 @@ The kit is the design and the decisions; **[Bootbox](https://github.com/joelnjos
 | Records owned by a location | `parts_loc.js` → `formsAt`, `formVisible` | forms per location |
 | Actions behind approvals (P107, P108) | `parts_appr.js` → `ACTIONS` (label, icon, effect, `pick`) + `approvalGate(action, { kind, id, label, loc, note? })`; what a decided request does is the action's `apply(req)` / `reject(req)`, set from the module's own parts | publish, export, reset; their effects and form picker in `parts_fomu.js`, `loc: form.loc` |
 | Sign-in panel and mark (P48) | `product.js` → `signin`, `logo`; art component registered in `comps` | Fomu's headline, points and `FomuSignInArt` |
-| Curtain loader (P114) | `product.js` → `loader: { page, boot }` (inline SVGs, one colour, CSS motion); shown by `ProductLoader` on the page curtain, the boot curtain and the phone splash | none: Fomu keeps the ring |
+| Curtain loader (P114) | `product.js` → `loader: { page, boot }` (inline SVGs, one colour, CSS motion); shown by `ProductLoader` on the page curtain, the boot curtain and the phone splash | none: the example keeps the ring |
 | Phone app states and movements (P51–P79) | `parts_appshell.js` → `appState`, `APP`, the phone components; Screens pill › Phone app and Phone movements | the states and movements with Fomu's name and mark |
 | Settings tabs (P42) | `parts_shell.js` → `SETTINGS_TABS` | Fomu's Results tab (chart defaults) |
 | Recent activity (P45) | `parts_loc.js` → `ACTIVITY` per organisation + `logActivity` | form, people and location events per demo organisation |
