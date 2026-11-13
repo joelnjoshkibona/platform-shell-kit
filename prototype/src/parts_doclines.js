@@ -77,7 +77,7 @@
         if (!(+M.d.qty > 0)) e.qty = 'Enter a quantity above 0.';
         if (money_.value && !(+M.d.price >= 0)) e.price = 'Enter a price of 0 or more.';
         if (p.kind === 'sale' && (+M.d.disc < 0 || +M.d.disc > 100)) e.disc = 'Discount is between 0 and 100.';
-        M.err = e; if (Object.keys(e).length) return;
+        M.err = e; if (Object.keys(e).length) { motionInvalid('[data-doclines-modal]'); return; }
         const vals = { qty: +M.d.qty, price: +M.d.price || 0, list: M.d.list || '', disc: +M.d.disc || 0, vat: money_.value ? +M.d.vat || 0 : 0 };
         if (p.lots) vals.lots = M.lots.filter(r => +r.take > 0).map(r => ({ lot: r.id, qty: Math.min(+r.take, r.qty) }));
         if (M.mode === 'edit') { set(p.modelValue.map(x => (x === M.line ? { ...x, ...vals } : x))); toast('Line updated', p.itemOf(M.line.item).name, 'Pencil'); }
@@ -140,10 +140,10 @@
       </div>
       <!-- totals -->
       <div v-if="totals && money_ && modelValue.length" class="ml-auto grid w-full max-w-xs gap-1 text-sm tnum" data-doclines-totals>
-        <div class="flex justify-between gap-4 text-muted-foreground"><span>Subtotal</span><span>{{ money(T.net + T.disc) }}</span></div>
+        <div class="flex justify-between gap-4 text-muted-foreground"><span>Subtotal</span><Num :value="T.net + T.disc" :format="money"/></div>
         <div v-if="T.disc" class="flex justify-between gap-4 text-muted-foreground"><span>Discount</span><span>− {{ money(T.disc) }}</span></div>
-        <div class="flex justify-between gap-4 text-muted-foreground"><span>VAT</span><span>{{ money(T.tax) }}</span></div>
-        <div class="flex justify-between gap-4 border-t pt-1.5 text-base font-semibold"><span>Total</span><span>{{ cur(T.total) }}</span></div></div>
+        <div class="flex justify-between gap-4 text-muted-foreground"><span>VAT</span><Num :value="T.tax" :format="money"/></div>
+        <div class="flex justify-between gap-4 border-t pt-1.5 text-base font-semibold"><span>Total</span><Num :value="T.total" :format="cur"/></div></div>
 
       <!-- the line: view, edit or add -->
       <Dialog v-model:open="M.open"><div class="grid gap-4" data-doclines-modal>

@@ -166,6 +166,61 @@ body{font-family:Geist,ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial,sans-seri
 @keyframes growx{from{transform:scaleX(0)}}
 .sheetl-enter-active,.sheetl-leave-active{transition:transform 220ms cubic-bezier(.2,.8,.2,1)}
 .sheetl-enter-from,.sheetl-leave-to{transform:translateX(-100%)}
+/* ---- motion (prototype): tokens and the shared classes. All of it is off under prefers-reduced-motion (the global rule
+   above stops CSS motion; the JS helpers in parts_motion.js check it too). */
+:root{ --dur-fast:120ms; --dur-base:180ms; --dur-slow:280ms; --ease-standard:cubic-bezier(.2,.8,.2,1); --ease-exit:cubic-bezier(.4,0,1,1) }
+@keyframes ovIn{from{opacity:0}} @keyframes ovOut{to{opacity:0}}
+@keyframes dlgIn{from{opacity:0;transform:scale(.96)}} @keyframes dlgOut{to{opacity:0;transform:scale(.96)}}
+@keyframes sheetUp{from{transform:translateY(100%)}} @keyframes sheetDown{to{transform:translateY(100%)}}
+/* dialogs: scale + fade in 160ms, out 120ms; under 640px they slide up from the bottom and back down */
+.dlg-panel{animation:dlgIn 160ms var(--ease-standard) both}
+.dlg-ov{animation:ovIn 160ms linear both}
+.dlg-panel.dlg-out{animation:dlgOut var(--dur-fast) var(--ease-exit) both}
+.dlg-ov.dlg-out{animation:ovOut var(--dur-fast) var(--ease-exit) both}
+.dlg-enter-active{animation:ovIn 160ms linear both}.dlg-leave-active{animation:ovOut var(--dur-fast) var(--ease-exit) both}
+.dlg-leave-active .dlg-panel{animation:dlgOut var(--dur-fast) var(--ease-exit) both}
+.dlg-out,.dlg-leave-active{pointer-events:none}
+@media (max-width:639px){
+  .dlg-panel{animation:sheetUp var(--dur-slow) var(--ease-standard) both}
+  .dlg-panel.dlg-out,.dlg-leave-active .dlg-panel{animation:sheetDown 200ms var(--ease-exit) both}
+  .dlg-ov.dlg-out{animation-duration:200ms}
+  .dlg-enter-active{animation-duration:var(--dur-slow)}.dlg-leave-active{animation-duration:200ms}
+}
+/* sheets: in 280ms, out 200ms, both sides */
+.sheet-enter-active,.sheetl-enter-active{transition:transform var(--dur-slow) var(--ease-standard)}
+.sheet-leave-active,.sheetl-leave-active{transition:transform 200ms var(--ease-exit)}
+.fade-enter-active{transition:opacity var(--dur-base) linear}.fade-leave-active{transition:opacity 200ms var(--ease-exit)}
+/* list rows: first-load rise (6px, 30ms stagger, first 8), a new row highlights, a changed row flashes */
+@keyframes lrRise{from{opacity:.001;transform:translateY(6px)}}
+.lr-rise{animation:lrRise 320ms var(--ease-standard) both}
+@keyframes lrNew{from{background-color:hsl(var(--primary) / .12)}to{background-color:transparent}}
+@keyframes lrChanged{0%,30%{background-color:hsl(var(--primary) / .08)}to{background-color:transparent}}
+.lr-new{animation:lrNew 1200ms var(--ease-standard) both}.lr-changed{animation:lrChanged 1000ms ease-out both}
+.lr-move{transition:transform var(--dur-base) var(--ease-standard)}
+.lr-item:last-child>:last-child{border-bottom-width:0}
+/* tabs: the active pill slides; a tab's content fades in */
+.tab-ind{position:absolute;z-index:0;border-radius:calc(var(--radius) - 2px);background:hsl(var(--background));box-shadow:0 1px 3px 0 rgb(0 0 0 / .1),0 1px 2px -1px rgb(0 0 0 / .1);pointer-events:none}
+.tab-ind.tab-ind-anim{transition:left var(--dur-base) var(--ease-standard),top var(--dur-base) var(--ease-standard),width var(--dur-base) var(--ease-standard),height var(--dur-base) var(--ease-standard)}
+@keyframes fadeIn{from{opacity:0}}
+.tab-in{animation:fadeIn var(--dur-fast) linear both}.tab-in .kpi{animation:none}
+/* save bar: slides up while there are changes, shows Saved, then slides away */
+.savebar-enter-active{transition:transform var(--dur-slow) var(--ease-standard),opacity var(--dur-base) linear}
+.savebar-leave-active{transition:transform 200ms var(--ease-exit),opacity 200ms var(--ease-exit)}
+.savebar-enter-from,.savebar-leave-to{transform:translateY(calc(100% + 16px));opacity:0}
+/* an error line slides down under its field */
+@keyframes errIn{from{opacity:0;max-height:0;transform:translateY(-3px)}to{opacity:1;max-height:4em;transform:none}}
+p.text-xs.text-destructive{animation:errIn var(--dur-base) var(--ease-standard)}
+/* skeleton → content, and other swaps */
+.xfade-enter-active{transition:opacity var(--dur-base) linear}.xfade-leave-active{transition:opacity 100ms var(--ease-exit)}
+.xfade-enter-from,.xfade-leave-to{opacity:0}
+.opt-in{animation:fadeIn var(--dur-base) linear both}
+/* press: buttons and clickable rows give a little on press (80ms) */
+button.press{transition-property:color,background-color,border-color,box-shadow,opacity,transform;transition-duration:150ms,150ms,150ms,150ms,150ms,80ms;transition-timing-function:ease,ease,ease,ease,ease,var(--ease-standard)}
+button.press:active:not(:disabled){transform:scale(.98)}
+div.press-row{transition:background-color 150ms ease,transform 80ms var(--ease-standard)}
+div.press-row:active{transform:scale(.995)}
+@media (prefers-reduced-motion:reduce){button.press:active:not(:disabled),div.press-row:active{transform:none}}
+
 </style>
 
 <script>/* P46: last accent this browser saw, before anything paints */try{var __a=localStorage.getItem('bootbox-accent');if(__a){var __s=document.createElement("style");__s.id="org-accent";__s.textContent=__a;document.head.appendChild(__s)}}catch(e){}</script>
@@ -408,7 +463,7 @@ const BTN_V = {
 const BTN_S = { default: 'h-9 px-4 py-2', sm: 'h-8 rounded-md px-3 text-xs', lg: 'h-10 rounded-md px-8', icon: 'h-9 w-9', 'icon-sm': 'h-8 w-8' };
 const Button = {
   props: { variant: { default: 'default' }, size: { default: 'default' }, type: { default: 'button' }, disabled: Boolean },
-  computed: { cls() { return cn('inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50', BTN_V[this.variant], BTN_S[this.size]) } },
+  computed: { cls() { return cn('press inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50', BTN_V[this.variant], BTN_S[this.size]) } },
   template: `<button :type="type" :class="cls" :disabled="disabled"><slot/></button>`
 };
 const Input = {
@@ -536,9 +591,9 @@ function useOverlayEsc(p, emit) {
 const Dialog = {
   props: { open: Boolean }, emits: ['update:open'],
   setup(p, { emit }) { useOverlayEsc(p, emit); },
-  template: `<Teleport to="body"><Transition name="fade"><div v-if="open" class="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4" style="padding-bottom:var(--kbd,0px)">
+  template: `<Teleport to="body"><Transition name="dlg"><div v-if="open" class="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4" style="padding-bottom:var(--kbd,0px)">
     <div class="absolute inset-0 bg-black/70" @click="$emit('update:open', false)"></div>
-    <div role="dialog" aria-modal="true" class="pop relative grid max-h-[calc(100dvh-1rem-var(--kbd,0px))] w-full max-w-lg gap-4 overflow-y-auto overscroll-contain border bg-background p-6 shadow-lg rounded-t-xl sm:max-h-[calc(100dvh-2rem)] sm:rounded-xl" style="padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px))">
+    <div role="dialog" aria-modal="true" class="dlg-panel relative grid max-h-[calc(100dvh-1rem-var(--kbd,0px))] w-full max-w-lg gap-4 overflow-y-auto overscroll-contain border bg-background p-6 shadow-lg rounded-t-xl sm:max-h-[calc(100dvh-2rem)] sm:rounded-xl" style="padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px))">
       <button type="button" class="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" @click="$emit('update:open', false)" aria-label="Close"><Icon name="X" :size="16"/></button>
       <slot/></div></div></Transition></Teleport>`
 };
@@ -556,12 +611,17 @@ const Tabs = {
   props: { modelValue: String, items: Array, full: Boolean }, emits: ['update:modelValue'],
   setup(p, { emit }) {
     const scroller = ref(null); const fade = reactive({ l: false, r: false }); const more = ref(false);
+    /* motion: the active pill is one element that slides to the chosen tab (placed without animation the first time) */
+    const ind = reactive({ ready: false, anim: false, style: {} });
+    const place = () => { const s = scroller.value; if (!s) return; const b = s.querySelector('[aria-selected="true"]'); if (!b) { ind.ready = false; return; }
+      ind.style = { left: b.offsetLeft + 'px', top: b.offsetTop + 'px', width: b.offsetWidth + 'px', height: b.offsetHeight + 'px' };
+      if (!ind.ready) { ind.ready = true; requestAnimationFrame(() => requestAnimationFrame(() => { ind.anim = true; })); } };
     const measure = () => { const s = scroller.value; if (!s) return; fade.l = s.scrollLeft > 2; fade.r = s.scrollLeft + s.clientWidth < s.scrollWidth - 2; more.value = !p.full && s.scrollWidth > s.clientWidth + 2; };
     const show = () => nextTick(() => { const s = scroller.value; if (!s) return; const b = s.querySelector('[aria-selected="true"]');
       if (b && !p.full) { const l = b.offsetLeft, r = l + b.offsetWidth; if (l < s.scrollLeft + 24) s.scrollLeft = Math.max(0, l - 24); else if (r > s.scrollLeft + s.clientWidth - 24) s.scrollLeft = r - s.clientWidth + 24; }
-      measure(); });
+      measure(); place(); });
     watch(() => p.modelValue, show); watch(() => (p.items || []).map(t => t.value + ':' + t.count).join(), show);
-    let ro; onMounted(() => { show(); if (window.ResizeObserver && scroller.value) { ro = new ResizeObserver(measure); ro.observe(scroller.value); } });
+    let ro; onMounted(() => { show(); if (window.ResizeObserver && scroller.value) { ro = new ResizeObserver(() => { measure(); place(); }); ro.observe(scroller.value); } if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => place()); });
     onBeforeUnmount(() => { if (ro) ro.disconnect(); });
     function key(e) {
       const n = (p.items || []).length; if (!n) return; const i = Math.max(0, p.items.findIndex(t => t.value === p.modelValue)); let j = null;
@@ -570,22 +630,139 @@ const Tabs = {
       nextTick(() => { const b = scroller.value && scroller.value.querySelectorAll('[role=tab]')[j]; if (b) b.focus(); });
     }
     const moreItems = computed(() => (p.items || []).map(t => ({ id: t.value, label: t.label + (t.count != null ? ' · ' + t.count : ''), checked: t.value === p.modelValue })));
-    return { scroller, fade, more, measure, key, moreItems };
+    return { scroller, fade, more, measure, key, moreItems, ind };
   },
   template: `<div :class="full ? 'w-full' : 'flex min-w-0 max-w-full items-center gap-1'">
     <div :class="full ? '' : 'relative min-w-0'">
       <div ref="scroller" role="tablist" @scroll="measure" @keydown="key" style="scrollbar-width:none"
-        :class="['h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground', full ? 'grid w-full' : 'inline-flex max-w-full overflow-x-auto']" :style="full ? 'grid-template-columns:repeat(' + items.length + ',minmax(0,1fr))' : ''">
+        :class="['relative h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground', full ? 'grid w-full' : 'inline-flex max-w-full overflow-x-auto']" :style="full ? 'grid-template-columns:repeat(' + items.length + ',minmax(0,1fr))' : ''">
+        <span v-if="ind.ready" :class="['tab-ind', ind.anim && 'tab-ind-anim']" :style="ind.style" aria-hidden="true"></span>
         <button v-for="t in items" :key="t.value" type="button" role="tab" :aria-selected="modelValue===t.value" :tabindex="modelValue===t.value ? 0 : -1" @click="$emit('update:modelValue', t.value)"
-          :class="['inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', modelValue===t.value ? 'bg-background text-foreground shadow' : 'hover:text-foreground']">
-          {{ t.label }}<span v-if="t.count != null" class="tnum rounded-full bg-muted-foreground/15 px-1.5 text-[11px] leading-4">{{ t.count }}</span></button></div>
-      <span v-if="fade.l" class="pointer-events-none absolute inset-y-0 left-0 w-8 rounded-l-lg bg-gradient-to-r from-muted to-transparent" aria-hidden="true"></span>
-      <span v-if="fade.r" class="pointer-events-none absolute inset-y-0 right-0 w-8 rounded-r-lg bg-gradient-to-l from-muted to-transparent" aria-hidden="true"></span>
+          :class="['relative z-[1] inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', modelValue===t.value ? (ind.ready ? 'text-foreground' : 'bg-background text-foreground shadow') : 'hover:text-foreground']">
+          {{ t.label }}<span v-if="t.count != null" class="tnum rounded-full bg-muted-foreground/15 px-1.5 text-[11px] leading-4"><Num :value="t.count"/></span></button></div>
+      <span v-if="fade.l" class="pointer-events-none absolute inset-y-0 left-0 z-[2] w-8 rounded-l-lg bg-gradient-to-r from-muted to-transparent" aria-hidden="true"></span>
+      <span v-if="fade.r" class="pointer-events-none absolute inset-y-0 right-0 z-[2] w-8 rounded-r-lg bg-gradient-to-l from-muted to-transparent" aria-hidden="true"></span>
     </div>
     <DropdownMenu v-if="more" :items="moreItems" label="All tabs" @select="it => $emit('update:modelValue', it.id)"><template #trigger><Button variant="ghost" size="sm" class="h-9 shrink-0 px-2" aria-label="More tabs"><span class="hidden sm:inline">More</span><Icon name="ChevronDown" :size="15"/></Button></template></DropdownMenu>
   </div>`
 };
 
+/* ---------------------------------------------------------------- motion (prototype for review): the shared pieces
+   Tokens are CSS (assemble.py): --dur-fast 120ms · --dur-base 180ms · --dur-slow 280ms · --ease-standard · --ease-exit.
+   Motion explains a change: something arrives, leaves, moves, changes or was refused. Nothing loops (spinners aside),
+   nothing moves on hover. Under prefers-reduced-motion everything here is off: values jump, nothing shakes or staggers,
+   dialogs and rows appear and go at once.
+     motionMs(ms)          ms, or 0 under reduced motion (for waits that hold an element on screen while it leaves)
+     motionShake(el)       one 6px shake, 300ms (a refused value)
+     motionInvalid(root)   after a refused submit: focus the first field that shows an error and shake it once
+     <Num :value :format>  a number that tweens to its new value (400ms, ease-out, tabular figures); first render does not count up
+     <Collapse>            wraps one v-if child: height + fade in (180ms) and out (135ms)
+     <TabPanel :name>      a tab's content: a 120ms fade when the tab changes (not on first render)
+     useListMotion(...)    ListRows: first-load rise stagger, new-row highlight, changed-row flash, deleted-row collapse */
+const reducedMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const motionMs = (ms) => (reducedMotion() ? 0 : ms);
+const EASE_STD = 'cubic-bezier(.2,.8,.2,1)', EASE_EXIT = 'cubic-bezier(.4,0,1,1)';
+
+function motionShake(el) {
+  if (!el || !el.animate || reducedMotion()) return;
+  el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(3px)' }, { transform: 'translateX(0)' }],
+    { duration: 300, easing: 'ease-in-out' });
+}
+function motionInvalid(root) {
+  nextTick(() => {
+    const r = typeof root === 'string' ? document.querySelector(root) : root; if (!r) return;
+    const msgs = [...r.querySelectorAll('p.text-destructive, [data-field-error]')].filter(x => !x.matches('[role=alert]') && x.offsetParent !== null);
+    const msg = msgs[0]; if (!msg) return;
+    const field = msg.closest('.grid') || msg.parentElement;
+    const input = field && field.querySelector('input:not([type=hidden]):not([disabled]), textarea, select, button[role=combobox], [contenteditable=true]');
+    if (input) input.focus({ preventScroll: false });
+    motionShake(field);
+  });
+}
+
+const Num = {
+  props: { value: [Number, String], format: { type: Function, default: null } },
+  setup(p) {
+    const shown = ref(p.value); let raf = 0;
+    const isNum = (v) => typeof v === 'number' && isFinite(v);
+    watch(() => p.value, (to, from) => {
+      cancelAnimationFrame(raf);
+      if (!isNum(to) || !isNum(from) || to === from || reducedMotion()) { shown.value = to; return; }
+      const t0 = performance.now(), d = 400, whole = Number.isInteger(to) && Number.isInteger(from);
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - k, 3), v = from + (to - from) * e;
+        shown.value = k < 1 ? (whole ? Math.round(v) : Math.round(v * 100) / 100) : to;
+        if (k < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    });
+    onBeforeUnmount(() => cancelAnimationFrame(raf));
+    const text = computed(() => (p.format ? p.format(shown.value) : shown.value));
+    return { text };
+  },
+  template: `<span class="tnum" data-num>{{ text }}</span>`
+};
+
+/* height + fade for one v-if child; the box's own padding and margins collapse with it */
+function heightKeys(el) { const cs = getComputedStyle(el); return { height: el.scrollHeight + 'px', paddingTop: cs.paddingTop, paddingBottom: cs.paddingBottom, marginTop: cs.marginTop, marginBottom: cs.marginBottom, opacity: 1 }; }
+const ZERO_H = { height: '0px', paddingTop: '0px', paddingBottom: '0px', marginTop: '0px', marginBottom: '0px', opacity: 0 };
+function collapseIn(el, done, ms = 180) {
+  if (reducedMotion() || !el.animate) return done();
+  const full = heightKeys(el); el.style.overflow = 'hidden';
+  const a = el.animate([ZERO_H, full], { duration: ms, easing: EASE_STD });
+  a.onfinish = a.oncancel = () => { el.style.overflow = ''; done(); };
+}
+function collapseOut(el, done, ms = 135) {
+  if (reducedMotion() || !el.animate) return done();
+  const cs = getComputedStyle(el);
+  const full = { height: el.offsetHeight + 'px', paddingTop: cs.paddingTop, paddingBottom: cs.paddingBottom, marginTop: cs.marginTop, marginBottom: cs.marginBottom, opacity: 1 };
+  el.style.overflow = 'hidden';
+  const a = el.animate([full, ZERO_H], { duration: ms, easing: EASE_EXIT, fill: 'forwards' });
+  a.onfinish = a.oncancel = () => done();
+}
+const Collapse = {
+  props: { duration: { type: Number, default: 180 } },
+  setup(p) { return { enter: (el, done) => collapseIn(el, done, p.duration), leave: (el, done) => collapseOut(el, done, Math.round(p.duration * 0.75)) }; },
+  template: `<Transition :css="false" @enter="enter" @leave="leave"><slot/></Transition>`
+};
+
+const TabPanel = {
+  props: { name: String, cls: { type: String, default: 'grid grid-cols-[minmax(0,1fr)] gap-4' } },
+  setup(p) { const switched = ref(false); watch(() => p.name, () => { switched.value = true; }); return { switched }; },
+  template: `<div :key="name" :class="[cls, switched && 'tab-in']" data-tabpanel><slot/></div>`
+};
+
+/* ListRows: what changed between two renders of the same query decides the motion.
+   Same query (filters, sort, search, scope) and only rows added → highlight them; only rows removed → they collapse;
+   same rows with different data → they flash once. A changed query (filtering, sorting, searching) moves nothing. */
+function useListMotion(rows, keyOf, sigOf) {
+  const M = reactive({ first: true, live: false, flash: {} });
+  const timers = {};
+  const hash = (r) => { try { return JSON.stringify(r); } catch (e) { return ''; } };
+  const snap = () => rows().slice(0, 200).map(r => [keyOf(r), hash(r)]);
+  let prev = snap(), prevSig = sigOf();   // the rows as first drawn: the first change is compared with them
+  function mark(k, kind) {
+    clearTimeout(timers[k]); delete M.flash[k];
+    nextTick(() => { M.flash[k] = kind; timers[k] = setTimeout(() => { delete M.flash[k]; }, 1300); });
+  }
+  watch(() => [snap(), sigOf()], ([now, sig]) => {
+    const before = new Map(prev), after = new Map(now);
+    const added = now.filter(([k]) => !before.has(k)).map(([k]) => k), removed = prev.filter(([k]) => !after.has(k)).map(([k]) => k);
+    M.live = !reducedMotion() && sig === prevSig && !(added.length && removed.length) && added.length <= 5 && removed.length <= 20;
+    if (M.live && prev.length) {
+      added.forEach(k => mark(k, 'new'));
+      if (!added.length && !removed.length) now.forEach(([k, h]) => { if (before.has(k) && before.get(k) !== h) mark(k, 'changed'); });
+    }
+    prev = now; prevSig = sig;
+  }, { flush: 'pre' });
+  let firstT = null;
+  onMounted(() => { if (reducedMotion()) { M.first = false; return; } firstT = setTimeout(() => { M.first = false; }, 8 * 30 + 450); });
+  onBeforeUnmount(() => { clearTimeout(firstT); Object.values(timers).forEach(clearTimeout); });
+  const itemClass = (r, i) => [M.first && i < 8 && 'lr-rise', M.flash[keyOf(r)] === 'new' && 'lr-new', M.flash[keyOf(r)] === 'changed' && 'lr-changed'];
+  const itemStyle = (i) => (M.first && i < 8 ? { animationDelay: i * 30 + 'ms' } : null);
+  const leave = (el, done) => (M.live ? collapseOut(el, done, 180) : done());
+  return { M, itemClass, itemStyle, leave, mark };
+}
 /* ================================================================ BUILDER MODULE (iteration 1) */
 const BuilderMod = (() => {
 /* ---------------------------------------------------------------- store */
@@ -2934,8 +3111,9 @@ const ShellMod = (() => {
       const idIcon = computed(() => A.id.includes('@') ? 'Mail' : /^[+\d][\d\s]*$/.test(A.id.trim()) && A.id.trim() ? 'Phone' : 'User');
       const idKind = computed(() => ({ Mail: 'email', Phone: 'phone number', User: 'username' })[idIcon.value]);
       function signIn() {
-        if (!A.id.trim()) { A.err = 'Enter your email, phone number or username.'; return; }
-        if (A.pw.length < 6) { A.err = `That ${idKind.value} and password do not match. 4 tries left before a 15-minute lock.`; return; }
+        const refuse = (id) => nextTick(() => { const el = document.getElementById(id); if (el) { el.focus(); motionShake(el.closest('.grid') || el); } });   // motion: the field that was refused shakes once
+        if (!A.id.trim()) { A.err = 'Enter your email, phone number or username.'; refuse('li-id'); return; }
+        if (A.pw.length < 6) { A.err = `That ${idKind.value} and password do not match. 4 tries left before a 15-minute lock.`; refuse('li-pw'); return; }
         A.err = ''; A.busy = true; setTimeout(() => { A.busy = false; G.route = 'twofa'; }, 800);
       }
       const refs = ref([]);
@@ -2947,7 +3125,7 @@ const ShellMod = (() => {
         setTimeout(() => {
           A.busy = false;
           const ok = A.recovery ? /^[a-z0-9]{4}-?[a-z0-9]{4}$/i.test(A.rec.trim()) : A.code.join('') === '123456';
-          if (!ok) { A.codeErr = A.recovery ? 'That recovery code is not valid or was already used.' : 'That code is not right. Codes change every 30 seconds.'; A.code = ['', '', '', '', '', '']; focus(0); return; }
+          if (!ok) { A.codeErr = A.recovery ? 'That recovery code is not valid or was already used.' : 'That code is not right. Codes change every 30 seconds.'; motionShake(A.recovery ? document.getElementById('rc') : refs.value[0] && refs.value[0].parentElement); A.code = ['', '', '', '', '', '']; focus(0); return; }
           G.route = 'orgpick';
         }, 700);
       }
@@ -3660,10 +3838,10 @@ const ShellMod = (() => {
     template: `<div class="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-4">
       <div><h2 class="text-xl font-semibold tracking-tight sm:text-2xl">Roles</h2><p class="text-sm text-muted-foreground">Bundles of permissions. Everyone has one main role; custom roles are given at a location and add to it.</p></div>
       <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Roles</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Shield" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.total }}</p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.total - kpi.custom }} main · {{ kpi.custom }} custom</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.people }}</p><p class="mt-1 text-[11px] text-muted-foreground">Each holds one main role</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">With a custom role</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.located }}</p><p class="mt-1 text-[11px] text-muted-foreground">Given at one or more locations</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Direct grants</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="UserRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.direct }}</p><p class="mt-1 text-[11px] text-muted-foreground">People with exceptions outside a role</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Roles</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Shield" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.total"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.total - kpi.custom }} main · {{ kpi.custom }} custom</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">Each holds one main role</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">With a custom role</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.located"/></p><p class="mt-1 text-[11px] text-muted-foreground">Given at one or more locations</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Direct grants</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="UserRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.direct"/></p><p class="mt-1 text-[11px] text-muted-foreground">People with exceptions outside a role</p></div>
       </div>
       <ListCard :list="LS" :tabs="typeTabs" v-model:quick="quick">
         <template #actions><Button v-if="canEditRole()" size="sm" @click="newRole"><Icon name="Plus" :size="15"/>New<span class="hidden sm:inline"> role</span></Button></template>
@@ -3692,7 +3870,7 @@ const ShellMod = (() => {
     emits: ['tabs', 'update:embedTab'],
     setup(props, { emit }) {
       const curId = computed(() => props.embedId || G.roleId);
-      const R2 = reactive({ draft: [], leave: null, tab: props.embedId ? (props.embedTab || 'overview') : (G.pendingTab || 'overview'), filter: 'all', q: '', loading: false, updatedAt: Date.now(), edit: false, name: '', desc: '', copy: false, from: '', del: false, shown: 6, hLoading: false });
+      const R2 = reactive({ saved: false, draft: [], leave: null, tab: props.embedId ? (props.embedTab || 'overview') : (G.pendingTab || 'overview'), filter: 'all', q: '', loading: false, updatedAt: Date.now(), edit: false, name: '', desc: '', copy: false, from: '', del: false, shown: 6, hLoading: false });
       const role = computed(() => roleById(curId.value));
       /* D42: ticks are staged in a draft; a save bar shows the diff and who it affects */
       const reseed = () => { R2.draft = role.value ? [...role.value.perms] : []; };
@@ -3701,7 +3879,9 @@ const ShellMod = (() => {
       watch(curId, () => { reseed(); R2.tab = 'overview'; R2.filter = 'all'; R2.q = ''; if (!props.embedId) window.scrollTo({ top: 0 }); }, { flush: 'sync' });
       const diff = computed(() => { if (!role.value) return { add: [], remove: [] }; const saved = role.value.perms; return { add: R2.draft.filter(p => !saved.includes(p)), remove: saved.filter(p => !R2.draft.includes(p)) }; });
       const dirty = computed(() => diff.value.add.length + diff.value.remove.length > 0);
-      function saveDraft() { const n = holders.value.length; role.value.perms.splice(0, role.value.perms.length, ...R2.draft); Object.assign(role.value, { updatedAt: 'Today', updatedBy: ME.name }); G.toast('Role saved', n ? 'Applies to ' + n + (n === 1 ? ' person' : ' people') + ' on their next request.' : 'Nobody holds it yet.', 'Shield'); }
+      /* motion: Save shows a short Saved state in the bar before it slides away */
+      let savedT = null;
+      function saveDraft() { R2.saved = true; clearTimeout(savedT); savedT = setTimeout(() => { R2.saved = false; }, 900); const n = holders.value.length; role.value.perms.splice(0, role.value.perms.length, ...R2.draft); Object.assign(role.value, { updatedAt: 'Today', updatedBy: ME.name }); G.toast('Role saved', n ? 'Applies to ' + n + (n === 1 ? ' person' : ' people') + ' on their next request.' : 'Nobody holds it yet.', 'Shield'); }
       function discardDraft() { reseed(); }
       /* leaving with unsaved changes asks first (sidebar, breadcrumb, search, anything that uses nav) */
       G.leaveGuard = (route, sub, then) => { if (!dirty.value) return false; R2.leave = { route, sub, then }; return true; };   // then: a caller's own step (Back, P49) instead of nav
@@ -3785,15 +3965,15 @@ const ShellMod = (() => {
           <DropdownMenu :items="moreItems" @select="onMore"><template #trigger><Button variant="outline" size="icon" aria-label="More actions"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu></div>
       </div>
       <div v-if="!embedId" class="max-w-full overflow-x-auto"><Tabs v-model="R2.tab" :items="tabs"/></div>
-      <div :class="['grid grid-cols-[minmax(0,1fr)] gap-4 transition-opacity', R2.loading && 'pointer-events-none opacity-60']">
+      <TabPanel :name="R2.tab" :cls="'grid grid-cols-[minmax(0,1fr)] gap-4 transition-opacity' + (R2.loading ? ' pointer-events-none opacity-60' : '')">
 
       <!-- OVERVIEW -->
       <template v-if="R2.tab==='overview'">
         <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
           <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Permissions</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="KeyRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ applied }}<span class="text-sm font-normal text-muted-foreground">/{{ PERMS.length }}</span></p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full rounded-full bg-c1 transition-[width] duration-700" :style="{ width: kpi.pct + '%' }"></div></div></div>
           <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Menus visible</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="ListTree" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.menus }}<span class="text-sm font-normal text-muted-foreground">/{{ MENU.length }}</span></p><p class="mt-1 text-[11px] text-muted-foreground">Top-level menus in the sidebar</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.people }}</p><p class="mt-1 text-[11px] text-muted-foreground">{{ role.system ? 'As their main role' : 'At ' + kpi.locs + ' location' + (kpi.locs===1 ? '' : 's') }}</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">With direct grants</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="UserRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.direct }}</p><p class="mt-1 text-[11px] text-muted-foreground">Holders with exceptions</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ role.system ? 'As their main role' : 'At ' + kpi.locs + ' location' + (kpi.locs===1 ? '' : 's') }}</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">With direct grants</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="UserRound" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.direct"/></p><p class="mt-1 text-[11px] text-muted-foreground">Holders with exceptions</p></div>
         </div>
         <div class="grid grid-cols-1 gap-3 lg:grid-cols-3 [&>*]:min-w-0">
           <Card class="kpi lg:col-span-2" style="animation-delay:200ms"><div class="p-4">
@@ -3887,7 +4067,7 @@ const ShellMod = (() => {
         <ol class="grid gap-4"><li v-for="(e, i) in HIST.slice(0, R2.shown)" :key="i" class="flex gap-3"><span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"><Icon :name="e.icon" :size="14"/></span><div class="min-w-0 text-sm"><p><span class="font-medium">{{ e.who }}</span> {{ e.what }}</p><p v-if="e.detail" class="text-xs text-muted-foreground">{{ e.detail }}</p><p class="text-xs text-muted-foreground tnum">{{ e.when }}</p></div></li></ol>
         <div v-if="R2.shown < HIST.length" class="mt-4 flex justify-center"><Button variant="outline" size="sm" :disabled="R2.hLoading" @click="moreHist"><Icon v-if="R2.hLoading" name="LoaderCircle" :size="14" class="animate-spin"/>Load more</Button></div>
       </div></Card>
-      </div>
+      </TabPanel>
 
       <Dialog v-model:open="R2.edit">
         <div class="grid gap-1.5 pr-6"><h2 class="text-lg font-semibold leading-none">Edit role</h2><p class="text-sm text-muted-foreground">{{ role.system ? 'Main role names are fixed. You can change the description.' : 'Renaming keeps every assignment.' }}</p></div>
@@ -3901,13 +4081,16 @@ const ShellMod = (() => {
         <div v-if="copyDiff" class="flex flex-wrap gap-2 text-xs"><span class="inline-flex items-center gap-1 rounded-md bg-c1/15 px-2 py-1 font-medium tnum"><Icon name="Plus" :size="12"/>{{ copyDiff.add }} added</span><span class="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-1 font-medium text-destructive tnum"><Icon name="Minus" :size="12"/>{{ copyDiff.remove }} removed</span></div>
         <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button variant="outline" @click="R2.copy=false">Cancel</Button><Button :disabled="!R2.from" @click="doCopy"><Icon name="CopyPlus" :size="14"/>Stage changes</Button></div>
       </Dialog>
-      <Transition name="fade"><div v-if="dirty" class="sticky bottom-3 z-30 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border bg-popover p-2.5 pl-3.5 text-sm shadow-lg" role="region" aria-label="Unsaved changes">
+      <Transition name="savebar"><div v-if="dirty || R2.saved" class="sticky bottom-3 z-30 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border bg-popover p-2.5 pl-3.5 text-sm shadow-lg" role="region" :aria-label="dirty ? 'Unsaved changes' : 'Saved'" data-testid="savebar">
+        <template v-if="!dirty"><span class="grid h-5 w-5 place-items-center rounded-full bg-c1/15 text-c1"><Icon name="Check" :size="13"/></span><span class="font-medium" role="status">Saved</span><span class="min-h-8"></span></template>
+        <template v-else>
         <span class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-warning"></span>
         <span class="font-medium">Unsaved changes</span>
         <span class="inline-flex items-center gap-1 rounded-md bg-c1/15 px-1.5 py-0.5 text-xs font-medium tnum" :title="diff.add.join(', ')"><Icon name="Plus" :size="11"/>{{ diff.add.length }}</span>
         <span class="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-1.5 py-0.5 text-xs font-medium tnum text-destructive" :title="diff.remove.join(', ')"><Icon name="Minus" :size="11"/>{{ diff.remove.length }}</span>
         <span class="hidden text-xs text-muted-foreground sm:inline">Affects {{ holders.length }} {{ holders.length===1 ? 'person' : 'people' }}</span>
         <span class="flex flex-1 justify-end gap-2"><Button variant="ghost" size="sm" @click="discardDraft">Discard</Button><Button size="sm" @click="saveDraft"><Icon name="Check" :size="14"/>Save changes</Button></span>
+        </template>
       </div></Transition>
       <Dialog :open="!!R2.leave" @update:open="v => { if (!v) R2.leave = null }">
         <div class="grid gap-1.5 pr-6"><h2 class="text-lg font-semibold leading-none">Leave without saving?</h2><p class="text-sm text-muted-foreground">{{ role.name }} has {{ diff.add.length }} added and {{ diff.remove.length }} removed permissions that are not saved.</p></div>
@@ -3941,7 +4124,7 @@ const ShellMod = (() => {
   const DS_SHADOW = [['shadow-sm', 'Cards at rest, inputs, buttons'], ['shadow-md', 'Hovered or active card'], ['shadow-lg', 'Menus, toasts, sheets'], ['shadow-xl', 'Dialogs, flyouts, phone frame']];
   const DS_MOTION = [
     ['Popover / menu open', 120, 'ease-out', 'pop'], ['Card activate', 160, 'ease-out', 'expand'], ['List reorder (FLIP)', 180, 'cubic-bezier(.2,.8,.2,1)', 'move'],
-    ['Sheet slide', 220, 'cubic-bezier(.2,.8,.2,1)', 'sheet'], ['Dropdown expand', 240, 'cubic-bezier(.2,.8,.2,1)', 'expand'], ['Sidebar panel push', 280, 'cubic-bezier(.2,.8,.2,1)', 'push'],
+    ['Sheet slide (in · out 200 ease-exit)', 280, 'cubic-bezier(.2,.8,.2,1)', 'sheet'], ['Dialog in (out 120 ease-exit)', 160, 'cubic-bezier(.2,.8,.2,1)', 'dialog'], ['Dropdown expand', 240, 'cubic-bezier(.2,.8,.2,1)', 'expand'], ['Sidebar panel push', 280, 'cubic-bezier(.2,.8,.2,1)', 'push'],
     ['Card rise-in (stagger 40–60ms)', 420, 'cubic-bezier(.2,.8,.2,1)', 'rise'], ['Bars / meters grow', 700, 'cubic-bezier(.2,.8,.2,1)', 'grow'], ['Curtain close / open', '440 / 600', 'cubic-bezier(.7,0,.3,1)', 'curtain'],
   ];
   const DS_BP = [['Base', '< 640', 'Phone: one column, bottom action bars, tables become card lists, tabs full width on their own row, menu in a slide-out sheet'], ['sm', '≥ 640', 'Two-column card grids, table/card toggle appears, header shows more icons'], ['md', '≥ 768', 'Tables replace card lists in Responses, Members and Menu Management'], ['lg', '≥ 1024', 'Persistent sidebar (240px, 64px collapsed), builder tool rail, tabs centred in header'], ['xl', '≥ 1280', 'Three-column form cards, 2-column chart grid, 5 KPI tiles']];
@@ -4085,7 +4268,7 @@ const ShellMod = (() => {
     template: `<div class="mx-auto grid max-w-[1120px] grid-cols-[minmax(0,1fr)] gap-4">
       <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 class="text-xl font-semibold tracking-tight">Design system</h2><p class="text-sm text-muted-foreground">Tokens, type, spacing and components behind every screen. Values match shadcn-vue + Tailwind.</p></div>
         <div class="flex items-center gap-2 rounded-md border bg-card px-3 py-1.5 text-xs text-muted-foreground"><Icon :name="isDark ? 'Moon' : 'Sun'" :size="13"/>Showing {{ isDark ? 'dark' : 'light' }} theme values<Button variant="ghost" size="sm" class="h-7" @click="G.theme = isDark ? 'light' : 'dark'">Switch</Button></div></div>
-      <div class="-mx-1 overflow-x-auto px-1"><Tabs v-model="D.tab" :items="[{value:'foundations',label:'Foundations'},{value:'components',label:'Components',count:comps.length},{value:'layout',label:'Layout rules'},{value:'rules',label:'Rules',count:RULES.length}]"/></div>
+      <div class="-mx-1 overflow-x-auto px-1"><Tabs v-model="D.tab" :items="[{value:'foundations',label:'Foundations'},{value:'components',label:'Components',count:comps.length},{value:'motion',label:'Motion'},{value:'layout',label:'Layout rules'},{value:'rules',label:'Rules',count:RULES.length}]"/></div>
 
       <!-- FOUNDATIONS -->
       <template v-if="D.tab==='foundations'">
@@ -4191,6 +4374,7 @@ const ShellMod = (() => {
       </template>
 
       <!-- LAYOUT RULES -->
+      <MotionLab v-else-if="D.tab==='motion'"/>
       <template v-else-if="D.tab==='layout'">
         <section class="kpi rounded-xl border bg-card p-4 shadow-sm sm:p-5">
           <h3 class="font-semibold">Page layout</h3>
@@ -4344,12 +4528,14 @@ const ShellMod = (() => {
           <AppUpdateBanner/><ConnectionNotice v-if="G.app.conn==='banner'" variant="banner"/>
           <StaleStamp v-if="G.app.stale && G.view==='dashboard'" class="mx-auto mb-3 max-w-[1200px]" :offline="G.app.stale==='offline'" :ago="G.app.stale==='offline' ? '3 min ago' : 'just now'" @refresh="G.app.stale = 'fresh'"/>
           <ConnectionNotice v-if="G.app.conn==='page'" variant="page"/>
-          <div v-else-if="G.switching" class="mx-auto grid max-w-[1200px] gap-4" aria-busy="true" aria-label="Loading organisation">
+          <Transition v-else name="xfade" mode="out-in">   <!-- motion: the skeleton fades out, the page fades in -->
+          <div v-if="G.switching" key="sk" class="mx-auto grid max-w-[1200px] gap-4" aria-busy="true" aria-label="Loading organisation">
             <div class="flex items-center gap-3"><div class="h-10 w-10 animate-pulse rounded-md bg-muted"></div><div class="grid gap-2"><div class="h-3 w-24 animate-pulse rounded bg-muted"></div><div class="h-5 w-56 animate-pulse rounded bg-muted"></div></div></div>
             <div class="grid grid-cols-2 gap-2 lg:grid-cols-4"><div v-for="n in 4" :key="n" class="h-24 animate-pulse rounded-xl bg-muted/70"></div></div>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"><div v-for="n in 6" :key="n" class="h-40 animate-pulse rounded-xl bg-muted/70"></div></div>
           </div>
-          <NoAccessPage v-else-if="!allowed"/>
+          <div v-else key="page">
+          <NoAccessPage v-if="!allowed"/>
           <DashboardPage v-else-if="G.view==='dashboard'"/>
           <MediaPage v-else-if="G.view==='media'"/>
           <ApprovalsPage v-else-if="G.view==='approvals'"/>
@@ -4380,6 +4566,8 @@ const ShellMod = (() => {
           <NotificationsPage v-else-if="G.view==='notifications'"/>
           <PermissionsPage v-else-if="G.view==='permissions'"/>
           <PlaceholderPage v-else/>
+          </div>
+          </Transition>
         </main>
       </div>
       <NewOrgDialog/>
@@ -4486,10 +4674,10 @@ const ShellMod = (() => {
 
       <!-- overview strip -->
       <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Live forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Radio" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ live.length }}</p><p class="mt-1 text-[11px] text-muted-foreground">{{ FORMS.filter(f=>f.status==='draft').length }} drafts waiting</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Live forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Radio" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="live.length"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ FORMS.filter(f=>f.status==='draft').length }} drafts waiting</p></div>
         <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Responses this week</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Inbox" :size="13"/></span></div><div class="mt-1.5 flex items-end justify-between gap-2"><p class="text-2xl font-semibold tnum">{{ week.reduce((a,b)=>a+b,0) }}</p><Spark v-if="week.some(Boolean)" :data="week" class="h-7 w-20"/></div><p class="mt-1 text-[11px] text-muted-foreground">Across live forms</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Completed normally</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="CircleCheck" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ FORMS.some(f=>f.responses) ? '93.4%' : '–' }}</p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full rounded-full bg-c1 transition-[width] duration-700" :style="{ width: FORMS.some(f=>f.responses) ? '93.4%' : '0%' }"></div></div></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">To review</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="TriangleAlert" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ flagged }}</p><p class="mt-1 text-[11px] text-muted-foreground">Responses with violations</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Completed normally</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="CircleCheck" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="FORMS.some(f=>f.responses) ? '93.4%' : '–'"/></p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full rounded-full bg-c1 transition-[width] duration-700" :style="{ width: FORMS.some(f=>f.responses) ? '93.4%' : '0%' }"></div></div></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">To review</p><span class="grid h-6 w-6 place-items-center rounded-md bg-warning/15 text-warning"><Icon name="TriangleAlert" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="flagged"/></p><p class="mt-1 text-[11px] text-muted-foreground">Responses with violations</p></div>
       </div>
 
       <!-- quick filters + toolbar (D31) -->
@@ -4966,10 +5154,10 @@ const ShellMod = (() => {
         <div><h2 class="text-xl font-semibold tracking-tight sm:text-2xl">Locations</h2><p class="text-sm text-muted-foreground">{{ G.viewAs ? 'Only the locations ' + G.viewAs.name.split(' ')[0] + ' is assigned to, and everything under them.' : 'Every place in ' + G.org.name + ', from the organisation down to warehouses.' }}</p></div>
       </div>
       <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Locations</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.total }}</p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.active }} active · {{ kpi.branches }} branches</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People assigned</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.people }}</p><p class="mt-1 text-[11px] text-muted-foreground">Across all locations shown</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Location forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="ClipboardList" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.forms }}</p><p class="mt-1 text-[11px] text-muted-foreground">Owned by a location</p></div>
-        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Responses, 30 days</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Inbox" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.resp }}</p><p class="mt-1 text-[11px] text-muted-foreground">Snapshotted per location</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Locations</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.total"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.active }} active · {{ kpi.branches }} branches</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People assigned</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">Across all locations shown</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Location forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="ClipboardList" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.forms"/></p><p class="mt-1 text-[11px] text-muted-foreground">Owned by a location</p></div>
+        <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Responses, 30 days</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Inbox" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.resp"/></p><p class="mt-1 text-[11px] text-muted-foreground">Snapshotted per location</p></div>
       </div>
       <ListCard :list="LS" :tabs="statusTabs" v-model:quick="quick">
         <template #actions><Tooltip :content="allOpen ? 'Collapse all' : 'Expand all'" side="left"><Button variant="ghost" size="sm" class="w-8 px-0" :disabled="filtering" @click="expandAll(!allOpen)" :aria-label="allOpen ? 'Collapse all' : 'Expand all'"><Icon :name="allOpen ? 'ChevronsDownUp' : 'ChevronsUpDown'" :size="15"/></Button></Tooltip>
@@ -5201,15 +5389,15 @@ const ShellMod = (() => {
         <div class="flex gap-1.5"><RefreshButton :loading="T.loading" :updated-at="T.updatedAt" @refresh="refresh"/><Button v-if="canEditLoc() && T.tab!=='details'" variant="outline" @click="T.tab='details'; startEdit()"><Icon name="Pencil" :size="14"/>Edit</Button><Button v-if="canEditLoc()" @click="G.newLoc = loc.id"><Icon name="CirclePlus" :size="14"/><span class="hidden sm:inline">Add child</span><span class="sm:hidden">Child</span></Button><DropdownMenu :items="moreItems" @select="onMore"><template #trigger><Button variant="outline" size="icon" aria-label="More actions"><Icon name="EllipsisVertical" :size="15"/></Button></template></DropdownMenu></div>
       </div>
       <div v-if="!embedId" class="max-w-full overflow-x-auto"><Tabs v-model="T.tab" :items="tabs"/></div>
-      <div :class="['grid grid-cols-[minmax(0,1fr)] gap-4 transition-opacity', T.loading && 'pointer-events-none opacity-60']">
+      <TabPanel :name="T.tab" :cls="'grid grid-cols-[minmax(0,1fr)] gap-4 transition-opacity' + (T.loading ? ' pointer-events-none opacity-60' : '')">
 
       <!-- OVERVIEW -->
       <template v-if="T.tab==='overview'">
         <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
           <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Responses, 30 days</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Inbox" :size="13"/></span></div><div class="mt-1.5 flex items-end justify-between gap-2"><p class="text-2xl font-semibold tnum">{{ kpi.resp }}</p><Spark v-if="kpi.resp" :data="kpi.spark" class="h-7 w-20"/></div><p class="mt-1 text-[11px] text-muted-foreground">Here and below</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="ClipboardList" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.forms }}</p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.live }} live now</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.people }}</p><p class="mt-1 text-[11px] text-muted-foreground">{{ direct.length }} assigned here</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Completed normally</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="CircleCheck" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ kpi.completion ? kpi.completion + '%' : '–' }}</p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full rounded-full bg-c1 transition-[width] duration-700" :style="{ width: (kpi.completion || 0) + '%' }"></div></div></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="ClipboardList" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.forms"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ kpi.live }} live now</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.people"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ direct.length }} assigned here</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Completed normally</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="CircleCheck" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="kpi.completion ? kpi.completion + '%' : '–'"/></p><div class="mt-2 h-1.5 overflow-hidden rounded-full" style="background:color-mix(in oklab,var(--c1) 18%,hsl(var(--card)))"><div class="h-full rounded-full bg-c1 transition-[width] duration-700" :style="{ width: (kpi.completion || 0) + '%' }"></div></div></div>
         </div>
         <div class="grid grid-cols-1 gap-3 lg:grid-cols-3 [&>*]:min-w-0">
           <Card class="kpi lg:col-span-2" style="animation-delay:200ms"><div class="p-4">
@@ -5336,7 +5524,7 @@ const ShellMod = (() => {
             </div></article></div>
         <div v-else class="grid place-items-center rounded-xl border border-dashed p-10 text-center"><Icon name="ClipboardList" :size="22" class="text-muted-foreground"/><p class="mt-2 font-medium">No forms owned here</p><p class="text-sm text-muted-foreground">Organisation-wide forms still reach people here.</p></div>
       </template>
-      </div>
+      </TabPanel>
       <!-- HISTORY -->
       <Card v-if="T.tab==='history'" class="kpi"><div class="p-4">
         <ol class="relative grid gap-4 before:absolute before:bottom-2 before:left-[13px] before:top-2 before:w-px before:bg-border">
@@ -5445,7 +5633,9 @@ const ShellMod = (() => {
     function clearAll() { S.filters = {}; S.draft = {}; S.mode = 'simple'; refresh(); }
     function setFilter(k, f) { if (f) S.filters[k] = f; else delete S.filters[k]; refresh(); }
     function chips() { return Object.entries(S.filters).map(([k, f]) => { const fd = fields.value.find(x => x.key === k); const val = noValue(f.op) ? '' : f.op === 'between' ? f.value.map(v => fd.type === 'date' ? fmtDay(v) : v).join(' – ') : Array.isArray(f.value) ? f.value.map(v => fd.type === 'select_paginated' ? ((LABELS[lkey(fd.module, v)] || {}).label || v) : (fd.options.find(op => op.value === v) || { label: v }).label).join(', ') + (fd.type === 'select_paginated' && fd.module === 'locations' && f.below ? ' and below' : '') : fd.type === 'date' ? fmtDay(f.value) : fd.type === 'boolean' ? (f.value === 'yes' ? 'Yes' : 'No') : '"' + f.value + '"'; return { key: k, text: fd.label + ' ' + opLabel(fd.type, f.op) + (val ? ' ' + val : '') }; }); }
-    return { S, rows, fields, scoped: computed(() => Object.keys(scopeOf()).length > 0), sorts: o.sorts, activeCount, refresh, openFilters, setMode, setOp, canApply, apply, clearAll, setFilter, chips, noun: o.noun || 'records' };
+    /* motion: what the list is asking for; ListRows animates row changes only while this stays the same */
+    const sig = computed(() => JSON.stringify([S.filters, S.sort, S.dir, ((o.query ? o.query() : G.search) || '').trim(), scopeOf()]));
+    return { S, rows, sig, fields, scoped: computed(() => Object.keys(scopeOf()).length > 0), sorts: o.sorts, activeCount, refresh, openFilters, setMode, setOp, canApply, apply, clearAll, setFilter, chips, noun: o.noun || 'records' };
   }
 
   /* ---------- Date picker (no native pickers, rules): month + year switchers inside the calendar card; popover on desktop, modal on phones */
@@ -5724,10 +5914,10 @@ const ShellMod = (() => {
       </div>
       <div :class="['grid gap-4 transition-opacity', R.loading && 'pointer-events-none opacity-60']">
         <div class="grid grid-cols-2 gap-2 lg:grid-cols-4 [&>*]:min-w-0">
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Live forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Radio" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ live.length }}</p><p class="mt-1 text-[11px] text-muted-foreground">{{ VF.filter(f=>f.status==='draft').length }} drafts waiting</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Live forms</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Radio" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="live.length"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ VF.filter(f=>f.status==='draft').length }} drafts waiting</p></div>
           <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:60ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Responses this week</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Inbox" :size="13"/></span></div><div class="mt-1.5 flex items-end justify-between gap-2"><p class="text-2xl font-semibold tnum">{{ week.reduce((a,b)=>a+b,0) }}</p><Spark v-if="week.some(Boolean)" :data="week" class="h-7 w-20"/></div><p class="mt-1 text-[11px] text-muted-foreground">Across live forms</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Locations</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ byLoc.length }}</p><p class="mt-1 text-[11px] text-muted-foreground">{{ G.viewAs ? 'In their scope' : 'Reporting to ' + (root ? root.name : 'you') }}</p></div>
-          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ peopleCount }}</p><p class="mt-1 text-[11px] text-muted-foreground">{{ G.viewAs ? 'Assigned in their scope' : 'Members of ' + G.org.name }}</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:120ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">Locations</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="MapPin" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="byLoc.length"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ G.viewAs ? 'In their scope' : 'Reporting to ' + (root ? root.name : 'you') }}</p></div>
+          <div class="kpi rounded-xl border bg-card p-3.5 shadow-sm" style="animation-delay:180ms"><div class="flex items-center justify-between"><p class="text-xs font-medium text-muted-foreground">People</p><span class="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-primary"><Icon name="Users" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="peopleCount"/></p><p class="mt-1 text-[11px] text-muted-foreground">{{ G.viewAs ? 'Assigned in their scope' : 'Members of ' + G.org.name }}</p></div>
         </div>
         <div class="grid grid-cols-1 gap-3 lg:grid-cols-3 [&>*]:min-w-0">
           <Card class="kpi lg:col-span-2" style="animation-delay:200ms"><div class="p-4">
@@ -5945,7 +6135,8 @@ const ShellMod = (() => {
       const onCtx = (e) => { if (p.list && p.list.batch && p.list.batch.usable() && isPhoneNow()) e.preventDefault(); };   // the long press is ours, not the browser's menu
       function onRow(e, r) { if (pressed) { pressed = false; return; } if (bOn.value) { if (e.target.closest('a,[data-stop]')) return; p.list.batch.tick(r); return; } if (!p.clickable) return; if (e.target.closest('button,a,input,select,textarea,label,[role=combobox],[data-stop]')) return; emit('open', r); }
       function sortBy(c) { const L = p.list; if (!L || !c.sort) return; if (L.S.sort === c.sort) L.S.dir = L.S.dir === 'asc' ? 'desc' : 'asc'; else { L.S.sort = c.sort; L.S.dir = 'asc'; } L.refresh(); }
-      return { root, P, meta, toggle, onRow, sortBy, slots, bOn, pressStart, pressEnd, onCtx };
+      const LM = useListMotion(() => p.rows || [], p.rowKey, () => (p.list && p.list.sig ? p.list.sig.value : ''));
+      return { root, P, meta, toggle, onRow, sortBy, slots, bOn, pressStart, pressEnd, onCtx, LM };
     },
     template: `<div ref="root" class="min-w-0" :class="P.tight && 'lr-tight'">
       <div class="grid h-9 items-center gap-x-4 border-b px-4 text-xs font-medium text-muted-foreground" :style="{ gridTemplateColumns: P.tpl }">
@@ -5957,9 +6148,10 @@ const ShellMod = (() => {
         <span v-if="P.statusF && !P.hero && !P.stack"></span><span v-if="P.actCol"></span><span></span>
       </div>
       <p v-if="!rows.length" class="grid h-32 place-items-center px-4 text-center text-sm text-muted-foreground">{{ empty || 'Nothing matches.' }}</p>
-      <template v-for="r in rows" :key="rowKey(r)">
+      <TransitionGroup tag="div" name="lr" :css="LM.M.live" @leave="LM.leave">
+      <div v-for="(r, ri) in rows" :key="rowKey(r)" :class="['lr-item', LM.itemClass(r, ri)]" :style="LM.itemStyle(ri)" data-lr-item>
         <div v-for="m in [meta(r)]" :key="m.k" :role="bOn ? 'checkbox' : clickable ? 'link' : null" :aria-checked="bOn ? list.batch.isTicked(r) : null" :tabindex="bOn || clickable ? 0 : null" :aria-label="(bOn || clickable) && P.liveCols[0] ? P.liveCols[0].text(r) : null"
-          :class="['grid min-h-14 gap-x-4', clickable && 'cursor-pointer', ' border-b px-4 py-2 outline-none transition-colors last:border-0 hover:bg-accent/60 focus-visible:bg-accent/60', P.tight ? 'items-start' : 'items-center', m.isOpen && 'border-b-0 bg-accent/60', rowClass(r)]"
+          :class="['grid min-h-14 gap-x-4', clickable && 'press-row cursor-pointer', ' border-b px-4 py-2 outline-none transition-colors hover:bg-accent/60 focus-visible:bg-accent/60', P.tight ? 'items-start' : 'items-center', m.isOpen && 'border-b-0 bg-accent/60', rowClass(r)]"
           :style="{ gridTemplateColumns: P.tpl }" @click="onRow($event, r)" @keydown.enter="onRow($event, r)" @keydown.space.prevent="bOn && onRow($event, r)" @pointerdown="pressStart($event, r)" @pointerup="pressEnd" @pointerleave="pressEnd" @pointercancel="pressEnd" @contextmenu="onCtx">
           <template v-for="c in P.gridCols" :key="c.key">
             <div v-if="c.identity" :class="['flex min-w-0 gap-3', P.tight ? 'items-start' : 'items-center']" :style="c.indent ? { paddingLeft: c.indent(r) + 'px' } : null">
@@ -5991,10 +6183,11 @@ const ShellMod = (() => {
           <div v-if="P.actTop" class="relative z-10 -mr-2 -mt-1 flex items-center justify-end gap-1" data-stop><slot v-if="!bOn" name="actions" :row="r"/></div>
           <Icon v-else-if="clickable" name="ChevronRight" :size="16" :class="['justify-self-end text-muted-foreground/70', P.tight && 'mt-3']"/><span v-else></span>
         </div>
-        <div v-if="meta(r).isOpen" class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-6 border-b bg-accent/60 px-4 pb-3 pt-1 text-xs last:border-0" :class="!P.tight && slots.icon && 'pl-[68px]'">
+        <Collapse><div v-if="meta(r).isOpen" class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-6 border-b bg-accent/60 px-4 pb-3 pt-1 text-xs" :class="!P.tight && slots.icon && 'pl-[68px]'">
           <div v-for="c in meta(r).rest" :key="c.key" class="flex min-w-0 justify-between gap-3 border-b border-dashed py-1"><span class="text-muted-foreground">{{ c.label }}</span><span class="tnum min-w-0 truncate text-right">{{ c.text(r) }}</span></div>
-        </div>
-      </template>
+        </div></Collapse>
+      </div>
+      </TransitionGroup>
     </div>`
   };
 
@@ -6325,7 +6518,7 @@ const ShellMod = (() => {
               <div v-if="A.failed && !options.length" class="flex flex-col items-center gap-2 px-3 py-6 text-center"><Icon name="WifiOff" :size="22" class="text-muted-foreground/60"/><p class="text-sm text-muted-foreground">Couldn't load {{ src.noun }}.</p><Button size="sm" variant="outline" @click="load(false)"><Icon name="RotateCw" :size="13"/>Retry</Button></div>
               <template v-else>
                 <p v-if="A.pinned.length" class="px-2 pb-0.5 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Selected</p>
-                <button v-for="(r, i) in options" :key="r.value" type="button" role="option" :aria-selected="vals.includes(r.value)" :disabled="['restricted','missing'].includes(r.status)" @mouseenter="A.hi=i" @click="choose(r)" :class="['flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left disabled:cursor-default', A.hi===i ? 'bg-accent' : '', i===A.pinned.length && A.pinned.length ? 'mt-1 border-t pt-2' : '']">
+                <button v-for="(r, i) in options" :key="r.value" type="button" role="option" :aria-selected="vals.includes(r.value)" :disabled="['restricted','missing'].includes(r.status)" @mouseenter="A.hi=i" @click="choose(r)" :class="['opt-in flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left disabled:cursor-default', A.hi===i ? 'bg-accent' : '', i===A.pinned.length && A.pinned.length ? 'mt-1 border-t pt-2' : '']">
                   <span v-if="multiple" :class="['grid h-4 w-4 shrink-0 place-items-center rounded-sm border border-primary', vals.includes(r.value) && 'bg-primary text-primary-foreground']"><Icon v-if="vals.includes(r.value)" name="Check" :size="11" stroke-width="3"/></span>
                   <span class="min-w-0 flex-1"><span :class="['flex items-center gap-1.5 truncate text-sm', ['archived','restricted','missing'].includes(r.status) && 'text-muted-foreground']"><Icon v-if="r.status==='restricted'" name="Lock" :size="12"/><span class="truncate"><template v-for="(part, pi) in mark(r.label)" :key="pi"><mark v-if="pi===1" class="rounded-sm bg-primary/15 text-foreground">{{ part }}</mark><template v-else>{{ part }}</template></template></span><span v-if="r.status==='archived'" class="shrink-0 text-xs text-warning">(archived)</span></span><span v-if="r.sub" class="block truncate text-xs text-muted-foreground">{{ r.sub }}</span></span>
                   <Icon v-if="!multiple && vals.includes(r.value)" name="Check" :size="14"/></button>
@@ -6645,7 +6838,7 @@ const ShellMod = (() => {
         if (!(+M.d.qty > 0)) e.qty = 'Enter a quantity above 0.';
         if (money_.value && !(+M.d.price >= 0)) e.price = 'Enter a price of 0 or more.';
         if (p.kind === 'sale' && (+M.d.disc < 0 || +M.d.disc > 100)) e.disc = 'Discount is between 0 and 100.';
-        M.err = e; if (Object.keys(e).length) return;
+        M.err = e; if (Object.keys(e).length) { motionInvalid('[data-doclines-modal]'); return; }
         const vals = { qty: +M.d.qty, price: +M.d.price || 0, list: M.d.list || '', disc: +M.d.disc || 0, vat: money_.value ? +M.d.vat || 0 : 0 };
         if (p.lots) vals.lots = M.lots.filter(r => +r.take > 0).map(r => ({ lot: r.id, qty: Math.min(+r.take, r.qty) }));
         if (M.mode === 'edit') { set(p.modelValue.map(x => (x === M.line ? { ...x, ...vals } : x))); toast('Line updated', p.itemOf(M.line.item).name, 'Pencil'); }
@@ -6708,10 +6901,10 @@ const ShellMod = (() => {
       </div>
       <!-- totals -->
       <div v-if="totals && money_ && modelValue.length" class="ml-auto grid w-full max-w-xs gap-1 text-sm tnum" data-doclines-totals>
-        <div class="flex justify-between gap-4 text-muted-foreground"><span>Subtotal</span><span>{{ money(T.net + T.disc) }}</span></div>
+        <div class="flex justify-between gap-4 text-muted-foreground"><span>Subtotal</span><Num :value="T.net + T.disc" :format="money"/></div>
         <div v-if="T.disc" class="flex justify-between gap-4 text-muted-foreground"><span>Discount</span><span>− {{ money(T.disc) }}</span></div>
-        <div class="flex justify-between gap-4 text-muted-foreground"><span>VAT</span><span>{{ money(T.tax) }}</span></div>
-        <div class="flex justify-between gap-4 border-t pt-1.5 text-base font-semibold"><span>Total</span><span>{{ cur(T.total) }}</span></div></div>
+        <div class="flex justify-between gap-4 text-muted-foreground"><span>VAT</span><Num :value="T.tax" :format="money"/></div>
+        <div class="flex justify-between gap-4 border-t pt-1.5 text-base font-semibold"><span>Total</span><Num :value="T.total" :format="cur"/></div></div>
 
       <!-- the line: view, edit or add -->
       <Dialog v-model:open="M.open"><div class="grid gap-4" data-doclines-modal>
@@ -7188,7 +7381,7 @@ const ShellMod = (() => {
       <p v-else-if="act && !act.self" class="flex items-center gap-2 rounded-lg border border-c3/30 bg-c3/10 px-3 py-2 text-sm"><Icon name="Forward" :size="15"/>{{ nameOf(act.for) }} delegated this to you until {{ act.until }}.</p>
       <p v-if="completable" class="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm"><Icon name="TriangleAlert" :size="15" class="mt-0.5 shrink-0 text-warning"/><span>This step asks for more approvals than people who can give them (the requester can't approve their own request). It has every approval it can get, so as Owner you complete it. The workflow is flagged in Approval workflows until it is fixed.</span></p>
       <div class="max-w-full overflow-x-auto"><Tabs v-model="T.tab" :items="[{value:'overview',label:'Overview'},{value:'notifications',label:'Notifications',count:logGroups.length},{value:'history',label:'History'}]"/></div>
-      <div :class="['grid grid-cols-1 gap-3 transition-opacity lg:grid-cols-[minmax(0,1fr)_20rem] [&>*]:min-w-0', T.loading && 'pointer-events-none opacity-60']">
+      <TabPanel :name="T.tab" :cls="'grid grid-cols-1 gap-3 transition-opacity lg:grid-cols-[minmax(0,1fr)_20rem] [&>*]:min-w-0' + (T.loading ? ' pointer-events-none opacity-60' : '')">
         <template v-if="T.tab==='overview'">
           <Card class="kpi"><div class="p-4"><h3 class="text-sm font-semibold">Approval steps</h3><div class="mt-3"><ApprovalSteps :req="req"/></div></div></Card>
           <div class="grid content-start gap-3">
@@ -7213,7 +7406,7 @@ const ShellMod = (() => {
           <p v-else class="mt-4 text-sm text-muted-foreground">Nothing sent yet.</p>
           <p class="mt-2 text-xs text-muted-foreground">Crossed out = skipped, amber = held for quiet hours. In-app always goes; people can turn off the others unless the step marks them required. Emails link to this page; deciding needs sign-in.</p></div></Card>
         <Card v-else class="kpi lg:col-span-2"><div class="p-4"><ol class="grid gap-3"><li v-for="(h, i) in hist" :key="i" class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"><Icon :name="h.icon" :size="13"/></span><div class="text-sm"><p>{{ h.text }}</p><p class="text-xs text-muted-foreground">{{ agoLong(h.at) }}</p></div></li></ol></div></Card>
-      </div>
+      </TabPanel>
       <ApproveDialog :state="D" @confirm="confirm"/>
     </div>`
   };
@@ -7793,7 +7986,7 @@ const ShellMod = (() => {
   }
   const SysHead = { props: { title: String, sub: String }, template: `<div><h2 class="text-xl font-semibold tracking-tight sm:text-2xl">{{ title }}</h2><p class="text-sm text-muted-foreground">{{ sub }}</p></div>` };
   const SysKpi = { props: { label: String, value: [String, Number], icon: String, tone: String, sub: String },
-    template: `<div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between gap-2"><p class="truncate text-xs font-medium text-muted-foreground">{{ label }}</p><span :class="['grid h-6 w-6 place-items-center rounded-md', tone === 'bad' ? 'bg-destructive/10 text-destructive' : tone === 'warn' ? 'bg-warning/15 text-warning' : 'bg-primary/10 text-primary']"><Icon :name="icon" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum">{{ value }}</p><p v-if="sub" class="mt-0.5 truncate text-[11px] text-muted-foreground">{{ sub }}</p></div>` };
+    template: `<div class="kpi rounded-xl border bg-card p-3.5 shadow-sm"><div class="flex items-center justify-between gap-2"><p class="truncate text-xs font-medium text-muted-foreground">{{ label }}</p><span :class="['grid h-6 w-6 place-items-center rounded-md', tone === 'bad' ? 'bg-destructive/10 text-destructive' : tone === 'warn' ? 'bg-warning/15 text-warning' : 'bg-primary/10 text-primary']"><Icon :name="icon" :size="13"/></span></div><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="value"/></p><p v-if="sub" class="mt-0.5 truncate text-[11px] text-muted-foreground">{{ sub }}</p></div>` };
 
   /* ---------------------------------------------------------------- Logs */
   const LogsPage = {
@@ -8105,6 +8298,110 @@ const ShellMod = (() => {
         </div>
         <div class="border-t p-3"><Button variant="outline" class="w-full" @click="G.howDoI = false; nav('help')"><Icon name="LifeBuoy" :size="15"/>All help and guides</Button></div></div></Sheet>`
   };
+
+  /* ================================================================ motion (prototype for review): the Design system's Motion tab
+     The tokens, then each motion live with a Replay. The demos use the same pieces the screens use (parts_motion.js). */
+  const MOTION_TOKENS = [
+    ['--dur-fast', '120ms', 'Exits, small swaps, a tab\'s content, press'],
+    ['--dur-base', '180ms', 'Most entrances: error lines, collapsibles, the tab pill, skeleton → content'],
+    ['--dur-slow', '280ms', 'Things that travel: sheets, a dialog sliding up on a phone, the save bar'],
+    ['--ease-standard', 'cubic-bezier(.2,.8,.2,1)', 'Entrances and moves: fast start, soft landing'],
+    ['--ease-exit', 'cubic-bezier(.4,0,1,1)', 'Exits: gathers speed and goes'],
+  ];
+  const MOTION_LIST = [
+    ['Dialog and sheet', 'In 160ms (scale .96 → 1 + fade); out 120ms. Under 640px the dialog slides up (280ms) and down (200ms). Sheets 280 in / 200 out. The overlay fades both ways.'],
+    ['List rows', 'First load: rows rise 6px, 30ms apart, the first 8 only. A new row is tinted once (1.2s); a deleted row collapses (180ms); a row whose data changed flashes once. Filtering, sorting and searching move nothing.'],
+    ['Tabs', 'The active pill slides to the chosen tab (180ms); the tab\'s content fades in (120ms).'],
+    ['Save bar', 'Slides up while there are unsaved changes (280ms); Save shows Saved, then the bar slides away (200ms).'],
+    ['Validation', 'A refused submit shakes the first field with an error once (6px, 300ms) and focuses it; the error line slides down (180ms).'],
+    ['Numbers', 'Totals, KPIs and counts run to their new value (400ms, ease-out, tabular figures). The first render does not count up.'],
+    ['Skeleton and collapsibles', 'The skeleton fades out (100ms) and the content in (180ms); a collapsible section opens by height (180ms) and closes (135ms).'],
+    ['Press', 'Buttons give to 98% while pressed (80ms); clickable rows to 99.5%.'],
+  ];
+  const MotionLab = {
+    setup() {
+      const S = reactive({ dlg: false, sheet: false, tab: 'a', dirty: false, saved: false, name: '', tried: false, n: 1284, total: 245600, loading: false, open: false, listKey: 0 });
+      let seq = 7;
+      const ROWS = reactive([{ id: 'r1', n: 'Alpha', k: 'a', v: 12 }, { id: 'r2', n: 'Bravo', k: 'b', v: 40 }, { id: 'r3', n: 'Charlie', k: 'a', v: 7 }, { id: 'r4', n: 'Delta', k: 'c', v: 88 }, { id: 'r5', n: 'Echo', k: 'b', v: 23 }, { id: 'r6', n: 'Foxtrot', k: 'c', v: 61 }]);
+      const NAMES = ['Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Lima', 'Mike', 'November', 'Oscar', 'Papa'];
+      const list = useList({ noun: 'samples', rows: () => ROWS, search: (r, q) => r.n.toLowerCase().includes(q), query: () => '', sorts: [{ value: 'none', label: 'As added', get: r => 0 }], fields: [] });
+      const cols = [{ key: 'n', label: 'Name', identity: true, priority: 1, min: 160, text: r => r.n }, { key: 'k', label: 'Kind', priority: 3, min: 90, fold: 'badge', text: r => 'Kind ' + r.k.toUpperCase() }, { key: 'v', label: 'Value', priority: 2, min: 80, right: true, text: r => String(r.v) }];
+      const addRow = () => { ROWS.unshift({ id: 'r' + (++seq), n: NAMES[seq % NAMES.length], k: 'abc'[seq % 3], v: Math.round(Math.random() * 99) }); };
+      const delRow = () => { if (ROWS.length) ROWS.splice(Math.min(1, ROWS.length - 1), 1); };
+      const changeRow = () => { if (!ROWS.length) return; const r = ROWS[Math.floor(Math.random() * ROWS.length)]; r.v = Math.round(Math.random() * 99); };
+      const replayList = () => { S.listKey++; };
+      const save = () => { S.saved = true; S.dirty = false; setTimeout(() => { S.saved = false; }, 900); };
+      const submit = () => { S.tried = true; if (S.name.trim().length < 2) { motionInvalid('[data-motion-form]'); return; } toast('Saved', S.name, 'Check'); S.tried = false; S.name = ''; };
+      const bump = () => { S.n = Math.round(800 + Math.random() * 1600); S.total = Math.round(100000 + Math.random() * 400000); };
+      const reload = () => { S.loading = true; setTimeout(() => { S.loading = false; }, 900); };
+      const money = (n) => Math.round(+n || 0).toLocaleString('en-US');
+      const stacked = () => openDialog({ kind: 'info', title: 'A dialog from the stack', text: 'Close it to see it leave: 120ms, or sliding down on a phone.' });
+      return { S, ROWS, list, cols, toast, addRow, delRow, changeRow, replayList, save, submit, bump, reload, money, stacked, MOTION_TOKENS, MOTION_LIST };
+    },
+    template: `<div class="grid grid-cols-[minmax(0,1fr)] gap-4" data-motion-lab>
+      <section class="kpi rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+        <h3 class="font-semibold">Motion tokens</h3><p class="text-sm text-muted-foreground">Motion explains a change: something arrives, leaves, moves, changes or was refused. Nothing loops except spinners, nothing moves on hover, and prefers-reduced-motion turns all of it off: values jump, nothing shakes, staggers or slides.</p>
+        <div class="mt-3 divide-y rounded-lg border">
+          <div v-for="t in MOTION_TOKENS" :key="t[0]" class="grid gap-1 p-3 sm:grid-cols-[11rem_13rem_minmax(0,1fr)] sm:items-center sm:gap-3"><code class="font-mono text-xs">{{ t[0] }}</code><code class="font-mono text-xs text-muted-foreground">{{ t[1] }}</code><p class="text-sm">{{ t[2] }}</p></div>
+        </div>
+      </section>
+      <div class="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+        <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="dialog">
+          <h3 class="font-semibold">{{ MOTION_LIST[0][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[0][1] }}</p>
+          <div class="mt-3 flex flex-wrap gap-2"><Button size="sm" @click="S.dlg=true" data-testid="m-dialog">Dialog</Button><Button size="sm" variant="outline" @click="S.sheet=true" data-testid="m-sheet">Sheet</Button><Button size="sm" variant="outline" @click="stacked" data-testid="m-appdialog">Stacked dialog</Button></div>
+          <Dialog v-model:open="S.dlg"><div class="grid gap-1.5 pr-6"><h2 class="text-lg font-semibold leading-none">A dialog</h2><p class="text-sm text-muted-foreground">Close it (Esc, Close or the overlay) to see it leave.</p></div>
+            <div class="flex justify-end"><Button variant="outline" @click="S.dlg=false" data-testid="m-dialog-close">Close</Button></div></Dialog>
+          <Sheet v-model:open="S.sheet"><div class="grid gap-2 p-6 pt-12"><h3 class="font-semibold">A sheet</h3><p class="text-sm text-muted-foreground">It slides in (280ms) and out (200ms).</p></div></Sheet>
+        </section>
+        <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="tabs">
+          <h3 class="font-semibold">{{ MOTION_LIST[2][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[2][1] }}</p>
+          <div class="mt-3"><Tabs v-model="S.tab" :items="[{ value: 'a', label: 'Overview' }, { value: 'b', label: 'Lines', count: ROWS.length }, { value: 'c', label: 'History' }]"/></div>
+          <TabPanel :name="S.tab" cls="mt-3 grid gap-2"><div class="rounded-lg border bg-muted/30 p-3 text-sm">{{ S.tab==='a' ? 'Overview: the summary of the record.' : S.tab==='b' ? 'Lines: ' + ROWS.length + ' rows.' : 'History: who changed what, and when.' }}</div></TabPanel>
+        </section>
+      </div>
+      <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="list">
+        <div class="flex flex-wrap items-start justify-between gap-2"><div class="min-w-0"><h3 class="font-semibold">{{ MOTION_LIST[1][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[1][1] }}</p></div>
+          <div class="flex flex-wrap gap-1.5"><Button size="sm" variant="outline" @click="replayList" data-testid="m-list-replay"><Icon name="RotateCcw" :size="14"/>First load</Button><Button size="sm" variant="outline" @click="addRow" data-testid="m-list-add"><Icon name="Plus" :size="14"/>Add</Button><Button size="sm" variant="outline" @click="changeRow" data-testid="m-list-change"><Icon name="RefreshCw" :size="14"/>Change one</Button><Button size="sm" variant="outline" @click="delRow" data-testid="m-list-delete"><Icon name="Trash2" :size="14"/>Delete</Button></div></div>
+        <div class="mt-3 overflow-hidden rounded-lg border"><ListRows :key="S.listKey" :list="list" :rows="list.rows.value" :columns="cols" :clickable="true" @open="r => toast('Opens ' + r.n, '', 'ArrowUpRight')"/></div>
+      </section>
+      <div class="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+        <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="savebar">
+          <h3 class="font-semibold">{{ MOTION_LIST[3][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[3][1] }}</p>
+          <div class="mt-3 flex flex-wrap items-center gap-3"><label class="flex items-center gap-2 text-sm"><Switch v-model="S.dirty" aria-label="Make a change" data-testid="m-dirty"/>Make a change</label></div>
+          <div class="relative mt-3 h-20 overflow-hidden rounded-lg border bg-muted/30">
+            <Transition name="savebar"><div v-if="S.dirty || S.saved" class="absolute inset-x-2 bottom-2 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border bg-popover p-2 pl-3 text-sm shadow-lg" data-testid="m-savebar">
+              <template v-if="S.dirty"><span class="h-2 w-2 shrink-0 rounded-full bg-warning"></span><span class="font-medium">Unsaved changes</span><span class="flex flex-1 justify-end gap-2"><Button variant="ghost" size="sm" @click="S.dirty=false">Discard</Button><Button size="sm" @click="save" data-testid="m-save"><Icon name="Check" :size="14"/>Save</Button></span></template>
+              <template v-else><span class="grid h-5 w-5 place-items-center rounded-full bg-c1/15 text-c1"><Icon name="Check" :size="13"/></span><span class="font-medium" role="status">Saved</span><span class="min-h-8"></span></template>
+            </div></Transition></div>
+        </section>
+        <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="validation">
+          <h3 class="font-semibold">{{ MOTION_LIST[4][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[4][1] }}</p>
+          <form class="mt-3 grid gap-3" @submit.prevent="submit" novalidate data-motion-form>
+            <div class="grid gap-1.5"><label for="m-name" class="text-sm font-medium after:ml-0.5 after:text-destructive after:content-['*']">Name</label><Input id="m-name" v-model="S.name" placeholder="Leave it empty and submit"/><p v-if="S.tried && S.name.trim().length < 2" class="text-xs text-destructive">Give it a name.</p></div>
+            <div class="flex justify-end"><Button type="submit" data-testid="m-submit">Submit</Button></div></form>
+        </section>
+        <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="numbers">
+          <h3 class="font-semibold">{{ MOTION_LIST[5][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[5][1] }}</p>
+          <div class="mt-3 grid grid-cols-2 gap-2"><div class="rounded-xl border bg-card p-3.5"><p class="text-xs font-medium text-muted-foreground">Responses</p><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="S.n"/></p></div>
+            <div class="rounded-xl border bg-card p-3.5"><p class="text-xs font-medium text-muted-foreground">Total</p><p class="mt-1.5 text-2xl font-semibold tnum"><Num :value="S.total" :format="money"/></p></div></div>
+          <div class="mt-3"><Button size="sm" variant="outline" @click="bump" data-testid="m-bump"><Icon name="RotateCcw" :size="14"/>New values</Button></div>
+        </section>
+        <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="skeleton">
+          <h3 class="font-semibold">{{ MOTION_LIST[6][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[6][1] }}</p>
+          <div class="mt-3 h-24"><Transition name="xfade" mode="out-in">
+            <div v-if="S.loading" key="sk" class="grid gap-2" aria-busy="true"><div class="h-4 w-1/2 animate-pulse rounded bg-muted"></div><div class="h-3 w-3/4 animate-pulse rounded bg-muted/70"></div><div class="h-3 w-2/3 animate-pulse rounded bg-muted/70"></div></div>
+            <div v-else key="c" class="grid gap-1"><p class="text-sm font-semibold">Arusha Branch</p><p class="text-sm text-muted-foreground">12 people · 3 roles · updated today</p></div></Transition></div>
+          <div class="flex flex-wrap gap-2"><Button size="sm" variant="outline" @click="reload" data-testid="m-reload"><Icon name="RotateCcw" :size="14"/>Load again</Button><Button size="sm" variant="outline" :aria-expanded="S.open" @click="S.open=!S.open" data-testid="m-collapse"><Icon :name="S.open ? 'ChevronUp' : 'ChevronDown'" :size="14"/>{{ S.open ? 'Fewer filters' : 'More filters' }}</Button></div>
+          <Collapse><div v-if="S.open" class="mt-3 grid gap-2 rounded-lg border bg-muted/30 p-3 text-sm" data-testid="m-collapsible"><p>Created between…</p><p>Type is…</p><p>Location includes the ones under it</p></div></Collapse>
+        </section>
+        <section class="kpi rounded-xl border bg-card p-4 shadow-sm" data-demo="press">
+          <h3 class="font-semibold">{{ MOTION_LIST[7][0] }}</h3><p class="mt-1 text-xs text-muted-foreground">{{ MOTION_LIST[7][1] }}</p>
+          <div class="mt-3 grid gap-2"><div class="flex flex-wrap gap-2"><Button size="sm">Press and hold</Button><Button size="sm" variant="outline">Outline</Button></div>
+            <div class="press-row flex cursor-pointer items-center justify-between rounded-lg border px-3 py-2.5 text-sm hover:bg-accent/60" role="button" tabindex="0">A clickable row<Icon name="ChevronRight" :size="16" class="text-muted-foreground"/></div></div>
+        </section>
+      </div>
+    </div>`
+  };
   /* ================================================================ P100/P101: AppDialog — the one dialog component, in a stack
      openDialog({ kind, title, size, fullscreen, fullPage, closeLabel, actions, status, beforeClose, confirmText, component, props })
        kind        'confirm' | 'form' | 'record' | 'info' — a preset for size, full screen and the footer (DLG_KINDS)
@@ -8127,12 +8424,15 @@ const ShellMod = (() => {
     const k = DLG_KINDS[o.kind || 'form'] || DLG_KINDS.form;
     const d = reactive({ closeLabel: k.closeLabel || 'Close', actions: [], status: '', ...o, id: ++dlgSeq, kind: o.kind || 'form', size: o.size || k.size,
       canFull: o.fullscreen != null ? o.fullscreen : k.fullscreen, prefKey: o.prefKey || (o.kind || 'form') + ':' + (o.module || o.title || ''), component: o.component ? markRaw(o.component) : null,
-      full: false, typed: '', busy: false, tabs: null, tab: o.tab || null, sub: o.sub || '' });
+      full: false, typed: '', busy: false, leaving: false, tabs: null, tab: o.tab || null, sub: o.sub || '' });
     d.full = !!(d.canFull && dlgPrefs[d.prefKey]);
     DIALOGS.push(d); return d;
   }
   async function closeDialog(d, force) {
+    if (d.leaving) return true;
     if (!force && d.beforeClose) { try { if ((await d.beforeClose(d)) === false) return false; } catch (e) { return false; } }
+    /* motion: the dialog plays its way out (120ms; 200ms sliding down on a phone) before it leaves the stack */
+    const out = motionMs(window.innerWidth < 640 ? 200 : 120); if (out) { d.leaving = true; await wait(out); }
     const i = DIALOGS.indexOf(d); if (i > -1) DIALOGS.splice(i, 1); return true;
   }
   async function closeDialogsAbove(j) { while (DIALOGS.length - 1 > j) { if (!(await closeDialog(DIALOGS[DIALOGS.length - 1]))) return false; } return true; }
@@ -8166,7 +8466,7 @@ const ShellMod = (() => {
       const locked = (a) => a.primary && p.d.confirmText && p.d.typed.trim().toUpperCase() !== p.d.confirmText.toUpperCase();
       async function run(a) {
         if (p.d.busy || locked(a)) return; p.d.busy = true;
-        try { const r = await a.run(p.d); if (r !== false && !a.keepOpen) await closeDialog(p.d, true); } finally { p.d.busy = false; }
+        try { const r = await a.run(p.d); if (r === false) motionInvalid(root.value); else if (!a.keepOpen) await closeDialog(p.d, true); } finally { p.d.busy = false; }
       }
       async function full() { const go = p.d.fullPage; const d = p.d; d.goingFull = true; if (!(await closeDialogsAbove(-1))) { d.goingFull = false; return; } go(d); }
       function toggleFull() { p.d.full = !p.d.full; dlgPrefs[p.d.prefKey] = p.d.full; try { localStorage.setItem('kit.dialogFull', JSON.stringify(dlgPrefs)); } catch (e) {} }
@@ -8178,9 +8478,9 @@ const ShellMod = (() => {
       return { below, isTop, labelOf, shown, extra, locked, run, full, toggleFull, root, closeDialog, closeDialogsAbove, DLG_W };
     },
     template: `<Teleport to="body"><div class="fixed inset-0 flex items-end justify-center sm:items-center sm:p-4" :style="{ zIndex: 50 + i }">
-      <div :class="['absolute inset-0', i === 0 ? 'bg-black/70' : 'bg-black/45']" aria-hidden="true"></div>
+      <div :class="['dlg-ov absolute inset-0', i === 0 ? 'bg-black/70' : 'bg-black/45', d.leaving && 'dlg-out']" aria-hidden="true"></div>
       <div ref="root" role="dialog" aria-modal="true" :aria-label="labelOf(d)" data-testid="app-dialog" :data-kind="d.kind" :data-size="d.full ? 'full' : d.size"
-        :class="['pop relative flex w-full flex-col overflow-hidden border bg-background shadow-2xl', d.full ? 'h-[100dvh] sm:h-[calc(100dvh-2rem)] sm:max-w-[calc(100vw-2rem)] sm:rounded-xl' : 'h-[100dvh] sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:rounded-xl ' + DLG_W[d.size]]" style="padding-top:env(safe-area-inset-top,0px)">
+        :class="['dlg-panel relative flex w-full flex-col overflow-hidden border bg-background shadow-2xl', d.leaving && 'dlg-out', d.full ? 'h-[100dvh] sm:h-[calc(100dvh-2rem)] sm:max-w-[calc(100vw-2rem)] sm:rounded-xl' : 'h-[100dvh] sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:rounded-xl ' + DLG_W[d.size]]" style="padding-top:env(safe-area-inset-top,0px)">
         <header class="shrink-0 border-b px-4 pt-3 sm:px-5" :class="d.tabs ? 'pb-2' : 'pb-3'">
           <button v-if="below.length" type="button" class="mb-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground sm:hidden" @click="closeDialog(d)"><Icon name="ArrowLeft" :size="13"/>{{ labelOf(below[below.length - 1]) }}</button>
           <nav v-if="below.length" class="mb-1 hidden min-w-0 flex-wrap items-center gap-1 text-xs text-muted-foreground sm:flex" aria-label="Open dialogs" data-testid="dialog-trail">
@@ -8261,7 +8561,7 @@ const ShellMod = (() => {
     setup() {
       const host = reactive({ kind: 'form', status: '', actions: [], busy: false });
       const f = computed(() => G.formPage && (FORM_DEFS || {})[G.formPage.module]);
-      const run = async (a) => { if (host.busy) return; host.busy = true; try { const r = await a.run(host); if (r !== false && !a.keepOpen) goBack(); } finally { host.busy = false; } };
+      const run = async (a) => { if (host.busy) return; host.busy = true; try { const r = await a.run(host); if (r === false) motionInvalid('main'); else if (!a.keepOpen) goBack(); } finally { host.busy = false; } };
       const sorted = computed(() => { const a = [...host.actions]; return [...a.filter(x => !x.primary), ...a.filter(x => x.primary)]; });
       onBeforeUnmount(() => { if (host.beforeClose) host.beforeClose(host); });
       return { G, host, f, run, sorted, goBack };
@@ -8727,7 +9027,7 @@ const ShellMod = (() => {
   }
   G.appState = appState;
 
-  return { AuthView, ShellView, comps: { DocLines, DocFlow, DocTrail, FormPage, LocationForm, BatchBar, BatchResult, DialogStack, DialogLayer, RecordTabView, HelpPage, HelpArticlePage, HowDoI, ReportsPage, ReportPage, MyJobsPage, JobPage, JobProgress, JobPreview, LogsPage, QueuePage, ScheduledTasksPage, TrashPage, NotificationsPage, PermissionsPage, SysHead, SysKpi, RecordLink, LocationPreview, RolePreview, RequestPreview, ListCard, ListRows, ListShare, LockedField, BackButton, ConnectionNotice, AppUpdateBanner, AppUpdateRequired, AppNotifsAsk, AppNotifsRow, AppBackHint, AppSplash, AppIcon, PhoneMock, LockScreen, SessionExpired, PermissionCard, ActionSheet, ScanView, PrinterCard, StaleStamp, BottomBar, KeyboardSim, PhoneOverlays, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog, BrandMark, ProductLoader, ExampleSignInArt, StatusPill, StatusesCard, NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, ResultChartSettings, Spark, OrgAvatar, AccentPicker, OrgSwitcher, NewOrgDialog } };
+  return { AuthView, ShellView, comps: { MotionLab, DocLines, DocFlow, DocTrail, FormPage, LocationForm, BatchBar, BatchResult, DialogStack, DialogLayer, RecordTabView, HelpPage, HelpArticlePage, HowDoI, ReportsPage, ReportPage, MyJobsPage, JobPage, JobProgress, JobPreview, LogsPage, QueuePage, ScheduledTasksPage, TrashPage, NotificationsPage, PermissionsPage, SysHead, SysKpi, RecordLink, LocationPreview, RolePreview, RequestPreview, ListCard, ListRows, ListShare, LockedField, BackButton, ConnectionNotice, AppUpdateBanner, AppUpdateRequired, AppNotifsAsk, AppNotifsRow, AppBackHint, AppSplash, AppIcon, PhoneMock, LockScreen, SessionExpired, PermissionCard, ActionSheet, ScanView, PrinterCard, StaleStamp, BottomBar, KeyboardSim, PhoneOverlays, LocationsPage, LocationPage, AssignSheet, ViewAsDialog, ViewAsBanner, NewLocationDialog, BrandMark, ProductLoader, ExampleSignInArt, StatusPill, StatusesCard, NotifPrefsSheet, ApprovalSteps, NewRequestDialog, ApprovalsPage, ApproveDialog, RequestPage, RequestTypesPage, DelegationsPage, MediaThumb, FilePicker, MediaLibraryDialog, MediaPage, ApiSelect, RichText, DraftBanner, DraftStatus, MyDraftsSheet, DeleteDialog, RelatedLink, DatePicker, RefreshButton, ListToolbar, FiltersDialog, HeaderSearch, DashboardPage, DesignPage, SideNav, MenusPage, RolesPage, RolePage, NewRoleDialog, GrantDialog, PlaceholderPage, NoAccessPage, FormsList, TemplatesPage, MembersPage, WorkspacePage, ResultChartSettings, Spark, OrgAvatar, AccentPicker, OrgSwitcher, NewOrgDialog } };
 })();
 
 /* ================================================================ ROOT */
@@ -8841,7 +9141,7 @@ app.config.globalProperties.ACCENTS = ACCENTS;
 app.config.globalProperties.RESP = ResponsesMod.RESP;
 app.config.globalProperties.PRODUCT = PRODUCT;
 Object.entries(Object.assign(
-  { Icon, Button, Input, Textarea, Label, Switch, Checkbox, RadioGroupItem, Badge, Card, Separator, Select, DropdownMenu, Tooltip, Dialog, Sheet, Tabs, ScreensPill, PhoneFrame, Curtain,
+  { Icon, Button, Input, Textarea, Label, Switch, Checkbox, RadioGroupItem, Badge, Card, Separator, Select, DropdownMenu, Tooltip, Dialog, Sheet, Tabs, Num, Collapse, TabPanel, ScreensPill, PhoneFrame, Curtain,
     BuilderView: BuilderMod.BuilderView, RespondentView: RespondentMod.RespondentView, ResponsesView: ResponsesMod.ResponsesView, AuthView: ShellMod.AuthView, ShellView: ShellMod.ShellView },
   BuilderMod.comps, RespondentMod.comps, ResponsesMod.comps, ShellMod.comps)).forEach(([n, c]) => app.component(n, c));
 app.mount('#app');

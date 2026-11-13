@@ -367,7 +367,7 @@
       <p v-else-if="act && !act.self" class="flex items-center gap-2 rounded-lg border border-c3/30 bg-c3/10 px-3 py-2 text-sm"><Icon name="Forward" :size="15"/>{{ nameOf(act.for) }} delegated this to you until {{ act.until }}.</p>
       <p v-if="completable" class="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm"><Icon name="TriangleAlert" :size="15" class="mt-0.5 shrink-0 text-warning"/><span>This step asks for more approvals than people who can give them (the requester can't approve their own request). It has every approval it can get, so as Owner you complete it. The workflow is flagged in Approval workflows until it is fixed.</span></p>
       <div class="max-w-full overflow-x-auto"><Tabs v-model="T.tab" :items="[{value:'overview',label:'Overview'},{value:'notifications',label:'Notifications',count:logGroups.length},{value:'history',label:'History'}]"/></div>
-      <div :class="['grid grid-cols-1 gap-3 transition-opacity lg:grid-cols-[minmax(0,1fr)_20rem] [&>*]:min-w-0', T.loading && 'pointer-events-none opacity-60']">
+      <TabPanel :name="T.tab" :cls="'grid grid-cols-1 gap-3 transition-opacity lg:grid-cols-[minmax(0,1fr)_20rem] [&>*]:min-w-0' + (T.loading ? ' pointer-events-none opacity-60' : '')">
         <template v-if="T.tab==='overview'">
           <Card class="kpi"><div class="p-4"><h3 class="text-sm font-semibold">Approval steps</h3><div class="mt-3"><ApprovalSteps :req="req"/></div></div></Card>
           <div class="grid content-start gap-3">
@@ -392,7 +392,7 @@
           <p v-else class="mt-4 text-sm text-muted-foreground">Nothing sent yet.</p>
           <p class="mt-2 text-xs text-muted-foreground">Crossed out = skipped, amber = held for quiet hours. In-app always goes; people can turn off the others unless the step marks them required. Emails link to this page; deciding needs sign-in.</p></div></Card>
         <Card v-else class="kpi lg:col-span-2"><div class="p-4"><ol class="grid gap-3"><li v-for="(h, i) in hist" :key="i" class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"><Icon :name="h.icon" :size="13"/></span><div class="text-sm"><p>{{ h.text }}</p><p class="text-xs text-muted-foreground">{{ agoLong(h.at) }}</p></div></li></ol></div></Card>
-      </div>
+      </TabPanel>
       <ApproveDialog :state="D" @confirm="confirm"/>
     </div>`
   };

@@ -24,7 +24,7 @@ const BTN_V = {
 const BTN_S = { default: 'h-9 px-4 py-2', sm: 'h-8 rounded-md px-3 text-xs', lg: 'h-10 rounded-md px-8', icon: 'h-9 w-9', 'icon-sm': 'h-8 w-8' };
 const Button = {
   props: { variant: { default: 'default' }, size: { default: 'default' }, type: { default: 'button' }, disabled: Boolean },
-  computed: { cls() { return cn('inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50', BTN_V[this.variant], BTN_S[this.size]) } },
+  computed: { cls() { return cn('press inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50', BTN_V[this.variant], BTN_S[this.size]) } },
   template: `<button :type="type" :class="cls" :disabled="disabled"><slot/></button>`
 };
 const Input = {
@@ -152,9 +152,9 @@ function useOverlayEsc(p, emit) {
 const Dialog = {
   props: { open: Boolean }, emits: ['update:open'],
   setup(p, { emit }) { useOverlayEsc(p, emit); },
-  template: `<Teleport to="body"><Transition name="fade"><div v-if="open" class="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4" style="padding-bottom:var(--kbd,0px)">
+  template: `<Teleport to="body"><Transition name="dlg"><div v-if="open" class="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4" style="padding-bottom:var(--kbd,0px)">
     <div class="absolute inset-0 bg-black/70" @click="$emit('update:open', false)"></div>
-    <div role="dialog" aria-modal="true" class="pop relative grid max-h-[calc(100dvh-1rem-var(--kbd,0px))] w-full max-w-lg gap-4 overflow-y-auto overscroll-contain border bg-background p-6 shadow-lg rounded-t-xl sm:max-h-[calc(100dvh-2rem)] sm:rounded-xl" style="padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px))">
+    <div role="dialog" aria-modal="true" class="dlg-panel relative grid max-h-[calc(100dvh-1rem-var(--kbd,0px))] w-full max-w-lg gap-4 overflow-y-auto overscroll-contain border bg-background p-6 shadow-lg rounded-t-xl sm:max-h-[calc(100dvh-2rem)] sm:rounded-xl" style="padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px))">
       <button type="button" class="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" @click="$emit('update:open', false)" aria-label="Close"><Icon name="X" :size="16"/></button>
       <slot/></div></div></Transition></Teleport>`
 };
@@ -173,12 +173,17 @@ const Tabs = {
   props: { modelValue: String, items: Array, full: Boolean }, emits: ['update:modelValue'],
   setup(p, { emit }) {
     const scroller = ref(null); const fade = reactive({ l: false, r: false }); const more = ref(false);
+    /* motion: the active pill is one element that slides to the chosen tab (placed without animation the first time) */
+    const ind = reactive({ ready: false, anim: false, style: {} });
+    const place = () => { const s = scroller.value; if (!s) return; const b = s.querySelector('[aria-selected="true"]'); if (!b) { ind.ready = false; return; }
+      ind.style = { left: b.offsetLeft + 'px', top: b.offsetTop + 'px', width: b.offsetWidth + 'px', height: b.offsetHeight + 'px' };
+      if (!ind.ready) { ind.ready = true; requestAnimationFrame(() => requestAnimationFrame(() => { ind.anim = true; })); } };
     const measure = () => { const s = scroller.value; if (!s) return; fade.l = s.scrollLeft > 2; fade.r = s.scrollLeft + s.clientWidth < s.scrollWidth - 2; more.value = !p.full && s.scrollWidth > s.clientWidth + 2; };
     const show = () => nextTick(() => { const s = scroller.value; if (!s) return; const b = s.querySelector('[aria-selected="true"]');
       if (b && !p.full) { const l = b.offsetLeft, r = l + b.offsetWidth; if (l < s.scrollLeft + 24) s.scrollLeft = Math.max(0, l - 24); else if (r > s.scrollLeft + s.clientWidth - 24) s.scrollLeft = r - s.clientWidth + 24; }
-      measure(); });
+      measure(); place(); });
     watch(() => p.modelValue, show); watch(() => (p.items || []).map(t => t.value + ':' + t.count).join(), show);
-    let ro; onMounted(() => { show(); if (window.ResizeObserver && scroller.value) { ro = new ResizeObserver(measure); ro.observe(scroller.value); } });
+    let ro; onMounted(() => { show(); if (window.ResizeObserver && scroller.value) { ro = new ResizeObserver(() => { measure(); place(); }); ro.observe(scroller.value); } if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => place()); });
     onBeforeUnmount(() => { if (ro) ro.disconnect(); });
     function key(e) {
       const n = (p.items || []).length; if (!n) return; const i = Math.max(0, p.items.findIndex(t => t.value === p.modelValue)); let j = null;
@@ -187,17 +192,18 @@ const Tabs = {
       nextTick(() => { const b = scroller.value && scroller.value.querySelectorAll('[role=tab]')[j]; if (b) b.focus(); });
     }
     const moreItems = computed(() => (p.items || []).map(t => ({ id: t.value, label: t.label + (t.count != null ? ' · ' + t.count : ''), checked: t.value === p.modelValue })));
-    return { scroller, fade, more, measure, key, moreItems };
+    return { scroller, fade, more, measure, key, moreItems, ind };
   },
   template: `<div :class="full ? 'w-full' : 'flex min-w-0 max-w-full items-center gap-1'">
     <div :class="full ? '' : 'relative min-w-0'">
       <div ref="scroller" role="tablist" @scroll="measure" @keydown="key" style="scrollbar-width:none"
-        :class="['h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground', full ? 'grid w-full' : 'inline-flex max-w-full overflow-x-auto']" :style="full ? 'grid-template-columns:repeat(' + items.length + ',minmax(0,1fr))' : ''">
+        :class="['relative h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground', full ? 'grid w-full' : 'inline-flex max-w-full overflow-x-auto']" :style="full ? 'grid-template-columns:repeat(' + items.length + ',minmax(0,1fr))' : ''">
+        <span v-if="ind.ready" :class="['tab-ind', ind.anim && 'tab-ind-anim']" :style="ind.style" aria-hidden="true"></span>
         <button v-for="t in items" :key="t.value" type="button" role="tab" :aria-selected="modelValue===t.value" :tabindex="modelValue===t.value ? 0 : -1" @click="$emit('update:modelValue', t.value)"
-          :class="['inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', modelValue===t.value ? 'bg-background text-foreground shadow' : 'hover:text-foreground']">
-          {{ t.label }}<span v-if="t.count != null" class="tnum rounded-full bg-muted-foreground/15 px-1.5 text-[11px] leading-4">{{ t.count }}</span></button></div>
-      <span v-if="fade.l" class="pointer-events-none absolute inset-y-0 left-0 w-8 rounded-l-lg bg-gradient-to-r from-muted to-transparent" aria-hidden="true"></span>
-      <span v-if="fade.r" class="pointer-events-none absolute inset-y-0 right-0 w-8 rounded-r-lg bg-gradient-to-l from-muted to-transparent" aria-hidden="true"></span>
+          :class="['relative z-[1] inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', modelValue===t.value ? (ind.ready ? 'text-foreground' : 'bg-background text-foreground shadow') : 'hover:text-foreground']">
+          {{ t.label }}<span v-if="t.count != null" class="tnum rounded-full bg-muted-foreground/15 px-1.5 text-[11px] leading-4"><Num :value="t.count"/></span></button></div>
+      <span v-if="fade.l" class="pointer-events-none absolute inset-y-0 left-0 z-[2] w-8 rounded-l-lg bg-gradient-to-r from-muted to-transparent" aria-hidden="true"></span>
+      <span v-if="fade.r" class="pointer-events-none absolute inset-y-0 right-0 z-[2] w-8 rounded-r-lg bg-gradient-to-l from-muted to-transparent" aria-hidden="true"></span>
     </div>
     <DropdownMenu v-if="more" :items="moreItems" label="All tabs" @select="it => $emit('update:modelValue', it.id)"><template #trigger><Button variant="ghost" size="sm" class="h-9 shrink-0 px-2" aria-label="More tabs"><span class="hidden sm:inline">More</span><Icon name="ChevronDown" :size="15"/></Button></template></DropdownMenu>
   </div>`
