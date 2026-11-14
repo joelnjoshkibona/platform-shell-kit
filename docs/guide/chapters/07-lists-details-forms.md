@@ -27,6 +27,12 @@ Every screen of a product is one of a few shapes. Each shape is decided once (th
 - Adding or changing a line opens the line form in a modal; deleting asks once (no YES: the line is part of the document's unsaved changes). Header and lines save together, with one draft.
 - Lots, when the document moves stock, are picked in the line form, oldest first. `DocFlow` shows where the document is in its workflow and `DocTrail` the documents before and after it.
 
+## Motion (P116)
+
+- Motion tells you what just happened: a dialog opening and closing, a new or deleted row, a changed number, a refused field. It never decorates, never loops, and never plays when you only filter or sort.
+- Use the library's pieces instead of your own: `Meter` for a percentage bar, `Num` for a number that changes, `Collapse` for something that opens, `TabPanel` for tab content. Lists and Highcharts charts already get theirs.
+- With reduced motion turned on in the operating system, everything shows at once and still works.
+
 ## Opening a form with settings (P100)
 
 A form is often opened from somewhere that already knows part of the answer: "New location under Arusha" knows the parent. Instead of a new dialog for each place, every module registers its form once (`defineForm`) and any screen opens it with a context:

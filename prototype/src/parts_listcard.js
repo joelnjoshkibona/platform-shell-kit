@@ -192,7 +192,8 @@
       const onCtx = (e) => { if (p.list && p.list.batch && p.list.batch.usable() && isPhoneNow()) e.preventDefault(); };   // the long press is ours, not the browser's menu
       function onRow(e, r) { if (pressed) { pressed = false; return; } if (bOn.value) { if (e.target.closest('a,[data-stop]')) return; p.list.batch.tick(r); return; } if (!p.clickable) return; if (e.target.closest('button,a,input,select,textarea,label,[role=combobox],[data-stop]')) return; emit('open', r); }
       function sortBy(c) { const L = p.list; if (!L || !c.sort) return; if (L.S.sort === c.sort) L.S.dir = L.S.dir === 'asc' ? 'desc' : 'asc'; else { L.S.sort = c.sort; L.S.dir = 'asc'; } L.refresh(); }
-      return { root, P, meta, toggle, onRow, sortBy, slots, bOn, pressStart, pressEnd, onCtx };
+      const LM = useListMotion(() => p.rows || [], p.rowKey, () => (p.list && p.list.sig ? p.list.sig.value : ''));
+      return { root, P, meta, toggle, onRow, sortBy, slots, bOn, pressStart, pressEnd, onCtx, LM };
     },
     template: `<div ref="root" class="min-w-0" :class="P.tight && 'lr-tight'">
       <div class="grid h-9 items-center gap-x-4 border-b px-4 text-xs font-medium text-muted-foreground" :style="{ gridTemplateColumns: P.tpl }">
@@ -204,9 +205,10 @@
         <span v-if="P.statusF && !P.hero && !P.stack"></span><span v-if="P.actCol"></span><span></span>
       </div>
       <p v-if="!rows.length" class="grid h-32 place-items-center px-4 text-center text-sm text-muted-foreground">{{ empty || 'Nothing matches.' }}</p>
-      <template v-for="r in rows" :key="rowKey(r)">
+      <TransitionGroup tag="div" name="lr" :css="LM.M.live" @leave="LM.leave">
+      <div v-for="(r, ri) in rows" :key="rowKey(r)" :class="['lr-item', LM.itemClass(r, ri)]" :style="LM.itemStyle(ri)" data-lr-item>
         <div v-for="m in [meta(r)]" :key="m.k" :role="bOn ? 'checkbox' : clickable ? 'link' : null" :aria-checked="bOn ? list.batch.isTicked(r) : null" :tabindex="bOn || clickable ? 0 : null" :aria-label="(bOn || clickable) && P.liveCols[0] ? P.liveCols[0].text(r) : null"
-          :class="['grid min-h-14 gap-x-4', clickable && 'cursor-pointer', ' border-b px-4 py-2 outline-none transition-colors last:border-0 hover:bg-accent/60 focus-visible:bg-accent/60', P.tight ? 'items-start' : 'items-center', m.isOpen && 'border-b-0 bg-accent/60', rowClass(r)]"
+          :class="['grid min-h-14 gap-x-4', clickable && 'press-row cursor-pointer', ' border-b px-4 py-2 outline-none transition-colors hover:bg-accent/60 focus-visible:bg-accent/60', P.tight ? 'items-start' : 'items-center', m.isOpen && 'border-b-0 bg-accent/60', rowClass(r)]"
           :style="{ gridTemplateColumns: P.tpl }" @click="onRow($event, r)" @keydown.enter="onRow($event, r)" @keydown.space.prevent="bOn && onRow($event, r)" @pointerdown="pressStart($event, r)" @pointerup="pressEnd" @pointerleave="pressEnd" @pointercancel="pressEnd" @contextmenu="onCtx">
           <template v-for="c in P.gridCols" :key="c.key">
             <div v-if="c.identity" :class="['flex min-w-0 gap-3', P.tight ? 'items-start' : 'items-center']" :style="c.indent ? { paddingLeft: c.indent(r) + 'px' } : null">
@@ -238,10 +240,11 @@
           <div v-if="P.actTop" class="relative z-10 -mr-2 -mt-1 flex items-center justify-end gap-1" data-stop><slot v-if="!bOn" name="actions" :row="r"/></div>
           <Icon v-else-if="clickable" name="ChevronRight" :size="16" :class="['justify-self-end text-muted-foreground/70', P.tight && 'mt-3']"/><span v-else></span>
         </div>
-        <div v-if="meta(r).isOpen" class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-6 border-b bg-accent/60 px-4 pb-3 pt-1 text-xs last:border-0" :class="!P.tight && slots.icon && 'pl-[68px]'">
+        <Collapse><div v-if="meta(r).isOpen" class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-6 border-b bg-accent/60 px-4 pb-3 pt-1 text-xs" :class="!P.tight && slots.icon && 'pl-[68px]'">
           <div v-for="c in meta(r).rest" :key="c.key" class="flex min-w-0 justify-between gap-3 border-b border-dashed py-1"><span class="text-muted-foreground">{{ c.label }}</span><span class="tnum min-w-0 truncate text-right">{{ c.text(r) }}</span></div>
-        </div>
-      </template>
+        </div></Collapse>
+      </div>
+      </TransitionGroup>
     </div>`
   };
 
