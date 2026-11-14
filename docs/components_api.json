@@ -2459,5 +2459,114 @@
   "dont": [
    "Make the flow clickable: actions live in the page header"
   ]
+ },
+ "Meter": {
+  "file": "src/components/app/motion/Meter.vue",
+  "props": [
+   [
+    "value",
+    "number",
+    "0",
+    "0–100; the fill's width (or height on axis y)"
+   ],
+   [
+    "axis",
+    "'x' | 'y'",
+    "'x'",
+    "y grows a column from its baseline"
+   ],
+   [
+    "duration",
+    "number",
+    "600",
+    "ms"
+   ],
+   [
+    "delay",
+    "number",
+    "0",
+    "ms, first draw only; stagger in 40ms steps, at most 12"
+   ],
+   [
+    "ease",
+    "string",
+    "'var(--ease-standard)'",
+    ""
+   ],
+   [
+    "instant",
+    "boolean",
+    "false",
+    "a live meter (a countdown) starts at its value"
+   ]
+  ],
+  "emits": [],
+  "slots": [],
+  "do": [
+   "Use it for every percentage bar: the track is your element, the Meter is the fill",
+   "Colour it with a class (bg-primary, bg-c1…)"
+  ],
+  "dont": [
+   "Animate a bar's width yourself",
+   "Replay it on a re-render or a changed filter"
+  ]
+ },
+ "Motion pieces": {
+  "file": "src/components/app/motion/ (Num.vue, Collapse.vue, TabPanel.vue, motion.ts: useListMotion, useDrawIn, motionInvalid, motionShake, motionMs, chartMotion)",
+  "props": [
+   [
+    "Num.value",
+    "number | string",
+    "",
+    "the number shown; changes tween"
+   ],
+   [
+    "Num.format",
+    "(n) => string",
+    "null",
+    "formats each frame"
+   ],
+   [
+    "Num.count",
+    "boolean",
+    "false",
+    "count up from 0 on first view (KPI tiles)"
+   ],
+   [
+    "Collapse.duration",
+    "number",
+    "180",
+    "ms to open; closing is 75% of it"
+   ],
+   [
+    "TabPanel.name",
+    "string",
+    "",
+    "the tab's value: the panel fades when it changes"
+   ],
+   [
+    "TabPanel.cls",
+    "string",
+    "'grid grid-cols-[minmax(0,1fr)] gap-4'",
+    "the panel's layout classes"
+   ]
+  ],
+  "emits": [],
+  "slots": [
+   [
+    "default",
+    "Collapse: one v-if child; TabPanel: the tab's content"
+   ]
+  ],
+  "do": [
+   "Use Num for any number that can change on the page (KPIs, counts, totals)",
+   "Call motionInvalid(form) after a submit the server refused",
+   "Use useDrawIn for a module's own drawing so it plays on first view, never behind the page curtain"
+  ],
+  "dont": [
+   "Write a keyframe or transition in a module: add the piece to the library first",
+   "Animate on a changed query, on hover or in a loop",
+   "Use durations or curves outside the tokens"
+  ]
  }
 }

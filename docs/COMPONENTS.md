@@ -8,7 +8,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 - **Actions**: Button
 - **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Document lines, Locked field, File picker · Media library, API select, Rich text, Date picker, Accent picker
-- **Display**: Badge · Status pill, Card · KPI tile, App icon and splash, Product loader
+- **Display**: Badge · Status pill, Meter, Motion pieces, Card · KPI tile, App icon and splash, Product loader
 - **Navigation**: Tabs, Sidebar item, Record link, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet, AppDialog · Record dialog
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, Job progress · Job page, View as banner
@@ -424,6 +424,68 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Don't: Colour without a word
 - Don't: Raw coloured spans
 - Don't: if (status.label === …): labels are editable
+
+### Meter
+
+`src/components/app/motion/Meter.vue`
+
+| Spec | Value |
+| --- | --- |
+| Fill | every percentage bar: 0 → value on first view (600ms), old → new on a change; never on a re-render |
+| Track | the bar's own element (rounded-full, a muted or tinted track); the Meter is the fill inside it, coloured by its class |
+| Axis | x by default; axis="y" grows a column from its baseline |
+| Stagger | delay in 40ms steps, at most 12 |
+| Live | instant for a live meter (a countdown): starts at its value |
+| Reduced motion | the value at once |
+| Variants | bar · column · live |
+| Used in | KPI completion, location and role bars, job and upload progress, report bars (P116) |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `value` | `number` | `0` | 0–100; the fill's width (or height on axis y) |
+| `axis` | `'x' \| 'y'` | `'x'` | y grows a column from its baseline |
+| `duration` | `number` | `600` | ms |
+| `delay` | `number` | `0` | ms, first draw only; stagger in 40ms steps, at most 12 |
+| `ease` | `string` | `'var(--ease-standard)'` |  |
+| `instant` | `boolean` | `false` | a live meter (a countdown) starts at its value |
+
+- Do: Use it for every percentage bar: the track is your element, the Meter is the fill
+- Do: Colour it with a class (bg-primary, bg-c1…)
+- Don't: Animate a bar's width yourself
+- Don't: Replay it on a re-render or a changed filter
+
+### Motion pieces
+
+`src/components/app/motion/ (Num.vue, Collapse.vue, TabPanel.vue, motion.ts: useListMotion, useDrawIn, motionInvalid, motionShake, motionMs, chartMotion)`
+
+| Spec | Value |
+| --- | --- |
+| Num | a number that tweens to its new value (400ms, tabular figures); count: from 0 on first view (700ms) |
+| Collapse | one v-if child: height + fade in 180ms, out 135ms |
+| TabPanel | a tab's content: 120ms fade when the tab changes, not on first render |
+| Helpers | useListMotion (ListRows), useDrawIn, motionInvalid, motionShake, motionMs, chartMotion |
+| Tokens | --dur-fast 120 · --dur-base 180 · --dur-slow 280 · --ease-standard · --ease-exit |
+| Reduced motion | all off: values at once, nothing shakes, staggers or tweens |
+| Variants | see the Motion tab |
+| Used in | KPI tiles, counts, totals, collapsibles, details tabs (P116) |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `Num.value` | `number \| string` | – | the number shown; changes tween |
+| `Num.format` | `(n) => string` | `null` | formats each frame |
+| `Num.count` | `boolean` | `false` | count up from 0 on first view (KPI tiles) |
+| `Collapse.duration` | `number` | `180` | ms to open; closing is 75% of it |
+| `TabPanel.name` | `string` | – | the tab's value: the panel fades when it changes |
+| `TabPanel.cls` | `string` | `'grid grid-cols-[minmax(0,1fr)] gap-4'` | the panel's layout classes |
+
+**Slots:** `#default` Collapse: one v-if child; TabPanel: the tab's content
+
+- Do: Use Num for any number that can change on the page (KPIs, counts, totals)
+- Do: Call motionInvalid(form) after a submit the server refused
+- Do: Use useDrawIn for a module's own drawing so it plays on first view, never behind the page curtain
+- Don't: Write a keyframe or transition in a module: add the piece to the library first
+- Don't: Animate on a changed query, on hover or in a loop
+- Don't: Use durations or curves outside the tokens
 
 ### Card · KPI tile
 

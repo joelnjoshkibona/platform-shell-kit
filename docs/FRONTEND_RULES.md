@@ -276,6 +276,24 @@ Every screen is built against these rules. Where code and the prototype disagree
 - Notifications (D43): the workflow editor has a Notifications block (channel chips, in-app locked on; event switches; reminder every N hours up to M). Each step can override channels and mark them required. The request page has a Notifications tab: one row per person and event with a chip per channel, crossed out with the reason when skipped. People manage their own email/SMS/push in Notification settings (user menu); in-app can't be turned off.
 - Email and quiet hours (D44): approval emails link to the request; nobody decides from an email. SMS and push inside the org's quiet hours (Settings, default 20:00–07:00 EAT) show as held (amber chip with the release time); required steps ignore quiet hours.
 
+## Motion (P116)
+
+Motion answers what just happened: something arrived, left, moved, changed or was refused. The shared pieces are in `COMPONENTS.md` (Num, Collapse, TabPanel, Meter) and the helpers below; the Design system page's Motion tab shows each one.
+
+**Locked**
+
+- One token set: `--dur-fast` 120ms, `--dur-base` 180ms, `--dur-slow` 280ms, `--ease-standard`, `--ease-exit`. No other durations or curves in a component; exits are faster than entrances and use `--ease-exit`.
+- Dialogs and sheets animate **in and out**; nothing that leaves vanishes. Below 640px a dialog slides up from the bottom.
+- Lists move only for a change in the same query: first load (rise, 30ms stagger, first 8 rows), a new row (highlight once), a changed row after Refresh (flash once), a deleted row (collapse). **A changed filter, sort, search or scope moves nothing.** Always through `useListMotion` in `ListRows`.
+- A refused submit focuses the first field with an error and shakes it once (`motionInvalid`); error text slides down.
+- Every percentage bar is a `Meter`; every changing number in a KPI, count or total is a `Num`; every Highcharts chart takes `chartMotion()` (through `loadHighcharts`). Data draws in on first view (`useDrawIn`) and on a real change of value, never on a re-render, never behind the page curtain.
+- `prefers-reduced-motion`: everything off, values shown at once, nothing shakes, staggers or tweens, and everything still works. Waits that hold an element while it leaves use `motionMs()`, which is 0 then.
+- Nothing loops (spinners aside); nothing moves on hover beyond colour.
+
+**Constrained-creative**: stagger caps (8 rows, 12 bars), which numbers tween on a page (KPIs, counts and totals that change; not every figure), a module's own chart types through `chartMotion`.
+
+**Free**: none. A motion a module needs that is not here is a new piece in the library first.
+
 ## Locked: visual
 
 shadcn-vue components and Tailwind with semantic tokens only; never a raw hex or grey class in a component. Values come from the prototype's Design system page (D17).

@@ -1,4 +1,4 @@
-/* ---------------------------------------------------------------- motion (prototype for review): the shared pieces
+/* ---------------------------------------------------------------- motion (P116): the shared pieces
    Tokens are CSS (assemble.py): --dur-fast 120ms · --dur-base 180ms · --dur-slow 280ms · --ease-standard · --ease-exit.
    Motion explains a change: something arrives, leaves, moves, changes or was refused. Nothing loops (spinners aside),
    nothing moves on hover. Under prefers-reduced-motion everything here is off: values jump, nothing shakes or staggers,
