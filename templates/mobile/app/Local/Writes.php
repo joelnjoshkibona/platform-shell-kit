@@ -49,7 +49,7 @@ class Writes
     /** @return resource */
     private static function open()
     {
-        $dir = storage_path('framework');
+        $dir = storage_path('framework/cache'); // ignored by git, like the cache itself
         if (! is_dir($dir)) {
             @mkdir($dir, 0775, true);
         }
