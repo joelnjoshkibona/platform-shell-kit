@@ -2601,7 +2601,7 @@
     "kind",
     "'push' | 'pop' | 'tab' | 'step-next' | 'step-back'",
     "from the navigation",
-    "Set by the router (and the wizard), never by a screen"
+    "Set by the router (and the wizard), never by a screen. In a wizard it wraps the step's body inside the scrolling area; the leaving page or step is pinned at its own box"
    ]
   ],
   "emits": [],

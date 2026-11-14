@@ -88,11 +88,11 @@ const NewOrder = { components: { Header, Icon, Av, Btn, FooterBar, ItemCatalogue
         primary: ['Print the order', () => toast('Printing SO-0042'), 'Printer'], secondary: ['Make another order', () => { docReset(); go('neworder'); }, 'Plus'] });
       docReset(); };
     const prev = () => { DOC.dir = 'step-back'; DOC.step--; };
-    return { S, DOC, steps, people, room, ok, next, prev, cust, money, num, prod, docTotal, docUnits };
+    return { S, DOC, steps, people, room, ok, next, prev, cust, money, num, prod, docTotal, docUnits, pinLeaving };
   },
   template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="New order" pushed hide-search/>
     <div class="shrink-0 border-b px-4 py-2.5"><div class="flex items-center gap-2"><template v-for="(s, i) in steps" :key="s"><span :class="['grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold', i < DOC.step ? 'bg-success text-white' : i === DOC.step ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground']"><Icon v-if="i < DOC.step" name="Check" :size="13"/><template v-else>{{ i + 1 }}</template></span><span :class="['text-xs', i === DOC.step ? 'font-semibold' : 'text-muted-foreground']">{{ s }}</span><span v-if="i < 2" class="h-px flex-1 bg-border"></span></template></div></div>
-    <div class="scroll relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden"><transition :name="'pg-' + DOC.dir"><div :key="DOC.step">
+    <div class="scroll relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden"><transition :name="'pg-' + DOC.dir" @before-leave="pinLeaving"><div :key="DOC.step">
       <div v-if="DOC.step === 0" class="space-y-3 p-3"><Seg v-model="DOC.pay" :tabs="[{ id: 'cash', label: 'Cash' }, { id: 'credit', label: 'Credit' }]"/>
         <button v-for="c in people" :key="c.id" type="button" :class="['press flex w-full items-center gap-3 rounded-xl border p-3 text-left', DOC.c === c.id ? 'border-primary bg-primary/5' : 'bg-card']" @click="DOC.c = c.id"><Av :c="c" :size="40"/><span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold">{{ c.name }}</span><span class="block text-xs text-muted-foreground">{{ c.limit ? 'Credit limit ' + money(c.limit) + (c.owes > 0 ? ' · owes ' + money(c.owes) : '') : 'No credit' }}</span></span><Icon v-if="DOC.c === c.id" name="CircleCheck" :size="20" class="text-primary"/></button></div>
       <ItemCatalogue v-else-if="DOC.step === 1"><div v-if="room != null" :class="['mx-3 mt-3 rounded-xl border p-3 text-xs', room < 0 ? 'border-destructive/40 bg-destructive/5 text-destructive' : 'bg-card text-muted-foreground']">Credit left for this order: <span class="font-semibold tnum">{{ money(Math.max(0, room)) }}</span> of {{ money(cust(DOC.c).limit) }}</div></ItemCatalogue>

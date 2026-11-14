@@ -41,7 +41,7 @@ push, sync, forgot password …); what it cannot do is left out of the app inste
 ## How it moves (P118)
 
 The phone follows the web's motion rules (P116) and adds its own: the splash opens into the app as soon as it is ready, a record slides
-in from the right and Back slides it away, tabs fade, wizard steps slide by direction, lists rise once, and a write that matters (an
+in from the right and Back slides it away, tabs fade, wizard steps slide by direction (only the step moves; the header and the steps stay still), lists rise once, and a write that matters (an
 order made, goods out, stock received) ends in a done moment with the number and what happens next instead of a toast. A document's
 lines are added from an item catalogue with a quantity sheet (P115). Reduced motion turns all of it off.
 
