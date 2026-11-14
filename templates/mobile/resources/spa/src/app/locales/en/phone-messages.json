@@ -1,0 +1,20 @@
+{
+  "firstRun": {
+    "step": "Step {n} of {of}",
+    "later": "Not now"
+  },
+  "messages": {
+    "sending": "Sending",
+    "sent": "Sent",
+    "delivered": "Delivered",
+    "notSent": "Not sent",
+    "retry": "Retry",
+    "placeholder": "Text message",
+    "chooseSim": "Choose the SIM",
+    "count": "{chars} · {parts} SMS",
+    "send": "Send"
+  },
+  "common": {
+    "undo": "Undo"
+  }
+}

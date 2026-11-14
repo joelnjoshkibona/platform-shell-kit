@@ -1,0 +1,20 @@
+{
+  "firstRun": {
+    "step": "Hatua {n} kati ya {of}",
+    "later": "Si sasa"
+  },
+  "messages": {
+    "sending": "Inatumwa",
+    "sent": "Imetumwa",
+    "delivered": "Imefika",
+    "notSent": "Haijatumwa",
+    "retry": "Jaribu tena",
+    "placeholder": "Ujumbe",
+    "chooseSim": "Chagua laini",
+    "count": "{chars} · SMS {parts}",
+    "send": "Tuma"
+  },
+  "common": {
+    "undo": "Tendua"
+  }
+}

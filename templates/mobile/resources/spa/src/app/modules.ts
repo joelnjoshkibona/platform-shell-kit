@@ -62,6 +62,12 @@ export interface ModuleDefinition {
    * the page that starts it. The page opens its form when it sees `?new=1` (the phone generator writes that in).
    */
   quickAdd?: QuickAdd[]
+  /**
+   * P120: the module whose page is the app's first screen (an SMS app opens on its conversations). `true`: its route named
+   * `home` replaces the platform's Home, its menu group leads the drawer, and Back on it is "press again to leave".
+   * The platform's Home says `'fallback'` and is left out when a module claims the first screen. At most one module may.
+   */
+  home?: true | 'fallback'
 }
 
 export interface HomeCard {
@@ -108,6 +114,9 @@ export interface MenuLink {
   path: string
   perm?: string
   group?: string
+  /** A number on the link: `badge` stands out (unread), `count` is quiet (how many there are). Read when the drawer opens. */
+  badge?: () => number | undefined
+  count?: () => number | undefined
 }
 
 export function defineModule(definition: ModuleDefinition): ModuleDefinition {
@@ -127,7 +136,10 @@ export function loadModules(found: Record<string, { default: ModuleDefinition }>
     if (def.modes && !def.modes.includes(mode)) continue
     modules.push(def)
   }
-  return modules
+  // P120: one module may own the first screen; the platform's Home steps aside for it
+  const owners = modules.filter((m) => m.home === true)
+  if (owners.length > 1) throw new Error(`Only one module may own the first screen: ${owners.map((m) => m.key).join(', ')}`)
+  return owners.length ? modules.filter((m) => m.home !== 'fallback') : modules
 }
 
 export const modules = loadModules()
@@ -142,6 +154,9 @@ export const moduleQuickAdds: QuickAdd[] = collectQuickAdds(modules)
 
 /** Whether a module with this key is in this app (in this data mode). */
 export const hasModule = (key: string) => modules.some((m) => m.key === key)
+
+/** P120: the module that owns the first screen, if any. */
+export const homeModule: ModuleDefinition | undefined = modules.find((m) => m.home === true)
 
 /** The modules' Home cards, in order, each ready to render with `<component :is>`. A repeated key fails loudly. */
 export function collectHomeCards(mods: ModuleDefinition[] = modules): { key: string; component: Component; perm?: string }[] {

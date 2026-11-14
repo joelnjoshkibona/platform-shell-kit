@@ -7,7 +7,7 @@ names in this table (`./bridge`, `./log`, `./lock`, `./data`, `./Dialog.vue`, `.
 
 | File | What | P |
 | --- | --- | --- |
-| `boot.ts`, `App.vue`, `modules.ts` | start-up; `defineModule` and the glob loader over `../modules/*/module.ts` (**here**: a module may declare `health`, P119, and `reminders`, P74) | P81, P82 |
+| `boot.ts`, `App.vue`, `modules.ts` | start-up; `defineModule` and the glob loader over `../modules/*/module.ts` (**here**: a module may declare `health`, P119, `reminders`, P74, and `home: true` to own the first screen, P120; menu links take `badge` and `count`) | P81, P82, P120 |
 | `i18n.ts`, `session.ts`, `api.ts` | languages; the stored session; the API client from `packages/shared` with the token from secure storage | P57 |
 | `bridge.ts` | native calls: the listener registered before the call, a timeout, never throws; also `IS_APP`, `APP_VERSION`, `APP_BUILD` (baked in by build-web.sh) | |
 | `network.ts`, `lifecycle.ts` | the phone's network state plus failed calls; pause, resume, kill | P58, P59 |
@@ -19,6 +19,7 @@ names in this table (`./bridge`, `./log`, `./lock`, `./data`, `./Dialog.vue`, `.
 | `health.ts`, `healthSources.ts` (**here**) | `HealthCheck`, `HealthSource`, `readHealth`, the shared auto-start check (`autostartCheck`: the maker's path, Open settings, I allowed it; proven, confirmed or blocked; kept per build); the sources: each module's `health`, plus the reminders' when a module has reminders | P119 |
 | `reminders.ts`, `RemindersRuns.vue` (**here**) | the reminders over the alarms plugin, their checks (notifications, exact alarms, battery, auto-start) and what runs (the last and next reminder, test buttons) | P74, P119 |
 | `locales/{en,sw}/phoneApp.json`, `phone-health.json` (**here**) | the words of the update flow and of Background health (`phone-*.json` merge into the `phone` namespace) | |
+| `textParts.ts` (**here**) | characters and SMS parts for a composer: GSM 03.38 160/153 (extension characters count twice), anything else 70/67 | P120 |
 | `keyboard.ts`, `log.ts` | the keyboard height as `--kb` (lifted from `blutrixx/nativephp-device-utils`); the app log | P71, P72 |
 | `drafts.ts`, `media.ts` | drafts written as typed and resumed after a kill; photos, files and voice notes kept until the server has them | P58, P75 |
 | `Shell*.vue`, `Sheet.vue`, `Dialog.vue`, `Toast.vue`, `DatePicker.vue`, `Search.vue`, `PhoneStates.vue` | the frame: header, bottom bar, drawer, sheets lifted by the keyboard, dialogs, the no-signal, update and lock states | P56, P62 |
