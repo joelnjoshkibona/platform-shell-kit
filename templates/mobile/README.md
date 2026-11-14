@@ -47,7 +47,8 @@ Never import a web screen or component.
 Set `APP_DATA_MODE` in `.env` (`tools/new-product` asks):
 
 - **connected**: the interface calls the API; the phone keeps only drafts, the last data and the log.
-- **phone**: the phone's own Laravel holds the modules' tables and services (`/api/local/*`), with backups to a file. No server.
+- **phone**: the phone's own Laravel holds the data (`/api/local/*`, `app/Local`): every module in the generic store
+  (`local_records`), or in its own store (`app/Local/Modules/{Key}.php`, P104), with backups to a file. No server.
 - **sync**: `/api/local/*` on a working copy, a `sync_queue` of changes sent in order with keys, and the server's `/sync/changes` and `/sync/push`.
 
 Screens use `src/app/data.ts` only, so they work the same in every mode.
