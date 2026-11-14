@@ -54,13 +54,28 @@ A document with lines is built from three library components and one page patter
   behind approval say so in the confirm dialog and their button reads **Send for approval** (P107).
 - Conversions (offer → order → invoice) copy the lines and link both records; the trail shows the chain.
 
+**On a phone, Add a line picks from the catalogue** (amended in kit 1.34.0, P118 for its motion). Typing an item name on a phone is slow
+and the person usually adds several lines in a row, so on a phone **Add a line** opens the **item catalogue** instead of the line form:
+
+- `ItemCatalogue`: the items as a list, a sticky search (name, SKU, barcode; P64 scan) and category chips, each item with its price and
+  what is in stock, and the quantity already in the document as a badge. An item that cannot be added (out of stock where stock limits
+  the kind) says why when tapped.
+- Tapping an item opens the **quantity sheet** (`QtySheet`): the item, its price and stock, a large quantity field with − / + and quick
+  steps (+10, +20, +50, +100), the line total live, and **Add · total**; for an item already in the document **Update** and **Remove**.
+  Limits are props: `maxBy` (stock, or none) and `room` (a money ceiling, such as what is left of a credit limit), and the sheet says which
+  limit stopped it and does not add past it.
+- A **cart bar** (`CartBar`) at the bottom shows the lines, units and total and opens the lines (`DocLines`) in a sheet, where View, Edit
+  and Delete work as above.
+- Everything else is unchanged: the same lines, one draft, one save, the server recomputes and wins. On the web, and for kinds that need
+  discount, VAT or lots on every line, Add a line keeps the line form.
+
 **Constrained-creative**: which columns a kind shows; the limit hint under an item (`ordered 4 · 1 delivered`); KPI tiles on the Overview.
 
 **Free**: the document's own banners and cards (a fiscal receipt, a sent-to-customer log).
 
 ## Components
 
-`DocLines`, `DocFlow` and `DocTrail` are in the library (`docs/COMPONENTS.md`, `docs/components_api.json`, the Design system page, which
+`DocLines`, `DocFlow` and `DocTrail` are in the library, with the phone's `ItemCatalogue`, `QtySheet` and `CartBar` (`docs/COMPONENTS.md`, `docs/components_api.json`, the Design system page, which
 demos a sale draft, a stock draft with lots and a read-only list on an example catalogue). The kit names no product record: items, prices
 and lots come from props (`itemOf`, `priceOf`, `lotsOf`) and the item picker is an ApiSelect module the product registers (`itemModule`).
 `currency` labels the totals and the price field; empty shows numbers only.

@@ -30,6 +30,21 @@ The phone app works in one of three ways, chosen when the product is made:
 
 The screens never know which one is on: they read and write through one data layer (`src/app/data.ts`), so a module is written once.
 
+## Talking to the backend (P117)
+
+Every remote call goes through one **backend adapter**, the phone's twin of the web's (P105): sign-in and the code step, a password reset
+by code, the profile and permissions, organisations, the menu, lists and errors. The kit's own API is the default. A product whose API
+already exists writes `mobile/resources/spa/src/backend/index.ts` with `defineBackend({...})` and maps its answers to the kit's shapes
+there; nothing else in the app knows a path. The adapter also says what the backend can do (organisations, notifications, approvals,
+push, sync, forgot password …); what it cannot do is left out of the app instead of shown broken.
+
+## How it moves (P118)
+
+The phone follows the web's motion rules (P116) and adds its own: the splash opens into the app as soon as it is ready, a record slides
+in from the right and Back slides it away, tabs fade, wizard steps slide by direction, lists rise once, and a write that matters (an
+order made, goods out, stock received) ends in a done moment with the number and what happens next instead of a toast. A document's
+lines are added from an item catalogue with a quantity sheet (P115). Reduced motion turns all of it off.
+
 ## What is the phone's own (P51 to P79)
 
 - **A phone moves.** The app keeps the person signed in without a signal, saves the open form when it goes to the background, comes back where it was after Android closes it, never repeats a save it is unsure about, and shows "No connection" honestly.

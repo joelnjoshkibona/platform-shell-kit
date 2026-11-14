@@ -1,6 +1,6 @@
 # P119 · Background health from the modules
 
-Status: **decided** (kit 1.33.0; numbered P119 after P116 on main and P117, P118 on the phone-backend branch, kit 1.32.0). Built in a product's phone app on device (an Infinix on Android 10, Transsion's own task killer), tested
+Status: **decided** (kit 1.33.0; numbered P119 after P116 on main and P117, P118 on the phone-backend branch, kit 1.34.0). Built in a product's phone app on device (an Infinix on Android 10, Transsion's own task killer), tested
 there and lifted into `templates/mobile/`. Amends P74 (its auto-start note) and P93.
 
 ## Why

@@ -2568,5 +2568,187 @@
    "Animate on a changed query, on hover or in a loop",
    "Use durations or curves outside the tokens"
   ]
+ },
+ "Splash open": {
+  "file": "mobile/resources/spa/src/app/motion/SplashOpen.vue",
+  "props": [
+   [
+    "ready",
+    "boolean",
+    "false",
+    "The app has its session and first screen; opens the curtain"
+   ]
+  ],
+  "emits": [
+   [
+    "opened",
+    "",
+    "After the curtain has opened"
+   ]
+  ],
+  "slots": [],
+  "do": [
+   "Match the native splash exactly in the first frame"
+  ],
+  "dont": [
+   "Wait for the animation before showing a ready app"
+  ]
+ },
+ "Page transition": {
+  "file": "mobile/resources/spa/src/app/motion/PageTransition.vue",
+  "props": [
+   [
+    "kind",
+    "'push' | 'pop' | 'tab' | 'step-next' | 'step-back'",
+    "from the navigation",
+    "Set by the router (and the wizard), never by a screen"
+   ]
+  ],
+  "emits": [],
+  "slots": [
+   [
+    "default",
+    "",
+    "The page"
+   ]
+  ],
+  "do": [
+   "Let the navigation choose the direction"
+  ],
+  "dont": [
+   "Animate a changed query (filter, search, scope) as a page change"
+  ]
+ },
+ "Done moment": {
+  "file": "mobile/resources/spa/src/app/motion/DoneMoment.vue",
+  "props": [
+   [
+    "title",
+    "string",
+    "–",
+    "What was done"
+   ],
+   [
+    "ref",
+    "string",
+    "–",
+    "The record number"
+   ],
+   [
+    "text",
+    "string",
+    "–",
+    "What happens next"
+   ],
+   [
+    "facts",
+    "[string, string][]",
+    "[]",
+    "Label and value rows"
+   ],
+   [
+    "primary",
+    "[label, run, icon]",
+    "–",
+    "The main next action"
+   ],
+   [
+    "secondary",
+    "[label, run, icon]",
+    "–",
+    "Another next action"
+   ]
+  ],
+  "emits": [
+   [
+    "close",
+    "",
+    "Back or the close button"
+   ]
+  ],
+  "slots": [],
+  "do": [
+   "Say what happens next in one line"
+  ],
+  "dont": [
+   "Use it for a filter, a setting or a small edit"
+  ]
+ },
+ "Item catalogue · Quantity sheet · Cart bar": {
+  "file": "src/components/app/documents/phone/ItemCatalogue.vue",
+  "props": [
+   [
+    "cart",
+    "DocLinesModel",
+    "–",
+    "The document's lines"
+   ],
+   [
+    "priced",
+    "boolean",
+    "true",
+    "Show prices and totals"
+   ],
+   [
+    "allowOut",
+    "boolean",
+    "false",
+    "Items out of stock can still be added"
+   ],
+   [
+    "maxBy",
+    "'stock' | null",
+    "null",
+    "Cap a line at the stock"
+   ],
+   [
+    "room",
+    "number | null",
+    "null",
+    "A money ceiling for the whole document"
+   ],
+   [
+    "cartTitle",
+    "string",
+    "'The lines'",
+    "Title of the lines sheet"
+   ]
+  ],
+  "emits": [
+   [
+    "open-item",
+    "id",
+    "An item that cannot be added was tapped"
+   ]
+  ],
+  "slots": [
+   [
+    "default",
+    "",
+    "Above the items (e.g. a credit meter)"
+   ]
+  ],
+  "do": [
+   "Keep the catalogue as the step itself",
+   "Say which limit stopped a quantity"
+  ],
+  "dont": [
+   "Put inputs in the catalogue rows",
+   "Add past a stock or money limit"
+  ]
+ },
+ "Backend adapter (phone)": {
+  "file": "mobile/resources/spa/src/app/backend/index.ts",
+  "props": [],
+  "emits": [],
+  "slots": [],
+  "do": [
+   "Map the backend's envelope, flags and pagination inside the adapter",
+   "Declare capabilities so missing parts are hidden"
+  ],
+  "dont": [
+   "Call the HTTP client with a path from a store or a screen",
+   "Keep the token outside secure storage"
+  ]
  }
 }

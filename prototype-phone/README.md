@@ -53,6 +53,35 @@ Drawn here first, so the owner can approve the look before anything is built (`s
 - **Receipt settings** (owner only; drawer, Shop, Receipt; or Settings): live preview (Printer 58 mm and PDF), the logo with the black-and-white copy the printer prints, what shows (ten blocks, fixed order, items and total always), the owner's words (address, TIN, header 48, footer 96, fill-ins). A cashier sees "Only Amina can change the receipt".
 - The logo, the shop details and the sale lines in the paper are made up.
 
+## Backend adapter (P117)
+
+The Picker's **Backend** switch draws the same app on another backend (`src/79_backend.js`, `BACKEND`). Every remote call goes through
+one adapter in the app; here only its capabilities change what is drawn: sign-in by username, a 4-digit code by SMS after the password
+(`CodeBoxes`: four boxes over one input with `autocomplete="one-time-code"`, a resend countdown, a wrong code shakes once), "Forgot
+password?" sends a code and resets the password with it, one organisation (no picker or switcher), the menu built from the permissions,
+and no notifications (no Alerts tab, no Notifications in the menu). States: `backend-other-signin`, `backend-other-code`,
+`backend-other-code-wrong`, `backend-other-forgot`, `backend-other-reset`, `backend-other-home`, `backend-other-drawer` (+ dark).
+
+## Motion (P118)
+
+P116's tokens are defined once in `00_head.html` (`--dur-fast`, `--dur-base`, `--dur-slow`, `--ease-standard`, `--ease-exit`).
+`src/27_motion.js` holds the phone's own pieces: `SplashOpen` (the closed curtain with an example P114 boot loader that builds a mark in
+CSS, then a circle closes into the mark when the app is ready, at most 520ms), `DoneMoment` (`done({...})`: the ring and tick draw, the
+number, what happens next, facts, next actions) and the page motion in `Screen` (90_root.js): `go` pushes from the right, `back` pops to
+the right, tabs fade, wizard steps slide by direction; the leaving page is pinned so sheets keep the app as their frame. The Picker's
+**Motion** group replays them, with **Reduce motion** (everything appears at once, the check already drawn) and **Slow motion**
+(prototype only, stretches the tokens). States: `motion-splash`, `motion-splash-opening`, `motion-push`, `motion-pop`, `motion-step`,
+`motion-done` (+ dark), `motion-printing`, `motion-reduced`.
+
+## Lines on a phone (P115)
+
+**New order** (Sell › New order, `src/45_lines.js`) is a document with lines in three steps (Customer, Lines, Check). Lines come from
+`ItemCatalogue` (sticky search with scan, category chips, price, stock, the quantity already in the order as a badge; an out-of-stock item
+says why), a tap opens `QtySheet` (large quantity, − / +, +10 … +100, the line total, Add / Update / Remove; it stops at the stock and, on
+credit, at what is left of the customer's limit, and says which), and `CartBar` opens the lines (`LinesSheet`). Making the order ends in
+the done moment. The till keeps its own tap-to-add pattern. States: `lines-customer`, `lines-catalogue` (+ dark), `lines-qty`,
+`lines-qty-update`, `lines-qty-over-stock`, `lines-qty-over-limit`, `lines-cart`, `lines-check`.
+
 ## Build
 
 `python3 assemble.py` writes `index.html` from `src/`. `node tools/shoot.cjs` writes `screenshots/` (needs `npm i` in

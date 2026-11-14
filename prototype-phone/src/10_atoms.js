@@ -73,7 +73,8 @@ const S = reactive({
   salesTab: 'all', salesQ: '', salesFilter: { status: 'all', range: 'all', who: 'all' }, shown: 6, list: 'data',
   custQ: '', custTab: 'all', cid: 'c1', custPane: 'overview', saleId: 'S-1304',
   notifTab: 'unread', expanded: null, lock: true, lockAfter: '5 min', checking: false, upToDate: false, search: false, searchQ: '', recent: ['Water', 'Neema', 'S-1290'],
-  waitingDone: []
+  waitingDone: [],
+  nav: 'tab', reduce: false, slowmo: false, splash: null, done: null   /* P118: the last navigation (push / pop / tab), reduced motion, slow motion (prototype only), the splash, the done moment */
 });
 const ME = computed(() => S.role === 'owner' ? { name: 'Amina', full: 'Amina Mushi', ini: 'AM', role: 'Owner', email: 'amina@bootbox.app' } : { name: 'Rehema', full: 'Rehema Kileo', ini: 'RK', role: 'Cashier', email: 'rehema@bootbox.app' });
 const unread = computed(() => NOTIFS.filter(n => n.unread).length);
@@ -82,10 +83,10 @@ const waitingN = computed(() => WAITING.length - S.waitingDone.length);
 let toastT;
 function toast(msg) { S.toast = msg; S.toastKey++; clearTimeout(toastT); toastT = setTimeout(() => (S.toast = ''), 2400); }
 const TABS = ['home', 'sales', 'customers', 'alerts'];
-function tab(r) { S.stack = []; S.drawer = false; S.sheet = null; S.search = false; S.route = r; }
-function go(r, arg) { S.drawer = false; S.sheet = null; S.search = false; S.stack.push(S.route); if (r === 'sale' && arg) S.saleId = arg; if (r === 'customer' && arg) { S.cid = arg; S.custPane = 'overview'; } S.route = r; }
+function tab(r) { S.nav = 'tab'; S.stack = []; S.drawer = false; S.sheet = null; S.search = false; S.route = r; }
+function go(r, arg) { S.nav = 'push'; S.drawer = false; S.sheet = null; S.search = false; S.stack.push(S.route); if (r === 'sale' && arg) S.saleId = arg; if (r === 'customer' && arg) { S.cid = arg; S.custPane = 'overview'; } S.route = r; }
 function back() {
   if (S.dialog) { S.dialog = null; return; } if (S.sheet) { S.sheet = null; return; } if (S.drawer) { S.drawer = false; return; } if (S.search) { S.search = false; return; }
   if (S.cartOpen) { S.cartOpen = false; return; }
-  S.route = S.stack.pop() || 'home';
+  S.nav = 'pop'; S.route = S.stack.pop() || 'home';
 }

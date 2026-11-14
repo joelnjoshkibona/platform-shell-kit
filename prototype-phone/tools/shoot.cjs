@@ -8,8 +8,39 @@ const only = process.argv[3] ? process.argv[3].split(',') : null;
   await p.goto(FILE); await p.waitForTimeout(1500);
   const set = (fn, arg) => p.evaluate(fn, arg);
   const shot = async (n) => { await p.waitForTimeout(550); await p.locator('.app').screenshot({ path: OUT + '/' + n + '.png' }); };
-  const reset = () => set(() => { if (typeof SYNCS !== 'undefined') { SYNCS.mode = 'connected'; SYNCS.first = 0; } S.stack = []; S.drawer = false; S.sheet = null; S.dialog = null; S.search = false; S.cartOpen = false; S.toast = ''; S.list = 'data'; S.net = 'online'; S.update = null; S.recSrc = null; S.print = 'idle'; S.printFail = null; S.printer = 'RPP02N'; S.map = 'path'; S.phoneNet = 'wifi'; RT.logo = true; UPD.step = 'start'; UPD.pct = 0; HEALTH.exact = false; HEALTH.autostart = 'blocked'; S.dark = false; S.role = 'owner'; });
+  const reset = () => set(() => { if (typeof SYNCS !== 'undefined') { SYNCS.mode = 'connected'; SYNCS.first = 0; } S.stack = []; S.drawer = false; S.sheet = null; S.dialog = null; S.search = false; S.cartOpen = false; S.toast = ''; S.list = 'data'; S.net = 'online'; S.update = null; S.recSrc = null; S.print = 'idle'; S.printFail = null; S.printer = 'RPP02N'; S.map = 'path'; S.phoneNet = 'wifi'; RT.logo = true; UPD.step = 'start'; UPD.pct = 0; HEALTH.exact = false; HEALTH.autostart = 'blocked'; S.dark = false; S.role = 'owner'; S.nav = 'tab'; S.reduce = false; S.slowmo = false; S.splash = null; S.done = null; BACKEND.kind = 'kit'; BACKEND.codeErr = false; docReset(); });
   const steps = {
+    /* P117: another backend */
+    'backend-other-signin': () => set(() => { BACKEND.kind = 'other'; S.route = 'othersignin'; }),
+    'backend-other-signin-dark': () => set(() => { BACKEND.kind = 'other'; S.route = 'othersignin'; S.dark = true; }),
+    'backend-other-code': () => set(() => { BACKEND.kind = 'other'; codeCountdown(42); S.route = 'othercode'; }),
+    'backend-other-code-wrong': () => set(() => { BACKEND.kind = 'other'; BACKEND.codeErr = true; codeCountdown(0); S.route = 'othercode'; }),
+    'backend-other-code-dark': () => set(() => { BACKEND.kind = 'other'; codeCountdown(42); S.route = 'othercode'; S.dark = true; }),
+    'backend-other-forgot': () => set(() => { BACKEND.kind = 'other'; S.route = 'otherforgot'; }),
+    'backend-other-reset': () => set(() => { BACKEND.kind = 'other'; codeCountdown(51); S.route = 'otherreset'; }),
+    'backend-other-home': () => set(() => { BACKEND.kind = 'other'; S.route = 'home'; }),
+    'backend-other-drawer': () => set(() => { BACKEND.kind = 'other'; S.route = 'home'; S.drawer = true; }),
+    'backend-other-home-dark': () => set(() => { BACKEND.kind = 'other'; S.route = 'home'; S.dark = true; }),
+    /* P118: motion (slow motion stretches the tokens so the shot catches the slide) */
+    'motion-splash': () => set(() => { S.route = 'home'; splashPlay(false); }),
+    'motion-splash-opening': async () => { await set(() => { S.route = 'home'; splashPlay(false); }); await p.waitForTimeout(700); await set(() => { const el = document.querySelector('.splash'); el.style.clipPath = 'circle(34% at 50% 42%)'; }); },
+    'motion-push': async () => { await set(() => { S.slowmo = true; S.route = 'sales'; }); await p.waitForTimeout(300); await set(() => go('sale', 'S-1304')); },
+    'motion-pop': async () => { await set(() => { S.slowmo = true; S.route = 'sale'; S.saleId = 'S-1304'; S.stack = ['sales']; }); await p.waitForTimeout(1900); await set(() => back()); },
+    'motion-step': async () => { await set(() => { S.slowmo = true; DOC.c = 'c2'; S.stack = ['home']; S.route = 'neworder'; }); await p.waitForTimeout(1900); await set(() => { DOC.dir = 'step-next'; DOC.step = 1; }); },
+    'motion-done': async () => { await set(() => { S.route = 'home'; done({ title: 'Order made', ref: 'SO-0042', text: 'Baraka Mushi pays when the goods are picked up.', facts: [['Customer', 'Baraka Mushi'], ['Lines', '2 lines · 18 units'], ['Total', money(14600)]], primary: ['Print the order', null, 'Printer'], secondary: ['Make another order', null, 'Plus'] }); }); await p.waitForTimeout(700); },
+    'motion-done-dark': () => set(() => { S.dark = true; S.route = 'home'; done({ title: 'Order made', ref: 'SO-0042', text: 'Baraka Mushi pays when the goods are picked up.', facts: [['Customer', 'Baraka Mushi'], ['Lines', '2 lines · 18 units'], ['Total', money(14600)]], primary: ['Print the order', null, 'Printer'], secondary: ['Make another order', null, 'Plus'] }); }),
+    'motion-printing': () => set(() => { S.receipt = SALES[2]; S.route = 'receipt'; S.print = 'printing'; }),
+    'motion-reduced': () => set(() => { S.reduce = true; S.route = 'home'; done({ title: 'Order made', ref: 'SO-0042', text: 'With reduced motion the check is already drawn.', facts: [['Total', money(14600)]], primary: ['Print the order', null, 'Printer'] }); }),
+    /* P115 on a phone: lines from the catalogue */
+    'lines-customer': () => set(() => { DOC.c = 'c2'; S.stack = ['home']; S.route = 'neworder'; }),
+    'lines-catalogue': () => set(() => { DOC.c = 'c2'; DOC.step = 1; docSet('p1', 12); docSet('p4', 6); S.stack = ['home']; S.route = 'neworder'; }),
+    'lines-catalogue-dark': () => set(() => { S.dark = true; DOC.c = 'c2'; DOC.step = 1; docSet('p1', 12); docSet('p4', 6); S.stack = ['home']; S.route = 'neworder'; }),
+    'lines-qty': () => set(() => { DOC.c = 'c2'; DOC.step = 1; docSet('p1', 12); S.stack = ['home']; S.route = 'neworder'; DOC.qtyId = 'p3'; S.sheet = 'qty'; }),
+    'lines-qty-update': () => set(() => { DOC.c = 'c2'; DOC.step = 1; docSet('p1', 12); S.stack = ['home']; S.route = 'neworder'; DOC.qtyId = 'p1'; S.sheet = 'qty'; }),
+    'lines-qty-over-stock': () => set(() => { DOC.c = 'c2'; DOC.step = 1; S.stack = ['home']; S.route = 'neworder'; DOC.qtyStart = 4; DOC.qtyId = 'p2'; S.sheet = 'qty'; }),
+    'lines-qty-over-limit': () => set(() => { DOC.c = 'c1'; DOC.pay = 'credit'; DOC.step = 1; docSet('p1', 5); S.stack = ['home']; S.route = 'neworder'; DOC.qtyStart = 6; DOC.qtyId = 'p3'; S.sheet = 'qty'; }),
+    'lines-cart': () => set(() => { DOC.c = 'c2'; DOC.step = 1; docSet('p1', 12); docSet('p4', 6); docSet('p3', 4); S.stack = ['home']; S.route = 'neworder'; S.sheet = 'doclines'; }),
+    'lines-check': () => set(() => { DOC.c = 'c2'; DOC.step = 2; docSet('p1', 12); docSet('p4', 6); S.stack = ['home']; S.route = 'neworder'; }),
     /* P102: the data modes */
     'sync-home': () => set(() => { SYNCS.mode = 'sync'; S.route = 'home'; }),
     'sync-page': () => set(() => { SYNCS.mode = 'sync'; S.stack = ['home']; S.route = 'sync'; }),
