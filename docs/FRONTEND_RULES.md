@@ -422,6 +422,24 @@ Guide: `docs/architecture/MODULES.md`.
 - Unit price comes from the product's price resolution; overriding needs a permission and the line shows it changed. Totals sit under the list; the server recomputes on save and wins (409 on a difference, P88).
 - Lots (`lots: true`) are picked in the line form, oldest first (FIFO), changeable; the list shows "n of m picked"; stock actions refuse lines not fully picked.
 - Document forms open as AppDialog `xl` when priced, `lg` for quantities only (P100). `DocFlow` and `DocTrail` sit at the top of the Overview.
+- On a phone, Add a line opens `ItemCatalogue`: a tap opens `QtySheet` (large quantity, − / +, +10 to +100, line total, Add / Update / Remove; limits by stock and by a money ceiling, and it says which limit stopped it); `CartBar` opens the lines. Lines, draft, save and server rules are the same.
+
+## Locked: the phone on another backend (P117)
+
+- The phone reaches its API only through the adapter (`backend()`): headers, sign-in and the code step, password reset by code, profile, organisations, menu, lists (P87), errors (`check`, P88), and P102's connected data layer. No store, composable or screen calls the HTTP client with a path of its own; the convention test fails on it.
+- The default adapter is the kit's API. A product with its own API writes `mobile/resources/spa/src/backend/index.ts` with `defineBackend({...})` in product code; kit files stay untouched.
+- The token lives in secure storage (P57); a 401 (or what the adapter's `check` calls one) clears it and opens Session ended.
+- Missing capabilities hide their parts: no organisation picker or switcher, bell and inbox, Approvals, push, sync mode or "Forgot password?" when the backend lacks them. One organisation skips the picker. Without server menus the menu comes from the modules and permissions.
+- The code step is one screen for every kind (`OtpBoxes`, length from the step, resend countdown, one-time-code autofill) and says where the code went.
+
+## Locked: phone motion (P118)
+
+- P116's rules and tokens hold on the phone; motion never blocks a tap and is off under reduced motion (the system setting, or the app's own).
+- The splash opens when the app is ready (`SplashOpen`, at most 520ms), never holding a ready app; a P114 boot loader may build the mark meanwhile (up to 150px).
+- Pages push from the right and pop back to the right; tabs and top-level pages fade; wizard steps slide by direction (`PageTransition`, set by the navigation, never by a screen).
+- Lists rise once on first load; Refresh, filters, search and scope move nothing.
+- A write that matters ends in `DoneMoment` (the check draws, the number, what happens next, facts, next actions) instead of a toast; everything else keeps the toast.
+- Printing shows progress until the printer answers.
 
 ## Constrained-creative and Free
 

@@ -49,7 +49,8 @@ const Header = { props: { title: String, pushed: Boolean, hideSearch: Boolean },
     <button type="button" class="press ml-0.5 mr-1 grid h-9 w-9 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground" aria-label="Your profile" @click="go('profile')">{{ ME.ini }}</button></header>` };
 
 const TabBar = { components: { Icon },
-  setup() { const items = [['home', 'Home', 'House'], ['sales', 'Sales', 'Receipt'], ['sell', 'Sell', 'ShoppingCart'], ['customers', 'Customers', 'Users'], ['alerts', 'Alerts', 'Bell']];
+  setup() { const all = [['home', 'Home', 'House'], ['sales', 'Sales', 'Receipt'], ['sell', 'Sell', 'ShoppingCart'], ['customers', 'Customers', 'Users'], ['alerts', 'Alerts', 'Bell']];
+    const items = computed(() => all.filter(i => i[0] !== 'alerts' || BACKEND.caps().notifications));   /* P117: no notifications capability, no Alerts tab */
     return { S, items, unread, tab, go }; },
   template: `<nav class="relative z-20 flex shrink-0 items-end border-t bg-background px-1" :style="{ paddingBottom: 'var(--sa-bottom)', height: 'calc(56px + var(--sa-bottom))' }" aria-label="Main">
     <template v-for="it in items" :key="it[0]">
@@ -63,7 +64,7 @@ const TabBar = { components: { Icon },
 
 const ROOTS = ['payments', 'products', 'movements', 'deliveries', 'count', 'accounts', 'expenses', 'suppliers', 'users', 'settings', 'alertsettings', 'receiptsettings'];
 const MENU = [
-  { label: 'Sell', items: [['Till', 'ShoppingCart', 'till'], ['Sales', 'Receipt', 'sales'], ['Payments', 'Wallet', 'payments']] },
+  { label: 'Sell', items: [['Till', 'ShoppingCart', 'till'], ['New order', 'ClipboardList', 'neworder'], ['Sales', 'Receipt', 'sales'], ['Payments', 'Wallet', 'payments']] },
   { label: 'People', items: [['Customers', 'Users', 'customers'], ['Suppliers', 'Truck', 'suppliers', 'owner']] },
   { label: 'Stock', items: [['Products', 'Package', 'products'], ['Stock movements', 'ArrowLeftRight', 'movements'], ['Deliveries', 'PackagePlus', 'deliveries', 'owner'], ['End-of-day count', 'ClipboardCheck', 'count']] },
   { label: 'Money', owner: true, items: [['Accounts', 'Landmark', 'accounts'], ['Expenses', 'Coins', 'expenses']] },
@@ -72,7 +73,9 @@ const MENU = [
 ];
 const Drawer = { components: { Icon },
   setup() {
-    const groups = computed(() => MENU.filter(g => !g.owner || S.role === 'owner').map(g => ({ label: g.label, items: g.items.filter(i => i[3] !== 'owner' || S.role === 'owner') })));
+    /* P117: on a backend without notifications the menu leaves them out (what a backend cannot serve is hidden) */
+    const noNotes = (i) => BACKEND.caps().notifications || !['alerts', 'alertsettings'].includes(i[2]);
+    const groups = computed(() => MENU.filter(g => !g.owner || S.role === 'owner').map(g => ({ label: g.label, items: g.items.filter(i => (i[3] !== 'owner' || S.role === 'owner') && noNotes(i)) })));
     const cur = (t) => (t === S.route) || (t === 'till' && S.route === 'till');
     const open = (t) => { if (TABS.includes(t)) return tab(t); if (ROOTS.includes(t)) { S.stack = []; S.drawer = false; S.sheet = null; S.route = t; return; } go(t); };
     return { S, ME, groups, cur, open, unread, waitingN };

@@ -14,7 +14,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, Job progress · Job page, View as banner
 - **Data**: List rows, Charts, List toolbar · Filters, Document flow · trail, List card, Batch mode, Report table · Chart builder, Approval steps
 - **Help**: Help · How do I…
-- **Phone**: Phone foundations, Lock screen, Session ended, Permission ask, Action sheet, Scan view, Printer picker, Freshness stamp, Bottom bar, No connection, App updates, Back key hint
+- **Phone**: Phone foundations, Lock screen, Session ended, Permission ask, Action sheet, Scan view, Printer picker, Freshness stamp, Bottom bar, No connection, App updates, Back key hint, Splash open, Page transition, Done moment, Item catalogue · Quantity sheet · Cart bar, Backend adapter (phone)
 
 ## Actions
 
@@ -1225,7 +1225,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | Keyboard (P62) | the view shrinks (100dvh); the focused field is scrolled to about 30% from the top after 300 ms; the primary action sits in a BottomBar above the keyboard |
 | Layers (P61) | content 0 · header 30 · dialogs and sheets 50 · toasts 60 · action sheet 96 · back hint 100 · scan 108 · update required 110 · session ended 111 · lock 112 · curtain 120. Back closes the top one first |
 | Touch | phone pieces: 48px buttons, 52px rows, 56px keypad keys. The web shell’s controls keep the sizes they are drawn at |
-| Motion | short fades and rises (120 ms); nothing depends on a gesture; no pull to refresh (an explicit Refresh and the refresh on return, P58); reduced motion removes the movement |
+| Motion (P118) | P116's tokens and rules; pages push from the right and pop back, tabs and top-level pages fade, wizard steps slide by direction (PageTransition); the splash opens (SplashOpen); a done moment after a write that matters (DoneMoment); lists rise once; sheets rise and settle. Nothing depends on a gesture, nothing blocks a tap; no pull to refresh (an explicit Refresh and the refresh on return, P58); reduced motion removes the movement |
 | Variants | header · safe areas · keyboard · layers |
 | Used in | Every screen on a phone. |
 
@@ -1507,3 +1507,111 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 - Do: Close the top layer before showing it
 - Don't: Show it on a forced screen
+
+### Splash open
+
+`mobile/resources/spa/src/app/motion/SplashOpen.vue`
+
+| Spec | Value |
+| --- | --- |
+| When | over the first web frame, which matches the native splash (P55); opens as soon as the app is ready |
+| Look | the closed curtain in the organisation colour with the mark (or the product's P114 `boot` loader, which may build the mark with CSS, up to 150px); opening = a circle closing into the mark |
+| Timing | at most 520ms after ready; never holds a ready app; not ready = stays closed with the mark, the P8 loader after 300ms |
+| Reduced motion | a 120ms fade |
+| Variants | closed · opening · reduced motion |
+| Used in | App start. |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `ready` | `boolean` | `false` | The app has its session and first screen; opens the curtain |
+
+- Do: Match the native splash exactly in the first frame
+- Don't: Wait for the animation before showing a ready app
+
+### Page transition
+
+`mobile/resources/spa/src/app/motion/PageTransition.vue`
+
+| Spec | Value |
+| --- | --- |
+| Push | a record or deeper page slides in from the right, `--dur-slow`, standard ease |
+| Pop | Back slides it out to the right, faster, exit ease |
+| Tab | bottom-bar tabs and top-level pages fade, `--dur-base` |
+| Steps | wizard steps slide by direction: Next from the right, Back from the left |
+| Input | a tap during a transition goes to the new screen |
+| Variants | push · pop · tab · step-next · step-back · reduced motion |
+| Used in | The router view; wizards. |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `kind` | `'push' \| 'pop' \| 'tab' \| 'step-next' \| 'step-back'` | from the navigation | Set by the router (and the wizard), never by a screen |
+
+- Do: Let the navigation choose the direction
+- Don't: Animate a changed query (filter, search, scope) as a page change
+
+### Done moment
+
+`mobile/resources/spa/src/app/motion/DoneMoment.vue`
+
+| Spec | Value |
+| --- | --- |
+| When | after a write that matters: a record to hand over or act on, goods out, stock received or confirmed, a payment recorded. Everything else keeps the toast (P9) |
+| Look | full screen: a ring and a tick draw (420ms), a soft burst; the title, the record number in mono, one line on what happens next, the facts (who, how many, how much), the primary action and a secondary one |
+| Close | its actions, Back, or the close button; it opens on the record it made |
+| Reduced motion | the check shows already drawn |
+| Variants | with print · without print · reduced motion |
+| Used in | Create flows whose result is handed over (orders, sales, dispatches, receipts). |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `title` | `string` | – | "Order created" |
+| `ref` | `string` | – | The record number |
+| `text` | `string` | – | What happens next |
+| `facts` | `[string, string][]` | `[]` | Label and value rows |
+| `primary` / `secondary` | `[label, run, icon]` | – | The next actions |
+
+- Do: Say what happens next in one line
+- Don't: Use it for a filter, a setting or a small edit
+
+### Item catalogue · Quantity sheet · Cart bar
+
+`src/components/app/documents/phone/ (ItemCatalogue.vue, QtySheet.vue, CartBar.vue)`
+
+| Spec | Value |
+| --- | --- |
+| When (P115) | on a phone, Add a line of a document opens the catalogue instead of the line form |
+| Catalogue | sticky search (name, SKU, barcode; P64 scan) and category chips; each item with price, stock and the quantity already in the document as a badge; an item that cannot be added says why when tapped |
+| Quantity sheet | the item, price and stock; a large quantity field, − / +, quick steps +10 +20 +50 +100; the line total live; Add · total, or Update and Remove for an item already in the document |
+| Limits | `maxBy` (stock or none) and `room` (a money ceiling, e.g. what is left of a credit limit): the sheet says which limit stopped it and never adds past it |
+| Cart bar | sticky at the bottom: lines, units and total; opens the lines (DocLines) in a sheet |
+| Variants | priced · quantities only · over stock · over the money ceiling · cart open |
+| Used in | Phone create flows with lines (orders, sales, requests, dispatches). |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `cart` | `DocLinesModel` | – | The document's lines (the same model DocLines edits) |
+| `priced` | `boolean` | `true` | Show prices and totals |
+| `allowOut` | `boolean` | `false` | Items out of stock can still be added (requests) |
+| `maxBy` | `'stock' \| null` | `null` | Cap a line at the stock |
+| `room` | `number \| null` | `null` | A money ceiling for the whole document |
+| `cartTitle` | `string` | `'The lines'` | Title of the lines sheet |
+
+- Do: Keep the catalogue as the step itself (no extra Add button)
+- Don't: Put inputs in the catalogue rows; quantities change in the sheet
+
+### Backend adapter (phone)
+
+`mobile/resources/spa/src/app/backend/ (index.ts, types.ts, product.ts) · product: src/backend/index.ts`
+
+| Spec | Value |
+| --- | --- |
+| What (P117) | the only place that knows API paths: headers, sign-in and the code step, password reset by code, profile, organisations, menu, lists, errors, records (P102 connected layer) |
+| Default | the kit's own API; a product overrides with `defineBackend({...})` in product code |
+| Capabilities | organisations, serverMenus, notifications, approvals, push, sync, forgotPassword, twoFactor, drafts, media; missing = hidden |
+| Token | secure storage (P57); a 401 opens Session ended |
+| Variants | kit backend · another backend (Picker switch in the phone prototype) |
+| Used in | Every store and screen through `backend()`. |
+
+- Do: Map the backend's envelope, flags and pagination inside the adapter
+- Don't: Call the HTTP client with a path from a store or a screen
+
