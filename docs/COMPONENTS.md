@@ -1676,6 +1676,72 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: One state per message
 - Don't: Show a state per SMS part
 
+### Passphrase fields · Recovery key (P121)
+
+`mobile/resources/spa/src/components/ (PassphraseFields.vue, RecoveryKey.vue)`
+
+| Spec | Value |
+| --- | --- |
+| When | setting or changing the passphrase of a hidden space (P121), and the key shown once at its setup |
+| Fields | two password fields (h-11), labelled Passphrase and Passphrase again; under 8 characters an amber line: "A short passcode can be guessed from a copied phone in hours"; after the first try "Use at least 4 characters" or "The two passphrases don't match" |
+| Key | monospace 18px semibold in a dashed box; groups of 4 never break across lines; selectable; "This is the only time it is shown"; one button, I wrote it down |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `action` | `string` | – | PassphraseFields: the button's words |
+| `busy` | `boolean` | `false` | Both: the button off |
+| `min` · `weakBelow` | `number` | `4` · `8` | PassphraseFields |
+| `value` | `string` | – | RecoveryKey: groups joined by `-` |
+
+- Do: Warn about a short passphrase and let the person choose
+- Don't: Show the recovery key a second time, or keep it after I wrote it down
+
+### Choice sheet (P121)
+
+`mobile/resources/spa/src/components/ChoiceSheet.vue`
+
+| Spec | Value |
+| --- | --- |
+| When | an action whose one choice must be made before it runs (Block: also move the existing messages) |
+| Look | the sheet: title as the question, a muted line, one tick box (20px) with its words, Cancel and the action side by side |
+| Tone | `destructive` paints the action red |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `open` · `title` · `action` | – | – | |
+| `text` · `choice` | `string` | – | The line; the tick box's words (no box without it) |
+| `checked` | `boolean` | `true` | The box as it opens |
+
+- Do: Tick the choice most people want
+- Don't: Use it for a plain yes or no: that is Confirm
+
+### Message details (P121)
+
+`mobile/resources/spa/src/components/MessageDetails.vue`
+
+| Spec | Value |
+| --- | --- |
+| When | a message is tapped (outside selection) |
+| Rows | sent: Written, Sent (or Sending), Delivered (or Not yet), or Not sent; received: Sent by them, Received; then SIM and SMS parts; each with its icon, date and time to the second |
+| Unknown | a time not recorded says "Not recorded" |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `message` | `{ direction, status, ts, sent_at?, delivered_at?, smsc_at?, parts? }` | – | |
+| `sim` · `who` | `string` | – | The SIM's name; who the conversation is with |
+
+- Do: Show what the network reported
+- Don't: Guess a time that was not recorded
+
+### Hidden space helpers (P121)
+
+`mobile/resources/spa/src/app/hiddenSpace.ts`
+
+| Spec | Value |
+| --- | --- |
+| `guardHiddenSpace(router, { routes, isOpen, lock, home })` | locks on any route outside `routes`; in the background locks and, inside the space, replaces the route with `home` |
+| `tryOpen(words, unlock)` | search's first step: empty words never call `unlock`; a failure answers false (an ordinary search) |
+
 ### Backend adapter (phone)
 
 `mobile/resources/spa/src/app/backend/ (index.ts, types.ts, product.ts) · product: src/backend/index.ts`

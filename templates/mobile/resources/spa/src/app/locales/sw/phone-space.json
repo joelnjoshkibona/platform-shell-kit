@@ -1,0 +1,13 @@
+{
+  "space": {
+    "pass": "Nenosiri",
+    "again": "Nenosiri tena",
+    "weak": "Nenosiri fupi linaweza kukisiwa kutoka simu iliyonakiliwa ndani ya saa chache.",
+    "short": "Tumia angalau herufi {n}.",
+    "mismatch": "Manenosiri hayalingani.",
+    "keyTitle": "Ufunguo wako wa kurejesha",
+    "keyText": "Uandike na uutunze mahali salama. Ukisahau nenosiri, huu unafungua badala yake.",
+    "keyOnce": "Hii ndiyo mara pekee unaonyeshwa.",
+    "wrote": "Nimeuandika"
+  }
+}

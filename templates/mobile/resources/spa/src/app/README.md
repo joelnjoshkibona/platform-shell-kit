@@ -19,6 +19,7 @@ names in this table (`./bridge`, `./log`, `./lock`, `./data`, `./Dialog.vue`, `.
 | `health.ts`, `healthSources.ts` (**here**) | `HealthCheck`, `HealthSource`, `readHealth`, the shared auto-start check (`autostartCheck`: the maker's path, Open settings, I allowed it; proven, confirmed or blocked; kept per build); the sources: each module's `health`, plus the reminders' when a module has reminders | P119 |
 | `reminders.ts`, `RemindersRuns.vue` (**here**) | the reminders over the alarms plugin, their checks (notifications, exact alarms, battery, auto-start) and what runs (the last and next reminder, test buttons) | P74, P119 |
 | `locales/{en,sw}/phoneApp.json`, `phone-health.json` (**here**) | the words of the update flow and of Background health (`phone-*.json` merge into the `phone` namespace) | |
+| `hiddenSpace.ts` | a hidden space's locks (`guardHiddenSpace`: on leaving its routes and in the background) and search's first step (`tryOpen`) | P121 |
 | `textParts.ts` (**here**) | characters and SMS parts for a composer: GSM 03.38 160/153 (extension characters count twice), anything else 70/67 | P120 |
 | `keyboard.ts`, `log.ts` | the keyboard height as `--kb` (lifted from `blutrixx/nativephp-device-utils`); the app log | P71, P72 |
 | `drafts.ts`, `media.ts` | drafts written as typed and resumed after a kill; photos, files and voice notes kept until the server has them | P58, P75 |
