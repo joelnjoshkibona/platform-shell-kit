@@ -8,7 +8,7 @@ import { useI18n } from 'vue-i18n'
 
 /**
  * P79: the one question about an update, opened through the modal host once per version (Later is remembered for that
- * version code; the dot on the avatar and Profile > Check for updates bring it back). Short: "<product> X is ready", the
+ * version code; the dot on the avatar and Profile > Updates lead back to it). Short: "<product> X is ready", the
  * release's summary, "It is N MB. Your data stays.", Later and Update side by side. Update goes to the update page, which
  * does the work. The first launch of a newer version than the last one seen: the same card says "Updated to X" and lists
  * what changed, with Got it. Closing it any other way is Later / Got it. Replaces P53's banner.

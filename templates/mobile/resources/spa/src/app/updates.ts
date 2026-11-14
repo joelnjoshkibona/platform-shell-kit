@@ -16,8 +16,8 @@ import { appLog } from './log'
  * When: at launch, every hour while open, and on return after 15 minutes; never from a cache (a query parameter, no-store).
  * Below the minimum nothing else is reachable until it updates (AppUpdateRequired.vue). A newer version opens ONE offer
  * (AppUpdateOffer.vue: "<product> X is ready", the summary, the size, Later | Update) at the first calm moment of a launch,
- * never on the hourly check; Later puts that version off (kept by version code), and the dot on the avatar and Profile >
- * Check for updates bring it back. Update goes to the update page (modules/updates), one card that does the work: it looks
+ * never on the hourly check; Later puts that version off (kept by version code), and the dot on the avatar and the New badge on
+ * Profile > Updates bring it back. Update goes to the update page (modules/updates), one card that does the work: it looks
  * at the phone first (already downloaded, in progress, an older file, Android's permission), downloads with progress and
  * opens Android's installer (the mobile-updater plugin; it checks the SHA-256). The shell registers how the offer opens
  * (`setOfferOpener`), so this file knows no component.
@@ -164,7 +164,7 @@ export async function checkAppVersion() {
   }
 }
 
-/** Later: no more offer on launch until a newer version than this one is out (the dot stays, Check for updates opens the offer). */
+/** Later: no more offer on launch until a newer version than this one is out (the dot stays, Profile > Updates opens the page). */
 export function updateLater() {
   appVersion.later = laterKey()
   write(LATER, appVersion.later)
@@ -213,10 +213,6 @@ let offered = false
 export function setOfferOpener(open: (() => void) | null) {
   opener = open
   maybeOffer()
-}
-/** Opens the offer on request (Profile > Check for updates): the version on offer, or what changed in the one just installed. */
-export function showOffer() {
-  opener?.()
 }
 /** Once per app launch, at the first calm moment: what changed in a version just installed, else a new version not put off. */
 function maybeOffer() {

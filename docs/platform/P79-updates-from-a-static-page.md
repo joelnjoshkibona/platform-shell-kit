@@ -40,9 +40,14 @@ phone app with no server of its own (`APP_DATA_MODE=phone`, P102) and lifted int
 - **Codes decide, never names.** A lower name with a higher code is newer.
 - **The offer** opens once per launch at the first calm moment (never on the hourly check), and only for a version not put off:
   "**<product> X is ready**", the release's summary, "**It is N MB. Your data stays.**", then **Later** and **Update** side by side. Later is
-  remembered by version code; the dot on the avatar and Profile > Check for updates bring it back. The first launch of a newer version shows
+  remembered by version code; the dot on the avatar and the **New** badge on Profile > Updates bring it back. The first launch of a newer version shows
   "Updated to X" with what changed and Got it. The shell registers the offer in **every data mode** (the first product's offer never opened in phone
   mode because it was registered after the no-server return). On the phone this dialog takes the place of P53's banner.
+- **Profile > Updates** (right after App version) says where things stand and opens the update page, which checks as it opens: the
+  download's progress; "**<product> X is ready**" (with a **New** badge); "**Update needed**" below the minimum (also New); "**<product> is up
+  to date**" after a check found nothing newer; before any check, "Install a newer <product> over this one. Your data stays." The page is
+  reachable when there is nothing to install, so the installed build and the last check can always be seen. (Until 1.34.1 the row was
+  "Check for updates": it checked in place and reopened the offer, and the page could only be reached from the offer or during a download.)
 - **The update page is one card**: an icon and headline for the step with "Checked at <time>"; **Installed, Newest, Released, Size** (with the
   build numbers); the release's changes, each with its kind's icon; **one button** for the step (Download X, a progress bar with Cancel, Install,
   Install again, Open settings for Android's install-unknown-apps permission, Try again, or Check now when there is nothing to do); under it the
