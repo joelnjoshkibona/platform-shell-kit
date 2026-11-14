@@ -59,6 +59,16 @@ for v in ANDROID_KEYSTORE_FILE ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDRO
 done
 [ -f "$ANDROID_KEYSTORE_FILE" ] || die "No keystore at $ANDROID_KEYSTORE_FILE."
 
+# Set before anything is changed: a run stopped at any point (an error, Ctrl-C, a kill) puts mobile/.env back.
+cleanup() {
+  rm -rf "${OUT:-}" "${QUIET:-}" "${PAGE_DIR:-}"
+  [ -f "$MOBILE/.env.release-backup" ] && mv "$MOBILE/.env.release-backup" "$MOBILE/.env"
+  return 0
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
 FEED="$(env_of APP_UPDATE_FEED)"
 DOWNLOAD_REPO="$(env_of APP_DOWNLOAD_REPO)"
 APP_ID="$(env_of NATIVEPHP_APP_ID)"
@@ -99,12 +109,6 @@ OUT="$(mktemp -d)"
 QUIET="$(mktemp -d)"
 printf '#!/bin/sh\nexit 0\n' > "$QUIET/xdg-open"
 chmod +x "$QUIET/xdg-open"
-cleanup() {
-  rm -rf "$OUT" "$QUIET" "${PAGE_DIR:-}"
-  [ -f "$MOBILE/.env.release-backup" ] && mv "$MOBILE/.env.release-backup" "$MOBILE/.env"
-  return 0
-}
-trap cleanup EXIT
 export PATH="$QUIET:$PATH"
 # native:package runs Gradle on a terminal (TTY); without one (a script, CI), `script` lends it a pseudo-terminal.
 PACKAGE=(php artisan native:package android --build-type=release "--output=$OUT" --no-interaction)
