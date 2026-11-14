@@ -1,0 +1,13 @@
+{
+  "space": {
+    "pass": "Passphrase",
+    "again": "Passphrase again",
+    "weak": "A short passcode can be guessed from a copied phone in hours.",
+    "short": "Use at least {n} characters.",
+    "mismatch": "The two passphrases don't match.",
+    "keyTitle": "Your recovery key",
+    "keyText": "Write it down and keep it somewhere safe. If you forget your passphrase, it opens instead.",
+    "keyOnce": "This is the only time it is shown.",
+    "wrote": "I wrote it down"
+  }
+}

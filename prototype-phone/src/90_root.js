@@ -5,6 +5,7 @@ const SCREENS = {
   suppliers: Suppliers, supplier: SupplierPage, count: Count, expenses: Expenses, accounts: Accounts, account: AccountPage, alertsettings: AlertSettings, users: Users, settings: SettingsPage, receiptsettings: ReceiptSettings,
   phonestatus: PhoneStatus, trailmap: TrailMap, update: UpdatePage, health: BackgroundHealth, sync: SyncPage, conflict: ConflictPage, login: SignIn, twofa: TwoStep, lock: LockView, ended: SessionEnded,
   messages: MessagesList, thread: MessageThread, firstrun: FirstRunDemo,
+  spacesearch: SpaceSearch, space: SpaceView, spacesetup: SpaceSetup, choice: ChoiceDemo,
   neworder: NewOrder, othersignin: OtherSignIn, othercode: OtherCode, otherforgot: OtherForgot, otherreset: OtherReset
 };
 const Screen = { components: { ...SCREENS, Placeholder },
@@ -23,6 +24,7 @@ const Picker = { components: { Icon },
       ['Money', [['expenses', 'Expenses', 'Coins'], ['accounts', 'Accounts', 'Landmark'], ['account', 'Account page', 'FileText']]],
       ['You and the shop', [['alerts', 'Alerts', 'Bell'], ['alertsettings', 'Alerts and reminders', 'BellRing'], ['profile', 'Profile', 'CircleUser'], ['users', 'Users', 'UserCog'], ['settings', 'Settings', 'Settings'], ['receiptsettings', 'Receipt settings', 'ReceiptText'], ['phonestatus', 'This phone', 'Smartphone'], ['trailmap', 'Where this phone was', 'MapPin'], ['update', 'App update', 'CloudDownload'], ['health', 'Background health', 'ShieldCheck'], ['design', 'Design system', 'Palette']]],
       ['Messages (P120)', [['messages', 'Conversations (swipe, Undo)', 'MessageSquare'], ['thread', 'Conversation (bubbles, composer)', 'MessagesSquare'], ['firstrun', 'First run', 'ListChecks']]],
+      ['Hidden space (P121)', [['spacesetup', 'Setup (passphrase, recovery key)', 'KeyRound'], ['spacesearch', 'Search (the passphrase opens it)', 'Search'], ['space', 'Hidden (conversations, rules)', 'Lock'], ['choice', 'Block sheet · message details', 'Ban']]],
       ['Getting in', [['login', 'Sign in', 'LogIn'], ['twofa', 'Two-step code', 'ShieldCheck'], ['lock', 'Locked', 'Lock'], ['ended', 'Session ended', 'LockKeyhole']]]
     ];
     const to = (r) => { S.nav = 'tab'; S.done = null; S.stack = []; S.drawer = false; S.sheet = null; S.dialog = null; S.search = false; S.cartOpen = false; if (r === 'till' && !S.cart.length) { addP(PRODUCTS[0]); addP(PRODUCTS[1]); } if (r === 'receipt' && !S.receipt) S.receipt = SALES[0]; S.route = r; };

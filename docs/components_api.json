@@ -2934,5 +2934,218 @@
   "dont": [
    "A state per SMS part"
   ]
+ },
+ "Passphrase fields (P121)": {
+  "file": "mobile/resources/spa/src/components/PassphraseFields.vue",
+  "props": [
+   [
+    "action",
+    "string",
+    "–",
+    "The button's words"
+   ],
+   [
+    "busy",
+    "boolean",
+    "false",
+    "The button off"
+   ],
+   [
+    "min",
+    "number",
+    "4",
+    "Shortest allowed"
+   ],
+   [
+    "weakBelow",
+    "number",
+    "8",
+    "Warn below this"
+   ]
+  ],
+  "emits": [
+   [
+    "submit",
+    "passphrase: string",
+    "Valid and the same twice; the fields are cleared"
+   ]
+  ],
+  "do": [
+   "Warn about a short passphrase and let the person choose"
+  ],
+  "dont": [
+   "Refuse a short passphrase outright"
+  ],
+  "slots": [
+   [
+    "default",
+    "",
+    "PassphraseFields: under the fields (an error line)"
+   ]
+  ]
+ },
+ "Recovery key (P121)": {
+  "file": "mobile/resources/spa/src/components/RecoveryKey.vue",
+  "props": [
+   [
+    "value",
+    "string",
+    "–",
+    "Groups joined by -"
+   ],
+   [
+    "busy",
+    "boolean",
+    "false",
+    "The button off"
+   ]
+  ],
+  "emits": [
+   [
+    "done",
+    "",
+    "I wrote it down"
+   ]
+  ],
+  "do": [
+   "Show it once, in groups that never break"
+  ],
+  "dont": [
+   "Show it again or keep it after done"
+  ],
+  "slots": []
+ },
+ "Choice sheet (P121)": {
+  "file": "mobile/resources/spa/src/components/ChoiceSheet.vue",
+  "props": [
+   [
+    "open",
+    "boolean",
+    "–",
+    ""
+   ],
+   [
+    "title",
+    "string",
+    "–",
+    "The question"
+   ],
+   [
+    "text",
+    "string",
+    "–",
+    "One muted line"
+   ],
+   [
+    "choice",
+    "string",
+    "–",
+    "The tick box's words"
+   ],
+   [
+    "checked",
+    "boolean",
+    "true",
+    "The box as it opens"
+   ],
+   [
+    "action",
+    "string",
+    "–",
+    "The action's words"
+   ],
+   [
+    "tone",
+    "'primary' | 'destructive'",
+    "'primary'",
+    ""
+   ]
+  ],
+  "emits": [
+   [
+    "close",
+    "",
+    "Cancel or outside"
+   ],
+   [
+    "confirm",
+    "checked: boolean",
+    "The action"
+   ]
+  ],
+  "do": [
+   "Tick the choice most people want"
+  ],
+  "dont": [
+   "Use it for a plain yes or no"
+  ],
+  "slots": []
+ },
+ "Message details (P121)": {
+  "file": "mobile/resources/spa/src/components/MessageDetails.vue",
+  "props": [
+   [
+    "open",
+    "boolean",
+    "–",
+    ""
+   ],
+   [
+    "message",
+    "{ direction, status, ts, sent_at?, delivered_at?, smsc_at?, parts? } | null",
+    "–",
+    ""
+   ],
+   [
+    "sim",
+    "string",
+    "–",
+    "The SIM's name"
+   ],
+   [
+    "who",
+    "string",
+    "–",
+    "Who the conversation is with"
+   ]
+  ],
+  "emits": [
+   [
+    "close",
+    "",
+    ""
+   ]
+  ],
+  "do": [
+   "Say Not recorded for a missing time"
+  ],
+  "dont": [
+   "Guess a time"
+  ],
+  "slots": []
+ },
+ "Hidden space helpers (P121)": {
+  "file": "mobile/resources/spa/src/app/hiddenSpace.ts",
+  "props": [
+   [
+    "guardHiddenSpace",
+    "(router, { routes, isOpen, lock, home })",
+    "–",
+    "Locks on leaving the space's routes and in the background"
+   ],
+   [
+    "tryOpen",
+    "(words, unlock) => Promise<boolean>",
+    "–",
+    "Search's first step; a failure is an ordinary search"
+   ]
+  ],
+  "do": [
+   "Try every search first, at the same cost"
+  ],
+  "dont": [
+   "Keep the words that opened it in the field or the address"
+  ],
+  "slots": []
  }
 }

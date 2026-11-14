@@ -12,9 +12,25 @@
     "placeholder": "Ujumbe",
     "chooseSim": "Chagua laini",
     "count": "{chars} · SMS {parts}",
-    "send": "Tuma"
+    "send": "Tuma",
+    "details": {
+      "title": "Maelezo ya ujumbe",
+      "written": "Uliandikwa",
+      "sent": "Ulitumwa",
+      "delivered": "Ulifika",
+      "failed": "Haukutumwa",
+      "notYet": "Bado",
+      "sentByThem": "Ulitumwa nao",
+      "received": "Ulipokelewa",
+      "sim": "Laini",
+      "parts": "Sehemu za SMS",
+      "unknown": "Haikurekodiwa"
+    },
+    "sendAsNew": "Tuma upya",
+    "askSim": "Tuma kwa laini ipi?"
   },
   "common": {
-    "undo": "Tendua"
+    "undo": "Tendua",
+    "cancel": "Ghairi"
   }
 }

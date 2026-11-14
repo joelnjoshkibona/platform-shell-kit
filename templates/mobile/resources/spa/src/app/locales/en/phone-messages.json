@@ -12,9 +12,25 @@
     "placeholder": "Text message",
     "chooseSim": "Choose the SIM",
     "count": "{chars} · {parts} SMS",
-    "send": "Send"
+    "send": "Send",
+    "details": {
+      "title": "Message details",
+      "written": "Written",
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "failed": "Not sent",
+      "notYet": "Not yet",
+      "sentByThem": "Sent by them",
+      "received": "Received",
+      "sim": "SIM",
+      "parts": "SMS parts",
+      "unknown": "Not recorded"
+    },
+    "sendAsNew": "Send as new",
+    "askSim": "Send from which SIM?"
   },
   "common": {
-    "undo": "Undo"
+    "undo": "Undo",
+    "cancel": "Cancel"
   }
 }
