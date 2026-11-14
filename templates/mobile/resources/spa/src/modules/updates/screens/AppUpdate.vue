@@ -11,7 +11,7 @@ import { useRoute } from 'vue-router'
 
 /*
  * App update (P79): where the update happens, as one card. The offer (a modal, app/AppUpdateOffer.vue) sends Update
- * here with ?go=1; Profile > Check for updates opens the offer again. On arriving it looks at the phone before doing
+ * here with ?go=1; Profile > Updates opens it as it is, and it checks as it opens. On arriving it looks at the phone before doing
  * anything: the file is already there (Install), a download is under way (the progress), an older file (cleared, downloaded
  * again) or nothing (it downloads now). The card's headline, facts (Installed, Newest, Released, Size), what changes, and the
  * one button that fits follow the process. Leaving the page does not stop the download (Android keeps it going).

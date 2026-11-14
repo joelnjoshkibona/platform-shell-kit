@@ -1020,7 +1020,7 @@ const Profile = { components: { Header, Icon, Av, Pill, Seg, SetRow, Toggle, Btn
       <div><p class="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">This phone</p><div class="divide-y overflow-hidden rounded-xl border bg-card">
         <SetRow icon="Printer" title="Receipt printer" :sub="S.printFail === 'none' ? 'No printer chosen' : S.printer + ' · paired'" @click="S.sheet = 'printer'"/>
         <SetRow icon="Info" title="App version" value="1.0.2 (3)" no-chev/>
-        <SetRow icon="CloudDownload" title="Check for updates" :sub="UPD.step === 'current' ? 'You are on the latest version' : REL.name + ' is ready'" @click="go('update')"><span v-if="UPD.step !== 'current'" class="h-2 w-2 rounded-full bg-primary" aria-label="An update is ready"></span><Icon name="ChevronRight" :size="18" class="text-muted-foreground/60"/></SetRow>
+        <SetRow icon="Download" title="Updates" :sub="UPD.step === 'downloading' ? 'Downloading the update… ' + UPD.pct + '%' : S.update === 'required' ? 'Update needed' : UPD.step === 'current' ? 'Bootbox is up to date' : 'Bootbox ' + REL.name + ' is ready'" :value="UPD.step === 'current' ? '' : 'New'" @click="go('update')"/>
         <SetRow icon="ShieldCheck" title="Background health" :sub="healthSub" @click="go('health')"/></div></div>
 
       <div class="divide-y overflow-hidden rounded-xl border bg-card"><SetRow v-if="ME.role === 'Owner' || S.role === 'cashier'" icon="Eye" :title="S.role === 'owner' ? 'View as Rehema' : 'Back to Amina'" sub="See the shop as she does" @click="viewAs"/>
