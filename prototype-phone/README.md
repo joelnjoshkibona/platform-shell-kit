@@ -27,8 +27,8 @@ Sell: Home, Waiting for you, Till (tiles, cart, who is buying, credit and part p
 Payment page. People: Customers and Customer page, Suppliers and Supplier page. Stock: Products and Product page (overview,
 batches, movements), Stock movements, Deliveries and Delivery page (check, pay), Receive stock, End-of-day count with cash up.
 Money: Expenses, Accounts and Account page (history, check, move money). You and the shop: Alerts, Alerts and reminders,
-Profile, Users, Settings, Design system. Getting in: Sign in, Two-step code, Locked, Session ended. Phone states: no signal,
-update ready, update required.
+Profile, Users, Settings, App update (P79: one card), Background health (P119: the checks the modules supply, the auto-start card), Design system.
+Getting in: Sign in, Two-step code, Locked, Session ended. Phone states: no signal, update ready (the short offer: Later or Update), update required.
 
 **This phone** (Settings, P76) and **Where this phone was** (P77) are drawn in `src/79_device.js` with no real sensors and no real map: the live reading, 24 hours of battery and network, what is kept and Delete the trail; the map with path, stops, day arrows, centre button and attribution, and its states (no trail yet, no network for the map pictures). The picker's Phone state has buttons for each.
 

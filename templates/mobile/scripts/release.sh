@@ -11,8 +11,19 @@
 #    signed with this same key, or phones refuse it: keep a copy of the folder somewhere safe.
 # 4. Copies the APK to the server from ../.env.deploy (SERVER, SITE_DIR) and publishes it there with
 #    `php artisan mobile:publish` (each note one line; TYPE: text, TYPE one of NEW, IMPROVED, FIXED, SECURITY, ISSUE).
-#    --mandatory: older versions stop working (the app shows only "Update {{PRODUCT_NAME}} to keep going").
+#    --mandatory: older versions stop working (the app shows only its "has to be updated" screen).
 # The signed APK is kept in mobile/dist/ (git-ignored).
+#
+# P79, when APP_UPDATE_FEED is set in mobile/.env (an app with no server of its own, or one published on a download page):
+# step 4 publishes to the public download repo instead (APP_DOWNLOAD_REPO, e.g. owner/{{PRODUCT_SLUG}}-download, GitHub Pages on):
+#   a. refuses a version code that is not newer than the one published;
+#   b. builds as a release: APP_ENV=production and APP_DEBUG=false in the .env bundled into the APK (restored afterwards),
+#      so debug-only screens are not in it and the feed must be https;
+#   c. creates the GitHub Release v<version> with {{PRODUCT_SLUG}}-<version>.apk;
+#   d. writes latest.json (the first note without a TYPE: prefix is the one-line summary, the others are the changes;
+#      --mandatory makes this release the minimum), regenerates the page (make-download-page.mjs), commits and pushes;
+#   e. waits until the published page serves the new latest.json.
+# It needs `gh` signed in with push rights to that repo. The repo holds no source and no keys.
 set -euo pipefail
 
 MOBILE="$(cd "$(dirname "$0")/.." && pwd)"
@@ -48,7 +59,23 @@ for v in ANDROID_KEYSTORE_FILE ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDRO
 done
 [ -f "$ANDROID_KEYSTORE_FILE" ] || die "No keystore at $ANDROID_KEYSTORE_FILE."
 
-if [ "$BUILD_ONLY" = 0 ]; then
+FEED="$(env_of APP_UPDATE_FEED)"
+DOWNLOAD_REPO="$(env_of APP_DOWNLOAD_REPO)"
+APP_ID="$(env_of NATIVEPHP_APP_ID)"
+if [ -n "$FEED" ]; then
+  case "$FEED" in https://*) ;; *) die "APP_UPDATE_FEED must be https for a release (is $FEED)." ;; esac
+  [ -n "$DOWNLOAD_REPO" ] || die "Set APP_DOWNLOAD_REPO (owner/repo of the download page) in mobile/.env."
+  command -v gh >/dev/null || die "The GitHub CLI (gh) is needed to publish to $DOWNLOAD_REPO."
+  PAGE_DIR="$(mktemp -d)"
+  gh repo clone "$DOWNLOAD_REPO" "$PAGE_DIR" -- -q || die "Could not clone $DOWNLOAD_REPO."
+  if [ -f "$PAGE_DIR/latest.json" ]; then
+    PUBLISHED="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("versionCode",0))' "$PAGE_DIR/latest.json")"
+    [ "$CODE" -gt "$PUBLISHED" ] || die "Version code $CODE is not newer than the published $PUBLISHED: bump NATIVEPHP_APP_VERSION_CODE."
+  fi
+  # b: a release build, whatever this checkout's .env says; the original comes back on exit
+  cp "$MOBILE/.env" "$MOBILE/.env.release-backup"
+  sed -i 's/^APP_ENV=.*/APP_ENV=production/; s/^APP_DEBUG=.*/APP_DEBUG=false/' "$MOBILE/.env"
+elif [ "$BUILD_ONLY" = 0 ]; then
   [ -f "$ROOT/.env.deploy" ] || die "No .env.deploy at the repo root: it names the server (SERVER, SITE_DIR)."
   SERVER="$(sed -n 's/^SERVER=//p' "$ROOT/.env.deploy" | tail -n 1 | tr -d "\"'")"
   SITE_DIR="$(sed -n 's/^SITE_DIR=//p' "$ROOT/.env.deploy" | tail -n 1 | tr -d "\"'")"
@@ -56,9 +83,15 @@ if [ "$BUILD_ONLY" = 0 ]; then
 fi
 
 export {{PRODUCT_SLUG_UPPER}}_API_URL="${{{PRODUCT_SLUG_UPPER}}_API_URL:-https://{{DOMAIN}}/api}"
-case "${{PRODUCT_SLUG_UPPER}}_API_URL" in https://*) ;; *) [ "$BUILD_ONLY" = 1 ] || die "A published release talks to an https API ({{PRODUCT_SLUG_UPPER}}_API_URL is ${{PRODUCT_SLUG_UPPER}}_API_URL)." ;; esac
+if [ "$(env_of APP_DATA_MODE)" != phone ]; then
+  case "${{PRODUCT_SLUG_UPPER}}_API_URL" in https://*) ;; *) [ "$BUILD_ONLY" = 1 ] || die "A published release talks to an https API ({{PRODUCT_SLUG_UPPER}}_API_URL is ${{PRODUCT_SLUG_UPPER}}_API_URL)." ;; esac
+fi
 
-echo "Releasing {{PRODUCT_NAME}} $VERSION ($CODE) against ${{PRODUCT_SLUG_UPPER}}_API_URL"
+if [ -n "$FEED" ]; then
+  echo "Releasing {{PRODUCT_NAME}} $VERSION ($CODE) to $DOWNLOAD_REPO (feed $FEED)"
+else
+  echo "Releasing {{PRODUCT_NAME}} $VERSION ($CODE) against ${{PRODUCT_SLUG_UPPER}}_API_URL"
+fi
 "$MOBILE/scripts/build-web.sh"
 
 OUT="$(mktemp -d)"
@@ -66,7 +99,12 @@ OUT="$(mktemp -d)"
 QUIET="$(mktemp -d)"
 printf '#!/bin/sh\nexit 0\n' > "$QUIET/xdg-open"
 chmod +x "$QUIET/xdg-open"
-trap 'rm -rf "$OUT" "$QUIET"' EXIT
+cleanup() {
+  rm -rf "$OUT" "$QUIET" "${PAGE_DIR:-}"
+  [ -f "$MOBILE/.env.release-backup" ] && mv "$MOBILE/.env.release-backup" "$MOBILE/.env"
+  return 0
+}
+trap cleanup EXIT
 export PATH="$QUIET:$PATH"
 # native:package runs Gradle on a terminal (TTY); without one (a script, CI), `script` lends it a pseudo-terminal.
 PACKAGE=(php artisan native:package android --build-type=release "--output=$OUT" --no-interaction)
@@ -83,6 +121,37 @@ KEPT="$MOBILE/dist/{{PRODUCT_SLUG}}-$VERSION.apk"
 cp "$APK" "$KEPT"
 echo "Signed: $KEPT ($(du -h "$KEPT" | cut -f1), sha256 $(sha256sum "$KEPT" | cut -c1-16)…)"
 [ "$BUILD_ONLY" = 0 ] || exit 0
+
+if [ -n "$FEED" ]; then
+  SHA="$(sha256sum "$KEPT" | cut -d' ' -f1)"
+  SIZE="$(stat -c %s "$KEPT")"
+  TAG="v$VERSION"
+  NOTES_TEXT="$(printf '%s\n' "${NOTES[@]}")"
+  gh release create "$TAG" "$KEPT" --repo "$DOWNLOAD_REPO" --title "{{PRODUCT_NAME}} $VERSION" --notes "$NOTES_TEXT" >/dev/null
+  APK_URL="https://github.com/$DOWNLOAD_REPO/releases/download/$TAG/$(basename "$KEPT")"
+  python3 - "$PAGE_DIR/latest.json" "$APP_ID" "$CODE" "$VERSION" "$APK_URL" "$SHA" "$SIZE" "${MANDATORY:+1}" "${NOTES[@]}" <<'PY'
+import json, os, re, sys, datetime
+out, app, code, name, apk, sha, size, mandatory, *notes = sys.argv[1:]
+old = json.load(open(out)) if os.path.exists(out) else {}
+summary, changes = None, []
+for n in notes:
+    m = re.match(r'^(NEW|IMPROVED|FIXED|SECURITY|ISSUE):\s*(.+)$', n)
+    if m: changes.append({'type': m.group(1), 'text': m.group(2)})
+    elif summary is None: summary = n
+feed = {'app': app, 'versionCode': int(code), 'versionName': name, 'minimumCode': int(code) if mandatory else int(old.get('minimumCode', 1)),
+        'apk': apk, 'sha256': sha, 'size': int(size), 'date': datetime.date.today().isoformat(), 'notes': summary or '', 'changes': changes}
+json.dump(feed, open(out, 'w'), indent=2); open(out, 'a').write('\n')
+PY
+  node "$MOBILE/scripts/make-download-page.mjs" "$PAGE_DIR"
+  (cd "$PAGE_DIR" && git add -A && git commit -qm "{{PRODUCT_NAME}} $VERSION" && git push -q)
+  echo "Waiting for the page to serve $VERSION…"
+  for _ in $(seq 1 40); do
+    LIVE="$(curl -sf "$FEED?t=$(date +%s)" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("versionCode",0))' 2>/dev/null || echo 0)"
+    [ "$LIVE" = "$CODE" ] && { echo "Published: ${FEED%/*}/"; exit 0; }
+    sleep 15
+  done
+  die "Pushed, but $FEED does not serve version code $CODE yet: check the repo's Pages settings."
+fi
 
 REMOTE="/tmp/{{PRODUCT_SLUG}}-$VERSION-$$.apk"
 scp -q "$KEPT" "$SERVER:$REMOTE"

@@ -1,0 +1,64 @@
+{
+  "health": {
+    "title": "Background health",
+    "row": "Background health",
+    "rowOk": "{product} works with the app closed",
+    "rowNeeds": "{n} thing needs attention | {n} things need attention",
+    "inBrowser": "This page works in the phone app. In a browser there is nothing to check.",
+    "failed": "The phone could not be checked.",
+    "needs": "{n} thing can stop {product} in the background | {n} things can stop {product} in the background",
+    "needsBody": "Fix them so {product} keeps working with the app closed.",
+    "allGood": "All good",
+    "allGoodBody": "{product} keeps working with the app closed.",
+    "ok": "OK",
+    "attention": "Needs attention",
+    "now": "Now:",
+    "review": "Review",
+    "fix": "Fix",
+    "notifications": {
+      "title": "Notifications",
+      "why": "So {product} can show you a reminder.",
+      "ok": "Allowed",
+      "bad": "Not allowed"
+    },
+    "exact": {
+      "title": "Alarms and reminders",
+      "why": "So reminders fire at the minute, not a few minutes late.",
+      "ok": "Allowed",
+      "bad": "Not allowed: reminders may be late"
+    },
+    "battery": {
+      "title": "Battery: unrestricted",
+      "why": "So the phone does not stop {product} in the background.",
+      "ok": "Unrestricted",
+      "bad": "Optimised: Android may stop {product}"
+    },
+    "autostart": {
+      "title": "Auto-start",
+      "why": "This phone does not start a closed app unless it is allowed to start by itself.",
+      "pathTranssion": "Phone Master > Toolbox > Auto-start management > {product}.",
+      "pathOther": "{maker} keeps its own list of apps that may start by itself: allow {product} there.",
+      "proven": "Allowed: it started by itself after the last restart",
+      "confirmed": "Allowed (you confirmed it). Restarting the phone will check it.",
+      "blocked": "Blocked until you allow it",
+      "open": "Open settings",
+      "allowed": "I allowed it",
+      "disproven": "Not working: after the last restart {product} did not start by itself. Allow it again.",
+      "undo": "Not allowed? Ask again"
+    },
+    "runs": "What runs in the background",
+    "last": "Last reminder fired {time}",
+    "noneYet": "No reminder has fired yet",
+    "next": "Next reminder {time}",
+    "noneWaiting": "No reminder is waiting",
+    "testReminder": "Test reminder",
+    "testAlarm": "Test alarm",
+    "check": "Check now",
+    "testHelp": "“Test reminder” sends one in 10 seconds. “Test alarm” sends one that takes over the screen: lock the phone first and watch it open.",
+    "testSent": "Reminder on its way",
+    "testSentSub": "It arrives in about 10 seconds.",
+    "alarmSent": "Alarm on its way",
+    "alarmSentSub": "Lock the phone and wait 10 seconds.",
+    "nothing": "Nothing in this app runs in the background, so there is nothing to check."
+  }
+}

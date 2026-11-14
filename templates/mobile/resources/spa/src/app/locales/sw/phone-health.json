@@ -1,0 +1,64 @@
+{
+  "health": {
+    "title": "Afya ya usuli",
+    "row": "Afya ya usuli",
+    "rowOk": "{product} inafanya kazi programu ikiwa imefungwa",
+    "rowNeeds": "Jambo {n} linahitaji uangalizi | Mambo {n} yanahitaji uangalizi",
+    "inBrowser": "Ukurasa huu unafanya kazi kwenye programu ya simu. Kwenye kivinjari hakuna cha kukagua.",
+    "failed": "Simu haikuweza kukaguliwa.",
+    "needs": "Jambo {n} linaweza kusimamisha {product} usuli | Mambo {n} yanaweza kusimamisha {product} usuli",
+    "needsBody": "Rekebisha ili {product} iendelee kufanya kazi programu ikiwa imefungwa.",
+    "allGood": "Yote ni sawa",
+    "allGoodBody": "{product} inaendelea kufanya kazi programu ikiwa imefungwa.",
+    "ok": "Sawa",
+    "attention": "Inahitaji uangalizi",
+    "now": "Sasa:",
+    "review": "Kagua",
+    "fix": "Rekebisha",
+    "notifications": {
+      "title": "Arifa",
+      "why": "Ili {product} ikuonyeshe kikumbusho.",
+      "ok": "Zimeruhusiwa",
+      "bad": "Hazijaruhusiwa"
+    },
+    "exact": {
+      "title": "Kengele na vikumbusho",
+      "why": "Ili vikumbusho vilie kwa dakika yake, si kuchelewa dakika chache.",
+      "ok": "Imeruhusiwa",
+      "bad": "Haijaruhusiwa: vikumbusho vinaweza kuchelewa"
+    },
+    "battery": {
+      "title": "Betri: bila kikomo",
+      "why": "Ili simu isisimamishe {product} usuli.",
+      "ok": "Bila kikomo",
+      "bad": "Imeboreshwa: Android inaweza kusimamisha {product}"
+    },
+    "autostart": {
+      "title": "Kujianzisha",
+      "why": "Simu hii haianzishi programu iliyofungwa isipokuwa imeruhusiwa kujianzisha yenyewe.",
+      "pathTranssion": "Phone Master > Toolbox > Auto-start management > {product}.",
+      "pathOther": "{maker} ina orodha yake ya programu zinazoweza kujianzisha: ruhusu {product} hapo.",
+      "proven": "Imeruhusiwa: ilijianzisha yenyewe baada ya simu kuwashwa upya",
+      "confirmed": "Imeruhusiwa (umethibitisha). Kuwasha simu upya kutakagua.",
+      "blocked": "Imezuiwa hadi uiruhusu",
+      "open": "Fungua mipangilio",
+      "allowed": "Nimeruhusu",
+      "disproven": "Haifanyi kazi: baada ya simu kuwashwa upya {product} haikujianzisha. Iruhusu tena.",
+      "undo": "Hujaruhusu? Uliza tena"
+    },
+    "runs": "Kinachofanya kazi usuli",
+    "last": "Kikumbusho cha mwisho kililia {time}",
+    "noneYet": "Hakuna kikumbusho kilicholia bado",
+    "next": "Kikumbusho kinachofuata {time}",
+    "noneWaiting": "Hakuna kikumbusho kinachosubiri",
+    "testReminder": "Jaribu kikumbusho",
+    "testAlarm": "Jaribu kengele",
+    "check": "Kagua sasa",
+    "testHelp": "“Jaribu kikumbusho” hutuma kimoja baada ya sekunde 10. “Jaribu kengele” hutuma kinachochukua skrini: funga simu kwanza uone kikifunguka.",
+    "testSent": "Kikumbusho kiko njiani",
+    "testSentSub": "Kinafika baada ya takriban sekunde 10.",
+    "alarmSent": "Kengele iko njiani",
+    "alarmSentSub": "Funga simu na usubiri sekunde 10.",
+    "nothing": "Hakuna kitu kwenye programu hii kinachofanya kazi chinichini, kwa hiyo hakuna cha kukagua."
+  }
+}

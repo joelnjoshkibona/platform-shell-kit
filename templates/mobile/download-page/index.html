@@ -1,0 +1,85 @@
+<!doctype html>
+<!-- P79: the product's public download page. scripts/make-download-page.mjs fills {{NAME}}, {{TAGLINE}}, {{KEPT}} (mobile/.env)
+     and {{LIGHT}}, {{DARK}} (the colours) when scripts/release.sh publishes it with latest.json (GitHub Pages) and the APKs
+     (GitHub Releases). Edit this template, not the published copy. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{NAME}} download</title>
+<meta name="description" content="{{TAGLINE}}">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+:root{{{LIGHT}}}
+@media (prefers-color-scheme:dark){:root{{{DARK}}}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}
+main{max-width:30rem;margin:0 auto;padding:2.5rem 16px 3rem}
+.logo{display:block;width:72px;height:72px;border-radius:18px;margin-bottom:1rem}
+h1{font-size:1.75rem;margin:0 0 .25rem}
+.lede{color:var(--muted);margin:0 0 1.5rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1.25rem}
+.btn{display:block;text-align:center;background:var(--pri);color:var(--on);text-decoration:none;font-weight:600;padding:.9rem 1rem;border-radius:12px}
+.btn[aria-disabled=true]{opacity:.5;pointer-events:none}
+dl{display:grid;grid-template-columns:auto 1fr;gap:.35rem 1rem;margin:1rem 0 0;font-size:.9rem}
+dt{color:var(--muted)}dd{margin:0;word-break:break-all}
+h2{font-size:1.05rem;margin:1.75rem 0 .5rem}
+ol{padding-left:1.25rem;margin:0}li{margin:.35rem 0}
+ul.changes{list-style:none;padding:0;margin:.75rem 0 0;font-size:.9rem}
+ul.changes li{display:flex;gap:.5rem}
+ul.changes b{flex:none;font-size:.7rem;letter-spacing:.04em;color:var(--pri);padding-top:.2rem}
+small,.note{color:var(--muted);font-size:.875rem}
+code{font-size:.8rem}
+</style>
+</head>
+<body>
+<main>
+  <img class="logo" src="icon.png" width="72" height="72" alt="{{NAME}} icon">
+  <h1>{{NAME}}</h1>
+  <p class="lede">{{TAGLINE}}</p>
+
+  <div class="card">
+    <a id="dl" class="btn" href="#" aria-disabled="true">Checking the latest version…</a>
+    <dl id="facts" hidden>
+      <dt>Version</dt><dd id="ver"></dd>
+      <dt>Released</dt><dd id="date"></dd>
+      <dt>Size</dt><dd id="size"></dd>
+      <dt>SHA-256</dt><dd><code id="sha"></code></dd>
+    </dl>
+    <p id="notes" class="note"></p>
+    <ul id="changes" class="changes" hidden></ul>
+  </div>
+
+  <h2>Install</h2>
+  <ol>
+    <li>Tap the button and let the download finish.</li>
+    <li>Open the file. If Android asks, allow your browser to install unknown apps, then go back and tap Install.</li>
+    <li>If Google Play Protect says "App scan recommended", tap More details, then "Install without scanning". Scan app would send the file to Google.</li>
+    <li>Updating? Install the new file over the old one, or let the app update itself. {{KEPT}}</li>
+  </ol>
+  <p class="note">Opening this page sends nothing about you. The app is signed with one key, so Android only accepts updates from the same source.</p>
+</main>
+<script>
+const MB = (n) => (n / 1e6).toFixed(1) + ' MB';
+const $ = (id) => document.getElementById(id);
+fetch('latest.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json()).then((j) => {
+  const a = $('dl');
+  a.href = j.apk; a.removeAttribute('aria-disabled'); a.textContent = 'Download {{NAME}} ' + j.versionName + ' (' + MB(j.size) + ')';
+  $('ver').textContent = j.versionName + ' (build ' + j.versionCode + ')';
+  $('date').textContent = j.date || '';
+  $('size').textContent = MB(j.size);
+  $('sha').textContent = j.sha256;
+  $('notes').textContent = j.notes || '';
+  const list = $('changes');
+  for (const c of j.changes || []) {
+    const li = document.createElement('li'); const b = document.createElement('b'); b.textContent = c.type; li.append(b, document.createTextNode(c.text)); list.append(li);
+  }
+  list.hidden = !(j.changes || []).length;
+  $('facts').hidden = false;
+}).catch(() => { $('dl').textContent = 'Could not load the latest version. Try again.'; });
+</script>
+</body>
+</html>
