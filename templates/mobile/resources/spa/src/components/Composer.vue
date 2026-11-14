@@ -34,7 +34,7 @@ defineExpose({ focus: () => field.value?.focus() })
 </script>
 
 <template>
-  <div class="flex shrink-0 items-end gap-1.5 bg-background px-2 pt-2" :style="{ paddingBottom: 'calc(10px + max(var(--sa-bottom, 0px), var(--kbd, 0px)))' }">
+  <div class="flex shrink-0 items-end gap-1.5 bg-background px-2 pt-2" :style="{ paddingBottom: 'calc(10px + max(calc(var(--sa-bottom, 0px) * (1 - var(--kb-open, 0))), var(--kbd, 0px)))' }">
     <div class="flex min-w-0 flex-1 flex-col rounded-3xl bg-muted px-4 pb-1 pt-1">
       <textarea
         ref="field"
