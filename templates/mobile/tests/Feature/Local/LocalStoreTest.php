@@ -97,6 +97,8 @@ class LocalStoreTest extends TestCase
     {
         $this->postJson('/api/local/OwnProbes/save', ['record' => ['name' => 'kept apart']])->assertCreated()->assertJsonPath('data.where', 'own table');
         $this->getJson('/api/local/OwnProbes/list')->assertOk()->assertJsonPath('data.data.0.name', 'kept apart');
+        // an edit is an edit (200), although local_records has nothing under that id
+        $this->postJson('/api/local/OwnProbes/save', ['id' => 'own-1', 'record' => ['name' => 'changed']])->assertOk()->assertJsonPath('data.name', 'changed');
         $this->assertDatabaseCount('local_records', 0);
     }
 }

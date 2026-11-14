@@ -58,14 +58,16 @@ class LocalStore
      */
     public function save(string $module, array $input, ?string $id = null, bool $countVersion = true): array
     {
-        $existing = $id ? DB::table('local_records')->where('module', $module)->where('id', $id)->whereNull('deleted_at')->first() : null;
-        $op = $existing ? 'edit' : 'create';
+        $own = $this->ownStore($module);
+        // a module with its own store keeps nothing in local_records: an id there means an edit
+        $existing = $id && ! $own ? DB::table('local_records')->where('module', $module)->where('id', $id)->whereNull('deleted_at')->first() : null;
+        $op = ($own ? $id !== null : (bool) $existing) ? 'edit' : 'create';
         $input = array_diff_key($input, array_flip(['id', 'uuid', 'version', 'created_at', 'updated_at', 'deleted_at']));
         $hook = $this->hook($module);
         if ($hook) {
             $input = validator($input, $hook->rules($op))->validate();
         }
-        if ($own = $this->ownStore($module)) {
+        if ($own) {
             $record = $own->save($input, $id);
 
             return ['record' => $record, 'op' => $op, 'version' => $record['version'] ?? null];
