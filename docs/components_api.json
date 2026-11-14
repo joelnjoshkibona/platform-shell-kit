@@ -2750,5 +2750,189 @@
    "Call the HTTP client with a path from a store or a screen",
    "Keep the token outside secure storage"
   ]
+ },
+ "Swipe row (P120)": {
+  "file": "mobile/resources/spa/src/components/SwipeRow.vue",
+  "props": [
+   [
+    "left",
+    "{ label, icon }",
+    "–",
+    "Swiping right"
+   ],
+   [
+    "right",
+    "{ label, icon }",
+    "–",
+    "Swiping left"
+   ]
+  ],
+  "emits": [
+   [
+    "swipe",
+    "'left' | 'right'",
+    "Armed and let go"
+   ],
+   [
+    "open",
+    "",
+    "A tap"
+   ],
+   [
+    "menu",
+    "",
+    "A long press: the row's menu"
+   ]
+  ],
+  "slots": [
+   [
+    "default",
+    "The row"
+   ]
+  ],
+  "do": [
+   "Put the same action in the long-press menu"
+  ],
+  "dont": [
+   "Make a swipe the only way to an action"
+  ]
+ },
+ "Toast with Undo (P120)": {
+  "file": "src/components/app/toast/toast.ts",
+  "props": [
+   [
+    "undo",
+    "() => void",
+    "–",
+    "Puts the step back; the toast stays 5 s"
+   ]
+  ],
+  "emits": [],
+  "slots": [],
+  "do": [
+   "Archived · Undo"
+  ],
+  "dont": [
+   "Ask for a confirmation for something that can be undone"
+  ]
+ },
+ "First run (P120)": {
+  "file": "mobile/resources/spa/src/components/FirstRun.vue",
+  "props": [
+   [
+    "steps",
+    "{ key, icon, title, text, action, later? }[]",
+    "–",
+    "later: it can wait"
+   ],
+   [
+    "index",
+    "number",
+    "–",
+    "The step shown"
+   ],
+   [
+    "busy",
+    "boolean",
+    "false",
+    "Android's dialog is open"
+   ],
+   [
+    "note",
+    "string",
+    "–",
+    "After a no"
+   ]
+  ],
+  "emits": [
+   [
+    "act",
+    "",
+    "The main button"
+   ],
+   [
+    "later",
+    "",
+    "Not now"
+   ]
+  ],
+  "slots": [],
+  "do": [
+   "Say what still works without it"
+  ],
+  "dont": [
+   "Ask for something already allowed"
+  ]
+ },
+ "Message bubble · Composer (P120)": {
+  "file": "mobile/resources/spa/src/components/ (MessageBubble.vue, Composer.vue)",
+  "props": [
+   [
+    "dir",
+    "'in' | 'out'",
+    "–",
+    "Bubble"
+   ],
+   [
+    "status",
+    "'queued' | 'sending' | 'sent' | 'delivered' | 'failed'",
+    "–",
+    "Bubble"
+   ],
+   [
+    "selected",
+    "boolean",
+    "false",
+    "Bubble: long-pressed"
+   ],
+   [
+    "ring",
+    "boolean",
+    "false",
+    "Bubble: a search opened it"
+   ],
+   [
+    "v-model",
+    "string",
+    "–",
+    "Composer"
+   ],
+   [
+    "sim",
+    "string",
+    "–",
+    "Composer: two SIMs only"
+   ],
+   [
+    "sending",
+    "boolean",
+    "false",
+    "Composer"
+   ]
+  ],
+  "emits": [
+   [
+    "retry",
+    "",
+    "Bubble: Not sent"
+   ],
+   [
+    "send",
+    "",
+    "Composer"
+   ],
+   [
+    "sim",
+    "",
+    "Composer: the chip"
+   ]
+  ],
+  "slots": [],
+  "do": [
+   "One state per message"
+  ],
+  "dont": [
+   "A state per SMS part"
+  ]
  }
 }

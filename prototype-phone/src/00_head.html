@@ -81,6 +81,7 @@ body { margin: 0; background: hsl(var(--canvas)); font-family: Geist, ui-sans-se
 .app.reduce .splash.opening { animation: splash-fade 120ms linear forwards !important; } @keyframes splash-fade { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .app *, .app *::before, .app *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; } .app .splash.opening { animation: splash-fade 120ms linear forwards !important; } }
 @media (prefers-reduced-motion: reduce) { .rise, .skel { animation: none; } .sheet-enter-active, .sheet-leave-active, .drawer-enter-active, .drawer-leave-active, .pop-enter-active, .pop-leave-active { transition: none; } }
+@keyframes msg-drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.453.0/dist/umd/lucide.min.js"></script>

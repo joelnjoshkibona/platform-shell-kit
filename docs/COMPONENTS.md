@@ -817,7 +817,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | Spec | Value |
 | --- | --- |
 | Tooltip | primary fill, 12px text, 12px x · 6px y, 300ms delay, portal |
-| Toast | max-width 384px, 14px padding, title 14px/500, description 12px, icon 16px, 3.4s |
+| Toast | max-width 384px, 14px padding, title 14px/500, description 12px, icon 16px, 3.4s (5 s with Undo, P120) |
 | Position | toasts bottom-centre on phones, bottom-right from lg |
 | Variants | default, danger (timer) |
 | Used in | Icon buttons, confirmations after every action. |
@@ -1599,6 +1599,82 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 - Do: Keep the catalogue as the step itself (no extra Add button)
 - Don't: Put inputs in the catalogue rows; quantities change in the sheet
+
+### Swipe row (P120)
+
+`mobile/resources/spa/src/components/SwipeRow.vue`
+
+| Spec | Value |
+| --- | --- |
+| When | a list row with a frequent action (archive, done) |
+| Gesture | sideways past 96px arms the side (the label grows, an 8 ms vibration); letting go runs it after the row slides away (200 ms); less springs back; a vertical drag over 8px cancels so the list scrolls |
+| Long press | 480 ms (12 ms vibration) emits `menu`: the row's menu, which holds every swipe action too |
+| Variants | one side · both sides · armed · settling |
+| Used in | conversation lists, inboxes, task lists |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `left` | `{ label, icon }` | – | The action shown when swiping right |
+| `right` | `{ label, icon }` | – | The action shown when swiping left |
+
+- Do: Put the same action in the long-press menu
+- Don't: Make a swipe the only way to an action
+
+### Toast with Undo (P120)
+
+`src/components/app/toast/toast.ts` (`toast(title, { undo })`)
+
+| Spec | Value |
+| --- | --- |
+| When | a step that can be put back was just done on a phone: archived, deleted, moved |
+| Look | the toast with Undo on the right and a 2px bar that drains over 5 s |
+| Undo | runs the product's undo and closes; a delete is held until the time is up, so Undo only puts the row back |
+
+- Do: "Archived" · Undo
+- Don't: Ask "Are you sure?" for something that can be undone
+
+### First run (P120)
+
+`mobile/resources/spa/src/components/FirstRun.vue`
+
+| Spec | Value |
+| --- | --- |
+| When | what the app needs before it works (a role, permissions, a maker's setting), the first time it opens |
+| Look | full screen: a progress bar of the steps, a 72px glyph tile, the title, one line of why, the main button, Not now; a note in a muted box after a no |
+| Rules | one thing at a time, reason first (P63); a step already done is not shown; Not now on every step the app can work without |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `steps` | `{ key, icon, title, text, action, later? }[]` | – | `later`: the step can wait |
+| `index` | `number` | – | The step shown |
+| `busy` | `boolean` | `false` | While Android's dialog is open |
+| `note` | `string` | – | What changes after a no |
+
+- Do: Say what still works without it
+- Don't: Ask everything up front, or for something already allowed
+
+### Message bubble · Composer (P120)
+
+`mobile/resources/spa/src/components/ (MessageBubble.vue, Composer.vue) · src/app/textParts.ts`
+
+| Spec | Value |
+| --- | --- |
+| Bubble | max 80% wide, 15px text, radius 16 with the tail corner 6; sent in primary on the right, received in muted on the left; 180 ms entrance for a new one |
+| State | under a sent bubble: Sending (clock), Sent (check), Delivered (double check), Not sent (alert, destructive) with Retry; the time beside it |
+| Selected · found | an outline for a long-pressed message; a ring for the one a search opened |
+| Composer | field in muted, radius 24, grows to 120px; under it the SIM chip (two SIMs only) and `{chars} · {parts} SMS`; a 48px round Send |
+| Parts | GSM 03.38: 160 in one, 153 each when split (€ [ ] { } \\ ~ ^ \| count twice); anything else 70 / 67 |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `dir` | `'in' \| 'out'` | – | Bubble |
+| `status` | `'queued' \| 'sending' \| 'sent' \| 'delivered' \| 'failed'` | – | Bubble; emits `retry` |
+| `v-model` | `string` | – | Composer text |
+| `sim` | `string` | – | Composer: the chip's words; left out on one SIM |
+| `sending` | `boolean` | `false` | Composer: Send off |
+
+- Do: One state per message
+- Don't: Show a state per SMS part
 
 ### Backend adapter (phone)
 
