@@ -21,7 +21,7 @@ names in this table (`./bridge`, `./log`, `./lock`, `./data`, `./Dialog.vue`, `.
 | `locales/{en,sw}/phoneApp.json`, `phone-health.json` (**here**) | the words of the update flow and of Background health (`phone-*.json` merge into the `phone` namespace) | |
 | `hiddenSpace.ts` | a hidden space's locks (`guardHiddenSpace`: on leaving its routes and in the background) and search's first step (`tryOpen`) | P121 |
 | `textParts.ts` (**here**) | characters and SMS parts for a composer: GSM 03.38 160/153 (extension characters count twice), anything else 70/67 | P120 |
-| `keyboard.ts`, `log.ts` | the keyboard height as `--kb` (lifted from `blutrixx/nativephp-device-utils`); the app log | P71, P72 |
+| `keyboard.ts`, `log.ts` | the keyboard: the lift that the keyboard still covers as `--kb`, and on Android 15 and 16 the app frame and layers over the visual viewport with `--kb-open` (P71 amended 1.38.2; Bootbox's `keyboard.ts` is the working copy); the app log | P71, P72 |
 | `drafts.ts`, `media.ts` | drafts written as typed and resumed after a kill; photos, files and voice notes kept until the server has them | P58, P75 |
 | `Shell*.vue`, `Sheet.vue`, `Dialog.vue`, `Toast.vue`, `DatePicker.vue`, `Search.vue`, `PhoneStates.vue` | the frame: header, bottom bar, drawer, sheets lifted by the keyboard, dialogs, the no-signal, update and lock states | P56, P62 |
 
