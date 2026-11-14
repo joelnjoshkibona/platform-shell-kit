@@ -5,7 +5,7 @@
 1. Every phase ends with its pull request merged and its definition of done ticked.
 2. The version is raised (the API, the web app, and the phone app's version name and integer version code).
 3. The API is deployed with its migrations; the web app is built and deployed.
-4. The phone app is built signed (the key lives outside the repository), its file is checked (SHA-256), and the download page's `latest.json` is updated; phones update themselves (P79).
+4. The phone app is built signed (the key lives outside the repository), its file is checked (SHA-256), and, for an app updated from a download page, `scripts/release.sh` creates the GitHub Release, writes `latest.json` from the notes (`--mandatory` sets the minimum), regenerates the page and waits until it serves the new version; phones update themselves (P79).
 5. The release notes go in the guide's "Releases" page.
 
 ## Running it

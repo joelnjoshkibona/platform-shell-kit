@@ -27,7 +27,8 @@ const Profile = { components: { Header, Icon, Av, Pill, Seg, SetRow, Toggle, Btn
     const check = () => { S.checking = true; S.upToDate = false; setTimeout(() => { S.checking = false; S.upToDate = true; }, 1300); };
     const viewAs = () => { S.dialog = { title: S.role === 'owner' ? 'View as Rehema?' : 'Back to Amina?', text: S.role === 'owner' ? 'You see the shop as she does. Nothing you do is saved as hers.' : 'Leave Rehema’s view.', action: S.role === 'owner' ? 'View as Rehema' : 'Go back', cancel: 'Cancel', ok: () => { S.role = S.role === 'owner' ? 'cashier' : 'owner'; toast(S.role === 'cashier' ? 'Viewing as Rehema' : 'Back to Amina'); } }; };
     const signOut = () => signOutAsk();
-    return { S, ME, themes, setTheme, check, viewAs, signOut, unread, go, toast };
+    const healthSub = computed(() => { const n = (HEALTH.exact ? 0 : 1) + (HEALTH.autostart === 'confirmed' || HEALTH.autostart === 'proven' ? 0 : 1); return n ? n + (n === 1 ? ' thing needs' : ' things need') + ' attention' : 'Bootbox works with the app closed'; });
+    return { S, ME, themes, setTheme, check, viewAs, signOut, unread, go, toast, UPD, REL, healthSub };
   },
   template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="Profile" pushed hide-search/>
     <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-4 p-3 pb-8">
@@ -47,7 +48,8 @@ const Profile = { components: { Header, Icon, Av, Pill, Seg, SetRow, Toggle, Btn
       <div><p class="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">This phone</p><div class="divide-y overflow-hidden rounded-xl border bg-card">
         <SetRow icon="Printer" title="Receipt printer" :sub="S.printFail === 'none' ? 'No printer chosen' : S.printer + ' · paired'" @click="S.sheet = 'printer'"/>
         <SetRow icon="Info" title="App version" value="1.0.2 (3)" no-chev/>
-        <SetRow :icon="S.checking ? 'Loader2' : 'CloudDownload'" title="Check for updates" :sub="S.checking ? 'Checking…' : S.upToDate ? 'You are on the latest version' : 'Tap to check'" no-chev @click="check"/></div></div>
+        <SetRow icon="CloudDownload" title="Check for updates" :sub="UPD.step === 'current' ? 'You are on the latest version' : REL.name + ' is ready'" @click="go('update')"><span v-if="UPD.step !== 'current'" class="h-2 w-2 rounded-full bg-primary" aria-label="An update is ready"></span><Icon name="ChevronRight" :size="18" class="text-muted-foreground/60"/></SetRow>
+        <SetRow icon="ShieldCheck" title="Background health" :sub="healthSub" @click="go('health')"/></div></div>
 
       <div class="divide-y overflow-hidden rounded-xl border bg-card"><SetRow v-if="ME.role === 'Owner' || S.role === 'cashier'" icon="Eye" :title="S.role === 'owner' ? 'View as Rehema' : 'Back to Amina'" sub="See the shop as she does" @click="viewAs"/>
         <SetRow icon="LogOut" title="Sign out" danger no-chev @click="signOut"/></div></div></div></div>` };

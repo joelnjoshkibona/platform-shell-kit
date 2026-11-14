@@ -8,7 +8,7 @@ const only = process.argv[3] ? process.argv[3].split(',') : null;
   await p.goto(FILE); await p.waitForTimeout(1500);
   const set = (fn, arg) => p.evaluate(fn, arg);
   const shot = async (n) => { await p.waitForTimeout(550); await p.locator('.app').screenshot({ path: OUT + '/' + n + '.png' }); };
-  const reset = () => set(() => { if (typeof SYNCS !== 'undefined') { SYNCS.mode = 'connected'; SYNCS.first = 0; } S.stack = []; S.drawer = false; S.sheet = null; S.dialog = null; S.search = false; S.cartOpen = false; S.toast = ''; S.list = 'data'; S.net = 'online'; S.update = null; S.recSrc = null; S.print = 'idle'; S.printFail = null; S.printer = 'RPP02N'; S.map = 'path'; S.phoneNet = 'wifi'; RT.logo = true; S.dark = false; S.role = 'owner'; });
+  const reset = () => set(() => { if (typeof SYNCS !== 'undefined') { SYNCS.mode = 'connected'; SYNCS.first = 0; } S.stack = []; S.drawer = false; S.sheet = null; S.dialog = null; S.search = false; S.cartOpen = false; S.toast = ''; S.list = 'data'; S.net = 'online'; S.update = null; S.recSrc = null; S.print = 'idle'; S.printFail = null; S.printer = 'RPP02N'; S.map = 'path'; S.phoneNet = 'wifi'; RT.logo = true; UPD.step = 'start'; UPD.pct = 0; HEALTH.exact = false; HEALTH.autostart = 'blocked'; S.dark = false; S.role = 'owner'; });
   const steps = {
     /* P102: the data modes */
     'sync-home': () => set(() => { SYNCS.mode = 'sync'; S.route = 'home'; }),
@@ -75,7 +75,11 @@ const only = process.argv[3] ? process.argv[3].split(',') : null;
     expenses: () => set(() => { S.route = 'expenses'; }), 'expense-new': () => set(() => { S.route = 'expenses'; S.sheet = 'newexp'; }), accounts: () => set(() => { S.route = 'accounts'; }), account: () => set(() => { S.route = 'account'; S.accId = 'a1'; S.accTab = 'history'; }),
     alertsettings: () => set(() => { S.route = 'alertsettings'; }), users: () => set(() => { S.route = 'users'; }), settings: () => set(() => { S.route = 'settings'; }),
     login: () => set(() => { S.route = 'login'; }), twofa: () => set(() => { S.route = 'twofa'; }), lock: () => set(() => { S.route = 'lock'; }), ended: () => set(() => { S.route = 'ended'; }),
-    offline: () => set(() => { S.route = 'home'; S.net = 'offline'; }), 'update-bar': () => set(() => { S.route = 'sales'; S.update = 'available'; }), 'update-required': () => set(() => { S.update = 'required'; }),
+    offline: () => set(() => { S.route = 'home'; S.net = 'offline'; }), 'update-offer': () => set(() => { S.route = 'sales'; S.update = 'available'; }), 'update-required': () => set(() => { S.update = 'required'; }),
+    'update-page': () => set(() => { S.stack = ['profile']; S.route = 'update'; UPD.step = 'start'; }), 'update-ready': () => set(() => { S.stack = ['profile']; S.route = 'update'; UPD.step = 'ready'; }),
+    'update-dark': () => set(() => { S.stack = ['profile']; S.route = 'update'; UPD.step = 'downloading'; UPD.pct = 51; S.dark = true; }),
+    health: () => set(() => { S.stack = ['profile']; S.route = 'health'; }), 'health-confirmed': () => set(() => { S.stack = ['profile']; S.route = 'health'; HEALTH.autostart = 'confirmed'; HEALTH.exact = true; }),
+    'health-dark': () => set(() => { S.stack = ['profile']; S.route = 'health'; S.dark = true; }),
     'count-dark': () => set(() => { S.route = 'count'; S.countStep = 2; S.countPane = 'count'; S.counted.p2 = 3; S.dark = true; }), 'deliveries-dark': () => set(() => { S.route = 'deliveries'; S.dark = true; }), 'product-dark': () => set(() => { S.route = 'product'; S.pid = 'p2'; S.dark = true; }), 'accounts-dark': () => set(() => { S.route = 'accounts'; S.dark = true; }),
     'home-dark': () => set(() => { S.role = 'owner'; S.route = 'home'; S.dark = true; }),
     'till-dark': () => set(() => { S.route = 'till'; S.dark = true; }),

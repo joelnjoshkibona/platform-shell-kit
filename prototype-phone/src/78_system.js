@@ -62,10 +62,81 @@ const SessionEnded = { components: { AuthShell, Icon, Btn },
   setup() { return { S }; },
   template: `<AuthShell title="You were signed out" sub="For safety, Bootbox asks you to sign in again. What you had open is kept on this phone for this account."><Btn full @click="S.route = 'login'"><Icon name="LogIn" :size="16"/>Sign in again</Btn></AuthShell>` };
 
-/* the phone's states: no signal, an update */
+/* the phone's states: no signal, an update (P79: one short offer, one update card, the required screen) */
 const NetBar = { components: { Icon }, setup() { return { S, toast, SYNCS }; },
   template: `<div v-if="S.net === 'offline' && SYNCS.mode !== 'phone'" class="relative z-[55] flex shrink-0 items-center gap-2 bg-warning/15 px-3 py-1.5 text-xs text-warning" :style="{ paddingTop: 'calc(6px + var(--sa-real))' }" role="status"><Icon name="WifiOff" :size="14"/><span class="flex-1">{{ SYNCS.mode === 'sync' ? 'No signal · keep working. Your changes wait and are sent when it is back.' : 'Offline · showing figures from 3 min ago. Nothing can be saved.' }}</span><button type="button" class="font-semibold underline" @click="S.net = 'online'; toast('Updated just now')">Try again</button></div>` };
-const UpdateBar = { components: { Icon }, setup() { return { S, toast }; },
-  template: `<div v-if="S.update === 'available'" class="relative z-[54] flex shrink-0 items-center gap-2 border-b bg-primary/10 px-3 pb-2 text-sm" :style="{ paddingTop: S.net === 'offline' ? '8px' : 'calc(8px + var(--sa-real))' }" role="status"><Icon name="Download" :size="16" class="text-primary"/><span class="flex-1">A new version of Bootbox is ready</span><button type="button" class="h-8 rounded-md px-2 text-xs font-medium text-muted-foreground" @click="S.update = null">Later</button><button type="button" class="h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground" @click="toast('Opening the download')">Update</button></div>` };
-const UpdateRequired = { components: { Icon, Btn }, setup() { return { S, toast }; },
-  template: `<div v-if="S.update === 'required'" class="absolute inset-0 z-[110] flex flex-col items-center justify-center bg-background px-6 text-center"><span class="grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground"><Icon name="Store" :size="22"/></span><h2 class="mt-4 text-xl font-semibold">Update Bootbox to keep going</h2><p class="mt-1 text-sm text-muted-foreground">This version no longer works with the server.</p><div class="mt-5 w-full"><Btn full @click="toast('Opening the download')"><Icon name="Download" :size="16"/>Update now</Btn></div><p class="mt-2 text-xs text-muted-foreground tnum">Version 1.0.2 · needs 1.1.0 or newer</p></div>` };
+/* P79: the release on offer (made up) and the installed one */
+const REL = { name: '1.1.0', build: 5, have: '1.0.2', haveBuild: 3, mb: 18, date: '12 Nov 2026', summary: 'Faster start and a clearer receipt',
+  changes: [['NEW', 'Sparkles', 'Search in every list'], ['IMPROVED', 'TrendingUp', 'The till opens in half the time'], ['FIXED', 'Wrench', 'A draft sale came back twice after a restart']] };
+const UPD = reactive({ step: 'start', pct: 0, at: '09:41' });
+const startDownload = () => { UPD.step = 'downloading'; UPD.pct = 0; const t = setInterval(() => { UPD.pct = Math.min(100, UPD.pct + 17); if (UPD.pct >= 100) { clearInterval(t); UPD.step = 'ready'; } }, 350); };
+const UpdateOffer = { components: { Btn }, setup() { const later = () => { S.update = null; toast('Later: ' + REL.name + ' waits in Profile'); }; const update = () => { S.update = null; UPD.step = 'start'; go('update'); startDownload(); }; return { S, REL, later, update }; },
+  template: `<div v-if="S.update === 'available'" class="absolute inset-0 z-[80] grid place-items-center bg-black/50 px-6" @click.self="later"><transition name="pop" appear><div class="w-full rounded-xl bg-background p-5 shadow-2xl" role="dialog" aria-labelledby="upd-offer-title" data-testid="update-offer">
+    <h2 id="upd-offer-title" class="text-base font-semibold">Bootbox {{ REL.name }} is ready</h2><p class="mt-1.5 text-sm text-muted-foreground">{{ REL.summary }}. It is {{ REL.mb }} MB. Your data stays.</p>
+    <p class="mt-3 text-xs text-muted-foreground">Android asks once to let Bootbox install updates.</p>
+    <div class="mt-4 grid grid-cols-2 gap-2"><Btn v="outline" @click="later">Later</Btn><Btn @click="update">Update</Btn></div></div></transition></div>` };
+const UpdatePage = { components: { Header, Icon, Btn },
+  setup() {
+    const view = computed(() => UPD.step);
+    const ICON = { start: 'Download', downloading: 'Download', ready: 'PackageCheck', current: 'CircleCheck' };
+    const headline = computed(() => ({ start: 'Bootbox ' + REL.name + ' is ready', downloading: 'Bootbox ' + REL.name + ' is ready', ready: 'The update is downloaded', current: 'You are on the latest version' })[UPD.step]);
+    const tone = computed(() => UPD.step === 'current' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary');
+    const install = () => { toast('Android’s installer opens: tap Install'); setTimeout(() => { UPD.step = 'current'; }, 900); };
+    const check = () => { UPD.at = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); toast('Checked just now'); };
+    return { UPD, REL, view, ICON, headline, tone, startDownload, install, check, cancel: () => { UPD.step = 'start'; UPD.pct = 0; } };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="App update" pushed hide-search/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="p-3 pb-8">
+      <section class="rise rounded-xl border bg-card p-4" role="status" aria-label="App update" data-testid="update-card">
+        <div class="flex items-center gap-3"><span :class="['grid h-10 w-10 shrink-0 place-items-center rounded-full', tone]"><Icon :name="ICON[view]" :size="20"/></span>
+          <span class="min-w-0 flex-1"><span class="block text-base font-semibold leading-tight">{{ headline }}</span><span class="block text-xs text-muted-foreground tnum">Checked at {{ UPD.at }}</span></span></div>
+        <dl class="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
+          <div><dt class="text-xs text-muted-foreground">Installed</dt><dd class="font-medium tnum">{{ view === 'current' ? REL.name + ' (build ' + REL.build + ')' : REL.have + ' (build ' + REL.haveBuild + ')' }}</dd></div>
+          <div><dt class="text-xs text-muted-foreground">Newest</dt><dd class="font-medium tnum">{{ REL.name }} (build {{ REL.build }})</dd></div>
+          <div><dt class="text-xs text-muted-foreground">Released</dt><dd class="font-medium tnum">{{ REL.date }}</dd></div>
+          <div><dt class="text-xs text-muted-foreground">Size</dt><dd class="font-medium tnum">{{ REL.mb }} MB</dd></div></dl>
+        <ul v-if="view !== 'current'" class="mt-3 grid gap-1.5 text-sm text-muted-foreground"><li v-for="c in REL.changes" :key="c[2]" class="flex items-start gap-2"><Icon :name="c[1]" :size="15" class="mt-0.5 shrink-0 text-primary"/><span class="min-w-0">{{ c[2] }}</span></li></ul>
+        <div class="mt-4">
+          <div v-if="view === 'downloading'" aria-live="polite"><div class="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" :aria-valuenow="UPD.pct" aria-valuemin="0" aria-valuemax="100"><div class="h-full rounded-full bg-primary transition-[width]" :style="{ width: UPD.pct + '%' }"></div></div>
+            <p class="mt-1.5 flex justify-between text-xs text-muted-foreground tnum"><span>Downloading the update… {{ UPD.pct }}%</span><button type="button" class="press font-medium text-primary" @click="cancel">Cancel</button></p>
+            <p class="mt-2 text-xs text-muted-foreground">Version {{ REL.name }} · {{ REL.mb }} MB. You can leave this page; the download carries on.</p></div>
+          <template v-else-if="view === 'start'"><Btn full @click="startDownload"><Icon name="Download" :size="16"/>Download {{ REL.name }}</Btn></template>
+          <template v-else-if="view === 'ready'"><Btn full @click="install"><Icon name="PackageOpen" :size="16"/>Install</Btn><p class="mt-2 text-xs text-muted-foreground">Tap Install on the next screen. If Google Play Protect says “App scan recommended”, tap More details, then Install without scanning.</p></template>
+          <Btn v-else v="outline" full @click="check"><Icon name="RefreshCw" :size="16"/>Check now</Btn></div></section>
+      <p class="mt-3 px-1 text-xs text-muted-foreground">Bootbox asks one public page for the newest version number. It sends nothing about you or this phone. The file is checked before Android installs it, and Android only accepts an update signed with the same key, so your data stays.</p></div></div></div>` };
+const UpdateRequired = { components: { Icon, Btn }, setup() { return { S, toast, REL }; },
+  template: `<div v-if="S.update === 'required'" class="absolute inset-0 z-[110] flex flex-col items-center justify-center bg-background px-6 text-center" role="alertdialog" aria-modal="true" aria-labelledby="upd-req-title"><span class="grid h-14 w-14 place-items-center rounded-2xl bg-primary text-primary-foreground"><Icon name="Store" :size="26"/></span><h2 id="upd-req-title" class="mt-5 text-xl font-semibold">Update Bootbox to keep going</h2><p class="mt-2 text-sm text-muted-foreground">This version has to be updated before it can be used again. The update takes a minute; nothing you saved is lost.</p><div class="mt-6 w-full"><Btn full @click="toast('Downloading the update…')"><Icon name="Download" :size="16"/>Update now</Btn></div><p class="mt-3 text-xs text-muted-foreground tnum">Version {{ REL.have }} (build {{ REL.haveBuild }}) · needs build {{ REL.build }} or newer</p></div>` };
+
+/* P119: Background health, the checks the modules supply (made up: the example's reminders, on an Infinix) */
+const HEALTH = reactive({ exact: false, autostart: 'blocked' });
+const BackgroundHealth = { components: { Header, Icon, Btn },
+  setup() {
+    const checks = computed(() => [
+      { key: 'reminders.notifications', icon: 'Bell', title: 'Notifications', why: 'So Bootbox can show you a reminder.', ok: true, now: 'Allowed', fix: 'Review' },
+      { key: 'reminders.exact', icon: 'AlarmClock', title: 'Alarms and reminders', why: 'So reminders fire at the minute, not a few minutes late.', ok: HEALTH.exact, now: HEALTH.exact ? 'Allowed' : 'Not allowed: reminders may be late', fix: HEALTH.exact ? 'Review' : 'Fix', run: () => { HEALTH.exact = true; toast('Back from Android’s settings: checked again'); } },
+      { key: 'reminders.battery', icon: 'BatteryCharging', title: 'Battery: unrestricted', why: 'So the phone does not stop Bootbox in the background.', ok: true, now: 'Unrestricted', fix: 'Review' },
+      { key: 'reminders.autostart', icon: 'Power', title: 'Auto-start', why: 'This phone does not start a closed app unless it is allowed to start by itself. Phone Master > Toolbox > Auto-start management > Bootbox.',
+        ok: HEALTH.autostart === 'confirmed' || HEALTH.autostart === 'proven',
+        now: { blocked: 'Blocked until you allow it', confirmed: 'Allowed (you confirmed it). Restarting the phone will check it.', proven: 'Allowed: it started by itself after the last restart', disproven: 'Not working: after the last restart Bootbox did not start by itself. Allow it again.' }[HEALTH.autostart],
+        fix: 'Open settings', run: () => toast('Phone Master’s auto-start list opens'),
+        confirm: HEALTH.autostart === 'blocked' || HEALTH.autostart === 'disproven' ? 'I allowed it' : null, undo: HEALTH.autostart === 'confirmed' ? 'Not allowed? Ask again' : null }
+    ]);
+    const needs = computed(() => checks.value.filter(c => !c.ok).length);
+    const run = (c) => c.run ? c.run() : toast('Android’s settings open');
+    return { checks, needs, run, HEALTH, toast };
+  },
+  template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="Background health" pushed hide-search/>
+    <div class="scroll min-h-0 flex-1 overflow-y-auto"><div class="space-y-3 p-3 pb-8" data-testid="background-health">
+      <section :class="['rise flex items-start gap-3 rounded-xl border p-4', needs ? 'border-warning/40 bg-warning/10' : 'border-success/40 bg-success/10']" role="status"><Icon :name="needs ? 'TriangleAlert' : 'ShieldCheck'" :size="22" class="mt-0.5 shrink-0"/>
+        <div class="min-w-0"><p class="font-semibold">{{ needs ? needs + (needs === 1 ? ' thing can' : ' things can') + ' stop Bootbox in the background' : 'All good' }}</p><p class="mt-0.5 text-sm text-muted-foreground">{{ needs ? 'Fix them so Bootbox keeps working with the app closed.' : 'Bootbox keeps working with the app closed.' }}</p></div></section>
+      <section v-for="c in checks" :key="c.key" class="rounded-xl border bg-card p-4" :data-testid="'health-' + c.key"><div class="flex items-start gap-3">
+        <span :class="['grid h-10 w-10 shrink-0 place-items-center rounded-lg', c.ok ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning']"><Icon :name="c.icon" :size="20"/></span>
+        <div class="min-w-0 flex-1"><div class="flex items-start justify-between gap-2"><p class="font-semibold">{{ c.title }}</p><span :class="['inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium', c.ok ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning']"><Icon :name="c.ok ? 'Check' : 'TriangleAlert'" :size="12"/>{{ c.ok ? 'OK' : 'Needs attention' }}</span></div>
+          <p class="mt-0.5 text-sm text-muted-foreground">{{ c.why }}</p><p class="mt-1 text-sm">Now: {{ c.now }}</p>
+          <div :class="['mt-3 grid gap-2', c.confirm ? 'grid-cols-2' : 'justify-items-end']"><Btn :v="c.ok || c.confirm ? 'outline' : 'primary'" @click="run(c)">{{ c.fix }}</Btn><Btn v-if="c.confirm" @click="HEALTH.autostart = 'confirmed'">{{ c.confirm }}</Btn></div>
+          <div v-if="c.undo" class="mt-2 flex justify-end"><button type="button" class="press text-xs font-medium text-primary" :data-testid="'health-' + c.key + '-undo'" @click="HEALTH.autostart = 'blocked'">{{ c.undo }}</button></div></div></div></section>
+      <h3 class="px-1 pt-2 text-sm font-semibold">What runs in the background</h3>
+      <div class="overflow-hidden rounded-xl border bg-card"><div class="flex items-center gap-3 px-4 py-3"><span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted"><Icon name="Bell" :size="18"/></span><div class="min-w-0"><p class="text-sm font-medium">Last reminder fired 08:00</p><p class="truncate text-xs text-muted-foreground">Count the drawer</p></div></div>
+        <div class="flex items-center gap-3 border-t px-4 py-3"><span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted"><Icon name="AlarmClock" :size="18"/></span><div class="min-w-0"><p class="text-sm font-medium">Next reminder 18:00</p><p class="truncate text-xs text-muted-foreground">End-of-day count</p></div></div></div>
+      <div class="grid grid-cols-2 gap-2"><Btn v="outline" @click="toast('Reminder on its way')"><Icon name="BellRing" :size="16"/>Test reminder</Btn><Btn v="outline" @click="toast('Alarm on its way')"><Icon name="AlarmClock" :size="16"/>Test alarm</Btn></div>
+      <Btn v="outline" full @click="toast('Checked just now')"><Icon name="RefreshCw" :size="16"/>Check now</Btn></div></div></div>` };
