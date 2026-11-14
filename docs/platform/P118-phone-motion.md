@@ -1,6 +1,6 @@
 # P118 · Phone motion
 
-Status: **decided** (kit 1.34.0). Amends P116 (motion) for the phone app, P55 (splash), P114 (the product's boot loader) and the
+Status: **decided** (kit 1.34.0; amended in 1.36.0: steps move only the step's body). Amends P116 (motion) for the phone app, P55 (splash), P114 (the product's boot loader) and the
 Phone foundations › Motion entry in `docs/COMPONENTS.md`.
 
 ## Why
@@ -27,7 +27,11 @@ where they are and what just happened saves them from re-reading the screen.
    **build** its mark with CSS while the curtain is closed (bars grow, a dot settles), up to 150px wide.
 2. **Pages push and pop.** Opening a record or a deeper page slides it in from the right (`--dur-slow`, standard ease); Back slides it out
    to the right (exit ease, faster). Bottom-bar tabs and the drawer's top-level pages fade (`--dur-base`). Wizard steps slide by direction
-   (Next from the right, Back from the left) (`PageTransition`).
+   (Next from the right, Back from the left) (`PageTransition`). **A step change moves only the step's body.** The header, the steps
+   and the footer stay still. The transition wraps the body inside the page's scrolling area, and the leaving body is pinned at its own
+   box (where it was, its own width and height), never `position: absolute; inset: 0`. Inset 0 stretches it over whatever positioned box
+   is nearest, which is the page when the wizard's body has none, so the step rose over the header and the steps on every Next and Back.
+   The same holds for the router view: the leaving page is pinned at its own box.
 3. **Lists rise once.** The first load of a list rises in with P116's stagger (30ms, capped at 8 rows); Refresh, filters, search and scope
    move nothing; a new row is highlighted once.
 4. **The done moment.** After a write that matters (a record created that the person will hand over or act on, goods out, stock received
@@ -55,4 +59,5 @@ the done moment after a sale, the printing state. The Picker's **Motion** group 
 
 - With reduced motion on, no element has a running animation or transition after the first frame.
 - A tap during a push lands on the new screen (no blocked input).
+- During a step change the header, the steps and the footer do not move, and the step's body never rises above the steps.
 - The splash never stays after the app reports ready plus 520ms.

@@ -55,7 +55,7 @@ body { margin: 0; background: hsl(var(--canvas)); font-family: Geist, ui-sans-se
 .pg-pop-enter-active, .pg-pop-leave-active, .pg-step-back-enter-active, .pg-step-back-leave-active { transition: transform calc(var(--dur-slow) * .85) var(--ease-exit), opacity calc(var(--dur-slow) * .85) var(--ease-exit); }
 .pg-pop-leave-active, .pg-step-back-leave-active { z-index: 2; box-shadow: -12px 0 24px rgb(0 0 0 / .10); } .pg-pop-leave-to, .pg-step-back-leave-to { transform: translateX(100%); }
 .pg-pop-enter-from, .pg-step-back-enter-from { transform: translateX(-24%); opacity: .5; }
-.pg-step-next-leave-active, .pg-step-back-leave-active { position: absolute; inset: 0; }
+.pg-step-next-leave-active, .pg-step-back-leave-active { pointer-events: none; } /* pinned at its own box by pinLeaving (P118), never inset: 0 */
 .pg-tab-enter-active, .pg-tab-leave-active { transition: opacity var(--dur-base) ease; } .pg-tab-enter-from, .pg-tab-leave-to { opacity: 0; }
 /* the splash opens (SplashOpen): a circle closes into the mark; an example P114 boot loader builds its mark meanwhile (CSS only) */
 .splash { position: absolute; inset: 0; z-index: 120; display: grid; place-items: center; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); clip-path: circle(150% at 50% 42%); }
@@ -551,6 +551,9 @@ const DoneMoment = { components: { Icon, Btn },
       <Btn v-if="S.done.secondary" v="outline" full class="h-12" @click="act(S.done.secondary)"><Icon :name="S.done.secondary[2]" :size="17"/>{{ S.done.secondary[0] }}</Btn>
       <Btn v="ghost" full class="h-11" @click="act(null)">Close</Btn></div></div></transition>` };
 
+/* P118: the leaving page or step is pinned at its own box (never inset: 0, which stretched a wizard's step over its header and steps) */
+const pinLeaving = (el) => { const b = { top: el.offsetTop, left: el.offsetLeft, width: el.offsetWidth, height: el.offsetHeight }; Object.assign(el.style, { position: 'absolute', top: b.top + 'px', left: b.left + 'px', width: b.width + 'px', height: b.height + 'px' }); };
+
 /* ============================================================ Home */
 const Section = { props: { title: String, link: String }, components: { Icon },
   template: `<div class="mb-2 mt-6 flex items-center justify-between px-1"><h2 class="text-base font-semibold">{{ title }}</h2><button v-if="link" type="button" class="press -mr-2 flex h-8 items-center gap-0.5 rounded-lg px-2 text-sm font-medium text-primary" @click="$emit('link')">{{ link }}<Icon name="ChevronRight" :size="16"/></button></div>` };
@@ -811,11 +814,11 @@ const NewOrder = { components: { Header, Icon, Av, Btn, FooterBar, ItemCatalogue
         primary: ['Print the order', () => toast('Printing SO-0042'), 'Printer'], secondary: ['Make another order', () => { docReset(); go('neworder'); }, 'Plus'] });
       docReset(); };
     const prev = () => { DOC.dir = 'step-back'; DOC.step--; };
-    return { S, DOC, steps, people, room, ok, next, prev, cust, money, num, prod, docTotal, docUnits };
+    return { S, DOC, steps, people, room, ok, next, prev, cust, money, num, prod, docTotal, docUnits, pinLeaving };
   },
   template: `<div class="flex min-h-0 flex-1 flex-col"><Header title="New order" pushed hide-search/>
     <div class="shrink-0 border-b px-4 py-2.5"><div class="flex items-center gap-2"><template v-for="(s, i) in steps" :key="s"><span :class="['grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold', i < DOC.step ? 'bg-success text-white' : i === DOC.step ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground']"><Icon v-if="i < DOC.step" name="Check" :size="13"/><template v-else>{{ i + 1 }}</template></span><span :class="['text-xs', i === DOC.step ? 'font-semibold' : 'text-muted-foreground']">{{ s }}</span><span v-if="i < 2" class="h-px flex-1 bg-border"></span></template></div></div>
-    <div class="scroll relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden"><transition :name="'pg-' + DOC.dir"><div :key="DOC.step">
+    <div class="scroll relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden"><transition :name="'pg-' + DOC.dir" @before-leave="pinLeaving"><div :key="DOC.step">
       <div v-if="DOC.step === 0" class="space-y-3 p-3"><Seg v-model="DOC.pay" :tabs="[{ id: 'cash', label: 'Cash' }, { id: 'credit', label: 'Credit' }]"/>
         <button v-for="c in people" :key="c.id" type="button" :class="['press flex w-full items-center gap-3 rounded-xl border p-3 text-left', DOC.c === c.id ? 'border-primary bg-primary/5' : 'bg-card']" @click="DOC.c = c.id"><Av :c="c" :size="40"/><span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold">{{ c.name }}</span><span class="block text-xs text-muted-foreground">{{ c.limit ? 'Credit limit ' + money(c.limit) + (c.owes > 0 ? ' · owes ' + money(c.owes) : '') : 'No credit' }}</span></span><Icon v-if="DOC.c === c.id" name="CircleCheck" :size="20" class="text-primary"/></button></div>
       <ItemCatalogue v-else-if="DOC.step === 1"><div v-if="room != null" :class="['mx-3 mt-3 rounded-xl border p-3 text-xs', room < 0 ? 'border-destructive/40 bg-destructive/5 text-destructive' : 'bg-card text-muted-foreground']">Credit left for this order: <span class="font-semibold tnum">{{ money(Math.max(0, room)) }}</span> of {{ money(cust(DOC.c).limit) }}</div></ItemCatalogue>
@@ -1884,7 +1887,6 @@ const SCREENS = {
 };
 const Screen = { components: { ...SCREENS, Placeholder },
   setup() { const ph = computed(() => S.route.startsWith('ph:') ? S.route.slice(3) : '');
-    const pinLeaving = (el) => { const b = { top: el.offsetTop, left: el.offsetLeft, width: el.offsetWidth, height: el.offsetHeight }; Object.assign(el.style, { position: 'absolute', top: b.top + 'px', left: b.left + 'px', width: b.width + 'px', height: b.height + 'px' }); };
     return { S, ph, SCREENS, pinLeaving }; },
   /* P118 PageTransition: the navigation picks the motion (S.nav: go = push, back = pop, tab = fade); the screen never does.
      The leaving page is pinned where it was (absolute, its own box) so the new one takes its place in the flow; sheets keep the app as their frame. */

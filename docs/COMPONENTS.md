@@ -1537,8 +1537,9 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | Push | a record or deeper page slides in from the right, `--dur-slow`, standard ease |
 | Pop | Back slides it out to the right, faster, exit ease |
 | Tab | bottom-bar tabs and top-level pages fade, `--dur-base` |
-| Steps | wizard steps slide by direction: Next from the right, Back from the left |
+| Steps | wizard steps slide by direction: Next from the right, Back from the left; only the step's body moves (inside the scrolling area), the header, steps and footer stay still |
 | Input | a tap during a transition goes to the new screen |
+| Leaving | the leaving page or step is pinned at its own box, never `inset: 0` |
 | Variants | push · pop · tab · step-next · step-back · reduced motion |
 | Used in | The router view; wizards. |
 
