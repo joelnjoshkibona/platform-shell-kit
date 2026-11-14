@@ -1,6 +1,6 @@
 # P120 · A module may own the first screen; the messaging pieces
 
-Status: **decided** (kit 1.36.0). Amends P93 (the phone app's Home) and P82 (what a module declares). Built in a product's phone
+Status: **decided** (kit 1.37.0). Amends P93 (the phone app's Home) and P82 (what a module declares). Built in a product's phone
 app (an SMS app whose first screen is its conversations), tested on an emulator and lifted into `templates/mobile/`.
 
 ## Why

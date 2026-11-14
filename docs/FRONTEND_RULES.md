@@ -437,7 +437,7 @@ Guide: `docs/architecture/MODULES.md`.
 
 - P116's rules and tokens hold on the phone; motion never blocks a tap and is off under reduced motion (the system setting, or the app's own).
 - The splash opens when the app is ready (`SplashOpen`, at most 520ms), never holding a ready app; a P114 boot loader may build the mark meanwhile (up to 150px).
-- Pages push from the right and pop back to the right; tabs and top-level pages fade; wizard steps slide by direction (`PageTransition`, set by the navigation, never by a screen).
+- Pages push from the right and pop back to the right; tabs and top-level pages fade; wizard steps slide by direction (`PageTransition`, set by the navigation, never by a screen). A step change moves only the step's body, inside the scrolling area: the header, steps and footer stay still, and the leaving body is pinned at its own box, never `inset: 0`.
 - Lists rise once on first load; Refresh, filters, search and scope move nothing.
 - A write that matters ends in `DoneMoment` (the check draws, the number, what happens next, facts, next actions) instead of a toast; everything else keeps the toast.
 - Printing shows progress until the printer answers.

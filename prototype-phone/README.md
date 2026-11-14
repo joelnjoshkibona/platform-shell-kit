@@ -69,7 +69,7 @@ P116's tokens are defined once in `00_head.html` (`--dur-fast`, `--dur-base`, `-
 `src/27_motion.js` holds the phone's own pieces: `SplashOpen` (the closed curtain with an example P114 boot loader that builds a mark in
 CSS, then a circle closes into the mark when the app is ready, at most 520ms), `DoneMoment` (`done({...})`: the ring and tick draw, the
 number, what happens next, facts, next actions) and the page motion in `Screen` (90_root.js): `go` pushes from the right, `back` pops to
-the right, tabs fade, wizard steps slide by direction; the leaving page is pinned so sheets keep the app as their frame. The Picker's
+the right, tabs fade, wizard steps slide by direction (only the step's body moves; the header and steps stay still); the leaving page is pinned so sheets keep the app as their frame. The Picker's
 **Motion** group replays them, with **Reduce motion** (everything appears at once, the check already drawn) and **Slow motion**
 (prototype only, stretches the tokens). States: `motion-splash`, `motion-splash-opening`, `motion-push`, `motion-pop`, `motion-step`,
 `motion-done` (+ dark), `motion-printing`, `motion-reduced`.

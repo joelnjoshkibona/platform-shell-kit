@@ -38,3 +38,6 @@ const DoneMoment = { components: { Icon, Btn },
       <Btn v-if="S.done.primary" full class="h-12" @click="act(S.done.primary)"><Icon :name="S.done.primary[2]" :size="17"/>{{ S.done.primary[0] }}</Btn>
       <Btn v-if="S.done.secondary" v="outline" full class="h-12" @click="act(S.done.secondary)"><Icon :name="S.done.secondary[2]" :size="17"/>{{ S.done.secondary[0] }}</Btn>
       <Btn v="ghost" full class="h-11" @click="act(null)">Close</Btn></div></div></transition>` };
+
+/* P118: the leaving page or step is pinned at its own box (never inset: 0, which stretched a wizard's step over its header and steps) */
+const pinLeaving = (el) => { const b = { top: el.offsetTop, left: el.offsetLeft, width: el.offsetWidth, height: el.offsetHeight }; Object.assign(el.style, { position: 'absolute', top: b.top + 'px', left: b.left + 'px', width: b.width + 'px', height: b.height + 'px' }); };

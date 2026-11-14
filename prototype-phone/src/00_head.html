@@ -55,7 +55,7 @@ body { margin: 0; background: hsl(var(--canvas)); font-family: Geist, ui-sans-se
 .pg-pop-enter-active, .pg-pop-leave-active, .pg-step-back-enter-active, .pg-step-back-leave-active { transition: transform calc(var(--dur-slow) * .85) var(--ease-exit), opacity calc(var(--dur-slow) * .85) var(--ease-exit); }
 .pg-pop-leave-active, .pg-step-back-leave-active { z-index: 2; box-shadow: -12px 0 24px rgb(0 0 0 / .10); } .pg-pop-leave-to, .pg-step-back-leave-to { transform: translateX(100%); }
 .pg-pop-enter-from, .pg-step-back-enter-from { transform: translateX(-24%); opacity: .5; }
-.pg-step-next-leave-active, .pg-step-back-leave-active { position: absolute; inset: 0; }
+.pg-step-next-leave-active, .pg-step-back-leave-active { pointer-events: none; } /* pinned at its own box by pinLeaving (P118), never inset: 0 */
 .pg-tab-enter-active, .pg-tab-leave-active { transition: opacity var(--dur-base) ease; } .pg-tab-enter-from, .pg-tab-leave-to { opacity: 0; }
 /* the splash opens (SplashOpen): a circle closes into the mark; an example P114 boot loader builds its mark meanwhile (CSS only) */
 .splash { position: absolute; inset: 0; z-index: 120; display: grid; place-items: center; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); clip-path: circle(150% at 50% 42%); }

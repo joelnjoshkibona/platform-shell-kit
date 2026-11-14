@@ -9,7 +9,6 @@ const SCREENS = {
 };
 const Screen = { components: { ...SCREENS, Placeholder },
   setup() { const ph = computed(() => S.route.startsWith('ph:') ? S.route.slice(3) : '');
-    const pinLeaving = (el) => { const b = { top: el.offsetTop, left: el.offsetLeft, width: el.offsetWidth, height: el.offsetHeight }; Object.assign(el.style, { position: 'absolute', top: b.top + 'px', left: b.left + 'px', width: b.width + 'px', height: b.height + 'px' }); };
     return { S, ph, SCREENS, pinLeaving }; },
   /* P118 PageTransition: the navigation picks the motion (S.nav: go = push, back = pop, tab = fade); the screen never does.
      The leaving page is pinned where it was (absolute, its own box) so the new one takes its place in the flow; sheets keep the app as their frame. */
