@@ -40,7 +40,7 @@ const state = computed(() => {
         ring ? 'ring-4 ring-primary/40' : '',
       ]"
     >{{ body }}</div>
-    <div :class="['flex min-h-5 items-center gap-1 px-1.5 pb-1.5 pt-0.5 text-[11px] text-muted-foreground tnum', status === 'failed' ? 'font-semibold text-destructive' : '']">
+    <div :class="['flex min-h-5 items-center gap-1 px-1.5 pb-1.5 pt-0.5 text-[11px] tnum', status === 'failed' ? 'font-semibold text-destructive' : 'text-muted-foreground']">
       <span v-if="time && status !== 'failed' && status !== 'queued' && status !== 'sending'">{{ time }}</span>
       <template v-if="dir === 'out' && state">
         <span v-if="time && status !== 'failed' && status !== 'queued' && status !== 'sending'" aria-hidden="true">·</span>
