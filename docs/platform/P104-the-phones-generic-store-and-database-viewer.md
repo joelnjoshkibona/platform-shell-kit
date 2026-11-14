@@ -21,6 +21,7 @@ A module that needs more on the phone adds one class under the module's key (Boo
 
 - **rules** (`LocalModule`): validation of a save, and a `saving()` hook (a default, a total). The phone generator writes it with the API's starting rules. In sync mode the server checks every change again when it arrives.
 - **its own table** (`LocalModuleStore`): the module keeps its own table, with its own migration, and the store hands it list, view, save and delete. This is for phone-only logic or heavy relational queries offline.
+- **a table a native plugin owns** (`LocalModuleStore`, amended 1.35.0): when a plugin's native code must write without PHP (an SMS receiver, a sensor), the plugin owns its SQLite file and is its only writer. The module's store reads it on a second connection opened read-only (`PDO::SQLITE_OPEN_READONLY`, never migrated by Laravel) and saves through the plugin's bridge functions, then reads the row back. Two runtimes never write one file, so P78 stays true.
 
 ### Sync mode details (completing P102)
 
@@ -63,7 +64,15 @@ On the server: `sync_keys` (user_id + key unique, result, created_at; kept 30 da
 
 ## Built
 
-In Bootbox:
+In the kit (1.35.0), `templates/mobile`:
+
+- `app/Local` (`LocalStore`, `LocalModule`, `LocalModuleStore`, `SyncQueue`, `Backups`, `Drafts`, `AppLock`, `Writes` for P78, `Http/*`);
+- the `/api/local` routes in `routes/api.php`, `config/local.php`, the `local_records` migration and `config/database.php` with `busy_timeout`;
+- `tests/Feature/Local/*`.
+
+The database viewer is not in the template: it needs its own native plugin, which stays a product's.
+
+First built in Bootbox:
 
 - `api/app/Modules/Kernel/System/Sync`;
 - `mobile/app/Local`;
