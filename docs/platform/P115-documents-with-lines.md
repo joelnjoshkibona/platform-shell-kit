@@ -1,6 +1,6 @@
 # P115 · Documents with lines
 
-Status: **decided** (kit 1.30.0). Proposed by a product with sales and stock documents, tested in its copy of the prototype (the line
+Status: **decided** (kit 1.30.0; phone amendment 1.34.0; prices including VAT 1.39.0). Proposed by a product with sales and stock documents, tested in its copy of the prototype (the line
 list, the line modal, lots, conversions) and ported here.
 
 ## Why
@@ -69,6 +69,21 @@ and the person usually adds several lines in a row, so on a phone **Add a line**
 - Everything else is unchanged: the same lines, one draft, one save, the server recomputes and wins. On the web, and for kinds that need
   discount, VAT or lots on every line, Add a line keeps the line form.
 
+**Prices including VAT** (amended in kit 1.39.0). Where people quote the price the customer pays (shelf and counter prices), the
+document declares `pricesIncludeVat` (sale and purchase kinds; off by default, when prices are before VAT and VAT is added on top):
+
+- The line form labels the unit price **incl. VAT** and shows the price **excl. VAT** under it as you type; the line total is the
+  inclusive figure, with the VAT inside it named.
+- The list shows the unit price **excl. VAT** and **incl. VAT** as two columns (two figures on a card), the VAT rate as "18% inside".
+- VAT is taken out of each line, never added: line total = qty × price × (1 − discount %), rounded to 2 decimals;
+  **VAT = total × rate / (100 + rate)**, rounded to 2 decimals; excl. = total − VAT, so excl. + VAT is always the total. Rounding is to
+  the currency's minor unit (2 decimals), half away from zero. The unit price excl. VAT (price × 100 / (100 + rate)) is for display only.
+- Totals under the list: discount incl. VAT (when any), **subtotal excl. VAT, VAT, total incl. VAT**, each the sum of the line figures.
+- The server recomputes with the same rule and its numbers win (409 on a difference, P88), as for exclusive prices.
+- On a phone the quantity sheet shows the line total incl. VAT with the excl. figure and the VAT inside, the lines sheet's totals read
+  subtotal excl. VAT, VAT, total incl. VAT, and the cart bar's total says incl. VAT.
+- Mixed rates (0% and 18% lines) work line by line; a document is either inclusive or exclusive as a whole, never per line.
+
 **Constrained-creative**: which columns a kind shows; the limit hint under an item (`ordered 4 · 1 delivered`); KPI tiles on the Overview.
 
 **Free**: the document's own banners and cards (a fiscal receipt, a sent-to-customer log).
@@ -78,7 +93,8 @@ and the person usually adds several lines in a row, so on a phone **Add a line**
 `DocLines`, `DocFlow` and `DocTrail` are in the library, with the phone's `ItemCatalogue`, `QtySheet` and `CartBar` (`docs/COMPONENTS.md`, `docs/components_api.json`, the Design system page, which
 demos a sale draft, a stock draft with lots and a read-only list on an example catalogue). The kit names no product record: items, prices
 and lots come from props (`itemOf`, `priceOf`, `lotsOf`) and the item picker is an ApiSelect module the product registers (`itemModule`).
-`currency` labels the totals and the price field; empty shows numbers only.
+`currency` labels the totals and the price field; empty shows numbers only. `pricesIncludeVat` switches a priced document to prices
+including VAT (above); the Design system page demos a sale in that mode.
 
 ## API side (Bootbox)
 
