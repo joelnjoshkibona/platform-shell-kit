@@ -167,7 +167,8 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | Price | from the product's price source (priceOf), overriding needs a permission; a changed price is marked |
 | Lots | lots: true puts lot picking in the line's form, filled oldest first (FIFO), changeable |
 | Totals | subtotal, discount, VAT, total under the list; currency prop for the label |
-| Variants | sale · purchase · stock · stock with lots · read-only |
+| VAT included | pricesIncludeVat: the price entered includes VAT; the list shows excl. and incl. VAT, VAT = total × rate / (100 + rate) per line, rounded to 2 decimals; totals read subtotal excl. VAT, VAT, total incl. VAT |
+| Variants | sale · sale with prices incl. VAT · purchase · stock · stock with lots · read-only |
 | Used in | Any document with lines: offers, orders, invoices, purchase orders, goods receipts, deliveries, stock transfers |
 
 | Prop | Type | Default | Notes |
@@ -179,6 +180,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | `itemOf` | `(id) => { name, sku, unit }` | – | Label for a line (the record carries it in the app) |
 | `priceOf` | `(id) => { price, list } \| null` | `null` | The product's price resolution (sale type, location, date) |
 | `canOverridePrice` | `boolean` | `true` | false locks the unit price (sale kind) |
+| `pricesIncludeVat` | `boolean` | `false` | The unit price includes VAT (sale and purchase): the list shows excl. and incl. VAT, VAT is taken out of each line total (total × rate / (100 + rate), 2 decimals), totals read subtotal excl. VAT, VAT, total incl. VAT (P115, 1.39.0) |
 | `lots` | `boolean` | `false` | A Lots section in the line form, FIFO-filled (stock kind) |
 | `lotsOf` | `(itemId) => Lot[]` | `() => []` | Lots the line may take from: { id, code, qty, at } |
 | `limitOf` | `(line) => { max, label } \| null` | `null` | A hint under the item (e.g. ordered 4 · 1 delivered); qty over max is an error |
@@ -1596,6 +1598,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 | `maxBy` | `'stock' \| null` | `null` | Cap a line at the stock |
 | `room` | `number \| null` | `null` | A money ceiling for the whole document |
 | `cartTitle` | `string` | `'The lines'` | Title of the lines sheet |
+| `pricesIncludeVat` | `boolean` | `false` | Prices include VAT (P115, 1.39.0): the quantity sheet shows the line total incl. VAT with the excl. figure and the VAT inside; the lines sheet totals read subtotal excl. VAT, VAT, total incl. VAT; the cart bar's total says incl. VAT |
 
 - Do: Keep the catalogue as the step itself (no extra Add button)
 - Don't: Put inputs in the catalogue rows; quantities change in the sheet

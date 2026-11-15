@@ -2333,6 +2333,12 @@
     "false locks the unit price (sale kind)"
    ],
    [
+    "pricesIncludeVat",
+    "boolean",
+    "false",
+    "The unit price includes VAT (sale and purchase): the list shows excl. and incl. VAT, VAT is taken out of each line total (total × rate / (100 + rate), 2 decimals), totals read subtotal excl. VAT, VAT, total incl. VAT (P115, 1.39.0)"
+   ],
+   [
     "lots",
     "boolean",
     "false",
@@ -2407,13 +2413,15 @@
    "Mark a price that differs from the resolved one",
    "Fill lots oldest first (FIFO) in the line form and let the person change them",
    "Show subtotal, discount, VAT and total under the list; stock kind shows lines and units",
-   "Keep header and lines in one form with one draft and one save"
+   "Keep header and lines in one form with one draft and one save",
+   "Set pricesIncludeVat when the price people quote is the price the customer pays"
   ],
   "dont": [
    "Put inputs in the list rows",
    "Use a <table> or native number spinners",
    "Ask for YES to delete a line (it is an unsaved change of the document)",
-   "Let lines change after the document leaves draft"
+   "Let lines change after the document leaves draft",
+   "Add VAT on top of a price that already includes it, or show a VAT-inclusive price under an \"excl. VAT\" label"
   ]
  },
  "Document flow · trail": {
@@ -2712,6 +2720,12 @@
     "string",
     "'The lines'",
     "Title of the lines sheet"
+   ],
+   [
+    "pricesIncludeVat",
+    "boolean",
+    "false",
+    "Prices include VAT (P115, 1.39.0): the quantity sheet shows the line total incl. VAT with the excl. figure and the VAT inside; the lines sheet totals read subtotal excl. VAT, VAT, total incl. VAT; the cart bar's total says incl. VAT"
    ]
   ],
   "emits": [

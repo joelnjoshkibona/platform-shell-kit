@@ -7,6 +7,12 @@ const CATEGORY = { p1: 'Drinks', p3: 'Drinks', p2: 'Snacks', p4: 'Snacks', p5: '
 const DOC = reactive({ c: 'c2', pay: 'cash', lines: [], step: 0, dir: 'step-next', q: '', cat: 'All', qtyId: null, qtyStart: null });
 const docQty = (id) => (DOC.lines.find(l => l.id === id) || { q: 0 }).q;
 const docTotal = computed(() => DOC.lines.reduce((t, l) => t + prod(l.id).price * l.q, 0));
+/* pricesIncludeVat (P115, 1.39.0): this document's prices are shelf prices, VAT included at 18%; VAT is taken out of the total,
+   VAT = total × 18 / 118, rounded to 2 decimals, and the excl. figure is total − VAT */
+const DOC_INC = true, DOC_VAT = 18;
+const r2 = (n) => Math.sign(n) * Math.round(Math.abs(n) * 100 + 1e-9) / 100;
+const vatIn = (total) => (DOC_INC ? r2(total * DOC_VAT / (100 + DOC_VAT)) : 0);
+const docVat = computed(() => DOC.lines.reduce((t, l) => t + vatIn(prod(l.id).price * l.q), 0));
 const docUnits = computed(() => DOC.lines.reduce((t, l) => t + l.q, 0));
 function docSet(id, q) { const l = DOC.lines.find(x => x.id === id); if (q <= 0) { if (l) DOC.lines.splice(DOC.lines.indexOf(l), 1); return; } if (l) l.q = q; else DOC.lines.push({ id, q }); }
 function docReset(c = 'c2', pay = 'cash') { Object.assign(DOC, { c, pay, lines: [], step: 0, dir: 'step-next', q: '', cat: 'All', qtyId: null, qtyStart: null }); }
@@ -27,7 +33,7 @@ const QtySheet = { components: { Sheet, Icon, Btn, Tile },
     const ok = computed(() => q.value > 0 && !overStock.value && !overRoom.value);
     const save = () => { docSet(DOC.qtyId, q.value); S.sheet = null; DOC.qtyStart = null; };
     const remove = () => { docSet(DOC.qtyId, 0); S.sheet = null; DOC.qtyStart = null; };
-    return { S, DOC, p, had, q, max, room, total, overStock, atStock, overRoom, set, ok, save, remove, money, num };
+    return { S, DOC, DOC_INC, vatIn, p, had, q, max, room, total, overStock, atStock, overRoom, set, ok, save, remove, money, num };
   },
   template: `<Sheet :open="S.sheet === 'qty' && !!p" :title="p ? p.name : ''" :sub="p ? money(p.price) + ' per ' + p.unit + ' · ' + p.stock + ' ' + p.units + ' in stock' : ''" @close="S.sheet = null">
     <div v-if="p" class="space-y-4 px-5 pb-3">
@@ -37,21 +43,23 @@ const QtySheet = { components: { Sheet, Icon, Btn, Tile },
       <div class="grid grid-cols-4 gap-2"><button v-for="n in [10, 20, 50, 100]" :key="n" type="button" :disabled="q >= max" class="press h-10 rounded-lg bg-muted text-sm font-semibold disabled:opacity-40" @click="set(q + n)">+{{ n }}</button></div>
       <p v-if="atStock" class="flex gap-2 rounded-lg bg-warning/10 p-2.5 text-xs text-warning"><Icon name="PackageMinus" :size="15"/>That is all {{ max }} {{ p.units }} in stock.</p>
       <p v-if="overRoom" class="flex gap-2 rounded-lg bg-destructive/10 p-2.5 text-xs text-destructive"><Icon name="CircleAlert" :size="15"/>Only {{ money(Math.max(0, room)) }} of the credit limit is left. Lower the quantity or take cash.</p>
-      <div class="flex items-center justify-between rounded-lg bg-muted/60 px-3.5 py-2.5 text-sm"><span class="text-muted-foreground">{{ num(q) }} × {{ money(p.price) }}</span><span class="text-base font-bold tnum">{{ money(total) }}</span></div></div>
+      <div class="rounded-lg bg-muted/60 px-3.5 py-2.5 text-sm"><div class="flex items-center justify-between"><span class="text-muted-foreground">{{ num(q) }} × {{ money(p.price) }}<template v-if="DOC_INC"> incl. VAT</template></span><span class="text-base font-bold tnum">{{ money(total) }}</span></div>
+        <p v-if="DOC_INC" class="mt-0.5 flex justify-between text-xs text-muted-foreground tnum"><span>Excl. VAT {{ money(total - vatIn(total)) }}</span><span>VAT {{ money(vatIn(total)) }} inside</span></p></div></div>
     <template #footer><div :class="['grid gap-2', had ? 'grid-cols-[auto_1fr]' : '']"><Btn v-if="had" v="destructive-outline" class="h-12 px-4" aria-label="Remove the line" @click="remove"><Icon name="Trash2" :size="18"/></Btn><Btn full class="h-12" :disabled="!ok" @click="save">{{ had ? 'Update' : 'Add' }} · {{ money(total) }}</Btn></div></template></Sheet>` };
 
 /* LinesSheet: the lines (P115's DocLines in a sheet): change opens the quantity sheet, the bin removes */
 const LinesSheet = { props: { title: { type: String, default: 'The order' } }, components: { Sheet, Icon, Tile, Btn },
-  setup() { const open = (id) => { DOC.qtyId = id; S.sheet = 'qty'; }; return { S, DOC, prod, money, num, docTotal, docUnits, docSet, open }; },
+  setup() { const open = (id) => { DOC.qtyId = id; S.sheet = 'qty'; }; return { S, DOC, DOC_INC, docVat, prod, money, num, docTotal, docUnits, docSet, open }; },
   template: `<Sheet :open="S.sheet === 'doclines'" :title="title" :sub="DOC.lines.length + ' lines · ' + docUnits + ' units'" @close="S.sheet = null"><div class="px-4 pb-2">
     <div v-for="l in DOC.lines" :key="l.id" class="flex items-center gap-3 border-b py-3"><Tile :p="prod(l.id)" :size="40"/><button type="button" class="press min-w-0 flex-1 text-left" @click="open(l.id)"><span class="block truncate text-sm font-semibold">{{ prod(l.id).name }}</span><span class="block text-xs text-muted-foreground tnum">{{ num(l.q) }} × {{ money(prod(l.id).price) }}</span></button>
       <span class="text-sm font-semibold tnum">{{ money(l.q * prod(l.id).price) }}</span><button type="button" class="press grid h-9 w-9 place-items-center rounded-full text-muted-foreground" :aria-label="'Remove ' + prod(l.id).name" @click="docSet(l.id, 0)"><Icon name="Trash2" :size="17"/></button></div></div>
-    <template #footer><div class="flex items-center justify-between pb-1"><span class="text-sm text-muted-foreground">Total</span><span class="text-lg font-bold tnum">{{ money(docTotal) }}</span></div></template></Sheet>` };
+    <template #footer><div class="pb-1"><template v-if="DOC_INC"><div class="flex justify-between text-xs text-muted-foreground tnum"><span>Subtotal excl. VAT</span><span>{{ money(docTotal - docVat) }}</span></div><div class="flex justify-between text-xs text-muted-foreground tnum"><span>VAT</span><span>{{ money(docVat) }}</span></div></template>
+      <div class="flex items-center justify-between"><span class="text-sm text-muted-foreground">{{ DOC_INC ? 'Total incl. VAT' : 'Total' }}</span><span class="text-lg font-bold tnum">{{ money(docTotal) }}</span></div></div></template></Sheet>` };
 
 /* CartBar: sticky at the bottom of the catalogue */
-const CartBar = { components: { Icon }, setup() { return { S, DOC, money, docTotal, docUnits }; },
+const CartBar = { components: { Icon }, setup() { return { S, DOC, DOC_INC, money, docTotal, docUnits }; },
   template: `<transition name="pop"><button v-if="DOC.lines.length" type="button" class="press sticky bottom-3 z-10 mx-3 mb-3 flex w-[calc(100%-1.5rem)] items-center gap-3 rounded-xl bg-primary px-4 py-3 text-left text-primary-foreground shadow-lg" @click="S.sheet = 'doclines'">
-    <span class="grid h-9 w-9 place-items-center rounded-full bg-white/20"><Icon name="ShoppingBag" :size="18"/></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold">{{ DOC.lines.length }} lines · {{ docUnits }} units</span><span class="block text-xs opacity-80">Tap to see the lines</span></span><span class="text-base font-bold tnum">{{ money(docTotal) }}</span></button></transition>` };
+    <span class="grid h-9 w-9 place-items-center rounded-full bg-white/20"><Icon name="ShoppingBag" :size="18"/></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold">{{ DOC.lines.length }} lines · {{ docUnits }} units</span><span class="block text-xs opacity-80">Tap to see the lines</span></span><span class="text-right"><span class="block text-base font-bold tnum">{{ money(docTotal) }}</span><span v-if="DOC_INC" class="block text-[11px] opacity-80">incl. VAT</span></span></button></transition>` };
 
 /* ItemCatalogue: the catalogue is the step itself */
 const ItemCatalogue = { components: { Icon, Tile, Pill, CartBar },

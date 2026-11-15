@@ -424,6 +424,7 @@ Guide: `docs/architecture/MODULES.md`.
 - Unit price comes from the product's price resolution; overriding needs a permission and the line shows it changed. Totals sit under the list; the server recomputes on save and wins (409 on a difference, P88).
 - Lots (`lots: true`) are picked in the line form, oldest first (FIFO), changeable; the list shows "n of m picked"; stock actions refuse lines not fully picked.
 - Document forms open as AppDialog `xl` when priced, `lg` for quantities only (P100). `DocFlow` and `DocTrail` sit at the top of the Overview.
+- Prices including VAT (`pricesIncludeVat`, sale and purchase; off by default): the price entered includes VAT and its field says so, with the excl. figure live; the list shows the unit price excl. and incl. VAT; VAT per line = total × rate / (100 + rate), total and VAT each rounded to 2 decimals (half away from zero), excl. = total − VAT; totals read subtotal excl. VAT, VAT, total incl. VAT; the server uses the same rule and wins. Never add VAT on top of an inclusive price.
 - On a phone, Add a line opens `ItemCatalogue`: a tap opens `QtySheet` (large quantity, − / +, +10 to +100, line total, Add / Update / Remove; limits by stock and by a money ceiling, and it says which limit stopped it); `CartBar` opens the lines. Lines, draft, save and server rules are the same.
 
 ## Locked: the phone on another backend (P117)
