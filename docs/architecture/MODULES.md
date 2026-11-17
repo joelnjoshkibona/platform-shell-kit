@@ -72,6 +72,9 @@ API `module.json`:
 }
 ```
 
+`"platform_only": true` (optional, P122) makes the module a platform tool: its permissions are held only by the developer
+role, like Menus and Logs. Only for screens whose rows belong to no one organisation.
+
 Web `module.ts` (the phone app has its own, with the same key and permissions, for the modules it shows):
 ```ts
 export default defineModule({
