@@ -34,6 +34,12 @@ scaffolder again with `--force` on a module that exists: `--force` deletes the f
 
 The manifest records the choice: `"scope": "organisation" | "location" | "global"`.
 
+**Open:** the label column. The skeleton's record is named by `name`, and `name` is used outside the slots too (the
+isolation test, the details page title, the delete dialog). A module whose label is another column needs a scaffolder
+option for it; until then a generator keeps `name`.
+
+**Open:** quick tabs (P24, P40). The skeleton's list has none, so the list page has no `tabs` slot yet.
+
 **Open:** who may write a `global` module's rows. Today a global core module (Countries) can be edited by any
 organisation's owner. Until this is decided, a global module keeps the ordinary permissions.
 
@@ -57,8 +63,8 @@ With `--generated`, the scaffolders put every body region between named markers:
 - Everything outside the markers belongs to people and is never touched.
 - The default body (a `name` and a `description`) sits inside the slots, so a module made with `--generated` works
   before any generator has filled it.
-- Without `--generated`, the scaffolders write exactly what they wrote before: a person who scaffolds by hand never
-  sees a marker.
+- Without `--generated`, the files are exactly the `--generated` files less their marker lines: a person who
+  scaffolds by hand never sees a marker.
 - A slot name appears once per file. Markers are always balanced.
 
 The slots, by file:
@@ -67,18 +73,18 @@ The slots, by file:
 |---|---|
 | `{Module}Model.php` | `casts`, `relations`, `select-label` |
 | `{Module}Factory.php` | `definition` |
-| `Migrations/*_create_*_table.php` | `columns` |
+| `Migrations/*_create_*_table.php` | `columns` (with the unique key) |
 | `Seeders/{Module}Seeder.php` | `permissions` |
 | `Routes/api.php` | `actions` |
 | `{Module}Controller.php` | `actions` |
-| `Services/{Module}ListService.php` | `filterable`, `sortable`, `searchable`, `eager`, `filter-fields`, `bulk-actions` |
+| `Services/{Module}ListService.php` | `filterable`, `sortable`, `searchable`, `eager`, `bulk-actions`, `filter-fields` |
 | `Services/{Module}CreateService.php`, `…EditService.php` | `rules` |
 | `Services/{Module}ViewService.php` | `with` |
 | `Services/{Module}DeleteCheckService.php` | `relationships` |
 | `Tests/{Module}Test.php` | `fields` |
 | web `api.ts` | `row`, `input` |
-| web `pages/{Module}Page.vue` | `sorts`, `columns`, `tabs`, `row-actions` |
-| web `pages/{Module}FormDialog.vue` | `state`, `fields`, `valid`, `body` |
+| web `pages/{Module}Page.vue` | `sorts`, `columns`, `row-actions` |
+| web `pages/{Module}FormDialog.vue` | `state`, `valid`, `body`, `fields` |
 | web `pages/{Module}DetailPage.vue` | `overview` |
 | web `module.ts` | `tabs`, `actions`, `children` |
 
@@ -104,6 +110,6 @@ Every scaffolded module, generated or not, has:
 ## Checks
 
 - A module scaffolded in each scope passes its own tests, including the isolation test for its scope.
-- Without `--generated`, the scaffolders' output is unchanged by this decision.
+- Without `--generated`, the output carries no marker and equals the `--generated` output less its marker lines.
 - With `--generated`, every file's markers are balanced and each slot name appears once per file.
 - Replacing a slot's content leaves every line outside the slot unchanged.
