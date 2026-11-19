@@ -82,8 +82,8 @@ The slots, by file:
 | web: every script | `imports` (the generator's own import lines; a name already imported is left out) |
 | web `api.ts` | `row`, `types`, `input`, `api` (extra client calls) |
 | web `pages/{Module}Page.vue` | `sorts`, `tabs`, `columns`, `cells` (a column's own cell: status pill, related link), `row-actions` |
-| web `pages/{Module}FormDialog.vue` | `setup`, `state`, `valid`, `body`, `fields` |
-| web `pages/{Module}DetailPage.vue` | `setup`, `header` (`headerIcon`, `headerStatus`), `overview` (a fact with a `link` shows as a RelatedLink) |
+| web `pages/{Module}FormDialog.vue` | `setup`, `state`, `valid`, `body`, `fields`, `size` (the dialog's width: `lg`, or `xl` for a priced document, P115) |
+| web `pages/{Module}DetailPage.vue` | `setup`, `header` (`headerIcon`, `headerStatus`), `overview` (a fact with a `link` shows as a RelatedLink), `own-tabs` (the page's tabs between Overview and History), `overview-extra` (below the facts: a document's read-only lines), `tab-bodies` (those tabs' content) |
 | web `module.ts` | `tabs`, `declarations` (type entries, e.g. `RecordExtraTabMap`), `actions`, `extra-tabs` (a child's tab on its parent, P86) |
 
 **PHP imports have no slot.** A formatter that orders imports (Pint) moves them across any marker. A generator adds the
