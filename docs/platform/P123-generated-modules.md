@@ -80,16 +80,21 @@ The slots, by file:
 | `Services/{Module}ViewService.php` | `with` |
 | `Services/{Module}DeleteCheckService.php` | `relationships` |
 | `Tests/{Module}Test.php` | `fields` |
-| web `api.ts` | `row`, `input` |
-| web `pages/{Module}Page.vue` | `sorts`, `tabs`, `columns`, `row-actions` |
-| web `pages/{Module}FormDialog.vue` | `state`, `valid`, `body`, `fields` |
-| web `pages/{Module}DetailPage.vue` | `overview` |
+| web: every script | `imports` (the generator's own import lines; a name already imported is left out) |
+| web `api.ts` | `row`, `types`, `input`, `api` (extra client calls) |
+| web `pages/{Module}Page.vue` | `sorts`, `tabs`, `columns`, `cells` (a column's own cell: status pill, related link), `row-actions` |
+| web `pages/{Module}FormDialog.vue` | `setup`, `state`, `valid`, `body`, `fields` |
+| web `pages/{Module}DetailPage.vue` | `setup`, `header` (`headerIcon`, `headerStatus`), `overview` (a fact with a `link` shows as a RelatedLink) |
 | web `module.ts` | `tabs`, `actions`, `children` |
 
-**Imports have no slot.** A formatter that orders imports (Pint) moves them across any marker. A generator adds the
+**PHP imports have no slot.** A formatter that orders imports (Pint) moves them across any marker. A generator adds the
 imports its body needs and runs the starter's formatter on the files it wrote, which orders them and removes the ones
 nothing uses any more. The formatter may also change blank lines next to a slot; that is the only change it makes
-outside one.
+outside one. **The web side's imports have a slot:** nothing reorders them there, and an unused import fails the
+typecheck, so the generator owns its import lines whole.
+
+A generator writes a locale key it derives; a translation it has no words for (a missing Swahili label) is written
+only where the key is missing, never over one already there.
 
 JSON files carry no markers. In `module.json` a generator writes only `description`, `label`, `references`, `permissions`, `actions`,
 `children`, `search`, `select`, `role_defaults`, `approval_actions` and `media_references`, and changes `menu` only to
