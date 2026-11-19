@@ -8,10 +8,35 @@ Status: **decided** (kit 1.12.0). From PROJECT_GENERATOR (`PHP/PROJECT_GENERATOR
 - The web and phone UI read the entry to place the button and gate it; nothing is wired twice.
 - Bulk actions: `POST /{module}/bulk-action` with `ids[]` or the list's current filter, gated by `{Module}.bulkAction` and the action's own permission.
 
+### The entry (amended 2026-11-19, built in Bootbox)
+
+```json
+"actions": {
+  "close":    { "label": "Close", "icon": "CircleCheck", "button": "header", "confirm": true, "bulk": true,
+                "approval": true, "effect": "The task is closed." },
+  "reassign": { "label": "Reassign", "icon": "UserRoundCog", "button": "more", "fields": true }
+}
+```
+
+- `button`: `header` (beside Edit) or `more` (the More menu). `danger` styles it and asks to type YES.
+- `confirm`: a plain "Are you sure" before it runs. `fields`: the action opens its own dialog (`{Module}{Action}Dialog.vue`),
+  which validates against the service's `rules()`.
+- `bulk`: it is also on the list's bulk bar, through `/{module}/bulk-action` (no fields there; a row it cannot apply to is
+  skipped with the reason, P99).
+- `approval`: it is approval-gated (P107) without a class of its own: the platform's adapter finds the record within
+  the person's reach, takes its location (P108) and label, shows `effect`, and runs the same service once approved. The
+  direct route refuses (409) while a workflow applies, so the gate cannot be stepped round.
+- The route `POST /{module}/{uuid}/{action}` goes to one platform controller: the record is found within reach (404
+  otherwise), the service runs in a transaction, the fresh record comes back. The permissions are seeded from the
+  entries.
+- The service is `Actions/{Module}{Action}Service.php`, extending the platform's `ModuleAction`: `rules()` and
+  `handle($record, $data)`. It is the developer's: a generator writes it once and never again (P123).
+- Wizards and page actions are not in the entry yet.
+
 ## Why
 
 "Service + route + permission + button" is one contract that a reader and a reviewer can check in one place.
 
 ## Extension point
 
-`actions` in `module.json` and `module.ts`.
+`actions` in `module.json` (the server's contract) and `module.ts` (the buttons: the same keys, plus the dialog component).

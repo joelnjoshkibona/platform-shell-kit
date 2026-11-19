@@ -98,7 +98,9 @@ only where the key is missing, never over one already there.
 JSON files carry no markers. In `module.json` a generator writes only `description`, `label`, `references`, `permissions`, `actions`,
 `tab_on`, `search`, `select`, `role_defaults`, `approval_actions` and `media_references`, and changes `menu` only to
 set its icon, and `workflows` (P47). It may also write whole files of its own beside the skeleton's (a workflow's
-statuses migration); those it rewrites every run. In the locale files it writes only the keys under the module's own namespace.
+statuses migration); those it rewrites every run. A third kind is **written once**: a file whose body is the
+developer's (an action's service, P84, and its dialog). A generator writes it when it is missing and never touches it
+again, and says so ("kept"). In the locale files it writes only the keys under the module's own namespace.
 
 ### 4. The generator contract
 
