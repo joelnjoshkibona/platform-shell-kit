@@ -104,6 +104,22 @@ including VAT (above); the Design system page demos a sale in that mode.
   line's client id so `DocLines` can show them on the line.
 - Numbering (`OF-2026-0001`) from `DocumentNumberService` with a counter row per series, never a text sort.
 
+### The data shape (amended 2026-11-19, built in Bootbox)
+
+- The lines belong to the document's module: a `{table}_lines` table (`uuid`, the document's key, `position`,
+  `item_id`, `qty`, `price`, `disc`, `vat`, any extra columns, soft deletes) and a `{Module}LineModel` in its folder.
+  They have no routes, permissions or menu of their own: they are read with the document and saved with it.
+- The document's model declares them (`HasDocumentLines`, `const LINES = ['model', 'key', 'columns', 'kind',
+  'item_module', 'prices_include_vat', 'editable_status']`) and its number (`HasDocumentNumber`, `const NUMBER =
+  ['column', 'prefix']`, made on create, never taken from the request). The header keeps `subtotal`, `tax` and
+  `total`, the server's figures.
+- Every scaffolded create and edit service saves them (`SavesDocumentLines`, a no-op for a module without lines):
+  rules for `lines.*`, the lines saved in order after the header, the totals worked out and stored (a claimed `total`
+  a cent off is a 409 with the server's totals), and, once the document's status is past `editable_status`, lines in
+  an edit refused with the reason.
+- The web form holds the lines in the same draft and sends them in the same save; the details page shows them read-only
+  on the Overview and on a Lines tab, second.
+
 ## Open
 
 - Barcode scanning on the web: USB scanners type into the item picker today; a camera scan on the web may follow (P64 covers the phone).
