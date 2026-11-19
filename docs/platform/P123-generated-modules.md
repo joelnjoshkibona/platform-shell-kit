@@ -69,7 +69,7 @@ The slots, by file:
 
 | File | Slots |
 |---|---|
-| `{Module}Model.php` | `casts`, `relations`, `select-label` |
+| `{Module}Model.php` | `traits` (its own trait statement, under the skeleton's), `constants` (e.g. `SELECT_LABEL`, P47's `WORKFLOW`), `casts`, `relations` |
 | `{Module}Factory.php` | `definition` |
 | `Migrations/*_create_*_table.php` | `columns` (with the unique key) |
 | `Seeders/{Module}Seeder.php` | `permissions` |
@@ -86,9 +86,15 @@ The slots, by file:
 | web `pages/{Module}DetailPage.vue` | `overview` |
 | web `module.ts` | `tabs`, `actions`, `children` |
 
-JSON files carry no markers. In `module.json` a generator writes only `label`, `references`, `permissions`, `actions`,
+**Imports have no slot.** A formatter that orders imports (Pint) moves them across any marker. A generator adds the
+imports its body needs and runs the starter's formatter on the files it wrote, which orders them and removes the ones
+nothing uses any more. The formatter may also change blank lines next to a slot; that is the only change it makes
+outside one.
+
+JSON files carry no markers. In `module.json` a generator writes only `description`, `label`, `references`, `permissions`, `actions`,
 `children`, `search`, `select`, `role_defaults`, `approval_actions` and `media_references`, and changes `menu` only to
-set its icon. In the locale files it writes only the keys under the module's own namespace.
+set its icon, and `workflows` (P47). It may also write whole files of its own beside the skeleton's (a workflow's
+statuses migration); those it rewrites every run. In the locale files it writes only the keys under the module's own namespace.
 
 ### 4. The generator contract
 
@@ -112,4 +118,6 @@ Every scaffolded module, generated or not, has:
 - A module scaffolded in each scope passes its own tests, including the isolation test for its scope.
 - Without `--generated`, the output carries no marker and equals the `--generated` output less its marker lines.
 - With `--generated`, every file's markers are balanced and each slot name appears once per file.
-- Replacing a slot's content leaves every line outside the slot unchanged.
+- Replacing a slot's content leaves every line outside the slot unchanged, apart from the formatter's blank lines and
+  imports.
+- A generated module is compared with a hand-written one with its markers removed and the formatter run on both.
