@@ -84,7 +84,7 @@ The slots, by file:
 | web `pages/{Module}Page.vue` | `sorts`, `tabs`, `columns`, `cells` (a column's own cell: status pill, related link), `row-actions` |
 | web `pages/{Module}FormDialog.vue` | `setup`, `state`, `valid`, `body`, `fields` |
 | web `pages/{Module}DetailPage.vue` | `setup`, `header` (`headerIcon`, `headerStatus`), `overview` (a fact with a `link` shows as a RelatedLink) |
-| web `module.ts` | `tabs`, `actions`, `children` |
+| web `module.ts` | `tabs`, `declarations` (type entries, e.g. `RecordExtraTabMap`), `actions`, `extra-tabs` (a child's tab on its parent, P86) |
 
 **PHP imports have no slot.** A formatter that orders imports (Pint) moves them across any marker. A generator adds the
 imports its body needs and runs the starter's formatter on the files it wrote, which orders them and removes the ones
@@ -96,7 +96,7 @@ A generator writes a locale key it derives; a translation it has no words for (a
 only where the key is missing, never over one already there.
 
 JSON files carry no markers. In `module.json` a generator writes only `description`, `label`, `references`, `permissions`, `actions`,
-`children`, `search`, `select`, `role_defaults`, `approval_actions` and `media_references`, and changes `menu` only to
+`tab_on`, `search`, `select`, `role_defaults`, `approval_actions` and `media_references`, and changes `menu` only to
 set its icon, and `workflows` (P47). It may also write whole files of its own beside the skeleton's (a workflow's
 statuses migration); those it rewrites every run. In the locale files it writes only the keys under the module's own namespace.
 

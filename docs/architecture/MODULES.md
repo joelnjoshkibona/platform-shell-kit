@@ -66,8 +66,7 @@ API `module.json`:
     "move":      { "service": "TasksMoveService",      "permission": "Tasks.move",      "button": "more",   "opens": "dialog" },
     "setStatus": { "service": "TasksSetStatusService", "permission": "Tasks.setStatus", "button": "header", "opens": "menu", "bulk": true }
   },
-  "children": { "subtasks": { "module": "Tasks", "via": "parent_id", "tab": "Subtasks" },
-                "comments": { "module": "Comments", "via": "commentable", "tab": "Comments" } },
+  "tab_on": { "Tasks": { "key": "subtasks", "via": "parent_id", "tab": "Subtasks" } },
   "menu": { "group": "Work", "label": "Tasks", "icon": "ListChecks", "order": 10, "permission": "Tasks.list" }
 }
 ```
@@ -146,7 +145,7 @@ Generator source: `FRONTEND/src/components/related-record/RelatedRecordLink.vue`
 
 ## 7. Child tabs (P86)
 
-`children.subtasks` in the Tasks manifest → a Subtasks tab that renders the Tasks list scoped to the parent, fed by `GET /tasks/{uuid}/subtasks/list` (the server fetches the parent, then filters by `parent_id`), gated by `Tasks.list`; its create form locks the parent.
+`tab_on.Tasks` in the Tasks manifest (here the child is Tasks itself; a Comments module would declare its own `tab_on`) → a Subtasks tab that renders the Tasks list scoped to the parent, fed by `GET /tasks/{uuid}/subtasks/list` (the server fetches the parent, then filters by `parent_id`), gated by `Tasks.list`; its create form locks the parent.
 
 Generator source: `docs/modules/delegations.md`, `DelegationServiceGenerator`. Changed: the child module owns all its files.
 

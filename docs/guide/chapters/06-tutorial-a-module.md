@@ -18,7 +18,7 @@ We build a small **Tasks** module: a task has a title, an optional parent task (
   },
   "permissions": ["Tasks.setStatus"],
   "actions": { "setStatus": { "service": "TasksSetStatusService", "permission": "Tasks.setStatus", "button": "header", "opens": "menu", "bulk": true } },
-  "children": { "subtasks": { "module": "Tasks", "via": "parent_id", "tab": "Subtasks" } },
+  "tab_on": { "Tasks": { "key": "subtasks", "via": "parent_id", "tab": "Subtasks" } },
   "menu": { "group": "Work", "label": "Tasks", "icon": "ListChecks", "order": 10, "permission": "Tasks.list" }
 }
 ```
