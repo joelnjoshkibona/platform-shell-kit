@@ -181,6 +181,11 @@ const ShellMod = (() => {
         if (A.pw.length < 6) { A.err = `That ${idKind.value} and password do not match. 4 tries left before a 15-minute lock.`; refuse('li-pw'); return; }
         A.err = ''; A.busy = true; setTimeout(() => { A.busy = false; G.route = 'twofa'; }, 800);
       }
+      // P123: Google is one step (no code). The prototype shows the refusal for an email that was never invited.
+      function google() {
+        A.err = ''; A.busy = true;
+        setTimeout(() => { A.busy = false; if (A.id.trim().toLowerCase().startsWith('stranger')) { A.err = 'This Google account (s•••@gmail.com) has not been invited. Ask your administrator to invite this email.'; return; } G.route = 'orgpick'; }, 900);
+      }
       const refs = ref([]);
       const focus = (i) => nextTick(() => refs.value[i]?.focus());
       function onInput(e, i) { const v = e.target.value.replace(/\D/g, ''); if (v.length > 1) { v.slice(0, 6).split('').forEach((d, k) => A.code[k] = d); } else { A.code[i] = v; if (v && i < 5) focus(i + 1); } A.codeErr = ''; if (A.code.every(Boolean)) verify(); }
@@ -198,7 +203,7 @@ const ShellMod = (() => {
       function capsCheck(e) { A.caps = e.getModifierState && e.getModifierState('CapsLock'); }
       const mask = computed(() => { const v = A.fid || A.id || 'amina.juma@kilimaretail.co.tz'; return v.includes('@') ? v[0] + '•••@' + v.split('@')[1] : v.length > 4 ? v.slice(0, 4) + '•••' + v.slice(-2) : v; });
       function pickOrg(o) { switchOrg(o.id, { instant: true }); o.lastUsed = 'Now'; nav('dashboard'); G.toast('Welcome back, Amina', `Signed in to ${o.name}${A.trust ? '. This device is remembered for 30 days.' : '.'}`, 'LogIn'); }
-      return { G, A, idIcon, signIn, refs, onInput, onKey, verify, capsCheck, mask, ORGS, ROLE, formCount, pickOrg };
+      return { G, A, idIcon, signIn, google, refs, onInput, onKey, verify, capsCheck, mask, ORGS, ROLE, formCount, pickOrg };
     },
     template: `
     <div class="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -234,7 +239,10 @@ const ShellMod = (() => {
             <label class="flex items-center gap-2 text-sm"><Checkbox v-model="A.remember"/>Keep me signed in</label>
             <p v-if="A.err" class="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive" role="alert"><Icon name="CircleAlert" :size="15" class="mt-0.5"/>{{ A.err }}</p>
             <Button type="submit" class="!h-10" :disabled="A.busy"><Icon v-if="A.busy" name="LoaderCircle" class="animate-spin"/>{{ A.busy ? 'Signing in…' : 'Sign in' }}</Button>
-            <p class="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">Prototype: any username, password <span class="font-mono font-medium text-foreground">demo1234</span>, then code <span class="font-mono font-medium text-foreground">123456</span>.</p>
+            <!-- P123: Google sign-in, only when the server has a Google client -->
+            <div class="flex items-center gap-3 text-xs text-muted-foreground"><span class="h-px flex-1 bg-border"></span>or<span class="h-px flex-1 bg-border"></span></div>
+            <Button type="button" variant="outline" class="!h-11" :disabled="A.busy" @click="google"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M22.6 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h6c-.3 1.4-1 2.5-2.2 3.3v2.8h3.6c2.1-1.9 3.2-4.8 3.2-8.1z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.4-2.7l-3.6-2.8c-1 .7-2.3 1.1-3.8 1.1-2.9 0-5.4-2-6.3-4.6H2v2.9C3.8 20.5 7.6 23 12 23z"/><path fill="#FBBC05" d="M5.7 14c-.2-.7-.4-1.4-.4-2s.1-1.4.4-2V7.1H2C1.4 8.6 1 10.2 1 12s.4 3.4 1 4.9L5.7 14z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.3 1.7l3.2-3.2C17.5 2 15 1 12 1 7.6 1 3.8 3.5 2 7.1L5.7 10c.9-2.6 3.4-4.6 6.3-4.6z"/></svg>Continue with Google</Button>
+            <p class="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">Prototype: any username, password <span class="font-mono font-medium text-foreground">demo1234</span>, then code <span class="font-mono font-medium text-foreground">123456</span>. Google signs in at once; type <span class="font-mono font-medium text-foreground">stranger</span> first to see the not-invited message.</p>
           </form>
 
           <!-- TWO-STEP -->
