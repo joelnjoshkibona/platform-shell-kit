@@ -29,7 +29,7 @@ Status: **decided** (kit 1.12.0). From PROJECT_GENERATOR (`PHP/PROJECT_GENERATOR
 - The route `POST /{module}/{uuid}/{action}` goes to one platform controller: the record is found within reach (404
   otherwise), the service runs in a transaction, the fresh record comes back. The permissions are seeded from the
   entries.
-- The service is `Actions/{Module}{Action}Service.php`, extending the platform's `ModuleAction`: `rules()` and
+- The service is `Services/{Module}{Action}Service.php` (where the bulk runner finds it), extending the platform's `ModuleAction`: `rules()` and
   `handle($record, $data)`. It is the developer's: a generator writes it once and never again (P123).
 - Wizards and page actions are not in the entry yet.
 
