@@ -34,9 +34,8 @@ scaffolder again with `--force` on a module that exists: `--force` deletes the f
 
 The manifest records the choice: `"scope": "organisation" | "location" | "global"`.
 
-**Open:** the label column. The skeleton's record is named by `name`, and `name` is used outside the slots too (the
-isolation test, the details page title, the delete dialog). A module whose label is another column needs a scaffolder
-option for it; until then a generator keeps `name`.
+The record's name is a column of its own choosing: `--label-column` (default `name`) on both scaffolders makes every
+skeleton use of it (the list's main column, the details title, the delete dialog, the tests) that column.
 
 **Open:** who may write a `global` module's rows. Today a global core module (Countries) can be edited by any
 organisation's owner. Until this is decided, a global module keeps the ordinary permissions.
