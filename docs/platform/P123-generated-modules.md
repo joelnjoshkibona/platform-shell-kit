@@ -38,8 +38,6 @@ The manifest records the choice: `"scope": "organisation" | "location" | "global
 isolation test, the details page title, the delete dialog). A module whose label is another column needs a scaffolder
 option for it; until then a generator keeps `name`.
 
-**Open:** quick tabs (P24, P40). The skeleton's list has none, so the list page has no `tabs` slot yet.
-
 **Open:** who may write a `global` module's rows. Today a global core module (Countries) can be edited by any
 organisation's owner. Until this is decided, a global module keeps the ordinary permissions.
 
@@ -83,7 +81,7 @@ The slots, by file:
 | `Services/{Module}DeleteCheckService.php` | `relationships` |
 | `Tests/{Module}Test.php` | `fields` |
 | web `api.ts` | `row`, `input` |
-| web `pages/{Module}Page.vue` | `sorts`, `columns`, `row-actions` |
+| web `pages/{Module}Page.vue` | `sorts`, `tabs`, `columns`, `row-actions` |
 | web `pages/{Module}FormDialog.vue` | `state`, `valid`, `body`, `fields` |
 | web `pages/{Module}DetailPage.vue` | `overview` |
 | web `module.ts` | `tabs`, `actions`, `children` |
@@ -105,7 +103,9 @@ Every scaffolded module, generated or not, has:
 - its activity route and service (P101: History is the last tab);
 - its `/bulk-action` route and an empty bulk-action list (P84, P99), so the permission the seeder grants has a route;
 - on the web, its record page (P101), opened in the record dialog from any link (P111): Overview and History, with
-  the list's rows opening it.
+  the list's rows opening it;
+- on the web, its list's quick tabs (P24, P40) bound to one filter, with none declared: the `tabs` slot names the filter
+  and its tabs once the module has a status (P47).
 
 ## Checks
 
