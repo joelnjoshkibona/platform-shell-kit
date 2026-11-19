@@ -75,6 +75,10 @@ API `module.json`:
 `"platform_only": true` (optional, P122) makes the module a platform tool: its permissions are held only by the developer
 role, like Menus and Logs. Only for screens whose rows belong to no one organisation.
 
+`"scope": "organisation" | "location" | "global"` (P123) records who a module's rows belong to; `bootbox:module --scope=`
+writes it. A module made with `--generated` marks its body with named slots that a code generator fills; everything
+outside a slot belongs to people (P123, `docs/platform/P123-generated-modules.md`).
+
 Web `module.ts` (the phone app has its own, with the same key and permissions, for the modules it shows):
 ```ts
 export default defineModule({
