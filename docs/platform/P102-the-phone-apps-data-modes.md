@@ -74,5 +74,5 @@ Screenshots: `prototype-phone/screenshots/sync-*.png`, `phone-backups.png`.
 
 ## Generated modules (2026-11-20, kit 1.44.0)
 
-A generated module joins sync mode with `"sync": true` (or `{"keep_days": N}`) beside `"phone": true` in its
+A generated module joins sync mode with `"sync": true` (and `"keep_days": N` if wanted) beside `"phone": true` in its
 `generator.json`; P123 says how the generator writes it.

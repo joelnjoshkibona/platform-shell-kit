@@ -143,7 +143,7 @@ are part of the contract: `generator_contract` **2** (a generator that knows onl
 
 ### Sync modules (amended 2026-11-20, kit 1.44.0)
 
-A generated module may be a sync module (P102): `"sync": true`, or `"sync": {"keep_days": N}`, and only with
+A generated module may be a sync module (P102): `"sync": true` (with `"keep_days": N` to limit what a phone keeps), and only with
 `"phone": true`. The generator asks the scaffolder for it when it makes the module (`--sync`, `--keep-days`); the
 manifest's `sync` key stays the scaffolder's, so for a module that exists a generator never changes it and refuses a
 spec that disagrees, naming the key. The sync test's `fields` slot carries the offline record's other required fields,
