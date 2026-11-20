@@ -85,6 +85,11 @@ The slots, by file:
 | web `pages/{Module}FormDialog.vue` | `setup`, `state`, `valid`, `body`, `fields`, `size` (the dialog's width: `lg`, or `xl` for a priced document, P115) |
 | web `pages/{Module}DetailPage.vue` | `setup`, `header` (`headerIcon`, `headerStatus`), `overview` (a fact with a `link` shows as a RelatedLink), `own-tabs` (the page's tabs between Overview and History), `overview-extra` (below the facts: a document's read-only lines), `tab-bodies` (those tabs' content) |
 | web `module.ts` | `tabs`, `declarations` (type entries, e.g. `RecordExtraTabMap`), `actions`, `extra-tabs` (a child's tab on its parent, P86) |
+| phone `screens/types.ts` | `row`, `types` (a workflow's declared statuses, for phone mode) |
+| phone `screens/{Module}Page.vue` | `imports`, `setup`, `sort`, `tabs`, `cells` |
+| phone `screens/{Module}Sheet.vue` | `imports`, `setup`, `state`, `reset`, `draft-get`, `draft-apply`, `input`, `valid`, `fields` |
+| phone `module.ts` | `menu` (its icon) |
+| phone `app/Local/Modules/{Module}.php` | `rules` (the API's, for the phone's store, P104) |
 
 **PHP imports have no slot.** A formatter that orders imports (Pint) moves them across any marker. A generator adds the
 imports its body needs and runs the starter's formatter on the files it wrote, which orders them and removes the ones
@@ -104,7 +109,7 @@ again, and says so ("kept"). In the locale files it writes only the keys under t
 
 ### 4. The generator contract
 
-The starter's `kit.json` carries `"generator_contract": 1`. It goes up by one whenever a slot is added, removed,
+The starter's `kit.json` carries `"generator_contract": 2` (2 since 2026-11-20: the web slots added with P84, P86 and P115, and the phone's). It goes up by one whenever a slot is added, removed,
 renamed or moved, or a component or composable that generated code calls changes its props or its shape. A generator
 declares the contracts it can write for and refuses any other, naming the starter's contract and its own.
 
@@ -127,3 +132,10 @@ Every scaffolded module, generated or not, has:
 - Replacing a slot's content leaves every line outside the slot unchanged, apart from the formatter's blank lines and
   imports.
 - A generated module is compared with a hand-written one with its markers removed and the formatter run on both.
+
+### The phone (amended 2026-11-20, kit 1.42.0)
+
+The phone scaffolder (`mobile/resources/spa`: `npm run make:module -- tasks --generated --scope=… --label-column=…`)
+writes the phone skeleton with the slots above; a generator fills them only for a module that asks for phone screens.
+Its fields are the phone's own (P124: DateField, RecordPick, ChoiceSheet, Toggle), never a native picker. The slots
+are part of the contract: `generator_contract` **2** (a generator that knows only 1 refuses an app at 2, by name).
