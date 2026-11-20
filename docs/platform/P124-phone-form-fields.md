@@ -12,7 +12,7 @@ for generated phone screens (D7, P123).
 - **A related record** (a foreign key) is a field-styled button showing the chosen record's label, or the placeholder.
   Tapping it opens a sheet with a search box and the related module's rows, from its own list through the data
   client (`data.list(module, { q })`), so it works in all three data modes (P104): connected from the API, phone and
-  sync from the phone's store. Rows show the module's label column; **Show more** loads the next page; tapping a row
+  sync from the phone's store (in sync mode the related module is there as reference data, P126). Rows show the module's label column; **Show more** loads the next page; tapping a row
   picks it and closes the sheet; **Clear** when the field may be empty. Never `<select>`.
 - Both carry the field's label, its required mark (P26) and the error under them, like every phone field.
 - **A choice from a fixed list** (an enum, a workflow status) is a field-styled button showing the chosen option, and

@@ -79,6 +79,7 @@ The slots, by file:
 | `Services/{Module}ViewService.php` | `with` |
 | `Services/{Module}DeleteCheckService.php` | `relationships` |
 | `Tests/{Module}Test.php` | `fields` |
+| `Tests/{Module}SyncTest.php` (a sync module, P102) | `fields` (the offline record's other fields: the module test's) |
 | web: every script | `imports` (the generator's own import lines; a name already imported is left out) |
 | web `api.ts` | `row`, `types`, `input`, `api` (extra client calls) |
 | web `pages/{Module}Page.vue` | `sorts`, `tabs`, `columns`, `cells` (a column's own cell: status pill, related link), `row-actions` |
@@ -109,7 +110,7 @@ again, and says so ("kept"). In the locale files it writes only the keys under t
 
 ### 4. The generator contract
 
-The starter's `kit.json` carries `"generator_contract": 2` (2 since 2026-11-20: the web slots added with P84, P86 and P115, and the phone's). It goes up by one whenever a slot is added, removed,
+The starter's `kit.json` carries `"generator_contract": 3` (2 since 2026-11-20: the web slots added with P84, P86 and P115, and the phone's; 3 the same day: the sync test's `fields`). It goes up by one whenever a slot is added, removed,
 renamed or moved, or a component or composable that generated code calls changes its props or its shape. A generator
 declares the contracts it can write for and refuses any other, naming the starter's contract and its own.
 
@@ -139,3 +140,11 @@ The phone scaffolder (`mobile/resources/spa`: `npm run make:module -- tasks --ge
 writes the phone skeleton with the slots above; a generator fills them only for a module that asks for phone screens.
 Its fields are the phone's own (P124: DateField, RecordPick, ChoiceSheet, Toggle), never a native picker. The slots
 are part of the contract: `generator_contract` **2** (a generator that knows only 1 refuses an app at 2, by name).
+
+### Sync modules (amended 2026-11-20, kit 1.44.0)
+
+A generated module may be a sync module (P102): `"sync": true` (with `"keep_days": N` to limit what a phone keeps), and only with
+`"phone": true`. The generator asks the scaffolder for it when it makes the module (`--sync`, `--keep-days`); the
+manifest's `sync` key stays the scaffolder's, so for a module that exists a generator never changes it and refuses a
+spec that disagrees, naming the key. The sync test's `fields` slot carries the offline record's other fields, the same as
+the module test's. `generator_contract` **3**.
