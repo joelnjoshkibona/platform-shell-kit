@@ -85,7 +85,7 @@ The slots, by file:
 | web `pages/{Module}FormDialog.vue` | `setup`, `state`, `valid`, `body`, `fields`, `size` (the dialog's width: `lg`, or `xl` for a priced document, P115) |
 | web `pages/{Module}DetailPage.vue` | `setup`, `header` (`headerIcon`, `headerStatus`), `overview` (a fact with a `link` shows as a RelatedLink), `own-tabs` (the page's tabs between Overview and History), `overview-extra` (below the facts: a document's read-only lines), `tab-bodies` (those tabs' content) |
 | web `module.ts` | `tabs`, `declarations` (type entries, e.g. `RecordExtraTabMap`), `actions`, `extra-tabs` (a child's tab on its parent, P86) |
-| phone `screens/types.ts` | `row` |
+| phone `screens/types.ts` | `row`, `types` (a workflow's declared statuses, for phone mode) |
 | phone `screens/{Module}Page.vue` | `imports`, `setup`, `sort`, `tabs`, `cells` |
 | phone `screens/{Module}Sheet.vue` | `imports`, `setup`, `state`, `reset`, `draft-get`, `draft-apply`, `input`, `valid`, `fields` |
 | phone `module.ts` | `menu` (its icon) |
