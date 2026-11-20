@@ -15,7 +15,13 @@ for generated phone screens (D7, P123).
   sync from the phone's store. Rows show the module's label column; **Show more** loads the next page; tapping a row
   picks it and closes the sheet; **Clear** when the field may be empty. Never `<select>`.
 - Both carry the field's label, its required mark (P26) and the error under them, like every phone field.
-- Choices from a short fixed list (an enum, a workflow status) use the existing ChoiceSheet.
+- **A choice from a fixed list** (an enum, a workflow status) is a field-styled button showing the chosen option, and
+  a sheet listing the options (the chosen one ticked; Clear when the field may be empty). Never `<select>`.
+- **Workflow statuses on the phone (P47).** The phone reads a workflow's statuses as the website does, from
+  `GET /workflow-statuses?workflow=…`, and keeps the last answer per organisation, so pills, quick tabs and the status
+  choice work offline after one read (connected and sync modes). With no server at all (phone mode) it uses the
+  defaults the module declares, which the phone module carries. Labels and tones come from there, never from the code
+  (P47); `useWorkflow` on the phone has the website's shape (`rows`, `byId`, `byCode`, `label`, `TONES`).
 
 ## Why
 
@@ -24,5 +30,5 @@ of every related record cannot hold a module of thousands, and never works offli
 
 ## Extension point
 
-`components/ui/DateField.vue` and `components/ui/RecordPick.vue` in the phone app (`mobile/resources/spa`). The
-design page shows both.
+`components/ui/DateField.vue`, `components/ui/RecordPick.vue`, `components/ui/OptionPick.vue` and
+`app/lib/workflowStatuses.ts` in the phone app (`mobile/resources/spa`). The design page shows the pickers.
