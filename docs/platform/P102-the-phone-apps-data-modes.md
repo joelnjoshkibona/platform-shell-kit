@@ -71,3 +71,8 @@ In the phone prototype (`prototype-phone/src/25_sync.js`), with the picker's **D
 - Data and backups in on-the-phone mode.
 
 Screenshots: `prototype-phone/screenshots/sync-*.png`, `phone-backups.png`.
+
+## Generated modules (2026-11-20, kit 1.44.0)
+
+A generated module joins sync mode with `"sync": true` (or `{"keep_days": N}`) beside `"phone": true` in its
+`generator.json`; P123 says how the generator writes it.
