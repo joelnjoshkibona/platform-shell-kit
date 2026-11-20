@@ -79,7 +79,7 @@ The slots, by file:
 | `Services/{Module}ViewService.php` | `with` |
 | `Services/{Module}DeleteCheckService.php` | `relationships` |
 | `Tests/{Module}Test.php` | `fields` |
-| `Tests/{Module}SyncTest.php` (a sync module, P102) | `fields` (the offline record's other required fields) |
+| `Tests/{Module}SyncTest.php` (a sync module, P102) | `fields` (the offline record's other fields: the module test's) |
 | web: every script | `imports` (the generator's own import lines; a name already imported is left out) |
 | web `api.ts` | `row`, `types`, `input`, `api` (extra client calls) |
 | web `pages/{Module}Page.vue` | `sorts`, `tabs`, `columns`, `cells` (a column's own cell: status pill, related link), `row-actions` |
@@ -146,5 +146,5 @@ are part of the contract: `generator_contract` **2** (a generator that knows onl
 A generated module may be a sync module (P102): `"sync": true` (with `"keep_days": N` to limit what a phone keeps), and only with
 `"phone": true`. The generator asks the scaffolder for it when it makes the module (`--sync`, `--keep-days`); the
 manifest's `sync` key stays the scaffolder's, so for a module that exists a generator never changes it and refuses a
-spec that disagrees, naming the key. The sync test's `fields` slot carries the offline record's other required fields,
-as the module test's does. `generator_contract` **3**.
+spec that disagrees, naming the key. The sync test's `fields` slot carries the offline record's other fields, the same as
+the module test's. `generator_contract` **3**.
