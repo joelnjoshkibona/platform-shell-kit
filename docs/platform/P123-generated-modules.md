@@ -180,10 +180,13 @@ The phone's record page gains `tabs` and `lines` slots, its form a `lines` slot,
 
 ### Media columns and unique across columns (amended 2026-11-21, kit 1.50.0)
 
-- **Media columns (P131):** the skeleton gains the slots a `type: media` column fills (its uuid swap in create, edit and
-  view; the web and phone fields). `generator_contract` **7**; `--catch-up` adds them to a module made before.
+- **Media columns (P131):** a `type: media` column fills the existing slots (the migration, the model's constants, the
+  rules, the web and phone fields); what it uses is the platform's (`HasMediaColumns`, the web's `MediaValue`, the phone's
+  `MediaField` and `MediaView`, the sync push's `attach`), so `generator_contract` is **7**: a starter before it has
+  none of them.
 - **A record is still named by a typed column**, never by its P115 number: a record made on a phone has no number until
   it syncs, and with no server never (owner, 2026-11-21: an expense's description, a payment's reference).
 - **Unique across columns:** `unique: [["item_id", "price_list_id", "order_type"]]` gives a unique index (with
-  `organization_id`) and a rule that refuses a duplicate with the first column's reason. A single column keeps `unique: true`.
+  `organization_id`) and the platform's `UniqueTogether` rule on each column of the set (an edit that changes one of
+  them is checked too, with the record's own values for the rest). A single column keeps `unique: true`.
 
