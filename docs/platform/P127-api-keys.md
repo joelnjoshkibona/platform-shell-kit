@@ -48,7 +48,9 @@ routes opened to keys that the person holds.
 
 ## Extension point
 
-A product opens its routes to keys in its own route files (`->middleware('apikey')`); nothing else changes.
+A product opens its routes to keys in its own route files (`->middleware('apikey')`), and a declared action (P84) with
+`"apikey": true` in its `module.json` entry; nothing else changes. `GET /api-keys/me` is open to every key: which key
+is calling, as whom, where.
 
 ## Checks
 
