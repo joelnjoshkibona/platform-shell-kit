@@ -111,7 +111,7 @@ again, and says so ("kept"). In the locale files it writes only the keys under t
 
 ### 4. The generator contract
 
-The starter's `kit.json` carries `"generator_contract": 4` (2 since 2026-11-20: the web slots added with P84, P86 and P115, and the phone's; 3 the same day: the sync test's `fields`; 4 on 2026-11-21: the list's CSV). It goes up by one whenever a slot is added, removed,
+The starter's `kit.json` carries `"generator_contract": 5` (2 since 2026-11-20: the web slots added with P84, P86 and P115, and the phone's; 3 the same day: the sync test's `fields`; 4 on 2026-11-21: the list's CSV; 5 the same day: the phone's record page and actions, P129). It goes up by one whenever a slot is added, removed,
 renamed or moved, or a component or composable that generated code calls changes its props or its shape. A generator
 declares the contracts it can write for and refuses any other, naming the starter's contract and its own.
 
@@ -166,3 +166,9 @@ export still downloads at once; running it in the background (P95) is owed. `gen
 `--catch-up` for a module that exists: they add only the missing pieces (here the `{Module}Csv`, its route and the
 web list's Export) and touch nothing else, naming any piece whose place they cannot find. A generator runs it for every
 module that exists before it fills the slots.
+
+### The phone's record page and actions (amended 2026-11-21, kit 1.48.0)
+
+The phone skeleton writes the record page (`screens/{Module}DetailPage.vue`: slots `imports`, `setup`, `header`,
+`facts`) and `module.ts` gains an `actions` slot (P129). `generator_contract` **5**; `--catch-up` adds both to a phone
+module made before.
