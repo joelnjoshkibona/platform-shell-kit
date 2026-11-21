@@ -111,7 +111,7 @@ again, and says so ("kept"). In the locale files it writes only the keys under t
 
 ### 4. The generator contract
 
-The starter's `kit.json` carries `"generator_contract": 6` (2 since 2026-11-20: the web slots added with P84, P86 and P115, and the phone's; 3 the same day: the sync test's `fields`; 4 on 2026-11-21: the list's CSV; 5 the same day: the phone's record page and actions, P129; 6 the same day: the phone's tabs and lines, P130). It goes up by one whenever a slot is added, removed,
+The starter's `kit.json` carries `"generator_contract": 7` (2 since 2026-11-20: the web slots added with P84, P86 and P115, and the phone's; 3 the same day: the sync test's `fields`; 4 on 2026-11-21: the list's CSV; 5 the same day: the phone's record page and actions, P129; 6 the same day: the phone's tabs and lines, P130; 7 the same day: media columns, P131). It goes up by one whenever a slot is added, removed,
 renamed or moved, or a component or composable that generated code calls changes its props or its shape. A generator
 declares the contracts it can write for and refuses any other, naming the starter's contract and its own.
 
@@ -177,3 +177,13 @@ module made before.
 
 The phone's record page gains `tabs` and `lines` slots, its form a `lines` slot, and `module.ts` a `tab-on` slot
 (P130). `generator_contract` **6**; `--catch-up` adds them to a phone module made before.
+
+### Media columns, a number as the name, unique across columns (amended 2026-11-21, kit 1.50.0)
+
+- **Media columns (P131):** the skeleton gains the slots a `type: media` column fills (its uuid swap in create, edit and
+  view; the web and phone fields). `generator_contract` **7**; `--catch-up` adds them to a module made before.
+- **A document's number may be its name:** `label_column` may name the P115 `number` column (made by the server, unique
+  in the organisation), for a document that has no other natural name (an expense, a payment).
+- **Unique across columns:** `unique: [["item_id", "price_list_id", "order_type"]]` gives a unique index (with
+  `organization_id`) and a rule that refuses a duplicate with the first column's reason. A single column keeps `unique: true`.
+
