@@ -161,3 +161,8 @@ list's Export button. The columns are declared on the server once, in the `colum
 and the created date; a generator writes the columns the list shows, each with its header (a key of the module's web
 strings) and its cell (a related record's label, a status's name, an enum's words; never a JSON column, P125). The
 export still downloads at once; running it in the background (P95) is owed. `generator_contract` **4**.
+
+**Catching up.** A module made before a contract lacks the skeleton pieces that contract brought. Both scaffolders take
+`--catch-up` for a module that exists: they add only the missing pieces (here the `{Module}Csv`, its route and the
+web list's Export) and touch nothing else, naming any piece whose place they cannot find. A generator runs it for every
+module that exists before it fills the slots.
