@@ -17,12 +17,21 @@ animation with three named parts (markers):
   accent, full screen, with the mark. `SplashOpen` opens from that frame, so the start is one movement: entry, loop,
   exit, open.
 
+### 1a. The mark is the animation (owner 2026-11-22)
+
+When the mark is a line icon, the start is the mark's own parts, not a ring around it: its frame (Bootbox's hexagon)
+draws itself in the entry; in the loop it rests dim while a light runs round it; the rest of the mark (Bootbox's power
+button) is faint until the app is ready, and the exit is **pressing it**: it dips, turns the full ink (white on the dark
+curtain) and springs back, and the animation ends there, on the closed curtain. A mark that is not a line icon plays
+with a turning ring around the tile.
+
 ### 1b. The opening (amends P118's circle; owner 2026-11-22)
 
-The app **grows out of a circle** over the closed curtain, from the left edge at the mark's height, in at most 520 ms.
+The app **grows out of a circle** over the closed curtain, from where the product chooses (the side, the centre, the
+bottom or the top; Bootbox: the side), in at most 520 ms. From the side, the mark stays until the circle passes it.
 The mark stays on the curtain until the circle's edge passes it; it is never faded on its own. (P118's curtain shrank
-into the centre and faded the mark first, so the mark vanished in one frame; from the centre the mark would be the
-first thing covered.) In the app the opening starts when the native splash says it is gone, never beneath it; if it
+into the centre and faded the mark first, so the mark vanished in one frame; from the centre the mark is the first
+thing covered, a product may still choose it.) In the app the opening starts when the native splash says it is gone, never beneath it; if it
 never says so, 2.5 s after the app is ready.
 
 It never holds a ready app longer than the rest of one loop plus the exit. An animation without the three markers is
