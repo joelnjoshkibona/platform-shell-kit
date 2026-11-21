@@ -17,6 +17,14 @@ animation with three named parts (markers):
   accent, full screen, with the mark. `SplashOpen` opens from that frame, so the start is one movement: entry, loop,
   exit, open.
 
+### 1b. The opening (amends P118's circle; owner 2026-11-22)
+
+The app **grows out of a circle** over the closed curtain, from the left edge at the mark's height, in at most 520 ms.
+The mark stays on the curtain until the circle's edge passes it; it is never faded on its own. (P118's curtain shrank
+into the centre and faded the mark first, so the mark vanished in one frame; from the centre the mark would be the
+first thing covered.) In the app the opening starts when the native splash says it is gone, never beneath it; if it
+never says so, 2.5 s after the app is ready.
+
 It never holds a ready app longer than the rest of one loop plus the exit. An animation without the three markers is
 played whole, repeated until the app is ready (the plugin's own behaviour). Under reduced motion (Android's "Remove
 animations") only the closed curtain shows, standing still until the app is ready, then the 120 ms fade P118 already
