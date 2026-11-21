@@ -13,7 +13,8 @@ day. A record without a start date is not shown.
 
 ### 2. One calendar per organisation
 
-`/:org/calendar`, with a sidebar entry for whoever may list at least one module on it.
+`/:org/calendar`, with a sidebar entry, behind `Calendar.list` (every main role holds it); each module on it still
+needs its own `{Module}.list`, and with none the page says there is nothing to show.
 
 - Each module on the calendar is a **source** with its name and a colour; a legend shows them, and each can be hidden
   (remembered per person on this device).
