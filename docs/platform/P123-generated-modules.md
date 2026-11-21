@@ -111,7 +111,7 @@ again, and says so ("kept"). In the locale files it writes only the keys under t
 
 ### 4. The generator contract
 
-The starter's `kit.json` carries `"generator_contract": 6` (2 since 2026-11-20: the web slots added with P84, P86 and P115, and the phone's; 3 the same day: the sync test's `fields`; 4 on 2026-11-21: the list's CSV; 5 the same day: the phone's record page and actions, P129; 6 the same day: the phone's tabs and lines, P130). It goes up by one whenever a slot is added, removed,
+The starter's `kit.json` carries `"generator_contract": 7` (2 since 2026-11-20: the web slots added with P84, P86 and P115, and the phone's; 3 the same day: the sync test's `fields`; 4 on 2026-11-21: the list's CSV; 5 the same day: the phone's record page and actions, P129; 6 the same day: the phone's tabs and lines, P130; 7 the same day: media columns, P131). It goes up by one whenever a slot is added, removed,
 renamed or moved, or a component or composable that generated code calls changes its props or its shape. A generator
 declares the contracts it can write for and refuses any other, naming the starter's contract and its own.
 
@@ -177,3 +177,16 @@ module made before.
 
 The phone's record page gains `tabs` and `lines` slots, its form a `lines` slot, and `module.ts` a `tab-on` slot
 (P130). `generator_contract` **6**; `--catch-up` adds them to a phone module made before.
+
+### Media columns and unique across columns (amended 2026-11-21, kit 1.50.0)
+
+- **Media columns (P131):** a `type: media` column fills the existing slots (the migration, the model's constants, the
+  rules, the web and phone fields); what it uses is the platform's (`HasMediaColumns`, the web's `MediaValue`, the phone's
+  `MediaField` and `MediaView`, the sync push's `attach`), so `generator_contract` is **7**: a starter before it has
+  none of them.
+- **A record is still named by a typed column**, never by its P115 number: a record made on a phone has no number until
+  it syncs, and with no server never (owner, 2026-11-21: an expense's description, a payment's reference).
+- **Unique across columns:** `unique: [["item_id", "price_list_id", "order_type"]]` gives a unique index (with
+  `organization_id`) and the platform's `UniqueTogether` rule on each column of the set (an edit that changes one of
+  them is checked too, with the record's own values for the rest). A single column keeps `unique: true`.
+
