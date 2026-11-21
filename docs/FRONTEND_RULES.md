@@ -209,7 +209,7 @@ Every screen is built against these rules. Where code and the prototype disagree
 - Label above, help text under, error under that in `text-xs text-destructive`. No error summary box at the top.
 - Required: a CSS asterisk on the label (`after:content-['*']`), never a literal `*` in the text.
 - One field per row; pair two only when short and related (code + unit).
-- No native pickers, anywhere: no `<select>`, `<input type=file>`, `type=date|time`. Use Select, API select, Date picker, Time, File picker.
+- No native pickers, anywhere: no `<select>`, `<input type=file>`, `type=date|time`. Use Select, API select, Date picker, Time, File picker (File drop for a file read in the browser, never uploaded).
 - Create and edit share one form modal. Edit seeds itself from the record before it is shown.
 
 **Drafts (D33)**
