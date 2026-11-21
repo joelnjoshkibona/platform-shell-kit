@@ -7,7 +7,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 ## Index
 
 - **Actions**: Button
-- **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Document lines, Locked field, File picker · Media library, API select, Rich text, Date picker, Accent picker
+- **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Document lines, Locked field, File picker · Media library, File drop, API select, Rich text, Date picker, Accent picker
 - **Display**: Badge · Status pill, Meter, Motion pieces, Card · KPI tile, App icon and splash, Product loader
 - **Navigation**: Tabs, Sidebar item, Record link, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet, AppDialog · Record dialog
@@ -75,7 +75,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 - Do: Raw Input + Label + error <p> for plain text fields
 - Do: Required = CSS asterisk on the Label
-- Don't: type=date|time|file (use DatePicker, TimeField, FilePicker)
+- Don't: type=date|time|file (use DatePicker, TimeField, FilePicker; FileDrop for a file read in the browser)
 
 ### Select
 
@@ -227,6 +227,15 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 - Do: Keep it read-only; the form sends the parent id
 - Don't: An editable select that happens to be prefilled
 - Don't: Hiding the parent completely: people must see what the record belongs to
+
+### File drop
+
+`ui FileDrop`
+
+A file the browser reads and never uploads (an import, a settings file): a dashed drop zone with a Choose button over
+the browser's own file input, which is never shown. It hands the chosen `File` to `@file`; the page reads it. Props:
+`label` (the input's accessible name), `chooseLabel`, `hint` (before a file is chosen), `chosen` (its name after),
+`accept`, `error`. For a file kept on the server, use the file picker.
 
 ### File picker · Media library
 
