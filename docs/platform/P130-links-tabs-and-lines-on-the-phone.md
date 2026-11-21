@@ -35,14 +35,20 @@ words); the record page gathers every module's tabs on it.
   a price or remove a line. One draft, one save; the lines are editable only while the document's status allows
   (`editable_status`).
 - **Sync and on the phone:** the lines live inside the document's copy on the phone. The feed sends a document with its
-  lines; a change sends them with the document and **without a claimed total**: the server works the totals out and its
-  copy wins on the next sync. On the phone (no server) the phone works them out with the same line maths.
+  lines, each with its item; a change sends them with the document and **without a claimed total**: the server works the
+  totals out and its copy wins on the next sync. On the phone (no server) the phone works them out with the same line
+  maths.
+- **Each line keeps its item** (its id, uuid and name) in the phone's copy, so the record page names it with no signal;
+  the server saves only the line's own columns.
+- **The items are on the phone:** a sync document's `sync.reference` names its item module with the columns the
+  catalogue needs beyond a picker's (`{ "module": "Products", "columns": ["price"] }`), read-only as P126 says.
 
 ### 4. Generated modules
 
-The phone skeleton (P123) has a `tabs` slot on the record page (the module's own children as declared on it), `lines`
-slots on the record page and the form, and a `tab-on` slot in `module.ts`. `generator_contract` **6**; `--catch-up`
-adds them to a phone module made before.
+The phone skeleton (P123) has a `tab-on` slot in `module.ts` (the record page gathers a parent's tabs from its children's
+declarations, so the parent needs no slot of its own), a `lines` slot on the record page, the lines in the form's slots,
+and a `saving` slot in the phone store's module (a priced document's totals on the phone). `generator_contract` **6**;
+`--catch-up` adds them to a phone module made before.
 
 ## Checks
 
