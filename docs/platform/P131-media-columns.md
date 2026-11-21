@@ -11,7 +11,9 @@ list.
 A module's record may hold one file per column: a photo, a receipt, a scan. The file lives in the Media library (Core
 Media); the record holds a link to it, as Locations' photo already does (D49):
 
-- **Stored** as `<name>_media_id` (a foreign key to `media`, nullable or not as the column says).
+- **Stored** as `<name>_media_id` (a foreign key to `media`), **always nullable**: a phone in sync mode sends the record
+  before its file (§3), so a column that had to be filled would refuse every record made offline. A product that needs a
+  file before a record goes further checks it in an action (P84), not in the column.
 - **Sent and read** as `<name>`: the media's **uuid** (in on create and edit, out on view and list). The service swaps
   the uuid for the id; an unknown uuid, or one outside the organisation, is refused with the field's reason.
 - **Kept while used:** the module's `module.json` names it under `media_references` (`{ "<table>": ["<name>_media_id"] }`),

@@ -178,12 +178,12 @@ module made before.
 The phone's record page gains `tabs` and `lines` slots, its form a `lines` slot, and `module.ts` a `tab-on` slot
 (P130). `generator_contract` **6**; `--catch-up` adds them to a phone module made before.
 
-### Media columns, a number as the name, unique across columns (amended 2026-11-21, kit 1.50.0)
+### Media columns and unique across columns (amended 2026-11-21, kit 1.50.0)
 
 - **Media columns (P131):** the skeleton gains the slots a `type: media` column fills (its uuid swap in create, edit and
   view; the web and phone fields). `generator_contract` **7**; `--catch-up` adds them to a module made before.
-- **A document's number may be its name:** `label_column` may name the P115 `number` column (made by the server, unique
-  in the organisation), for a document that has no other natural name (an expense, a payment).
+- **A record is still named by a typed column**, never by its P115 number: a record made on a phone has no number until
+  it syncs, and with no server never (owner, 2026-11-21: an expense's description, a payment's reference).
 - **Unique across columns:** `unique: [["item_id", "price_list_id", "order_type"]]` gives a unique index (with
   `organization_id`) and a rule that refuses a duplicate with the first column's reason. A single column keeps `unique: true`.
 
