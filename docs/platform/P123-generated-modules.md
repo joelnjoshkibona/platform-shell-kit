@@ -74,6 +74,7 @@ The slots, by file:
 | `Seeders/{Module}Seeder.php` | `permissions` |
 | `Routes/api.php` | `actions` |
 | `{Module}Controller.php` | `actions` |
+| `{Module}Csv.php` (the list's CSV, P39/P87, D188) | `columns` (header and cell of each column the list shows) |
 | `Services/{Module}ListService.php` | `filterable`, `sortable`, `searchable`, `eager`, `bulk-actions`, `filter-fields` |
 | `Services/{Module}CreateService.php`, `…EditService.php` | `rules` |
 | `Services/{Module}ViewService.php` | `with` |
@@ -110,7 +111,7 @@ again, and says so ("kept"). In the locale files it writes only the keys under t
 
 ### 4. The generator contract
 
-The starter's `kit.json` carries `"generator_contract": 3` (2 since 2026-11-20: the web slots added with P84, P86 and P115, and the phone's; 3 the same day: the sync test's `fields`). It goes up by one whenever a slot is added, removed,
+The starter's `kit.json` carries `"generator_contract": 4` (2 since 2026-11-20: the web slots added with P84, P86 and P115, and the phone's; 3 the same day: the sync test's `fields`; 4 on 2026-11-21: the list's CSV). It goes up by one whenever a slot is added, removed,
 renamed or moved, or a component or composable that generated code calls changes its props or its shape. A generator
 declares the contracts it can write for and refuses any other, naming the starter's contract and its own.
 
@@ -122,6 +123,9 @@ Every scaffolded module, generated or not, has:
 - its `/bulk-action` route and an empty bulk-action list (P84, P99), so the permission the seeder grants has a route;
 - on the web, its record page (P101), opened in the record dialog from any link (P111): Overview and History, with
   the list's rows opening it;
+- its list export (P39, P87): `GET /<module>/list/export` answers the whole view (search, filters, sort, scope) as
+  CSV through the module's `{Module}Csv` (D188), behind `{Module}.list`; on the web, the list's Export button
+  (ListShare) calls it;
 - on the web, its list's quick tabs (P24, P40) bound to one filter, with none declared: the `tabs` slot names the filter
   and its tabs once the module has a status (P47).
 
@@ -148,3 +152,12 @@ A generated module may be a sync module (P102): `"sync": true` (with `"keep_days
 manifest's `sync` key stays the scaffolder's, so for a module that exists a generator never changes it and refuses a
 spec that disagrees, naming the key. The sync test's `fields` slot carries the offline record's other fields, the same as
 the module test's. `generator_contract` **3**.
+
+### The list's CSV (amended 2026-11-21, kit 1.45.0)
+
+Every scaffolded module exports its list (P39, P87): the skeleton writes `{Module}Csv.php`, a `ListCsv` (D188) whose
+rows are the list service's own for the view, its route `GET /<module>/list/export` (`{Module}.list`) and the web
+list's Export button. The columns are declared on the server once, in the `columns` slot: by default the label column
+and the created date; a generator writes the columns the list shows, each with its header (a key of the module's web
+strings) and its cell (a related record's label, a status's name, an enum's words; never a JSON column, P125). The
+export still downloads at once; running it in the background (P95) is owed. `generator_contract` **4**.
