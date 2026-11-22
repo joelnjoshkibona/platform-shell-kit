@@ -31,6 +31,10 @@ Status: **decided** (kit 1.12.0). From PROJECT_GENERATOR (`PHP/PROJECT_GENERATOR
   entries.
 - The service is `Services/{Module}{Action}Service.php` (where the bulk runner finds it), extending the platform's `ModuleAction`: `rules()` and
   `handle($record, $data)`. It is the developer's: a generator writes it once and never again (P123).
+- `from` (amended 2026-11-22, generator contract 8): the workflow statuses an action applies from, `"from": ["draft"]`.
+  Outside them the platform refuses it with the reason (a bulk run skips the row with it) and the record's page, on the
+  web and the phone, does not offer it. Without `from` an action applies in every status. Found rebuilding the V1 demo:
+  an approved expense could be submitted again, and a draft marked paid.
 - Wizards and page actions are not in the entry yet.
 
 ## Why
