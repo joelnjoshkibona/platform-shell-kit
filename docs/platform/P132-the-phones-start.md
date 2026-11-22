@@ -34,6 +34,11 @@ into the centre and faded the mark first, so the mark vanished in one frame; fro
 thing covered, a product may still choose it.) In the app the opening starts when the native splash says it is gone, never beneath it; if it
 never says so, 2.5 s after the app is ready.
 
+**Ready means the app is ready, not its page loaded** (found rebuilding the V1 demo, 2026-11-22): the page loading is
+not the app being ready to show, since it still checks the sign-in after that. So the loop runs until the app says
+it is ready (Bootbox: `window.__appReady`, set once the first page is in; the plugin's `wait_for_app`), never more
+than 6 s after the page has loaded. Otherwise the start stood still for about 1.5 s between the exit and the opening.
+
 It never holds a ready app longer than the rest of one loop plus the exit. An animation without the three markers is
 played whole, repeated until the app is ready (the plugin's own behaviour). Under reduced motion (Android's "Remove
 animations") only the closed curtain shows, standing still until the app is ready, then the 120 ms fade P118 already
