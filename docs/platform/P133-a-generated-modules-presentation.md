@@ -113,3 +113,18 @@ line's quantity and VAT rate without trailing zeros ("1", "18").
 The golden modules are rewritten to this by hand first. The generator is made to equal them, and the release check's
 generated-vs-golden comparison keeps it so. A product's screens are reviewed against this decision as a checklist (the
 review checklist in FRONTEND_RULES), by the builder and by a second reviewer who has not seen the first's conclusions.
+
+## Amended 2026-11-23 (the owner): fields on a quarter grid, label on top
+
+The owner, after the first rebuild: label on top and value below, with "customizable column span such that we can have
+the first 50/50, second 25,25,25,25, third 75,25, or 25,75, another 100", for the Overview **and** forms.
+
+- **One grid, four quarters.** Every Overview card and every form lays its fields on a 4-column grid; a field spans 1, 2,
+  3 or 4 quarters (25, 50, 75, 100%). On a tablet a field is 1 or 2 halves; on a phone every field is full width.
+- **Label on top**, the value under it (small muted label, the value at text size): long values wrap, nothing is squeezed.
+- **Defaults by kind** (Overview): a number, date, yes/no, fixed list or code 1; a link or a short text 2; long text 4;
+  the record's picture 1, first in its card. Forms: 2 (two fields a row, as before), long text, files and lines 4.
+- **The spec overrides** with `"span": 1–4` on a column (both places). Fields keep the spec's order; a row whose spans do
+  not reach four ends with a gap (the spec editor says so), never reshuffled.
+- **Cards are full width**, one section a row; the picture is the first field of the first card, not a card of its own.
+

@@ -160,7 +160,7 @@ Every screen is built against these rules. Where code and the prototype disagree
 
 **Overview**
 
-- Cards of icon + label + value fields, one card per section (Details, Amounts, Links, Dates, Notes, Timeline, or the module's own), two side by side from `lg`, a label/value grid inside (P133). A record's picture is a photo card first. Same field shape gets the same icon everywhere: `Hash` for codes and references, `AlignLeft` for notes, `FileText` for descriptions, `CalendarRange` for a validity window shown as `from → to`, `CalendarDays` for a date, `Banknote` for an amount, `MapPin` for a location, `UserRound` for a person; a link otherwise takes the linked module's icon.
+- Cards of icon + label + value fields, one full-width card per section (Details, Amounts, Links, Dates, Notes, Timeline, or the module's own); inside, the quarter grid with the label on top (P133, amended: default spans by kind, the spec's `span` overrides). A record's picture is a photo card first. Same field shape gets the same icon everywhere: `Hash` for codes and references, `AlignLeft` for notes, `FileText` for descriptions, `CalendarRange` for a validity window shown as `from → to`, `CalendarDays` for a date, `Banknote` for an amount, `MapPin` for a location, `UserRound` for a person; a link otherwise takes the linked module's icon.
 - An empty optional field is left out; a required one shows "–"; a section with nothing to show is left out (P133, amends P85).
 - A Timeline card (Created, Created by, Updated, Updated by) and both halves of the audit pair are always shown when the API returns them.
 - A field that points at another record is a related-record link, never plain text or a raw id.
@@ -209,7 +209,7 @@ Every screen is built against these rules. Where code and the prototype disagree
 
 - Label above, help text under, error under that in `text-xs text-destructive`. No error summary box at the top.
 - Required: a CSS asterisk on the label (`after:content-['*']`), never a literal `*` in the text.
-- Two columns from `sm`, in headed groups by section (P133): short fields (dates, amounts, choices, links, codes) pair; long text, media, JSON and lines span both. One column on a phone. Required fields first in their section; every field has a visible label, dates too.
+- A quarter grid (P133, amended): label on top, each field spans 1–4 quarters (default 2; long text, files and lines 4; the spec's `span` overrides); halves on a tablet, one column on a phone; headed groups by section on long forms. Required fields first in their section; every field has a visible label, dates too.
 - A field the system fills (`fill`: the signed-in user, a workflow action, the server) is never in a form; it shows on the Overview.
 - A short fixed list is a choice (Select; OptionPick on the phone), never free text.
 - No native pickers, anywhere: no `<select>`, `<input type=file>`, `type=date|time`. Use Select, API select, Date picker, Time, File picker (File drop for a file read in the browser, never uploaded).
