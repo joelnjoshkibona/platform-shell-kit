@@ -18,3 +18,7 @@ The generator had the mechanism (a registry built from the modules, one componen
 ## Extension point
 
 `defineModule` and `RecordLink` in the prototype (`parts_links.js`, `parts_comp.js`).
+
+## Amended by P133 (2026-11-23)
+
+On an Overview and the phone's record page an **empty optional field is left out**, not shown as "–"; a required one still shows "–". Lists, previews and forms are unchanged.

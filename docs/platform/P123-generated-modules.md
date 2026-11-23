@@ -111,7 +111,7 @@ again, and says so ("kept"). In the locale files it writes only the keys under t
 
 ### 4. The generator contract
 
-The starter's `kit.json` carries `"generator_contract": 7` (2 since 2026-11-20: the web slots added with P84, P86 and P115, and the phone's; 3 the same day: the sync test's `fields`; 4 on 2026-11-21: the list's CSV; 5 the same day: the phone's record page and actions, P129; 6 the same day: the phone's tabs and lines, P130; 7 the same day: media columns, P131). It goes up by one whenever a slot is added, removed,
+The starter's `kit.json` carries `"generator_contract": 9` (8 on 2026-11-22: an action's `from`, P84; 9 on 2026-11-23: sections, `fill`, menus and the phone's tabs, P133; 2 since 2026-11-20: the web slots added with P84, P86 and P115, and the phone's; 3 the same day: the sync test's `fields`; 4 on 2026-11-21: the list's CSV; 5 the same day: the phone's record page and actions, P129; 6 the same day: the phone's tabs and lines, P130; 7 the same day: media columns, P131. It goes up by one whenever a slot is added, removed,
 renamed or moved, or a component or composable that generated code calls changes its props or its shape. A generator
 declares the contracts it can write for and refuses any other, naming the starter's contract and its own.
 

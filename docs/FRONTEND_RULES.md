@@ -146,8 +146,8 @@ Every screen is built against these rules. Where code and the prototype disagree
 
 **Header**
 
-- Breadcrumb, then icon tile (or avatar for a person), title, code and status badge on one line, meta under it.
-- Header buttons, row 1: Refresh, and View full page when shown as a preview. Row 2: the record's actions. Only Edit is promoted to a visible button; delete and rare actions live in the More menu, which hides itself when empty.
+- Breadcrumb, then icon tile (or avatar for a person, or the record's picture), title, code and status badge (a `StatusPill` at the header's text size) on one line, meta under it (a document's total there, P133).
+- Header buttons, row 1: View full page when shown as a preview. Row 2: the record's actions. Refresh is in the More menu (P133; the page refreshes itself after every action and on focus). Only Edit is promoted to a visible button; delete and rare actions live in the More menu, which hides itself when empty.
 - One exception: a module may promote its single defining action beside Edit (Add child on a location, Preview this role on a role). Everything else stays in More (D39).
 - Back returns to `?back=` if present, else to the module list. Never browser history.
 - Terminal states (closed, cancelled, voided, archived) show a banner explaining why actions are gone and that the record is read-only.
@@ -160,7 +160,8 @@ Every screen is built against these rules. Where code and the prototype disagree
 
 **Overview**
 
-- Cards of icon + label + value fields. Same field shape gets the same icon everywhere: `Hash` for codes and references, `AlignLeft` for notes, `FileText` for descriptions, `CalendarRange` for a validity window shown as `from → to`.
+- Cards of icon + label + value fields, one card per section (Details, Amounts, Links, Dates, Notes, Timeline, or the module's own), two side by side from `lg`, a label/value grid inside (P133). A record's picture is a photo card first. Same field shape gets the same icon everywhere: `Hash` for codes and references, `AlignLeft` for notes, `FileText` for descriptions, `CalendarRange` for a validity window shown as `from → to`, `CalendarDays` for a date, `Banknote` for an amount, `MapPin` for a location, `UserRound` for a person; a link otherwise takes the linked module's icon.
+- An empty optional field is left out; a required one shows "–"; a section with nothing to show is left out (P133, amends P85).
 - A Timeline card (Created, Created by, Updated, Updated by) and both halves of the audit pair are always shown when the API returns them.
 - A field that points at another record is a related-record link, never plain text or a raw id.
 
@@ -208,7 +209,9 @@ Every screen is built against these rules. Where code and the prototype disagree
 
 - Label above, help text under, error under that in `text-xs text-destructive`. No error summary box at the top.
 - Required: a CSS asterisk on the label (`after:content-['*']`), never a literal `*` in the text.
-- One field per row; pair two only when short and related (code + unit).
+- Two columns from `sm`, in headed groups by section (P133): short fields (dates, amounts, choices, links, codes) pair; long text, media, JSON and lines span both. One column on a phone. Required fields first in their section; every field has a visible label, dates too.
+- A field the system fills (`fill`: the signed-in user, a workflow action, the server) is never in a form; it shows on the Overview.
+- A short fixed list is a choice (Select; OptionPick on the phone), never free text.
 - No native pickers, anywhere: no `<select>`, `<input type=file>`, `type=date|time`. Use Select, API select, Date picker, Time, File picker (File drop for a file read in the browser, never uploaded).
 - Create and edit share one form modal. Edit seeds itself from the record before it is shown.
 
@@ -492,6 +495,7 @@ Guide: `docs/architecture/MODULES.md`.
 - [ ] Every related record is a `RecordLink` from the registry; checked without the permission, deleted and missing (P85); a plain click opens the record dialog, so the module declares `page` (P111)
 - [ ] The implementation plan, the progress tracker and the build guide are updated in the same change (P91–P92)
 - [ ] Checked at 360px and 1280px, light and dark; no horizontal page scroll
+- [ ] Looked at as a design, not only as working (P133): grouped sections, no rows of empty values, every field labelled, a real module icon, numbers formatted, tabs as wide as the Overview, nothing cut off; reviewed by someone who did not build it
 - [ ] Zero console errors and zero console warnings (e2e asserts it)
 - [ ] Every menu, select, popover and tooltip is portalled and stays on screen
 - [ ] Toolbar order is Refresh, Filters, Clear, Sort, then Export / Copy link / New; no cards/table toggle; Refresh keeps content visible
