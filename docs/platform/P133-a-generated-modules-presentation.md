@@ -182,3 +182,21 @@ refuses an edit (422). Actions still run (Mark paid from Approved). The demo's A
 - **The spec editor** points out a row of the form that does not fill its four quarters ("leaves a gap of 1 quarter"),
   computed the way the browser lays it out.
 
+## Amended 2026-11-23 (the owner, third round): after an independent design review of the rebuilt demo
+
+- **A locked record is not deleted either** (the owner): no Delete in a locked status (web More and list rows, phone
+  More), and the server refuses it ("It is Approved: it can no longer be deleted."). An action is the way out.
+- **The next step is the primary button**: the record's first applicable, not dangerous header action is filled (Submit,
+  Approve, Mark paid); the rest stay outlined.
+- **A confirm dialog says what the action does**: the action's `effect` (`effect_sw`), else "It runs at once."
+- **The lock note** says it plainly: "This expense is Approved: it can no longer be edited or deleted."
+- **Toasts name the record**: "Task created · Count the stock", "Task saved · …".
+- **A card of one field** lays it across the card, not half of it.
+- **The record's picture** shows without its file name (it opens in the viewer).
+- **The search chip** shows the module only when the placeholder does not already say it.
+- **The sidebar** marks a tab-only module's parent on its pages (an item image marks Items).
+- **A percentage** (a column named `*_percent`) reads as one: label "Rate", form "Rate (%)", value "18%".
+- **A fixed list's value** may have its own words: `values_label` ({"mpesa": "M-Pesa"}).
+- **The phone**: pages without a tab bar clear Android's navigation bar; the offline banner wraps to two lines; Sync says
+  what waits ("2 waiting to send") rather than "Synced just now", and "Up to date" when a sync moved nothing.
+
