@@ -128,3 +128,57 @@ the first 50/50, second 25,25,25,25, third 75,25, or 25,75, another 100", for th
   not reach four ends with a gap (the spec editor says so), never reshuffled.
 - **Cards are full width**, one section a row; the picture is the first field of the first card, not a card of its own.
 
+## Amended 2026-11-23 (the owner, second round): the Overview reads like a statement; the open items closed
+
+From a screenshot the owner liked ("isn't this a good idea, but adjust it on small screens"), and their decisions on the
+items the first round left open.
+
+### The Overview's look (replaces "label on top" on the Overview; forms keep the quarter grid)
+
+- **A row**: a faint label (muted, regular weight, no kind icon) and a bright value (full contrast, medium weight; codes
+  mono, amounts tabular) on one line, a hairline under every row.
+- **By the card's own width** (container queries, never the screen's): wide, two columns of rows; medium (a tablet), one
+  column, the label as wide as it needs (at most 45%), the value right-aligned; narrow (a phone, under 26rem), the label on
+  top and the value under it. Long text and the record's picture always take a full row, label on top.
+- **Spans on the Overview**: a wide card holds two rows side by side, so a field of 1–2 quarters takes half a row and one
+  of 3–4 the full row.
+- **Short values never wrap** (a date, a phone, a code, an amount, a link): cut with … and shown whole on hover. The
+  screenshot broke "0745876498" and "23 Nov 2026" mid-word in half-cards of 190px; that is what this prevents.
+- **The links beside the rest**: on a wide page (the Overview 56rem or more) the Links card stands in a column of its own
+  (18rem) to the right; narrower, it keeps its place between the other cards.
+- **The phone's rows**: the same faint label and bright value, a hairline between rows; a value too long to sit beside its
+  label moves under it, whole.
+
+### The phone record page and form
+
+- **Compact**: the record page's sections that hold six fields or fewer between them become one Details card, the rule
+  the web already follows (one rule, `Sections::compact`, for both).
+- **The status on the phone form** follows the web's: not on create (a record starts in the first status); on edit only
+  the statuses no action leads to; left out when none is left.
+
+### A gallery: `"list": "grid"`
+
+A module whose records are mainly an image (an item's images) lists as a grid of thumbnails with their captions (web
+CardGrid, phone PhotoGrid), in its own list and as a tab. It is chosen in the spec (`"list": "grid"`, a toggle in the spec
+editor), never guessed: a guess would tip a module with a photo and many fields into a grid. `grid` needs an image column
+(else the spec is refused); the generator warns when a module looks like a gallery without the key.
+
+### A locked status: no Edit
+
+A status may say `"locked": true` (default: its `is_terminal`). In a locked status the record is not edited: Edit is not
+offered (web header, phone record page), a note under the header says why ("Approved: no longer edited"), and the server
+refuses an edit (422). Actions still run (Mark paid from Approved). The demo's Approved and Paid are locked.
+
+### Smaller rules
+
+- **An action's toast** says what happened: its `done` text, by default the status it leads to ("Submitted", "Approved"),
+  else "{Action} done"; never the button's own word.
+- **The Timeline** shows Created and Created by, and Updated and Updated by when the record was changed after it was made
+  (an action sets who changed it too).
+- **Copy link** in every record's More menu (the record's address); a one-record export is not offered (a printable
+  record may come later as its own feature).
+- **The list's search** names the module in its chip ("Expenses"), the placeholder says "Search expenses": the same words
+  never twice in one box.
+- **The spec editor** points out a row of the form that does not fill its four quarters ("leaves a gap of 1 quarter"),
+  computed the way the browser lays it out.
+

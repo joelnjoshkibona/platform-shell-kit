@@ -8,7 +8,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 
 - **Actions**: Button
 - **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Document lines, Locked field, File picker · Media library, Media viewer, File drop, API select, Rich text, Date picker, Accent picker, Icon picker
-- **Display**: Badge · Status pill, Overview sections · Row picture, Meter, Motion pieces, Card · KPI tile, App icon and splash, Product loader
+- **Display**: Badge · Status pill, Overview sections · Row picture · Gallery, Meter, Motion pieces, Card · KPI tile, App icon and splash, Product loader
 - **Navigation**: Tabs, Sidebar item, Record link, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet, AppDialog · Record dialog
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, Job progress · Job page, View as banner
@@ -474,20 +474,24 @@ the browser's own file input, which is never shown. It hands the chosen `File` t
 - Don't: Raw coloured spans
 - Don't: if (status.label === …): labels are editable
 
-### Overview sections · Row picture
+### Overview sections · Row picture · Gallery
 
-`src/components/app/facts/FactSections.vue`, `src/components/app/media/RowPicture.vue` (P133)
+`src/components/app/facts/FactSections.vue`, `src/components/app/media/RowPicture.vue`, `src/components/app/card-grid/CardGrid.vue` (P133, amended 2026-11-23)
 
 | Spec | Value |
 | --- | --- |
-| Sections | one titled Card per section (Details, Amounts, Links, Dates, Notes, Timeline, or the module's own), two side by side from `lg`; `wide` spans both |
-| Inside | a `<dl>`: label column 8rem (icon + label), value; links as RecordLink, a status as a pill, a file as its thumbnail; `mono`, `num` (tabular), `long` (wraps, spans) |
+| Sections | one titled Card per section (Details, Amounts, Links, Dates, Notes, Timeline, or the module's own); six fields or fewer between them merge into one Details card |
+| Row | a faint label (no icon) and a bright medium-weight value on one line, a hairline under every row; `mono`, `num` (tabular), `long` (wraps, full row, label on top) |
+| Width | by the card's own width (container queries): wide two columns, medium one (label at most 45%), narrow (<26rem) the label on top |
+| Short values | never wrap: cut with …, whole on hover |
+| Links | on an Overview 56rem or wider, the Links card in a right-hand column (18rem); narrower, in its place |
 | Empty | an empty optional fact is left out, a section with nothing is left out; a required empty one shows "–" |
-| Picture | `picture` (a media uuid or null): the record's photo card, a dashed "No picture yet" without one |
+| Picture | `picture` (a media uuid or null): a full row, the record's photo, a dashed "No picture yet" without one |
 | Row picture | a list row's 40px thumbnail (ListRows' `#icon` slot), or the module's icon in a muted tile |
+| Gallery | `"list": "grid"`: CardGrid of thumbnails and captions (web), PhotoGrid (phone, 3 across) |
 
-- Do: Draw every generated Overview with it, Timeline last
-- Don't: Show rows of "–" for empty optional fields
+- Do: Draw every generated Overview with it, Timeline last; open every thumbnail in the file viewer
+- Don't: Show rows of "–" for empty optional fields; break a date or a phone number over two lines
 
 ### Meter
 
