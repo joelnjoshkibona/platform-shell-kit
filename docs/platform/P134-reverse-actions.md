@@ -23,7 +23,8 @@ removed."
    first"). Each journaled record's version is checked, as the phone's sync does; nothing is overwritten blindly.
 5. **What a journal cannot see, the module undoes itself**: a forward action's service may have `reverse()` (notify the
    person whose delegation ended, void a number). Writes that bypass the models (mass updates, `DB::table`, pivot syncs)
-   are refused while an action runs, so nothing escapes the journal silently.
+   fail an action that a reverse action undoes, so nothing escapes the journal silently; an action nothing reverses may
+   still write them (amended 2026-11-23: a product's own action wrote with `DB::table`, and nothing replays its runs).
 6. **What cannot be taken back stays**: a sent notification, a used document number (voided, never reused), a file
    uploaded (detached, not deleted).
 7. **Not on the phone offline**: a reverse needs the server, like an approval-gated action.
