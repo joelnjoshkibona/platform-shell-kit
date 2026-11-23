@@ -7,8 +7,8 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 ## Index
 
 - **Actions**: Button
-- **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Document lines, Locked field, File picker · Media library, File drop, API select, Rich text, Date picker, Accent picker
-- **Display**: Badge · Status pill, Meter, Motion pieces, Card · KPI tile, App icon and splash, Product loader
+- **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Document lines, Locked field, File picker · Media library, File drop, API select, Rich text, Date picker, Accent picker, Icon picker
+- **Display**: Badge · Status pill, Overview sections · Row picture, Meter, Motion pieces, Card · KPI tile, App icon and splash, Product loader
 - **Navigation**: Tabs, Sidebar item, Record link, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet, AppDialog · Record dialog
 - **Feedback**: Tooltip · Toast, Empty · Skeleton · No access, Drafts, Job progress · Job page, View as banner
@@ -407,6 +407,30 @@ the browser's own file input, which is never shown. It hands the chosen `File` t
 - Don't: Use the accent for status, chart or background colours
 - Don't: Use a native colour input
 
+### Icon picker
+
+`src/components/app/icon-picker/IconPicker.vue` (P133)
+
+| Spec | Value |
+| --- | --- |
+| Trigger | ApiSelect's: the icon in a 24px muted tile, its name in words, ChevronsUpDown |
+| Panel | portalled popover, 20rem: a search box, then a 6-column grid of icons (each drawn), the highlighted one's name under it |
+| Search | every Lucide name, by words (`rec` → Receipt, Rectangle); names that start with it first; at most 60 shown |
+| Empty search | the current icon, then common ones |
+| Keys | arrows move (rows of 6), Enter picks, Esc closes |
+| Used in | Menu Management (a menu's icon), the Project Generator's spec editor (a module's and a sidebar section's icon) |
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `modelValue` | `string \| null` | `null` | A Lucide name |
+| `label` | `string` | | Shown above, as every field's label |
+| `names` | `string[]` | every icon | For tests or a narrowed set |
+
+**Emits:** `update:modelValue` (string)
+
+- Do: Use it wherever a person picks an icon
+- Don't: Offer a fixed short list or a free-text box for an icon
+
 ## Display
 
 ### Badge · Status pill
@@ -435,6 +459,21 @@ the browser's own file input, which is never shown. It hands the chosen `File` t
 - Don't: Colour without a word
 - Don't: Raw coloured spans
 - Don't: if (status.label === …): labels are editable
+
+### Overview sections · Row picture
+
+`src/components/app/facts/FactSections.vue`, `src/components/app/media/RowPicture.vue` (P133)
+
+| Spec | Value |
+| --- | --- |
+| Sections | one titled Card per section (Details, Amounts, Links, Dates, Notes, Timeline, or the module's own), two side by side from `lg`; `wide` spans both |
+| Inside | a `<dl>`: label column 8rem (icon + label), value; links as RecordLink, a status as a pill, a file as its thumbnail; `mono`, `num` (tabular), `long` (wraps, spans) |
+| Empty | an empty optional fact is left out, a section with nothing is left out; a required empty one shows "–" |
+| Picture | `picture` (a media uuid or null): the record's photo card, a dashed "No picture yet" without one |
+| Row picture | a list row's 40px thumbnail (ListRows' `#icon` slot), or the module's icon in a muted tile |
+
+- Do: Draw every generated Overview with it, Timeline last
+- Don't: Show rows of "–" for empty optional fields
 
 ### Meter
 
