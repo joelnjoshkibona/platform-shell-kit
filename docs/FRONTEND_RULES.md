@@ -147,7 +147,7 @@ Every screen is built against these rules. Where code and the prototype disagree
 **Header**
 
 - Breadcrumb, then icon tile (or avatar for a person, or the record's picture), title, code and status badge (a `StatusPill` at the header's text size) on one line, meta under it (a document's total there, P133).
-- Header buttons, row 1: View full page when shown as a preview. Row 2: the record's actions. Refresh is in the More menu (P133; the page refreshes itself after every action and on focus). Only Edit is promoted to a visible button; delete and rare actions live in the More menu, which hides itself when empty.
+- Header buttons, row 1: Refresh, and View full page when shown as a preview. Row 2: the record's actions. Refresh stays a visible button (owner 2026-11-23, P133). Only Edit is promoted to a visible button; delete and rare actions live in the More menu, which hides itself when empty.
 - One exception: a module may promote its single defining action beside Edit (Add child on a location, Preview this role on a role). Everything else stays in More (D39).
 - Back returns to `?back=` if present, else to the module list. Never browser history.
 - Terminal states (closed, cancelled, voided, archived) show a banner explaining why actions are gone and that the record is read-only.

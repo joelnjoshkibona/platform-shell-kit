@@ -1,7 +1,7 @@
 # P133 · A generated module's presentation
 
 Status: **decided** (kit 1.53.0, generator contract 9). Amends P85 (empty values), FRONTEND_RULES "details pages"
-(the header's Refresh, the Overview) and "forms and fields" (one field per row), P123 (what a spec says), P129 (the
+(the Overview) and "forms and fields" (one field per row), P123 (what a spec says), P129 (the
 phone's record page). Owner 2026-11-23, on the rebuilt V1 demo: "lots of weaknesses in our design, breaking layouts and
 design that is absolutely not lovely". The owner chose two-column forms, leaving empty optional fields out, and
 grouping related data into sections.
@@ -60,9 +60,8 @@ in its order. Columns it does not list fall into the defaults. An empty section 
 - **One line:** the icon tile (or the record's picture), title, its number as the code, and the status as a
   `StatusPill` at the header's text size. The status is a workflow column, or a link to the platform's Statuses.
 - **Meta:** a document's total sits in the meta line under the title.
-- **Buttons.** Visible: Edit, plus the one defining action (P32/D39), the next action of a workflow when it has one.
-  **Refresh moves into the More menu** (amends FRONTEND_RULES' "row 1: Refresh"). The page still refreshes itself
-  after every action and on focus.
+- **Buttons.** Visible: Refresh, Edit, plus the one defining action (P32/D39), the next action of a workflow when it
+  has one. Refresh stays a visible button (the owner, 2026-11-23: "Refresh should stay outside").
 
 ### 4. Lists and tabs
 
