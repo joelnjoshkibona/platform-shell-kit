@@ -53,3 +53,18 @@ field and details, and with `phone: true` the phone field, the phone store's rul
 Records with a photo or a receipt are ordinary in the products the generator is for, and a picture taken in the field is
 the phone app's commonest file. The library, the web picker, the delete check and the phone's camera already exist; this
 names one way to join them so a generated module gets all of it from one column.
+
+## Amended 2026-11-23 (the owner): one viewer for a file, before and after upload
+
+"All places we want to display images or files we might need to have a preview or download component that will download
+or preview such a file whether before uploading or after uploading."
+
+- **One viewer** (web `MediaViewer`, phone `MediaViewer` sheet): an image full size, a PDF as the document itself (web),
+  any other file as its card; always Download on the web, Share on the phone (Android's share list, through the app's own
+  server: a PDF or an image, its type read from its content).
+- **Everywhere a file shows, it opens the viewer**: a picker's rows (a file still on the device, before it is sent,
+  included: "not sent yet"), an Overview field, a list's thumbnail (without opening the row), the phone's form and record
+  page. `viewable: false` keeps a file closed where it must be.
+- **A form is not saved while one of its files is still uploading** (`provideUploads`, counted by every picker inside):
+  a test found a record saved before its photo had been handed over.
+

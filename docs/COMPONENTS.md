@@ -7,7 +7,7 @@ Use these components; never hand-roll a control that exists here. Missing one? A
 ## Index
 
 - **Actions**: Button
-- **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Document lines, Locked field, File picker · Media library, File drop, API select, Rich text, Date picker, Accent picker, Icon picker
+- **Forms**: Input, Select, Checkbox · Switch · Radio, Pin input (OTP), Document lines, Locked field, File picker · Media library, Media viewer, File drop, API select, Rich text, Date picker, Accent picker, Icon picker
 - **Display**: Badge · Status pill, Overview sections · Row picture, Meter, Motion pieces, Card · KPI tile, App icon and splash, Product loader
 - **Navigation**: Tabs, Sidebar item, Record link, Core module page, Top-bar search, Organisation switcher
 - **Overlays**: DropdownMenu, Dialog · Sheet, AppDialog · Record dialog
@@ -269,6 +269,20 @@ the browser's own file input, which is never shown. It hands the chosen `File` t
 - Do: Per-file reason on failure
 - Don't: <input type=file> outside this component
 - Don't: Send File objects with the record form
+
+### Media viewer
+
+`src/components/app/media/MediaViewer.vue` (web), `src/components/ui/MediaViewer.vue` (phone) (P131 amended)
+
+| Spec | Value |
+| --- | --- |
+| Shows | an image full size; a PDF inline (web); any other file as its icon, name, type and size |
+| Files | a library file (by its item / column value) or one still on this device (`file`, "not sent yet") |
+| Actions | Download (web), Share (phone: Android's share list), Close |
+| Opened by | a picker row, `MediaValue` (Overview, list thumbnails; `@click.stop`), `MediaView` on the phone |
+
+- Do: Open every shown file in it; never a thumbnail that does nothing
+- Don't: Build a per-page preview dialog
 
 ### API select
 
