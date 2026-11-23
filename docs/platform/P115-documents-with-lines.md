@@ -74,7 +74,7 @@ document declares `pricesIncludeVat` (sale and purchase kinds; off by default, w
 
 - The line form labels the unit price **incl. VAT** and shows the price **excl. VAT** under it as you type; the line total is the
   inclusive figure, with the VAT inside it named.
-- The list shows the unit price **excl. VAT** and **incl. VAT** as two columns (two figures on a card), the VAT rate as "18% inside".
+- The list shows the unit price **excl. VAT** and **incl. VAT**: both figures in the line's quantity × price cell (P133 layout A), the VAT rate as "18% inside".
 - VAT is taken out of each line, never added: line total = qty × price × (1 − discount %), rounded to 2 decimals;
   **VAT = total × rate / (100 + rate)**, rounded to 2 decimals; excl. = total − VAT, so excl. + VAT is always the total. Rounding is to
   the currency's minor unit (2 decimals), half away from zero. The unit price excl. VAT (price × 100 / (100 + rate)) is for display only.
@@ -125,3 +125,12 @@ including VAT (above); the Design system page demos a sale in that mode.
 - Barcode scanning on the web: USB scanners type into the item picker today; a camera scan on the web may follow (P64 covers the phone).
 - Units of measure and pack sizes (a unit vs a case of 4): out of scope; a product adds a `unit` column if it needs one.
 - Multi-currency lines: convert at entry for now; a kit-level currency field is a separate P.
+
+## Amended by P133 (2026-11-23): how the lines read
+
+The owner chose layout A of three prototyped (stacked table, list rows, list and detail): **a line is one unit, each column
+carries two facts**: the item over its code or note, quantity × price over the excl. figure or a discount, the amount over
+its VAT ("incl. VAT 18% · 2,700", "+ VAT 18% · 2,700", "no VAT"). No # column and no row of icon buttons: a click opens
+the line (view, then edit or remove) and a ⋮ menu is the shortcut; read-only lists have no menu. On a narrow screen each
+line folds to one stacked row with nothing cut off. Lines are never edited in the row (the owner: not at all).
+
