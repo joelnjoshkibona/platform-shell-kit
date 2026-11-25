@@ -1013,25 +1013,25 @@ the browser's own file input, which is never shown. It hands the chosen `File` t
 | Row | 16px x · 8px y, min 56px, hover accent/60, whole row clickable; identity cell = 40px icon tile + title line + meta line |
 | Numbers | hero right-aligned, 600, tabular; one-word sub-label when not tight |
 | Folding | by the card's own width (ResizeObserver), highest priority number first: status → badge over the hero; identity badges → title line; meta → meta line (two lines) then +N more |
-| Tight | identity minmax(0,1fr), hero max-content, row actions under the meta line, title wraps, identity cell top-aligned, toolbar icon-only |
+| Tight | identity minmax(0,1fr), hero the page's widest (fixed: rows line up), row actions behind one ⋮, title wraps, identity cell top-aligned, toolbar icon-only |
 | Variants | full table, partly folded, folded row, expanded (+N more strip), empty state |
 | Used in | Every list that shows rows: Users, Roles, Locations, Approvals, product modules. Not Logs or Queue (report tables). |
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `columns` | `ListColumn[]` | – | key, label, short?, identity?, hero?, status?, priority, fold: 'badge' | 'meta', min (px), sort? (a list.sorts value), text(row), variant?(row), mono?, right?, muted?, sub?, indent?(row) for trees |
+| `columns` | `ListColumn[]` | – | key, label, short?, identity?, hero?, status?, priority, fold: 'badge' | 'meta' | 'more' (P40 amended 1.58.0: 'more' goes straight to "+N more", labelled), min (px), sort? (a list.sorts value), text(row), variant?(row), mono?, right?, muted?, sub?, indent?(row) for trees |
 | `rows` | `array` | – | From useList() |
 | `list` | `useList() object` | – | Header sort; folded columns stay sortable through the Sort control |
 | `rowKey` | `(row) => string` | `r => r.id` |  |
 | `baseMeta` | `(row) => string` | `() => ''` | The module's always-on meta text (unit, customer, job); folded meta columns follow it |
 | `clickable` | `boolean` | `true` | false for lists with no record page (Users): no link role, no chevron |
 | `rowClass` | `(row) => string` | `() => ''` | Extra classes per row (dimmed tree matches, inherited rows) |
-| `actionsWidth` | `number` | `40` | Width of the #actions column, the same on every row whether or not it has actions (each row is its own grid); when tight the actions move under the meta line |
+| `actionsWidth` | `number` | `40` | Width of the #actions column, the same on every row whether or not it has actions (each row is its own grid); when tight the actions sit level with the title or wait behind one ⋮ (P50 amended 1.58.0) |
 | `empty` | `string` | `'Nothing matches.'` | Empty-state line when no slot is used |
 
 **Emits:** `open` (row)
 
-**Slots:** `#icon` 40px tile or avatar per row (#icon="{ row }"), `#cell-<key>` Grid cell for one column; a status column's slot is reused where it folds, `#actions` Row actions above the link; under the meta line when tight
+**Slots:** `#icon` 40px tile or avatar per row (#icon="{ row }"), `#cell-<key>` Grid cell for one column; a status column's slot is reused where it folds, `#actions` Row actions above the link; behind one ⋮ when tight
 
 - Do: One identity column (never folds, 40% floor) and at most one hero (never folds, right-aligned, tabular)
 - Do: Fold by the card's own width, highest priority number first; status folds right above the hero; identity badges fold to the title line; meta columns fill two lines then a +N more chip
