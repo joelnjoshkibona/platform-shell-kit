@@ -28,3 +28,9 @@ The panel was markup inside the shell, so every product inherited the example's 
 - **Prototype:** `BrandMark` and `ExampleSignInArt` in `parts_shell.js`. `assemble.py` inlines the logo into the boot curtain (`BOOT_MARK`). `setFavicon(t)` lives in `parts_helpers.js`.
 - **Web:** `BrandMark.vue` reads the product config. `SignInBrandPanel.vue` takes the product's art as a slot. The favicon SVG is generated at build time for the product default and swapped at runtime by the accent.
 - **Review:** no product name, icon or illustration appears anywhere outside `product.js` and the product's own art component.
+
+## Amended (1.59.0, 2026-11-25): a dark panel in dark mode
+
+In dark mode the brand panel used the dark theme's bright accent: half the sign-in screen a glaring light blue. The
+panel (`.brand-panel`) now takes the accent's deep curtain shade with its light text in dark mode, and the accent in
+light mode, as before. Its contents keep using primary and primary-foreground.

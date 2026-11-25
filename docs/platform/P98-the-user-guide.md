@@ -50,3 +50,11 @@ Deleted records wait in the trash for 30 days …
 ## Extension point
 
 `docs/help/articles/<lang>/*.md` (an article's `screens:` lists the routes whose How do I… offers it); `tools/help/build.js`.
+
+## Amended (1.59.0, 2026-11-25): a reading measure, and Help is a place in the sidebar
+
+- Help text lines stop at about 70 characters (articles and the list's summaries); the pictures keep the column's width.
+- Help and guides is the sidebar's active item on Help and on an article.
+- An article's plain text drops inline tags without a space: "**Overview**, or" no longer reads "Overview , or".
+- The pictures are taken from the product itself (`tools/help/build.js --app`), never from the kit's prototype: shot
+  routes are the product's routes, and a record is reached by clicking its row, never by a fixed id.

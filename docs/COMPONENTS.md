@@ -629,7 +629,7 @@ the browser's own file input, which is never shown. It hands the chosen `File` t
 | Trigger | 12px x, 4px y, 14px / 500, active = background + shadow |
 | Count | 11px pill inside the trigger |
 | Keys | ← → Home End move and open; only the open tab is in the Tab order (P101) |
-| Overflow | scrolls sideways with faded edges; the open tab scrolls into view; More lists every tab |
+| Overflow | the strip shows the tabs that fit whole and always the open one, never one cut at the edge; More lists every tab (kit 1.59.0); one tab too long for the strip scrolls with faded edges |
 | Variants | inline, full width (phone header row) |
 | Used in | Builder tabs, results sub-tabs, roles detail, status filters. |
 
@@ -1019,7 +1019,7 @@ the browser's own file input, which is never shown. It hands the chosen `File` t
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `columns` | `ListColumn[]` | – | key, label, short?, identity?, hero?, status?, priority, fold: 'badge' | 'meta' | 'more' (P40 amended 1.58.0: 'more' goes straight to "+N more", labelled), min (px), sort? (a list.sorts value), text(row), variant?(row), mono?, right?, muted?, sub?, indent?(row) for trees |
+| `columns` | `ListColumn[]` | – | key, label, short?, identity?, hero?, status?, priority, fold: 'badge' | 'meta' | 'more', metaLabel? (P40 amended 1.58.0 and 1.59.0: 'more' goes straight to "+N more", labelled; metaLabel puts the label before a number or date on the meta line), min (px), sort? (a list.sorts value), text(row), variant?(row), mono?, right?, muted?, sub?, indent?(row) for trees |
 | `rows` | `array` | – | From useList() |
 | `list` | `useList() object` | – | Header sort; folded columns stay sortable through the Sort control |
 | `rowKey` | `(row) => string` | `r => r.id` |  |

@@ -448,7 +448,7 @@
     "columns",
     "ListColumn[]",
     "",
-    "key, label, short?, identity?, hero?, status?, priority, fold: 'badge' | 'meta' | 'more' (P40 amended 1.58.0: 'more' goes straight to \"+N more\", labelled), min (px), sort? (a list.sorts value), text(row), variant?(row), mono?, right?, muted?, sub?, indent?(row) for trees"
+    "key, label, short?, identity?, hero?, status?, priority, fold: 'badge' | 'meta' | 'more', metaLabel? (P40 amended 1.58.0 and 1.59.0: 'more' goes straight to \"+N more\", labelled; metaLabel puts the label before a number or date on the meta line), min (px), sort? (a list.sorts value), text(row), variant?(row), mono?, right?, muted?, sub?, indent?(row) for trees"
    ],
    [
     "rows",

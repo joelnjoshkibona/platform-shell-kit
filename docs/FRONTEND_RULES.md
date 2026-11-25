@@ -149,6 +149,9 @@ Every screen is built against these rules. Where code and the prototype disagree
 - Breadcrumb, then icon tile (or avatar for a person, or the record's picture), title, code and status badge (a `StatusPill` at the header's text size) on one line, meta under it (a document's total there, P133).
 - Header buttons, row 1: Refresh, and View full page when shown as a preview. Row 2: the record's actions. Refresh stays a visible button (owner 2026-11-23, P133). Only Edit is promoted to a visible button; delete and rare actions live in the More menu, which hides itself when empty.
 - One exception: a module may promote its single defining action beside Edit (Add child on a location, Preview this role on a role). Everything else stays in More (D39).
+- That defining action is the page's one primary button; Edit is `outline`. A page without one has no primary button in its header (kit 1.59.0).
+- Page widths (kit 1.59.0): a page's column is `page-wide` (lists, reports) or `page-detail` (a record's page), both 1200px and 1600px from 1920px wide, or `page-narrow` (860px: help, notifications, forms on a page). Never a page's own `max-w-[…]`.
+- The sidebar opens the dropdown that holds the current page, on navigation and on a reload or a shared link; a panel group (System) stays a marked parent (kit 1.59.0).
 - Back returns to `?back=` if present, else to the module list. Never browser history.
 - Terminal states (closed, cancelled, voided, archived) show a banner explaining why actions are gone and that the record is read-only.
 

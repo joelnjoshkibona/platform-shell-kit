@@ -103,3 +103,23 @@ own width.
 
 Review checklist addition: at 820 and 1366, the dates, the status and the actions sit in one straight column under their
 header on every row.
+
+## Amended (1.59.0, 2026-11-25): labelled numbers and dates, whole tabs, the first record, page widths
+
+The second five-size review (the Project Generator, then Bootbox's own screens) found the meta line still unreadable
+where it held numbers and dates, and lists that looked lost on a wide screen.
+
+- **A number or a date on the meta line reads with its label.** A column with `metaLabel: true` shows "Due 15 Dec 2026",
+  "Progress 45%", never a bare "15 Dec 2026 · 2": two dates, or a lone number, can't be told apart. Words, names and a
+  document's own number stay bare. The generator marks dates, datetimes, numbers other than the hero and Created
+  (generator contract 13); a spec's `"metaLabel": false` keeps a column bare.
+- **A datetime keeps its time** ("25 Nov 2026, 10:39", `when()` in `app/lib/dates`); a date column is the day only.
+- **Quick tabs never show a tab cut in half.** The strip shows the tabs that fit whole, in order, and always the open
+  one; More lists every tab.
+- **An empty list that nothing narrows offers its first record** on the empty state too (no search, filter or quick
+  tab). A search or filter that finds nothing keeps "Nothing matches" and no button.
+- **One page width for a list and its record** (`page-wide`, `page-detail`: 1200px, 1600px from 1920px wide), so going
+  from one to the other never moves the content sideways, and XXL is no longer a narrow strip in an empty canvas.
+  Reading pages (help, notifications) use `page-narrow` (860px). Pages no longer set their own `max-w-[…]`.
+
+Review checklist addition: at 390, no tab is cut at the strip's edge; at 2560, a list fills its 1600px column.
