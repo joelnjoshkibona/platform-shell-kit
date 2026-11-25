@@ -20,3 +20,11 @@ only the ⋮ button.
 
 The extra line made every row taller by one line for one small button, so a phone showed a third fewer rows, and the
 button sat far from the name it acts on.
+
+## Amended (1.58.0, 2026-11-25): behind one ⋮, never a line of their own
+
+The review at phone width found every list row about 110px tall when the actions kept their own line (13 modules took
+three screens). **When the actions cannot sit level with the title (the 140px rule above), they wait behind one ⋮ in the
+chevron's place**: a 32px button that opens the row's own actions in a small popover. The row keeps one line of height
+for its name and meta, and the actions stay next to the record they act on. This replaces "the actions keep their own
+line" of 1.6.0.

@@ -86,3 +86,20 @@ Which columns a list has, their `priority`, which one is the hero, the base meta
 - [ ] Status folds right, above the hero, and shows on every row once folded.
 - [ ] `+N more` appears only when the meta line would overflow two lines; the row and chevron still open the record.
 - [ ] Toolbar · tabs · search · chips · header · rows · footer, in that order, at every width.
+
+## Amended (1.58.0, 2026-11-25): fixed widths, and "more"
+
+A five-size review (phone 390 to 2560) found rows drifting from their header on tablet and laptop: each row is its own
+grid, and a column sized to its content (a folded status, a tight hero, the actions beside the title) took each row's
+own width.
+
+- **Every column has a fixed width on a page.** A folded status and a tight hero take the widest text among the page's
+  rows, measured once; the folded status gets its header label. Cells line up with the header and with each other at
+  every width.
+- **A new fold target, `more`.** A column with `fold: 'more'` never joins the meta line: it waits in the "+N more" strip,
+  beside its label. A yes/no ("Yes · No · Yes" read as noise), a code or a hash folds there. The generator folds
+  booleans there, and any column whose spec says `"meta": false` (generator contract 12).
+- **The "+N more" chip is 24px** with a larger hit area; the sortable header is a full-height target.
+
+Review checklist addition: at 820 and 1366, the dates, the status and the actions sit in one straight column under their
+header on every row.

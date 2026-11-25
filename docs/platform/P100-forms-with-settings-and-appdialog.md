@@ -71,3 +71,9 @@ Status: **decided** (kit 1.20.0). Amends P26 (the one modal host is now a stack;
 - A `?form=` link opens the form with its lock.
 - Open full page carries the typed name into the page's save bar form.
 - Create location saves and closes; Create and add another stays open, resets the fields and keeps the lock.
+
+## Amended (1.58.0, 2026-11-25): the footer stays in view
+
+The review found a long form's Save below the fold on a phone and at 1366×768: the dialog scrolled as one, footer
+included. **The footer is sticky at the dialog's bottom** (a top border, the background, the safe-area padding), so
+the form's status and actions are always in view while its fields scroll.
