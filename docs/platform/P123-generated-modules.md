@@ -199,5 +199,6 @@ The phone's record page gains `tabs` and `lines` slots, its form a `lines` slot,
   generator writes each only when the page draws it: `generator_contract` **14**.
 - `--catch-up` moves them into the slot on a page made before, and knows a generated module by its slot markers, so
   running it without `--generated`, or twice, adds nothing that is there.
-- A product made from the starter carries the starter's checks less the one that makes a product: a product has no
-  `tools/new-product`.
+- A product made from the starter carries the starter's checks unchanged; the one that makes a product skips itself
+  there, since a product has no `tools/new-product` (a product's copy of a starter file is never edited, so the
+  starter's later changes still apply).
