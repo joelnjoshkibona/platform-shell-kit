@@ -1,6 +1,6 @@
 # P136 — Product parts: the api, the web app and the phone app, in any combination
 
-Status: decided 2026-11-24 (the owner), from what the Jumla product did by hand (jumlaapp-nativephp `8205288`: "Keep
+Status: decided 2026-11-24 (the owner), from what a product did by hand (its phone repository's commit `8205288`: "Keep
 only the phone app, at the repository root"). Amended the same day: first two shapes (full, and a phone app for
 another server), then any set of parts ("User can need api only or web only or phone only"). Amends the product starter
 (`tools/new-product`), the generator engine and a build in the Project Generator; builds on the backend adapter (P117).
@@ -44,12 +44,12 @@ another server), then any set of parts ("User can need api only or web only or p
 ## Why
 
 A product that needs one part had no way to start without carrying the others: a phone app for someone else's server
-carried a server, a web app, deploy and CI it never uses; a server for another team's screens carried two apps. Jumla
+carried a server, a web app, deploy and CI it never uses; a server for another team's screens carried two apps. A product
 removed them by hand; the next product would again. Keeping every part self-contained in Bootbox is what lets a reshaped
 product still take Bootbox's fixes.
 
 ## Not decided here
 
 Packages copied into a product (push, share-file, biometric, devserver, splashscreen, escpos-printer) move to their
-own repositories and are installed by version; that is being done from the Jumla product and taken by Bootbox when the
+own repositories and are installed by version; that is being done from a product and taken by Bootbox when the
 versions exist.

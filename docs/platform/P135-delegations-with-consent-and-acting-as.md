@@ -1,6 +1,6 @@
 # P135 — Delegations with consent, and acting as
 
-Status: decided 2026-11-23 (the owner), from the Ongeza proposals (`acting-as.md`, `user-flag.md`, kit-proposals).
+Status: decided 2026-11-23 (the owner), from a product's proposals (`acting-as.md`, `user-flag.md`, kit-proposals).
 Amends the approval delegations (D113) and View as.
 
 ## Decision
