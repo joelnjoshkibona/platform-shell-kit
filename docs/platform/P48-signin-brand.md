@@ -40,3 +40,8 @@ light mode, as before. Its contents keep using primary and primary-foreground.
 - The sign-in field's example (`placeholder` in `brandPanel.json`) is the product's own, like the panel's words: a
   product no longer shows the shell's demo address.
 - The panel's picture is aligned left with the headline: on a 2560 screen a centred picture floated away from the words.
+
+## Amended (1.61.0, 2026-11-26): the phone's sign-in foot is Check for updates (P137)
+
+- The phone's sign-in screens carry no "Protected by rate limits and two-step verification" line; their foot is the small
+  "Check for updates · <version>" line, and a newer version shows as a card at the top. The web sign-in is unchanged.
