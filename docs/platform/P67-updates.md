@@ -21,3 +21,8 @@ Every copy of the updater was rebuilt by hand; one app at 1.0.1 never saw 1.0.2 
 ## Where
 
 Prototype: P53 states. Product (P93): `mobile/resources/spa/src/app/` → updates.
+
+## Amended (1.61.0, 2026-11-26): bundles are counted per version code (P138)
+
+- A bundle update belongs to one version code and is numbered from 1 for it; the installed code is still the package's,
+  never `.env` (which `native:package` raises after writing the APK's code).

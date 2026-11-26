@@ -8,6 +8,12 @@
 4. The phone app is built signed (the key lives outside the repository), its file is checked (SHA-256), and, for an app updated from a download page, `scripts/release.sh` creates the GitHub Release, writes `latest.json` from the notes (`--mandatory` sets the minimum), regenerates the page and waits until it serves the new version; phones update themselves (P79).
 5. The release notes go in the guide's "Releases" page.
 
+A release that changes only the phone app's screens and PHP can go out as a **bundle update** instead of an APK (P138):
+`scripts/release.sh --bundle "What changed"` builds with the version and code of the APK last published (recorded by that
+release), refuses when the native side changed since (plugins, permissions, the PHP runtime, push, the splash: then release
+an APK), and publishes the zip beside that APK; phones download it in the background and finish with a quick restart.
+`--bundle-rollback` sends phones back to the APK's own files.
+
 ## Running it
 
 - **Secrets** never go in the repository: `.env` files stay on the servers; only `.env.example` is committed.

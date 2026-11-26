@@ -95,3 +95,10 @@ no connection is offline; no feed is off and sends nothing; off the phone the of
 
 - A test that the check's line reaches the exported app log (P113) needs the device-utils log fake; the product's phone test reads it by hand.
 - The web prototype's Design system still draws P53's banner for the web shell inside an app (`AppUpdateBanner`); the phone prototype draws P79.
+
+## Amended (1.61.0, 2026-11-26): the check before signing in (P137), and a bundle in the feed (P138)
+
+- On the sign-in screens the check runs at once (no 8-second wait), the offer is a card at the top with Update now, and
+  "Check for updates · <version>" sits at the foot (P137).
+- `latest.json` may carry `bundle: { forCode, number, url, sha256, size, date, notes }`; like the APK's, its address and
+  hash are read on the phone's server and handed to the plugin (`DownloadBundle`), never to the interface (P138).

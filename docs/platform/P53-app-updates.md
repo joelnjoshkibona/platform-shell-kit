@@ -15,3 +15,9 @@ The app compares its own version with two numbers from the server: `latest` and 
 ## Contract
 
 `GET /app/version` → `{ latest, minimum, url }`, cached by the app for an hour and checked on every launch.
+
+## Amended (1.61.0, 2026-11-26): before signing in (P137), and bundles (P138)
+
+- The sign-in screens check at once and show a newer version as a card with Update now (P137); Check for updates sits at
+  their foot. Signing in asks again.
+- The version answer may carry a `bundle` for the newest release's code (P138): the release's bundles, the newest active one.
