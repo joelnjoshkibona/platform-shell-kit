@@ -190,3 +190,14 @@ The phone's record page gains `tabs` and `lines` slots, its form a `lines` slot,
   `organization_id`) and the platform's `UniqueTogether` rule on each column of the set (an edit that changes one of
   them is checked too, with the record's own values for the rest). A single column keeps `unique: true`.
 
+
+### A generated page imports only what it draws (amended 2026-11-26, kit 1.62.0)
+
+- The phone's record page imported `Card` and `Row` outside the generator's slot, for the starter's placeholder facts.
+  A module of a name and long text draws no row, so its generated page kept an unused import and failed the product's
+  phone typecheck (found by building a point of sale end to end). Both now sit in the generator's imports slot, and the
+  generator writes each only when the page draws it: `generator_contract` **14**.
+- `--catch-up` moves them into the slot on a page made before, and knows a generated module by its slot markers, so
+  running it without `--generated`, or twice, adds nothing that is there.
+- A product made from the starter carries the starter's checks less the one that makes a product: a product has no
+  `tools/new-product`.
