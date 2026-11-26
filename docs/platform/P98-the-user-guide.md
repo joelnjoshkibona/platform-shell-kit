@@ -58,3 +58,11 @@ Deleted records wait in the trash for 30 days …
 - An article's plain text drops inline tags without a space: "**Overview**, or" no longer reads "Overview , or".
 - The pictures are taken from the product itself (`tools/help/build.js --app`), never from the kit's prototype: shot
   routes are the product's routes, and a record is reached by clicking its row, never by a fixed id.
+
+## Amended (1.60.0, 2026-11-26): pictures in the reader's theme
+
+- Every marked picture is taken in both themes: `<id>-<n>__<desktop|phone>-<light|dark>.png`. The article shows the one
+  in the app's theme (the theme menu, else the system's), and the shared page the one in the system's. A dark picture in
+  a light article, or a light one glaring in a dark article, was the review's complaint.
+- A picture whose top would fall in the screen's top third starts at the top of the screen, so its edge never cuts
+  through the header, the breadcrumb or the sidebar's organisation.

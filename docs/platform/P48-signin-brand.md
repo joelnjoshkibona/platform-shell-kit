@@ -34,3 +34,9 @@ The panel was markup inside the shell, so every product inherited the example's 
 In dark mode the brand panel used the dark theme's bright accent: half the sign-in screen a glaring light blue. The
 panel (`.brand-panel`) now takes the accent's deep curtain shade with its light text in dark mode, and the accent in
 light mode, as before. Its contents keep using primary and primary-foreground.
+
+## Amended (1.60.0, 2026-11-26): the product's own example, a picture on the headline's edge
+
+- The sign-in field's example (`placeholder` in `brandPanel.json`) is the product's own, like the panel's words: a
+  product no longer shows the shell's demo address.
+- The panel's picture is aligned left with the headline: on a 2560 screen a centred picture floated away from the words.

@@ -152,6 +152,7 @@ Every screen is built against these rules. Where code and the prototype disagree
 - That defining action is the page's one primary button; Edit is `outline`. A page without one has no primary button in its header (kit 1.59.0).
 - Page widths (kit 1.59.0): a page's column is `page-wide` (lists, reports) or `page-detail` (a record's page), both 1200px and 1600px from 1920px wide, or `page-narrow` (860px: help, notifications, forms on a page). Never a page's own `max-w-[…]`.
 - The sidebar opens the dropdown that holds the current page, on navigation and on a reload or a shared link; a panel group (System) stays a marked parent (kit 1.59.0).
+- The sidebar's list scrolls on its own above the pinned footer and fades at its bottom edge while items sit below the fold (kit 1.60.0). A down arrow opens a group in place; a right arrow pushes the group's own panel (D14).
 - Back returns to `?back=` if present, else to the module list. Never browser history.
 - Terminal states (closed, cancelled, voided, archived) show a banner explaining why actions are gone and that the record is read-only.
 

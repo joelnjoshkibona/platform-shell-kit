@@ -123,3 +123,7 @@ where it held numbers and dates, and lists that looked lost on a wide screen.
   Reading pages (help, notifications) use `page-narrow` (860px). Pages no longer set their own `max-w-[…]`.
 
 Review checklist addition: at 390, no tab is cut at the strip's edge; at 2560, a list fills its 1600px column.
+
+## Amended (1.60.0, 2026-11-26): the "+N more" chip keeps its line
+
+- The chip wraps together with the last meta part, so it never sits alone on a line of its own (rows of uneven height).

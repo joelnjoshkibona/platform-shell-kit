@@ -200,3 +200,8 @@ refuses an edit (422). Actions still run (Mark paid from Approved). The demo's A
 - **The phone**: pages without a tab bar clear Android's navigation bar; the offline banner wraps to two lines; Sync says
   what waits ("2 waiting to send") rather than "Synced just now", and "Up to date" when a sync moved nothing.
 
+
+## Amended (1.60.0, 2026-11-26): very wide fact cards
+
+- A fact card 60rem wide or more lays its rows out in three columns, 84rem or more in four: at 2560, two columns put a
+  value about 750px from its label.
